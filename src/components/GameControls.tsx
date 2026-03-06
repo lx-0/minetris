@@ -29,9 +29,8 @@ export const GameControls: React.FC<GameControlsProps> = ({
       ) : (
         <button
           onClick={onReset}
-          className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 
+          className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700
             rounded-lg font-bold transition-colors"
-          disabled={!isGameOver}
         >
           <RotateCcw className="w-5 h-5" />
           New Game

@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { GameControls } from './components/GameControls';
 import { useGameState } from './hooks/useGameState';
-import { Bomb, Skull, Trophy } from 'lucide-react';
+import { Bomb, Skull, Trophy, Layers, TrendingUp } from 'lucide-react';
+import { MINE_COUNT } from './utils/gameUtils';
 
 function App() {
   const {
     gameState,
     score,
+    level,
+    linesTotal,
     isGameOver,
     currentPiece,
     board,
@@ -16,30 +19,37 @@ function App() {
     rotatePiece,
     dropPiece,
     startGame,
-    resetGame
+    resetGame,
   } = useGameState();
 
-  const handleKeyPress = useCallback((event: KeyboardEvent) => {
-    if (isGameOver) return;
-    
-    switch (event.key) {
-      case 'ArrowLeft':
-        movePiece('left');
-        break;
-      case 'ArrowRight':
-        movePiece('right');
-        break;
-      case 'ArrowDown':
-        movePiece('down');
-        break;
-      case 'ArrowUp':
-        rotatePiece();
-        break;
-      case ' ':
-        dropPiece();
-        break;
-    }
-  }, [isGameOver, movePiece, rotatePiece, dropPiece]);
+  const handleKeyPress = useCallback(
+    (event: KeyboardEvent) => {
+      if (isGameOver) return;
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          movePiece('left');
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          movePiece('right');
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          movePiece('down');
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          rotatePiece();
+          break;
+        case ' ':
+          event.preventDefault();
+          dropPiece();
+          break;
+      }
+    },
+    [isGameOver, movePiece, rotatePiece, dropPiece]
+  );
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
@@ -54,7 +64,7 @@ function App() {
           <p className="text-gray-400">Where Minesweeper meets Tetris</p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-8 justify-center items-center">
+        <div className="flex flex-col md:flex-row gap-8 justify-center items-start">
           <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
             <GameBoard
               board={board}
@@ -64,22 +74,30 @@ function App() {
             />
           </div>
 
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 min-w-48">
             <div className="bg-gray-800 p-6 rounded-lg">
               <h2 className="text-2xl font-bold mb-4 text-purple-400">Stats</h2>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 text-sm">
                 <div className="flex items-center gap-2">
-                  <Trophy className="text-yellow-400" />
-                  <span>Score: {score}</span>
+                  <Trophy className="text-yellow-400 w-4 h-4 shrink-0" />
+                  <span>Score: <span className="font-bold">{score}</span></span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Bomb className="text-red-400" />
-                  <span>Mines: {mines.length}</span>
+                  <TrendingUp className="text-green-400 w-4 h-4 shrink-0" />
+                  <span>Level: <span className="font-bold">{level + 1}</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Layers className="text-blue-400 w-4 h-4 shrink-0" />
+                  <span>Lines: <span className="font-bold">{linesTotal}</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Bomb className="text-red-400 w-4 h-4 shrink-0" />
+                  <span>Mines: <span className="font-bold">{MINE_COUNT}</span></span>
                 </div>
                 {isGameOver && (
-                  <div className="flex items-center gap-2 text-red-400">
-                    <Skull />
-                    <span>Game Over!</span>
+                  <div className="flex items-center gap-2 text-red-400 mt-1">
+                    <Skull className="w-4 h-4 shrink-0" />
+                    <span className="font-bold">Game Over!</span>
                   </div>
                 )}
               </div>
@@ -93,14 +111,18 @@ function App() {
             />
 
             <div className="bg-gray-800 p-6 rounded-lg">
-              <h2 className="text-xl font-bold mb-4 text-purple-400">How to Play</h2>
-              <ul className="text-sm space-y-2 text-gray-300">
-                <li>← → : Move piece</li>
-                <li>↑ : Rotate piece</li>
-                <li>↓ : Move down</li>
-                <li>Space : Drop piece</li>
-                <li>Clear lines to reveal mine numbers</li>
+              <h2 className="text-xl font-bold mb-3 text-purple-400">Controls</h2>
+              <ul className="text-sm space-y-1 text-gray-300">
+                <li><kbd className="bg-gray-700 px-1 rounded">← →</kbd> Move</li>
+                <li><kbd className="bg-gray-700 px-1 rounded">↑</kbd> Rotate</li>
+                <li><kbd className="bg-gray-700 px-1 rounded">↓</kbd> Soft drop</li>
+                <li><kbd className="bg-gray-700 px-1 rounded">Space</kbd> Hard drop</li>
+              </ul>
+              <h2 className="text-xl font-bold mt-4 mb-2 text-purple-400">Tips</h2>
+              <ul className="text-sm space-y-1 text-gray-300">
+                <li>Numbers show adjacent mines</li>
                 <li>Avoid landing on mines!</li>
+                <li>Clear lines for points</li>
               </ul>
             </div>
           </div>
