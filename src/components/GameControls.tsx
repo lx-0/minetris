@@ -12,7 +12,6 @@ interface GameControlsProps {
 export const GameControls: React.FC<GameControlsProps> = ({
   onStart,
   onReset,
-  isGameOver,
   gameState,
 }) => {
   return (
