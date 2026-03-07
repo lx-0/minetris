@@ -52,7 +52,7 @@ export const useGameState = () => {
   levelRef.current = level;
   gameStateRef.current = gameState;
 
-  const spawnPiece = useCallback((currentBoard: BoardType, currentMines: Set<number>) => {
+  const spawnPiece = useCallback((currentBoard: BoardType) => {
     const shape = PIECES[Math.floor(Math.random() * PIECES.length)];
     const piece: PieceType = { shape, x: Math.floor(BOARD_COLS / 2), y: 0 };
     if (checkCollision(piece, currentBoard)) {
@@ -102,7 +102,7 @@ export const useGameState = () => {
       setLinesTotal(newLinesTotal);
       setLevel(newLevel);
       setCurrentPiece(null);
-      spawnPiece(clearedBoard, currentMines);
+      spawnPiece(clearedBoard);
     },
     [linesTotal, spawnPiece]
   );
@@ -170,7 +170,7 @@ export const useGameState = () => {
     setLevel(0);
     setLinesTotal(0);
     setGameState('playing');
-    spawnPiece(newBoard, newMines);
+    spawnPiece(newBoard);
   }, [spawnPiece]);
 
   const resetGame = useCallback(() => {
