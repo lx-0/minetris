@@ -39,6 +39,7 @@ export const useGameState = () => {
   const [linesTotal, setLinesTotal] = useState(0);
 
   const isGameOver = gameState === 'over';
+  const isPaused = gameState === 'paused';
   const isPlaying = gameState === 'playing';
 
   // Use refs for values needed inside the interval callback to avoid stale closures
@@ -129,9 +130,13 @@ export const useGameState = () => {
     return () => clearInterval(id);
   }, [isPlaying, level, lockPiece]);
 
+  const togglePause = useCallback(() => {
+    setGameState((s) => (s === 'playing' ? 'paused' : s === 'paused' ? 'playing' : s));
+  }, []);
+
   const movePiece = useCallback(
     (direction: 'left' | 'right' | 'down') => {
-      if (!currentPiece || isGameOver) return;
+      if (!currentPiece || isGameOver || isPaused) return;
       const dx = direction === 'left' ? -1 : direction === 'right' ? 1 : 0;
       const dy = direction === 'down' ? 1 : 0;
       const moved: PieceType = { ...currentPiece, x: currentPiece.x + dx, y: currentPiece.y + dy };
@@ -141,11 +146,11 @@ export const useGameState = () => {
         lockPiece(currentPiece, board, mines, level);
       }
     },
-    [currentPiece, board, mines, level, isGameOver, lockPiece]
+    [currentPiece, board, mines, level, isGameOver, isPaused, lockPiece]
   );
 
   const rotatePiece = useCallback(() => {
-    if (!currentPiece || isGameOver) return;
+    if (!currentPiece || isGameOver || isPaused) return;
     const rotated: PieceType = { ...currentPiece, shape: rotateCW(currentPiece.shape) };
     // Wall-kick: try original position, then shift ±1, ±2
     for (const kick of [0, 1, -1, 2, -2]) {
@@ -155,16 +160,16 @@ export const useGameState = () => {
         return;
       }
     }
-  }, [currentPiece, board, isGameOver]);
+  }, [currentPiece, board, isGameOver, isPaused]);
 
   const dropPiece = useCallback(() => {
-    if (!currentPiece || isGameOver) return;
+    if (!currentPiece || isGameOver || isPaused) return;
     let dropped = { ...currentPiece };
     while (!checkCollision({ ...dropped, y: dropped.y + 1 }, board)) {
       dropped = { ...dropped, y: dropped.y + 1 };
     }
     lockPiece(dropped, board, mines, level);
-  }, [currentPiece, board, mines, level, isGameOver, lockPiece]);
+  }, [currentPiece, board, mines, level, isGameOver, isPaused, lockPiece]);
 
   const startGame = useCallback(() => {
     const newBoard = createEmptyBoard();
@@ -195,6 +200,7 @@ export const useGameState = () => {
     level,
     linesTotal,
     isGameOver,
+    isPaused,
     currentPiece,
     nextPieceShape,
     board,
@@ -204,5 +210,6 @@ export const useGameState = () => {
     dropPiece,
     startGame,
     resetGame,
+    togglePause,
   };
 };

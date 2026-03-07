@@ -13,6 +13,7 @@ function App() {
     level,
     linesTotal,
     isGameOver,
+    isPaused,
     currentPiece,
     nextPieceShape,
     board,
@@ -22,12 +23,18 @@ function App() {
     dropPiece,
     startGame,
     resetGame,
+    togglePause,
   } = useGameState();
 
   const handleKeyPress = useCallback(
     (event: KeyboardEvent) => {
       if (isGameOver) return;
       switch (event.key) {
+        case 'p':
+        case 'P':
+          event.preventDefault();
+          togglePause();
+          break;
         case 'ArrowLeft':
           event.preventDefault();
           movePiece('left');
@@ -50,7 +57,7 @@ function App() {
           break;
       }
     },
-    [isGameOver, movePiece, rotatePiece, dropPiece]
+    [isGameOver, togglePause, movePiece, rotatePiece, dropPiece]
   );
 
   useEffect(() => {
@@ -67,13 +74,18 @@ function App() {
         </div>
 
         <div className="flex flex-col md:flex-row gap-8 justify-center items-start">
-          <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-xl relative">
             <GameBoard
               board={board}
               currentPiece={currentPiece}
               mines={mines}
               gameState={gameState}
             />
+            {isPaused && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg backdrop-blur-sm bg-gray-900/70">
+                <span className="text-3xl font-bold text-purple-400 tracking-widest">PAUSED</span>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-6 min-w-48">
@@ -110,7 +122,9 @@ function App() {
             <GameControls
               onStart={startGame}
               onReset={resetGame}
+              onTogglePause={togglePause}
               isGameOver={isGameOver}
+              isPaused={isPaused}
               gameState={gameState}
             />
 
@@ -121,6 +135,7 @@ function App() {
                 <li><kbd className="bg-gray-700 px-1 rounded">↑</kbd> Rotate</li>
                 <li><kbd className="bg-gray-700 px-1 rounded">↓</kbd> Soft drop</li>
                 <li><kbd className="bg-gray-700 px-1 rounded">Space</kbd> Hard drop</li>
+                <li><kbd className="bg-gray-700 px-1 rounded">P</kbd> Pause / Resume</li>
               </ul>
               <h2 className="text-xl font-bold mt-4 mb-2 text-purple-400">Tips</h2>
               <ul className="text-sm space-y-1 text-gray-300">

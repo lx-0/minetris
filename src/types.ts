@@ -1,4 +1,4 @@
-export type GameState = 'idle' | 'playing' | 'over';
+export type GameState = 'idle' | 'playing' | 'paused' | 'over';
 export type BoardType = number[][];
 export type PieceType = {
   shape: number[][];
