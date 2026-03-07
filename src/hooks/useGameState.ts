@@ -32,6 +32,7 @@ export const useGameState = () => {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [board, setBoard] = useState<BoardType>(createEmptyBoard());
   const [currentPiece, setCurrentPiece] = useState<PieceType | null>(null);
+  const [nextPieceShape, setNextPieceShape] = useState<number[][] | null>(null);
   const [mines, setMines] = useState<Set<number>>(new Set());
   const [score, setScore] = useState(0);
   const [level, setLevel] = useState(0);
@@ -43,23 +44,27 @@ export const useGameState = () => {
   // Use refs for values needed inside the interval callback to avoid stale closures
   const boardRef = useRef(board);
   const currentPieceRef = useRef(currentPiece);
+  const nextPieceShapeRef = useRef(nextPieceShape);
   const minesRef = useRef(mines);
   const levelRef = useRef(level);
   const gameStateRef = useRef(gameState);
   boardRef.current = board;
   currentPieceRef.current = currentPiece;
+  nextPieceShapeRef.current = nextPieceShape;
   minesRef.current = mines;
   levelRef.current = level;
   gameStateRef.current = gameState;
 
-  const spawnPiece = useCallback((currentBoard: BoardType) => {
-    const shape = PIECES[Math.floor(Math.random() * PIECES.length)];
+  const spawnPiece = useCallback((currentBoard: BoardType, queuedShape?: number[][]) => {
+    const shape = queuedShape ?? PIECES[Math.floor(Math.random() * PIECES.length)];
+    const next = PIECES[Math.floor(Math.random() * PIECES.length)];
     const piece: PieceType = { shape, x: Math.floor(BOARD_COLS / 2), y: 0 };
     if (checkCollision(piece, currentBoard)) {
       // Can't spawn — board is full, game over
       setGameState('over');
     } else {
       setCurrentPiece(piece);
+      setNextPieceShape(next);
     }
   }, []);
 
@@ -102,7 +107,7 @@ export const useGameState = () => {
       setLinesTotal(newLinesTotal);
       setLevel(newLevel);
       setCurrentPiece(null);
-      spawnPiece(clearedBoard);
+      spawnPiece(clearedBoard, nextPieceShapeRef.current ?? undefined);
     },
     [linesTotal, spawnPiece]
   );
@@ -170,13 +175,14 @@ export const useGameState = () => {
     setLevel(0);
     setLinesTotal(0);
     setGameState('playing');
-    spawnPiece(newBoard);
+    spawnPiece(newBoard, PIECES[Math.floor(Math.random() * PIECES.length)]);
   }, [spawnPiece]);
 
   const resetGame = useCallback(() => {
     setGameState('idle');
     setBoard(createEmptyBoard());
     setCurrentPiece(null);
+    setNextPieceShape(null);
     setMines(new Set());
     setScore(0);
     setLevel(0);
@@ -190,6 +196,7 @@ export const useGameState = () => {
     linesTotal,
     isGameOver,
     currentPiece,
+    nextPieceShape,
     board,
     mines,
     movePiece,

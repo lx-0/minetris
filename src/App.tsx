@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { GameControls } from './components/GameControls';
+import { NextPiecePanel } from './components/NextPiecePanel';
 import { useGameState } from './hooks/useGameState';
 import { Bomb, Skull, Trophy, Layers, TrendingUp } from 'lucide-react';
 import { MINE_COUNT } from './utils/gameUtils';
@@ -13,6 +14,7 @@ function App() {
     linesTotal,
     isGameOver,
     currentPiece,
+    nextPieceShape,
     board,
     mines,
     movePiece,
@@ -75,6 +77,8 @@ function App() {
           </div>
 
           <div className="flex flex-col gap-6 min-w-48">
+            <NextPiecePanel shape={nextPieceShape} />
+
             <div className="bg-gray-800 p-6 rounded-lg">
               <h2 className="text-2xl font-bold mb-4 text-purple-400">Stats</h2>
               <div className="flex flex-col gap-3 text-sm">
