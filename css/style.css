@@ -5361,6 +5361,35 @@ body.theme-legendary #score-display {
   font-size: 0.4em;
   color: #ff0;
 }
+.ppu-qty.ppu-cap-warn {
+  color: #ffaa00;
+  text-shadow: 0 0 4px #ffaa00;
+}
+.ppu-qty.ppu-cap-full {
+  color: #ff4444;
+  text-shadow: 0 0 6px #ff4444;
+  animation: ppu-cap-pulse 1.2s ease-in-out infinite;
+}
+@keyframes ppu-cap-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+.powerup-bank-total {
+  width: 100%;
+  text-align: center;
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.32em;
+  color: rgba(150, 200, 150, 0.7);
+  margin-bottom: 6px;
+}
+.powerup-bank-total.ppu-cap-warn {
+  color: #ffaa00;
+  text-shadow: 0 0 4px #ffaa00;
+}
+.powerup-bank-total.ppu-cap-full {
+  color: #ff4444;
+  text-shadow: 0 0 6px #ff4444;
+}
 .powerup-pick-none {
   font-family: "Press Start 2P", cursive;
   font-size: 0.38em;
@@ -14510,4 +14539,263 @@ body.biome-ice #inventory-hud { border-color: #4499dd; }
   color: #666;
   font-size: 10px;
   text-align: center;
+}
+
+/* ── Seasonal Events ─────────────────────────────────────────────────────── */
+
+/* ── Mode-select event banner ── */
+#se-event-banner {
+  margin: 6px 0 2px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.se-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(50,0,80,0.92) 0%, rgba(20,0,40,0.95) 100%);
+  border: 1px solid rgba(136,0,220,0.5);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #ddd;
+}
+.se-banner-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+}
+.se-banner-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+.se-banner-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.se-banner-label {
+  color: #bb66ff;
+  font-size: 6px;
+  letter-spacing: 1px;
+}
+.se-banner-name {
+  color: #eeccff;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}
+.se-banner-blurb {
+  color: #aaa;
+  font-size: 6px;
+  max-width: 260px;
+  line-height: 1.5;
+}
+.se-banner-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 130px;
+}
+.se-banner-days {
+  color: #ff9977;
+  font-size: 6px;
+}
+.se-banner-goal-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.se-banner-goal-label {
+  color: #aa77ff;
+  font-size: 5px;
+}
+.se-banner-goal-pct {
+  color: #88ffcc;
+  font-size: 6px;
+}
+.se-banner-goal-bar-wrap {
+  width: 120px;
+  height: 5px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.se-banner-goal-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6600cc, #88ffcc);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.se-banner-goal-progress {
+  color: #888;
+  font-size: 5px;
+}
+.se-banner-rewards-btn {
+  background: rgba(136,0,220,0.3);
+  border: 1px solid rgba(136,0,220,0.6);
+  border-radius: 4px;
+  color: #cc88ff;
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  margin-top: 2px;
+}
+.se-banner-rewards-btn:hover {
+  background: rgba(136,0,220,0.5);
+  color: #fff;
+}
+
+/* ── In-game HUD ticker ── */
+#se-ticker {
+  position: absolute;
+  bottom: 48px;    /* stacked above cg-ticker */
+  left: 12px;
+  z-index: 20;
+  pointer-events: none;
+  max-width: 220px;
+}
+.se-ticker-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: rgba(20,0,40,0.75);
+  border: 1px solid rgba(136,0,220,0.4);
+  border-radius: 5px;
+  padding: 6px 8px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: #ddd;
+}
+.se-ticker-label {
+  color: #cc88ff;
+  font-size: 7px;
+  letter-spacing: 0.3px;
+}
+.se-ticker-progress {
+  color: #bbb;
+  font-size: 6px;
+}
+.se-ticker-pct {
+  color: #88ffcc;
+  font-size: 6px;
+}
+.se-ticker-players {
+  color: #888;
+  font-size: 6px;
+}
+.se-ticker-bar-wrap {
+  width: 100%;
+  height: 5px;
+  background: rgba(255,255,255,0.10);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.se-ticker-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6600cc, #88ffcc);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+/* ── Cosmetics showcase panel ── */
+.se-cosmetics-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.75);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.se-cosmetics-panel > * {
+  background: linear-gradient(160deg, rgba(30,0,50,0.97) 0%, rgba(10,0,20,0.98) 100%);
+  border: 1px solid rgba(136,0,220,0.5);
+  border-radius: 8px;
+  padding: 20px;
+  min-width: 320px;
+  max-width: 420px;
+  font-family: "Press Start 2P", cursive;
+  color: #ddd;
+}
+.se-cos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 10px;
+  color: #cc88ff;
+}
+.se-cos-close {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 14px;
+}
+.se-cos-close:hover { color: #fff; }
+.se-cos-subtitle {
+  font-size: 7px;
+  color: #aaa;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+.se-cos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.se-cos-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(136,0,220,0.1);
+  border: 1px solid rgba(136,0,220,0.25);
+  border-radius: 5px;
+  padding: 8px 10px;
+}
+.se-cos-icon {
+  font-size: 22px;
+  width: 28px;
+  text-align: center;
+}
+.se-cos-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.se-cos-name {
+  font-size: 8px;
+  color: #eeccff;
+}
+.se-cos-cat {
+  font-size: 6px;
+  color: #888;
+  text-transform: uppercase;
+}
+.se-cos-rarity {
+  font-size: 6px;
+  font-weight: bold;
+}
+.se-cos-tag {
+  font-size: 5px;
+  color: #ff9977;
+  background: rgba(255,80,30,0.15);
+  border: 1px solid rgba(255,80,30,0.3);
+  border-radius: 3px;
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+.se-cos-empty {
+  font-size: 8px;
+  color: #666;
+  text-align: center;
+  padding: 16px 0;
 }

@@ -281,7 +281,26 @@ let activeTheme = "classic";
 let activeBlockSkin = null;
 
 // ── Power-up bank (persistent across runs via localStorage) ──────────────────
-const POWERUP_BANK_KEY = "mineCtris_powerups";
+const POWERUP_BANK_KEY     = "mineCtris_powerups";
+const POWERUP_PER_TYPE_CAP = 10;  // max per power-up type in bank
+const POWERUP_TOTAL_CAP    = 30;  // max total power-ups in bank
+
+function clampPowerUpBank(bank) {
+  var types = ['row_bomb', 'slow_down', 'shield', 'magnet', 'time_freeze', 'sabotage', 'counter', 'fortress'];
+  // Enforce per-type cap
+  for (var i = 0; i < types.length; i++) {
+    if ((bank[types[i]] || 0) > POWERUP_PER_TYPE_CAP) bank[types[i]] = POWERUP_PER_TYPE_CAP;
+  }
+  // Enforce total cap: reduce excess from types with the most, last-to-first
+  var total = types.reduce(function(s, t) { return s + (bank[t] || 0); }, 0);
+  for (var j = types.length - 1; j >= 0 && total > POWERUP_TOTAL_CAP; j--) {
+    var excess = total - POWERUP_TOTAL_CAP;
+    var reduce = Math.min(bank[types[j]] || 0, excess);
+    bank[types[j]] = (bank[types[j]] || 0) - reduce;
+    total -= reduce;
+  }
+  return bank;
+}
 
 function loadPowerUpBank() {
   try {
@@ -306,7 +325,7 @@ function loadPowerUpBank() {
 }
 
 function savePowerUpBank(bank) {
-  try { localStorage.setItem(POWERUP_BANK_KEY, JSON.stringify(bank)); } catch (_) {}
+  try { localStorage.setItem(POWERUP_BANK_KEY, JSON.stringify(clampPowerUpBank(bank))); } catch (_) {}
 }
 
 // Equipped power-up for the current run (chosen on mode select screen).

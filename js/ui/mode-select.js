@@ -117,14 +117,26 @@
           if (equippedPowerUpType && (bank[equippedPowerUpType] || 0) === 0) {
             equippedPowerUpType = null;
           }
+          // Total bank count indicator
+          var bankTotal = puDefs.reduce(function(s, d) { return s + (bank[d.type] || 0); }, 0);
+          var perTypeCap = (typeof POWERUP_PER_TYPE_CAP !== 'undefined') ? POWERUP_PER_TYPE_CAP : 10;
+          var totalCap   = (typeof POWERUP_TOTAL_CAP    !== 'undefined') ? POWERUP_TOTAL_CAP    : 30;
+          var totalClass = bankTotal >= totalCap ? ' ppu-cap-full' : bankTotal >= totalCap - 4 ? ' ppu-cap-warn' : '';
+          var totalEl = document.createElement("div");
+          totalEl.className = "powerup-bank-total" + totalClass;
+          totalEl.textContent = "Bank: " + bankTotal + "/" + totalCap;
+          pickerEl.appendChild(totalEl);
+
           owned.forEach(function (def) {
+            var qty = bank[def.type] || 0;
+            var qtyClass = qty >= perTypeCap ? ' ppu-cap-full' : qty >= perTypeCap - 2 ? ' ppu-cap-warn' : '';
             const btn = document.createElement("button");
             btn.className = "powerup-pick-btn" + (equippedPowerUpType === def.type ? " pu-equipped" : "");
             btn.dataset.type = def.type;
             btn.innerHTML =
               '<div class="ppu-icon">' + def.icon + '</div>' +
               '<div class="ppu-name">' + def.name + '</div>' +
-              '<div class="ppu-qty">\xD7' + (bank[def.type] || 0) + '</div>';
+              '<div class="ppu-qty' + qtyClass + '">\xD7' + qty + '/' + perTypeCap + '</div>';
             btn.addEventListener("click", function (e) {
               e.stopPropagation();
               equippedPowerUpType = (equippedPowerUpType === def.type) ? null : def.type;
