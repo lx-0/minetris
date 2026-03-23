@@ -220,7 +220,11 @@ function onMouseDown(event) {
       const _objType = targetedBlock.userData.objectType;
       const _matName = targetedBlock.userData.materialType ||
         (_objType ? OBJECT_TYPE_TO_MATERIAL[_objType] : null);
-      addScore(_matName && BLOCK_TYPES[_matName] ? BLOCK_TYPES[_matName].points : 10);
+      const _basePoints = _matName && BLOCK_TYPES[_matName] ? BLOCK_TYPES[_matName].points : 10;
+      // Depth-scaled mining score: basePoints × (1 + depth × 0.05) for underground blocks.
+      const _blockDepth = targetedBlock.userData.isUnderground
+        ? Math.max(0, -targetedBlock.position.y) : 0;
+      addScore(_blockDepth > 0 ? Math.round(_basePoints * (1 + _blockDepth * 0.05)) : _basePoints);
       if (typeof achOnBlockMined === "function") achOnBlockMined(blocksMined, _objType);
       if (typeof onMissionBlockMined === "function") onMissionBlockMined();
       // Seasonal event: track void-adjacent mining

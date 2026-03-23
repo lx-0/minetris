@@ -54,6 +54,20 @@ function checkPlayerCollision(deltaY) {
   return false;
 }
 
+/**
+ * Teleport the player back to above the surface. Called as a safety net when
+ * the player falls below the bedrock floor.
+ */
+function returnPlayerToSurface() {
+  if (!controls) return;
+  controls.getObject().position.set(
+    controls.getObject().position.x,
+    PLAYER_HEIGHT + BLOCK_SIZE,
+    controls.getObject().position.z
+  );
+  playerVelocity.y = 0;
+}
+
 // Hold-C detection for co-op thumbs-up emote
 var _cKeyHoldTimeout = null;
 

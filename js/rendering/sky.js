@@ -425,3 +425,43 @@ function updateSky(elapsedSeconds, delta = 0.016) {
     scene.fog.density = fogDensity;
   }
 }
+
+// ── Underground depth effects ─────────────────────────────────────────────────
+
+// Reusable color for underground fog interpolation (avoids per-frame allocation).
+const _ugFogColor = new THREE.Color();
+
+/**
+ * Apply underground ambient dimming and fog colour shift based on camera depth.
+ * Call from animate() after updateSky() so that underground overrides sky values.
+ *
+ * @param {number} cameraY  World Y position of the camera.
+ */
+function applyUndergroundDepth(cameraY) {
+  // depth = how far below the surface the camera is (0 at surface, positive underground).
+  const depth = Math.max(0, -(cameraY - BLOCK_SIZE / 2));
+  if (depth <= 0) return;  // above ground — no override needed
+
+  // Ambient dimming: 100% at surface → ~15% at bedrock (30 layers below).
+  const ambientFactor = Math.max(0.15, 1.0 - depth * 0.03);
+
+  if (typeof hemisphereLight !== 'undefined' && hemisphereLight) {
+    hemisphereLight.intensity *= ambientFactor;
+  }
+  if (typeof sunLight !== 'undefined' && sunLight) {
+    sunLight.intensity *= ambientFactor;
+  }
+
+  if (typeof scene !== 'undefined' && scene.fog) {
+    // Fog colour: green-brown (shallow) → dark blue-grey (deep).
+    const t = Math.min(1.0, depth / 30.0);
+    _ugFogColor.setRGB(
+      (0x4a / 255) * (1 - t) + (0x0a / 255) * t,  // R: 0x4a → 0x0a
+      (0x3a / 255) * (1 - t) + (0x0e / 255) * t,  // G: 0x3a → 0x0e
+      (0x20 / 255) * (1 - t) + (0x1a / 255) * t   // B: 0x20 → 0x1a
+    );
+    scene.fog.color.copy(_ugFogColor);
+    // Denser fog underground to reinforce depth.
+    scene.fog.density = Math.max(scene.fog.density, 0.008 + t * 0.02);
+  }
+}

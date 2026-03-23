@@ -11,6 +11,10 @@ function animate() {
   const elapsedTime = clock.getElapsedTime();
 
   updateSky(elapsedTime, delta);
+  // Underground ambient dimming + fog shift (overrides sky values when camera is below surface).
+  if (typeof applyUndergroundDepth === 'function' && camera) {
+    applyUndergroundDepth(camera.position.y);
+  }
 
   if (!isGameOver && !isPaused) {
     // Tick the sprint timer (starts only once the first piece begins falling)
@@ -114,6 +118,11 @@ function animate() {
             const mName = nearestBlock.userData.materialType || (oType ? OBJECT_TYPE_TO_MATERIAL[oType] : null);
             if (mName) addToInventory(nearestBlock.material.color.getStyle());
             addScore(mName && BLOCK_TYPES[mName] ? BLOCK_TYPES[mName].points : 10);
+            // Seasonal event: track void-adjacent mining
+            if (typeof recordVoidAdjacentMined === 'function' && nearestBlock.userData.gridPos &&
+                typeof isAdjacentToVoid === 'function' && isAdjacentToVoid(nearestBlock.userData.gridPos)) {
+              recordVoidAdjacentMined();
+            }
             unregisterBlock(nearestBlock);
             disposeBlock(nearestBlock);
             worldGroup.remove(nearestBlock);
@@ -247,9 +256,10 @@ function animate() {
 
     if (!isEditorMode) checkPlayerCollision(playerVelocity.y * delta);
 
-    // Safety: below bedrock floor → respawn at surface to prevent softlock
+    // Safety: below bedrock floor → respawn at surface to prevent softlock.
+    // Threshold is -32 to allow full underground traversal (bedrock at Y=-29.5).
     if (isSurvivalMode && controls && controls.isLocked && !isGameOver) {
-      if (controls.getObject().position.y < -10.5) {
+      if (controls.getObject().position.y < -32) {
         returnPlayerToSurface();
       }
     }

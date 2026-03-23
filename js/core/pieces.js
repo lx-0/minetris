@@ -562,38 +562,61 @@ function updateFallingPieces(delta) {
       lowestPoint = Math.min(lowestPoint, block.userData.tempVec.y);
     });
     let landed = false;
-    if (lowestPoint <= BLOCK_SIZE / 2) {
-      piece.position.y += BLOCK_SIZE / 2 - lowestPoint;
-      landed = true;
-    } else {
+    // Land on surface blocks and any underground blocks with meshes in worldGroup.
+    // No hard floor at Y=0.5 — pieces can fall through mined shafts underground.
+    piece.children.forEach((block) => {
+      if (landed) return;
+      block.getWorldPosition(block.userData.tempVec);
+      const blockBottomY = block.userData.tempVec.y - BLOCK_SIZE / 2;
+      worldGroup.children.forEach((staticObj) => {
+        if (landed || staticObj.name === "ground") return;
+        const staticBox = (staticObj.userData.boundingBox =
+          staticObj.userData.boundingBox ||
+          new THREE.Box3().setFromObject(staticObj));
+        const fallingBlockWorldBox = (block.userData.worldBox =
+          block.userData.worldBox || new THREE.Box3());
+        fallingBlockWorldBox.setFromCenterAndSize(
+          block.userData.tempVec,
+          (block.userData.sizeVec =
+            block.userData.sizeVec ||
+            new THREE.Vector3(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
+        );
+        if (fallingBlockWorldBox.intersectsBox(staticBox)) {
+          if (blockBottomY <= staticBox.max.y + 0.01) {
+            piece.position.y +=
+              staticBox.max.y +
+              BLOCK_SIZE / 2 -
+              block.userData.tempVec.y;
+            landed = true;
+          }
+        }
+      });
+    });
+    // Direct underground grid check: catches solid blocks without meshes (unexposed cells).
+    if (!landed && typeof ugWorldToIndex === 'function' && typeof ugInBounds === 'function' &&
+        typeof undergroundGrid !== 'undefined' && undergroundGrid) {
       piece.children.forEach((block) => {
         if (landed) return;
         block.getWorldPosition(block.userData.tempVec);
-        const blockBottomY = block.userData.tempVec.y - BLOCK_SIZE / 2;
-        worldGroup.children.forEach((staticObj) => {
-          if (landed || staticObj.name === "ground") return;
-          const staticBox = (staticObj.userData.boundingBox =
-            staticObj.userData.boundingBox ||
-            new THREE.Box3().setFromObject(staticObj));
-          const fallingBlockWorldBox = (block.userData.worldBox =
-            block.userData.worldBox || new THREE.Box3());
-          fallingBlockWorldBox.setFromCenterAndSize(
-            block.userData.tempVec,
-            (block.userData.sizeVec =
-              block.userData.sizeVec ||
-              new THREE.Vector3(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
-          );
-          if (fallingBlockWorldBox.intersectsBox(staticBox)) {
-            if (blockBottomY <= staticBox.max.y + 0.01) {
-              piece.position.y +=
-                staticBox.max.y +
-                BLOCK_SIZE / 2 -
-                block.userData.tempVec.y;
-              landed = true;
-            }
+        const bx = block.userData.tempVec.x;
+        const by = block.userData.tempVec.y;
+        const bz = block.userData.tempVec.z;
+        const blockBottomY = by - BLOCK_SIZE / 2;
+        // Check the underground cell at the block's bottom face position.
+        const idx = ugWorldToIndex(bx, blockBottomY, bz);
+        if (ugInBounds(idx.xi, idx.zi, idx.yi) && undergroundGrid[idx.xi][idx.zi][idx.yi] !== null) {
+          const solidTopY = 1.0 - idx.yi;  // top of solid block: (0.5 - yi) + 0.5
+          if (blockBottomY <= solidTopY + 0.01) {
+            piece.position.y += solidTopY + BLOCK_SIZE / 2 - by;
+            landed = true;
           }
-        });
+        }
       });
+    }
+    // Safety bedrock floor — catches pieces that reach below the underground grid.
+    if (!landed && lowestPoint <= -30.0) {
+      piece.position.y += -30.0 - lowestPoint;
+      landed = true;
     }
     if (landed) {
       if (_lockDelaySecs > 0) {
