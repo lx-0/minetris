@@ -377,10 +377,15 @@ function _initBattleSpectator() {
       var _hypeElectricTimer = null;
 
       function _updateHypeBar() {
-        var fill = document.getElementById('spec-hype-fill');
-        var pct  = document.getElementById('spec-hype-pct');
-        if (fill) fill.style.width = _hypeLevel.toFixed(1) + '%';
-        if (pct)  pct.textContent  = Math.round(_hypeLevel) + '%';
+        var fill  = document.getElementById('spec-hype-fill');
+        var pct   = document.getElementById('spec-hype-pct');
+        var track = document.getElementById('spec-hype-track');
+        if (fill)  fill.style.width = _hypeLevel.toFixed(1) + '%';
+        if (pct)   pct.textContent  = Math.round(_hypeLevel) + '%';
+        if (track) {
+          if (_hypeLevel >= 70) track.classList.add('hype-high');
+          else                  track.classList.remove('hype-high');
+        }
       }
 
       function _hypeDecayTick(ts) {
@@ -411,6 +416,46 @@ function _initBattleSpectator() {
         }
       }
 
+      function _burstHypeParticles() {
+        var layer = document.getElementById('spec-emoji-float-layer');
+        if (!layer) return;
+        var chars = ['\u2726','\u2605','\u2604','\u26a1','\uD83D\uDD25','\uD83D\uDCA5'];
+        for (var i = 0; i < 14; i++) {
+          (function (idx) {
+            setTimeout(function () {
+              var el = document.createElement('div');
+              el.className = 'spec-hype-particle';
+              el.textContent = chars[Math.floor(Math.random() * chars.length)];
+              el.style.left   = (5 + Math.random() * 90) + '%';
+              el.style.bottom = '48%';
+              layer.appendChild(el);
+              setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1500);
+            }, idx * 50);
+          })(i);
+        }
+      }
+
+      function _playHypeChime() {
+        try {
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          var notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach(function (freq, i) {
+            var osc  = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            var t = ctx.currentTime + i * 0.1;
+            gain.gain.setValueAtTime(0, t);
+            gain.gain.linearRampToValueAtTime(0.25, t + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+            osc.start(t);
+            osc.stop(t + 0.5);
+          });
+        } catch (_) {}
+      }
+
       function _triggerHypeElectric() {
         _hypeElectric = true;
         var overlay = document.getElementById('spectator-overlay');
@@ -418,6 +463,8 @@ function _initBattleSpectator() {
         if (overlay) overlay.classList.add('hype-electric');
         if (banner)  banner.style.display = 'block';
         if (_hypeElectricTimer) clearTimeout(_hypeElectricTimer);
+        _burstHypeParticles();
+        _playHypeChime();
         _hypeElectricTimer = setTimeout(function () {
           _hypeElectric = false;
           if (overlay) overlay.classList.remove('hype-electric');
@@ -461,6 +508,26 @@ function _initBattleSpectator() {
           setTimeout(function () { btn.classList.remove('rate-limited'); }, 2000);
         });
       });
+
+      // Wire hype track bar for direct click/tap
+      var _hypeClickLastTime = 0;
+      var _hypeTrackEl = document.getElementById('spec-hype-track');
+      if (_hypeTrackEl) {
+        function _handleHypeTrackInput() {
+          if (!battle.isSpectator) return;
+          var now = Date.now();
+          if (now - _hypeClickLastTime < 200) return; // 200ms debounce
+          _hypeClickLastTime = now;
+          _hypeLevel = Math.min(100, _hypeLevel + 3);
+          _updateHypeBar();
+          if (_hypeLevel >= 100 && !_hypeElectric) _triggerHypeElectric();
+        }
+        _hypeTrackEl.addEventListener('click', _handleHypeTrackInput);
+        _hypeTrackEl.addEventListener('touchstart', function (e) {
+          e.preventDefault();
+          _handleHypeTrackInput();
+        }, { passive: false });
+      }
 
       // Handle incoming reactions (from server relay)
       function _onSpectatorReaction(msg) {

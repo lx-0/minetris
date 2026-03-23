@@ -9033,18 +9033,42 @@ body.theme-diamond-season #score-display { border-color: #00e5ff; }
   align-items: center;
 }
 #spec-hype-track {
-  height: 8px;
+  height: 12px;
   background: rgba(255,255,255,0.1);
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
   border: 1px solid rgba(255,215,0,0.3);
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  user-select: none;
+}
+#spec-hype-track:hover {
+  border-color: rgba(255,215,0,0.65);
+  box-shadow: 0 0 6px rgba(255,215,0,0.25);
+}
+#spec-hype-track.hype-high {
+  border-color: rgba(255,215,0,0.8);
+  box-shadow: 0 0 10px rgba(255,215,0,0.55), 0 0 20px rgba(255,107,0,0.3);
 }
 #spec-hype-fill {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, #f0a500, #ffd700, #ff6b00);
-  border-radius: 4px;
+  border-radius: 6px;
   transition: width 0.15s linear;
+}
+.spec-hype-particle {
+  position: absolute;
+  font-size: 1.1em;
+  pointer-events: none;
+  animation: spec-hype-burst 1.4s ease-out forwards;
+  font-family: sans-serif;
+  z-index: 9150;
+}
+@keyframes spec-hype-burst {
+  0%   { transform: translateY(0) scale(1.2); opacity: 1; }
+  60%  { opacity: 0.8; }
+  100% { transform: translateY(-130px) scale(0.3) rotate(60deg); opacity: 0; }
 }
 
 /* Electric banner at 100% hype */
