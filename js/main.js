@@ -963,6 +963,7 @@ function init() {
     gameRng = null;
     try { localStorage.setItem('mineCtris_lastMode', 'dungeon_' + (dungeonId || 'shallow_mines')); } catch (_) {}
     if (typeof metricsModePlayed === 'function') metricsModePlayed('dungeon_' + (dungeonId || 'shallow_mines'));
+    if (typeof markDungeonTierSeen === 'function') markDungeonTierSeen(dungeonId || 'shallow_mines');
     requestPointerLock();
   });
   // ── End Depths launch handlers ─────────────────────────────────────────────
