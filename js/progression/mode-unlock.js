@@ -15,6 +15,7 @@ const MODE_UNLOCK_TABLE = {
   survival:   8,
   battle:     10,
   expedition: 12,
+  depths:     14,
   coop:       16,
   editor:     20,
 };
@@ -161,7 +162,7 @@ function getNewlyUnlockedModes(oldLevel, newLevel) {
 var _MODE_DISPLAY_NAMES = {
   classic: 'Classic', sprint: 'Sprint', blitz: 'Blitz', puzzle: 'Puzzle',
   daily: 'Daily Challenge', weekly: 'Weekly Challenge', survival: 'Survival',
-  battle: 'Battle', expedition: 'Expeditions',
+  battle: 'Battle', expedition: 'Expeditions', depths: 'The Depths',
   coop: 'Co-op',
   editor: 'Editor',
 };

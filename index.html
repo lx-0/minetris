@@ -290,6 +290,12 @@
                   <div id="survival-world-card" class="survival-world-card"></div>
                   <button id="survival-reset-btn" class="survival-reset-btn" style="display:none;">&#128465; Reset World</button>
                 </div>
+                <div class="mode-card mode-card-depths" id="mode-card-depths" data-mode="depths">
+                  <div class="mode-card-icon">&#9935;</div>
+                  <div class="mode-card-name">The Depths</div>
+                  <div class="mode-card-desc">Descend into danger. Roguelike runs, tiered dungeons, and endless depths.</div>
+                  <button class="mode-card-lb-btn" data-lb-tab="depths" title="Leaderboard">&#127942;</button>
+                </div>
                 <div class="mode-card mode-card-expedition" id="mode-card-expedition" data-mode="expedition">
                   <div class="mode-card-icon">&#127758;</div>
                   <div class="mode-card-name">Expeditions</div>
@@ -1151,6 +1157,52 @@
           </div>
           <div id="biome-cosmetics-panel-body"></div>
           <button id="biome-cosmetics-close-btn">Close</button>
+        </div>
+      </div>
+
+      <!-- Depths Variant Selector overlay -->
+      <div id="depths-variant-overlay" style="display:none;" role="dialog" aria-label="The Depths — Choose Your Run">
+        <div id="depths-variant-panel">
+          <div id="depths-variant-header">
+            <span id="depths-variant-icon">&#9935;</span>
+            <div id="depths-variant-title">THE DEPTHS</div>
+            <div id="depths-variant-subtitle">Choose your descent</div>
+          </div>
+          <div id="depths-variant-list">
+            <button class="depths-variant-btn" data-variant="free_run">
+              <span class="dvb-icon">&#127922;</span>
+              <span class="dvb-name">Free Run</span>
+              <span class="dvb-desc">Roguelike. 7 floors, random upgrades, one life.</span>
+            </button>
+            <button class="depths-variant-btn" data-variant="daily_depths">
+              <span class="dvb-icon">&#128197;</span>
+              <span class="dvb-name">Daily Depths</span>
+              <span class="dvb-desc">Today's seeded run. Everyone gets the same dungeon.</span>
+            </button>
+            <div class="depths-variant-divider"></div>
+            <button class="depths-variant-btn" data-variant="shallow_mines">
+              <span class="dvb-icon">&#9935;</span>
+              <span class="dvb-name">Shallow Mines</span>
+              <span class="dvb-desc">3 floors. A good place to start.</span>
+            </button>
+            <button class="depths-variant-btn" data-variant="deep_caverns">
+              <span class="dvb-icon">&#128308;</span>
+              <span class="dvb-name">Deep Caverns</span>
+              <span class="dvb-desc">4 floors. Lava flows freely here.</span>
+            </button>
+            <button class="depths-variant-btn" data-variant="abyssal_rift">
+              <span class="dvb-icon">&#128128;</span>
+              <span class="dvb-name">Abyssal Rift</span>
+              <span class="dvb-desc">4 floors. The void stares back.</span>
+            </button>
+            <button class="depths-variant-btn depths-variant-btn-locked" id="depths-variant-infinite" data-variant="infinite">
+              <span class="dvb-icon">&#8734;</span>
+              <span class="dvb-name">Infinite Depths</span>
+              <span class="dvb-desc">Endless. Defeat the Wither Storm to unlock.</span>
+              <span class="dvb-lock" id="depths-infinite-lock">&#128274; Defeat the Wither Storm</span>
+            </button>
+          </div>
+          <button id="depths-variant-close">&#8592; Back</button>
         </div>
       </div>
 

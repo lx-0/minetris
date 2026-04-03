@@ -86,7 +86,7 @@
       // Render World Card stats panel
       if (typeof renderWorldCard === "function") renderWorldCard();
       // Apply highlight to the specified mode card
-      ["classic", "sprint", "blitz", "daily", "weekly", "puzzle", "survival", "expedition", "coop", "battle", "tournament"].forEach(function (mode) {
+      ["classic", "sprint", "blitz", "daily", "weekly", "puzzle", "survival", "depths", "expedition", "coop", "battle", "tournament"].forEach(function (mode) {
         const cardEl = document.getElementById("mode-card-" + mode);
         if (cardEl) {
           if (mode === highlightMode) {
@@ -434,6 +434,59 @@
     };
 
     // Survival mode card
+    // ── The Depths mode card — shows variant selector overlay ──
+    (function _initDepthsCard() {
+      var depthsCard = document.getElementById('mode-card-depths');
+      var overlay    = document.getElementById('depths-variant-overlay');
+      var closeBtn   = document.getElementById('depths-variant-close');
+      if (!depthsCard || !overlay) return;
+
+      function _isInfiniteDepthsUnlocked() {
+        try { return localStorage.getItem('mineCtris_witherStormDefeated') === 'true'; } catch (_) { return false; }
+      }
+
+      function _refreshInfiniteDepthsLockState() {
+        var btn  = document.getElementById('depths-variant-infinite');
+        var lock = document.getElementById('depths-infinite-lock');
+        if (!btn) return;
+        var unlocked = _isInfiniteDepthsUnlocked();
+        btn.classList.toggle('depths-variant-btn-locked', !unlocked);
+        if (lock) lock.style.display = unlocked ? 'none' : '';
+      }
+
+      function openDepthsVariantSelector() {
+        _refreshInfiniteDepthsLockState();
+        overlay.style.display = 'flex';
+        markModeSeen('depths');
+      }
+
+      function closeDepthsVariantSelector() {
+        overlay.style.display = 'none';
+      }
+
+      depthsCard.addEventListener('click', openDepthsVariantSelector);
+      if (closeBtn) closeBtn.addEventListener('click', closeDepthsVariantSelector);
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeDepthsVariantSelector();
+      });
+
+      overlay.addEventListener('click', function (e) {
+        var btn = e.target.closest('.depths-variant-btn');
+        if (!btn || btn.classList.contains('depths-variant-btn-locked')) return;
+        var variant = btn.dataset.variant;
+        closeDepthsVariantSelector();
+        hideModeSelect();
+        if (variant === 'free_run') {
+          document.dispatchEvent(new CustomEvent('depthsLaunch', { detail: {} }));
+        } else if (variant === 'daily_depths') {
+          document.dispatchEvent(new CustomEvent('dailyDepthsLaunch', { detail: {} }));
+        } else {
+          document.dispatchEvent(new CustomEvent('dungeonLaunch', { detail: { dungeonId: variant } }));
+        }
+      });
+    })();
+    // ── End Depths card setup ──
+
     const survivalCardEl = document.getElementById("mode-card-survival");
     if (survivalCardEl) {
       survivalCardEl.addEventListener("click", function () {

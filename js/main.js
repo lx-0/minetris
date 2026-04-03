@@ -937,6 +937,36 @@ function init() {
   // Restore equipped biome cosmetic — runs after restoreSeasonCosmetic so biome cosmetic takes priority.
   if (typeof restoreBiomeCosmetic === "function") restoreBiomeCosmetic();
 
+  // ── Depths launch handlers ──────────────────────────────────────────────────
+  // depthsLaunch: Free Run (roguelike 7-floor run)
+  document.addEventListener('depthsLaunch', function () {
+    isDailyChallenge = false;
+    gameRng = null;
+    try { localStorage.setItem('mineCtris_lastMode', 'depths'); } catch (_) {}
+    if (typeof metricsModePlayed === 'function') metricsModePlayed('depths');
+    requestPointerLock();
+  });
+
+  // dailyDepthsLaunch: seeded daily run
+  document.addEventListener('dailyDepthsLaunch', function () {
+    isDailyChallenge = false;
+    gameRng = null;
+    try { localStorage.setItem('mineCtris_lastMode', 'daily_depths'); } catch (_) {}
+    if (typeof metricsModePlayed === 'function') metricsModePlayed('daily_depths');
+    requestPointerLock();
+  });
+
+  // dungeonLaunch: tiered dungeon run (shallow_mines / deep_caverns / abyssal_rift / infinite)
+  document.addEventListener('dungeonLaunch', function (e) {
+    var dungeonId = e.detail && e.detail.dungeonId;
+    isDailyChallenge = false;
+    gameRng = null;
+    try { localStorage.setItem('mineCtris_lastMode', 'dungeon_' + (dungeonId || 'shallow_mines')); } catch (_) {}
+    if (typeof metricsModePlayed === 'function') metricsModePlayed('dungeon_' + (dungeonId || 'shallow_mines'));
+    requestPointerLock();
+  });
+  // ── End Depths launch handlers ─────────────────────────────────────────────
+
   // ── Expedition launch handler ──────────────────────────────────────────────
   // Triggered when the player clicks "Enter Biome" in the expedition world map.
   // Runs inside a user-gesture callchain (the original click), so pointer-lock

@@ -1903,6 +1903,152 @@ body {
   image-rendering: pixelated;
 }
 
+/* ── The Depths mode card — indigo/violet accent ── */
+.mode-card-depths {
+  border-color: rgba(120, 80, 220, 0.5);
+  box-shadow: 0 0 14px rgba(120, 80, 220, 0.15);
+}
+.mode-card-depths .mode-card-name {
+  color: #a57eff;
+  text-shadow: 0 0 6px #7b4fcc;
+}
+.mode-card-depths .mode-card-desc {
+  color: #c9b8ff;
+}
+.mode-card-depths:hover {
+  border-color: #a57eff !important;
+  box-shadow: 0 0 22px rgba(120, 80, 220, 0.45) !important;
+}
+.mode-card-depths.mode-card-highlighted {
+  border-color: #a57eff;
+  box-shadow: 0 0 28px rgba(120, 80, 220, 0.55);
+}
+
+/* ── Depths Variant Selector overlay ── */
+#depths-variant-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+}
+#depths-variant-panel {
+  background: rgba(8, 4, 24, 0.97);
+  border: 2px solid rgba(120, 80, 220, 0.6);
+  border-radius: 10px;
+  padding: 28px 32px 24px;
+  min-width: 360px;
+  max-width: 480px;
+  width: 90vw;
+  box-shadow: 0 0 40px rgba(120, 80, 220, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+#depths-variant-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+#depths-variant-icon {
+  font-size: 2em;
+}
+#depths-variant-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.85em;
+  color: #a57eff;
+  text-shadow: 0 0 8px #7b4fcc;
+  letter-spacing: 2px;
+}
+#depths-variant-subtitle {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.42em;
+  color: #c9b8ff;
+  opacity: 0.7;
+}
+#depths-variant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.depths-variant-btn {
+  display: grid;
+  grid-template-columns: 2em 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  background: rgba(120, 80, 220, 0.07);
+  border: 1px solid rgba(120, 80, 220, 0.3);
+  border-radius: 6px;
+  padding: 10px 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
+}
+.depths-variant-btn:hover:not(.depths-variant-btn-locked) {
+  border-color: #a57eff;
+  background: rgba(120, 80, 220, 0.18);
+}
+.dvb-icon {
+  grid-row: 1 / 3;
+  font-size: 1.4em;
+  text-align: center;
+}
+.dvb-name {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.6em;
+  color: #d4c4ff;
+  display: block;
+}
+.dvb-desc {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.38em;
+  color: rgba(180, 160, 255, 0.6);
+  display: block;
+  margin-top: 3px;
+  line-height: 1.5;
+}
+.depths-variant-divider {
+  height: 1px;
+  background: rgba(120, 80, 220, 0.25);
+  margin: 2px 0;
+}
+.depths-variant-btn-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: rgba(100, 100, 120, 0.3);
+}
+.dvb-lock {
+  grid-column: 2;
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.35em;
+  color: rgba(200, 180, 255, 0.5);
+  display: block;
+  margin-top: 4px;
+}
+#depths-variant-close {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.55em;
+  background: transparent;
+  border: 1px solid rgba(120, 80, 220, 0.3);
+  border-radius: 4px;
+  color: rgba(180, 160, 255, 0.6);
+  padding: 8px 14px;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: color 0.15s, border-color 0.15s;
+  margin-top: 4px;
+}
+#depths-variant-close:hover {
+  color: #a57eff;
+  border-color: rgba(120, 80, 220, 0.6);
+}
+
 /* ── Co-op mode card ── */
 .mode-card-coop {
   border-color: rgba(0, 180, 255, 0.5);
