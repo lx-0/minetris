@@ -211,6 +211,67 @@
         startBgMusic();
         setAmbientMood('menu');
       }
+
+      // Depths discovery prompt — shown once after 3+ games to new players who haven't tried The Depths
+      _maybeShowDepthsDiscoveryPrompt();
+    }
+
+    function _maybeShowDepthsDiscoveryPrompt() {
+      var promptEl = document.getElementById('depths-discovery-prompt');
+      if (!promptEl) return;
+
+      // Already dismissed permanently?
+      try {
+        if (localStorage.getItem('mineCtris_depthsPromptDismissed') === 'true') return;
+      } catch (_) {}
+
+      // Player must have 3+ games played
+      var stats = (typeof loadLifetimeStats === 'function') ? loadLifetimeStats() : null;
+      if (!stats || (stats.gamesPlayed || 0) < 3) return;
+
+      // Player must not have entered any Depths/Dungeon mode yet
+      try {
+        var seenRaw = localStorage.getItem('mineCtris_seenDungeonTiers');
+        var seen = seenRaw ? JSON.parse(seenRaw) : null;
+        // If seen is null it means the key was never written (no dungeon ever launched)
+        // If seen is a non-empty array the player has played dungeon tiers — skip
+        if (seen !== null && seen.length > 0) return;
+      } catch (_) { return; }
+
+      // Show the prompt
+      promptEl.style.display = 'block';
+      requestAnimationFrame(function () { promptEl.classList.add('ddp-visible'); });
+
+      // Wire buttons (idempotent — only bind once)
+      if (!promptEl._ddpBound) {
+        promptEl._ddpBound = true;
+
+        var showBtn = document.getElementById('ddp-show-me');
+        var laterBtn = document.getElementById('ddp-maybe-later');
+
+        function _dismissPrompt() {
+          promptEl.classList.remove('ddp-visible');
+          setTimeout(function () { promptEl.style.display = 'none'; }, 350);
+          try { localStorage.setItem('mineCtris_depthsPromptDismissed', 'true'); } catch (_) {}
+        }
+
+        if (showBtn) {
+          showBtn.addEventListener('click', function () {
+            _dismissPrompt();
+            // Scroll The Depths card into view and briefly highlight it
+            var depthsCard = document.getElementById('mode-card-depths');
+            if (depthsCard) {
+              depthsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              depthsCard.classList.add('mode-card-highlight');
+              setTimeout(function () { depthsCard.classList.remove('mode-card-highlight'); }, 2000);
+            }
+          });
+        }
+
+        if (laterBtn) {
+          laterBtn.addEventListener('click', _dismissPrompt);
+        }
+      }
     }
 
 
