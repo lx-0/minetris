@@ -975,6 +975,18 @@
         </div>
       </div>
 
+      <!-- Stats reset confirmation dialog -->
+      <div id="stats-reset-confirm-overlay" style="display:none;">
+        <div id="stats-reset-confirm-panel">
+          <div class="stats-reset-confirm-title">RESET STATS?</div>
+          <div class="stats-reset-confirm-body">This will permanently erase all lifetime stats and session history. This cannot be undone.</div>
+          <div class="stats-reset-confirm-buttons">
+            <button class="stats-reset-confirm-yes" onclick="_confirmStatsReset()">Reset Everything</button>
+            <button class="stats-reset-confirm-no" onclick="_closeStatsResetConfirm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Profile page overlay -->
       <div id="profile-overlay">
         <div id="profile-panel">

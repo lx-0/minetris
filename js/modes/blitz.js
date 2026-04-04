@@ -62,6 +62,10 @@ function triggerBlitzComplete() {
     highestComboCount:     sessionHighestComboCount,
     highestDifficultyTier: lastDifficultyTier,
     isDailyChallenge:      false,
+    tSpins:                sessionTSpins,
+    perfectClears:         sessionPerfectClears,
+    durationSecs:          120,
+    mode:                  'blitz',
   });
 
   // Log session for history graphs

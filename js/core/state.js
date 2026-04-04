@@ -426,6 +426,8 @@ let blocksPlaced = 0;
 let sessionCrafts = 0;
 let sessionConsumableCrafts = 0;
 let sessionHighestComboCount = 0;
+let sessionTSpins = 0;
+let sessionPerfectClears = 0;
 
 // ── Editor mode state ─────────────────────────────────────────────────────────
 // Free-fly no-gravity mode accessible via main menu "Create" or ?editor=1 URL param.

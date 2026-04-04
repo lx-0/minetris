@@ -285,6 +285,10 @@ function triggerGameOver() {
     highestComboCount: sessionHighestComboCount,
     highestDifficultyTier: lastDifficultyTier,
     isDailyChallenge,
+    tSpins: sessionTSpins,
+    perfectClears: sessionPerfectClears,
+    durationSecs: state.elapsedSeconds,
+    mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isSurvivalMode ? 'survival' : 'classic'),
   });
 
   // Log session for history graphs

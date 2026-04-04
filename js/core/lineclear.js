@@ -146,6 +146,7 @@ function checkLineClear(newBlocks) {
   // Consume T-spin flag from pieces.js
   _lcIsTSpin = (typeof lastPieceTSpin !== 'undefined' && lastPieceTSpin);
   if (typeof lastPieceTSpin !== 'undefined') lastPieceTSpin = false;
+  if (_lcIsTSpin) sessionTSpins++;
 
   // Perfect Clear: will the board be empty after removing these rows?
   // Count occupied cells outside the soon-to-be-cleared levels.
@@ -156,6 +157,7 @@ function checkLineClear(newBlocks) {
     });
     _lcPerfectClear = (_remainingCells === 0);
   }
+  if (_lcPerfectClear) sessionPerfectClears++;
 
   // Audio: rumble + arpeggio
   playLineClearRumble();

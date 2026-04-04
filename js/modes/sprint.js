@@ -78,6 +78,10 @@ function triggerSprintComplete() {
     highestComboCount:     sessionHighestComboCount,
     highestDifficultyTier: lastDifficultyTier,
     isDailyChallenge:      false,
+    tSpins:                sessionTSpins,
+    perfectClears:         sessionPerfectClears,
+    durationSecs:          Math.floor((sprintElapsedMs || 0) / 1000),
+    mode:                  'sprint',
   });
 
   // Log session for history graphs

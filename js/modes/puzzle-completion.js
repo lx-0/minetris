@@ -42,6 +42,10 @@ function _triggerPuzzleWin() {
       highestDifficultyTier: lastDifficultyTier,
       isDailyChallenge:      false,
       isPuzzleMode:          true,
+      tSpins:                sessionTSpins,
+      perfectClears:         sessionPerfectClears,
+      durationSecs:          typeof getGameState === 'function' ? Math.floor(getGameState().elapsedSeconds || 0) : 0,
+      mode:                  'puzzle',
     });
   }
 
