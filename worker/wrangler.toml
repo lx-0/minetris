@@ -10,7 +10,8 @@ bindings = [
   { name = "GUILD_OBJECTS", class_name = "GuildObject" },
   { name = "CLAN_WAR_OBJECTS", class_name = "ClanWarObject" },
   { name = "GUILD_CHAT_OBJECTS", class_name = "GuildChatObject" },
-  { name = "GUILD_EXPEDITION_OBJECTS", class_name = "GuildExpeditionObject" }
+  { name = "GUILD_EXPEDITION_OBJECTS", class_name = "GuildExpeditionObject" },
+  { name = "FRIENDS_PRESENCE", class_name = "FriendsPresence" }
 ]
 
 [[migrations]]
@@ -40,6 +41,10 @@ new_classes = ["GuildChatObject"]
 [[migrations]]
 tag = "v7"
 new_classes = ["GuildExpeditionObject"]
+
+[[migrations]]
+tag = "v8"
+new_classes = ["FriendsPresence"]
 
 [[kv_namespaces]]
 binding = "LEADERBOARD_KV"

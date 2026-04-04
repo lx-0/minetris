@@ -4064,6 +4064,126 @@ export class ClanWarObject {
   }
 }
 
+// ── FriendsPresence Durable Object ───────────────────────────────────────────
+// Single global hub for friend presence updates and invite relaying.
+// All clients connect to the same instance (name: "global").
+//
+//   GET /friends/presence/ws   — WebSocket upgrade
+//     Client sends:
+//       { type:'friend_presence', code, name, mode, friends:['CODE',...] }
+//       { type:'friend_invite',   from, fromName, to, mode, roomCode }
+//     Server sends to matching friends:
+//       { type:'friend_presence', code, name, mode }
+//       { type:'friend_presence_bulk', updates:[{ code, name, mode },...] }
+//       { type:'friend_invite',   from, fromName, to, mode, roomCode }
+
+export class FriendsPresence {
+  constructor(state, env) {
+    this.state   = state;
+    this.env     = env;
+    // Map<friendCode, { ws: WebSocket, mode: string, name: string, friends: Set<string> }>
+    this.clients = new Map();
+  }
+
+  async fetch(request) {
+    const upgradeHeader = request.headers.get('Upgrade');
+    if (!upgradeHeader || upgradeHeader.toLowerCase() !== 'websocket') {
+      return new Response('Expected WebSocket upgrade', { status: 426 });
+    }
+
+    const pair   = new WebSocketPair();
+    const [client, server] = Object.values(pair);
+    server.accept();
+
+    let myCode = null;
+
+    server.addEventListener('message', (event) => {
+      let msg;
+      try { msg = JSON.parse(event.data); } catch (e) { return; }
+
+      if (msg.type === 'friend_presence') {
+        const code = (msg.code || '').toString().toUpperCase();
+        if (!code) return;
+        myCode = code;
+        const friends = new Set(Array.isArray(msg.friends) ? msg.friends : []);
+        this.clients.set(code, { ws: server, mode: msg.mode || 'menu', name: msg.name || code, friends });
+
+        // Broadcast this player's presence to each connected mutual friend
+        const update = JSON.stringify({ type: 'friend_presence', code, mode: msg.mode || 'menu', name: msg.name || code });
+        for (const [otherCode, other] of this.clients) {
+          if (otherCode === code) continue;
+          if (other.ws.readyState !== 1 /* OPEN */) continue;
+          if (other.friends.has(code) || friends.has(otherCode)) {
+            try { other.ws.send(update); } catch (_) {}
+          }
+        }
+
+        // Send bulk snapshot of already-online friends to the newly connected client
+        const bulk = [];
+        for (const [otherCode, other] of this.clients) {
+          if (otherCode === code) continue;
+          if (friends.has(otherCode) && other.ws.readyState === 1) {
+            bulk.push({ code: otherCode, mode: other.mode, name: other.name });
+          }
+        }
+        if (bulk.length > 0) {
+          try { server.send(JSON.stringify({ type: 'friend_presence_bulk', updates: bulk })); } catch (_) {}
+        }
+
+      } else if (msg.type === 'friend_invite') {
+        const target = this.clients.get((msg.to || '').toString().toUpperCase());
+        if (target && target.ws.readyState === 1) {
+          try { target.ws.send(JSON.stringify(msg)); } catch (_) {}
+        }
+      }
+    });
+
+    const onClose = () => {
+      if (myCode) this.clients.delete(myCode);
+    };
+    server.addEventListener('close', onClose);
+    server.addEventListener('error', onClose);
+
+    return new Response(null, { status: 101, webSocket: client });
+  }
+}
+
+function _getFriendsPresenceStub(env) {
+  return env.FRIENDS_PRESENCE.get(env.FRIENDS_PRESENCE.idFromName('global'));
+}
+
+// ── Friend REST handlers ──────────────────────────────────────────────────────
+
+/**
+ * POST /api/friends/register
+ * Body: { code, name }  — registers a friend code → display name in KV.
+ * Used so other players can see your real name when adding by code.
+ */
+async function handleFriendsRegister(request, env) {
+  let body;
+  try { body = await request.json(); } catch (e) { return jsonResponse({ error: 'Invalid JSON' }, 400); }
+  const code = (body.code || '').toString().toUpperCase().replace(/\s/g, '');
+  const name = (body.name || '').toString().slice(0, 32).trim();
+  if (!/^[A-Z0-9]{6}$/.test(code)) return jsonResponse({ error: 'Invalid code' }, 400);
+  await env.LEADERBOARD_KV.put(`friend:code:${code}`, JSON.stringify({ name: name || code, registeredAt: Date.now() }), { expirationTtl: 86400 * 90 });
+  return jsonResponse({ ok: true });
+}
+
+/**
+ * GET /api/friends/lookup/:code
+ * Returns the display name registered for a friend code.
+ */
+async function handleFriendsLookup(code, env) {
+  const code2 = (code || '').toUpperCase().replace(/\s/g, '');
+  if (!/^[A-Z0-9]{6}$/.test(code2)) return jsonResponse({ error: 'Invalid code' }, 400);
+  const raw = await env.LEADERBOARD_KV.get(`friend:code:${code2}`);
+  if (!raw) return jsonResponse({ found: false });
+  try {
+    const data = JSON.parse(raw);
+    return jsonResponse({ found: true, code: code2, name: data.name });
+  } catch (e) { return jsonResponse({ found: false }); }
+}
+
 // ── Clan War API Handlers ─────────────────────────────────────────────────────
 
 /**
@@ -7348,6 +7468,17 @@ export default {
     } else if (method === 'GET' && /^\/guilds\/[A-Za-z0-9]{3,5}$/.test(url.pathname)) {
       const tag = url.pathname.split('/')[2];
       return handleGuildProfilePage(tag, env);  // return directly — not an API call
+
+    // ── Friend presence WebSocket ──────────────────────────────────────────
+    } else if (url.pathname === '/friends/presence/ws') {
+      return _getFriendsPresenceStub(env).fetch(request);
+
+    // ── Friend REST ────────────────────────────────────────────────────────
+    } else if (method === 'POST' && url.pathname === '/api/friends/register') {
+      response = await handleFriendsRegister(request, env);
+    } else if (method === 'GET' && /^\/api\/friends\/lookup\/[A-Z0-9]{6}$/.test(url.pathname)) {
+      const code = url.pathname.split('/').pop();
+      response = await handleFriendsLookup(code, env);
 
     } else {
       response = jsonResponse({ error: 'Not found' }, 404);

@@ -126,7 +126,8 @@ function _friendsSendPresence(mode) {
 function friendsConnectPresence() {
   _friendsLoadSeen();
   if (_friendsPresenceWs) return;
-  const wsUrl = FRIENDS_WORKER_URL.replace(/^https/, 'wss').replace(/^http(?!s)/, 'ws');
+  const wsBase = FRIENDS_WORKER_URL.replace(/^https/, 'wss').replace(/^http(?!s)/, 'ws');
+  const wsUrl  = wsBase + '/friends/presence/ws';
   try { _friendsPresenceWs = new WebSocket(wsUrl); }
   catch (e) { return; }
 
@@ -354,10 +355,22 @@ function _friendsRenderList() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
+function _friendsRegisterCode() {
+  const code = friendsGetMyCode();
+  const name = _friendsMyName();
+  fetch(FRIENDS_WORKER_URL + '/api/friends/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: code, name: name }),
+  }).catch(function () {});
+}
+
 function initFriends() {
   _friendsLoadSeen();
   // Ensure the player has a friend code on first load
   friendsGetMyCode();
+  // Register code → display name server-side so others can look us up
+  _friendsRegisterCode();
 
   // Panel close
   var closeBtn = document.getElementById('friends-panel-close');
