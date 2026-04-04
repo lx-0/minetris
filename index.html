@@ -436,6 +436,12 @@
                   <div class="mode-card-name">Expeditions</div>
                   <div class="mode-card-desc">Explore biomes. Gather resources. Build your world.</div>
                 </div>
+                <div class="mode-card mode-card-boss-battle" id="mode-card-boss_battle" data-mode="boss_battle" tabindex="0" role="button" aria-label="Boss Battle mode — Defeat Minecraft bosses through Tetris skill">
+                  <div class="mode-card-icon">&#128081;</div>
+                  <div class="mode-card-name">Boss Battle</div>
+                  <div class="mode-card-desc">Clear lines to slay the Wither, Ender Dragon, and Warden. Earn exclusive skins.</div>
+                  <div class="mode-card-pb" id="mode-pb-boss_battle"></div>
+                </div>
               </div>
             </div>
             <!-- ── MULTIPLAYER ── -->
@@ -834,6 +840,17 @@
         <span id="replay-controls-label">&#9654; REPLAY</span>
         <span id="replay-speed-display">1x</span>
         <span class="replay-hint">SPACE = pause &nbsp; 1/2/4 = speed &nbsp; ESC = stop</span>
+      </div>
+
+      <!-- Boss Victory screen -->
+      <div id="boss-victory-screen" style="display:none;">
+        <div id="bvs-boss-icon"></div>
+        <div id="bvs-boss-name"></div>
+        <div id="bvs-title">DEFEATED!</div>
+        <div id="bvs-stats"></div>
+        <div id="bvs-rewards"></div>
+        <button id="bvs-play-again-btn">Fight Another Boss</button>
+        <button id="bvs-main-menu-btn">Main Menu</button>
       </div>
 
       <!-- Blitz complete screen -->
@@ -1702,6 +1719,38 @@
         </div>
       </div>
 
+      <!-- Boss Battle selector overlay -->
+      <div id="boss-selector-overlay" style="display:none;" role="dialog" aria-label="Boss Battle — Choose Your Enemy">
+        <div id="boss-selector-panel">
+          <div id="boss-selector-header">&#128081; BOSS BATTLE</div>
+          <div id="boss-selector-desc">Clear lines to deal damage. Combos and T-Spins hit harder. Defeat bosses to earn exclusive cosmetics.</div>
+          <div id="boss-selector-buttons">
+            <button class="boss-select-btn" id="boss-btn-wither" data-boss="wither">
+              <span class="bsb-icon">&#128128;</span>
+              <span class="bsb-name">The Wither</span>
+              <span class="bsb-hp">100 HP</span>
+              <span class="bsb-desc">Sends obsidian garbage rows</span>
+              <span class="bsb-status" id="boss-status-wither"></span>
+            </button>
+            <button class="boss-select-btn" id="boss-btn-ender_dragon" data-boss="ender_dragon">
+              <span class="bsb-icon">&#128009;</span>
+              <span class="bsb-name">Ender Dragon</span>
+              <span class="bsb-hp">150 HP</span>
+              <span class="bsb-desc">Scrambles your piece queue</span>
+              <span class="bsb-status" id="boss-status-ender_dragon"></span>
+            </button>
+            <button class="boss-select-btn" id="boss-btn-warden" data-boss="warden">
+              <span class="bsb-icon">&#127761;</span>
+              <span class="bsb-name">The Warden</span>
+              <span class="bsb-hp">200 HP</span>
+              <span class="bsb-desc">Plunges the board into darkness</span>
+              <span class="bsb-status" id="boss-status-warden"></span>
+            </button>
+          </div>
+          <button id="boss-selector-close">&#8592; Back</button>
+        </div>
+      </div>
+
       <!-- Expedition Map overlay -->
       <div id="expedition-map-overlay" style="display:none;" role="dialog" aria-label="Expedition World Map">
         <div id="expedition-map-panel">
@@ -2118,6 +2167,35 @@
       <!-- Battle HUD badge (shown in-game when isBattleMode) -->
       <div id="battle-mode-badge" style="display:none;">&#9876; BATTLE</div>
 
+      <!-- Boss Battle HUD badge -->
+      <div id="boss-mode-badge" style="display:none;"></div>
+
+      <!-- Boss Battle health bar HUD -->
+      <div id="boss-hud" style="display:none;">
+        <div id="boss-hud-top">
+          <span id="boss-hud-icon"></span>
+          <span id="boss-hud-name"></span>
+          <span id="boss-attack-timer" class="boss-attack-timer"></span>
+        </div>
+        <div id="boss-hp-bar">
+          <div id="boss-hp-fill"></div>
+        </div>
+        <div id="boss-hp-text"></div>
+      </div>
+
+      <!-- Boss darkness overlay (Warden attack) -->
+      <div id="boss-darkness-overlay" style="display:none;"></div>
+
+      <!-- Boss intro splash -->
+      <div id="boss-intro-splash" style="display:none;">
+        <div class="boss-intro-icon"></div>
+        <div class="boss-intro-name"></div>
+        <div class="boss-intro-desc"></div>
+      </div>
+
+      <!-- Boss attack warning banner -->
+      <div id="boss-attack-banner" style="display:none;"></div>
+
       <!-- Score Race timer HUD (shown during Score Race match) -->
       <div id="battle-score-race-hud" style="display:none;">
         <div id="battle-score-race-timer">3:00</div>
@@ -2386,6 +2464,7 @@
     <script src="js/world/cave-mouth.js"></script>
     <script src="js/world/world-spawn.js"></script>
     <script src="js/modes/dungeon-modifier.js"></script>
+    <script src="js/modes/boss-battle.js"></script>
     <script src="js/modes/infinite-weekly.js"></script>
     <script src="js/ui/notifications.js"></script>
     <script src="js/ui/mode-select.js"></script>

@@ -209,6 +209,7 @@ function animate() {
       if (typeof updateSeasonalParticles === 'function') updateSeasonalParticles(delta);
       if (typeof updateHazardBlocks === 'function') updateHazardBlocks(delta);
       if (typeof tickDungeonModifiers === 'function') tickDungeonModifiers(delta);
+      if (typeof tickBossBattle === 'function') tickBossBattle(delta);
       updateFallingPieces(delta);
       if (isBattleMode && typeof battleHud !== 'undefined') battleHud.tick(delta);
       if (isBattleMode && typeof checkBattleScoreRace === 'function') checkBattleScoreRace(delta);

@@ -6,18 +6,19 @@
 // Level 0 = unlocked from the start.
 
 const MODE_UNLOCK_TABLE = {
-  classic:    0,
-  sprint:     2,
-  blitz:      2,
-  puzzle:     4,
-  daily:      6,
-  weekly:     6,
-  survival:   8,
-  battle:     10,
-  expedition: 12,
-  depths:     14,
-  coop:       16,
-  editor:     20,
+  classic:      0,
+  sprint:       2,
+  blitz:        2,
+  puzzle:       4,
+  daily:        6,
+  weekly:       6,
+  survival:     8,
+  battle:       10,
+  expedition:   12,
+  depths:       14,
+  coop:         16,
+  boss_battle:  14,  // unlocked after entering any dungeon (checked separately in boss-battle.js)
+  editor:       20,
 };
 
 // Ordered list for unlock notification lookups

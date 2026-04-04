@@ -248,6 +248,9 @@ function resetGame() {
   // Reset dungeon modifier state (Entropy and session tracking)
   if (typeof resetDungeonModifiers === 'function') resetDungeonModifiers();
 
+  // Reset boss battle state
+  if (typeof resetBossBattle === 'function') resetBossBattle();
+
   // Reset puzzle mode state
   isPuzzleMode = false;
   puzzlePuzzleId = 1;

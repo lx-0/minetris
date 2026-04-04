@@ -86,7 +86,7 @@
       // Render World Card stats panel
       if (typeof renderWorldCard === "function") renderWorldCard();
       // Apply highlight to the specified mode card
-      ["classic", "sprint", "blitz", "practice", "daily", "weekly", "puzzle", "survival", "depths", "expedition", "coop", "battle", "tournament"].forEach(function (mode) {
+      ["classic", "sprint", "blitz", "practice", "daily", "weekly", "puzzle", "survival", "depths", "expedition", "boss_battle", "coop", "battle", "tournament"].forEach(function (mode) {
         const cardEl = document.getElementById("mode-card-" + mode);
         if (cardEl) {
           if (mode === highlightMode) {
@@ -563,6 +563,115 @@
       });
     })();
     // ── End Depths card setup ──
+
+    // ── Boss Battle mode card ──────────────────────────────────────────────────
+    (function _initBossBattleCard() {
+      var bossCard     = document.getElementById('mode-card-boss_battle');
+      var bossOverlay  = document.getElementById('boss-selector-overlay');
+      var bossCloseBtn = document.getElementById('boss-selector-close');
+      if (!bossCard || !bossOverlay) return;
+
+      function _refreshBossStatuses() {
+        ['wither', 'ender_dragon', 'warden'].forEach(function (bossId) {
+          var statusEl = document.getElementById('boss-status-' + bossId);
+          if (!statusEl) return;
+          var defeated = (typeof getBossDefeated === 'function') ? getBossDefeated(bossId) : false;
+          statusEl.textContent = defeated ? '✓ Defeated' : '';
+          statusEl.style.color = defeated ? '#2ecc71' : '';
+        });
+      }
+
+      function openBossSelector() {
+        _refreshBossStatuses();
+        bossOverlay.style.display = 'flex';
+      }
+
+      function closeBossSelector() {
+        bossOverlay.style.display = 'none';
+      }
+
+      bossCard.addEventListener('click', function () {
+        if (typeof isBossBattleUnlocked === 'function' && !isBossBattleUnlocked()) {
+          // Show a brief hint if locked
+          var pbEl = document.getElementById('mode-pb-boss_battle');
+          if (pbEl) {
+            pbEl.textContent = 'Complete a Dungeon run to unlock';
+            pbEl.style.color = '#e74c3c';
+          }
+          return;
+        }
+        openBossSelector();
+      });
+
+      if (bossCloseBtn) bossCloseBtn.addEventListener('click', closeBossSelector);
+      bossOverlay.addEventListener('click', function (e) {
+        if (e.target === bossOverlay) closeBossSelector();
+      });
+
+      // Boss button click → start boss battle
+      bossOverlay.addEventListener('click', function (e) {
+        var btn = e.target.closest('.boss-select-btn');
+        if (!btn) return;
+        var bossId = btn.dataset.boss;
+        if (!bossId) return;
+        closeBossSelector();
+        hideModeSelect();
+        // Set boss battle mode flags
+        isBossBattleMode = true;
+        isDailyChallenge = false;
+        gameRng = null;
+        if (typeof metricsModePlayed === 'function') metricsModePlayed('boss_battle');
+        // Wire victory-screen buttons (idempotent)
+        _wireBossVictoryButtons();
+        requestPointerLock();
+        // Start boss session once pointer lock is acquired
+        document.addEventListener('pointerlockchange', function _onLock() {
+          document.removeEventListener('pointerlockchange', _onLock);
+          if (typeof startBossBattle === 'function') startBossBattle(bossId);
+        });
+      });
+
+      // Populate mode card personal best
+      var pbEl = document.getElementById('mode-pb-boss_battle');
+      if (pbEl && typeof isBossBattleUnlocked === 'function' && isBossBattleUnlocked()) {
+        var defeated = [];
+        ['wither', 'ender_dragon', 'warden'].forEach(function (b) {
+          if (typeof getBossDefeated === 'function' && getBossDefeated(b)) defeated.push(b.replace('_', ' '));
+        });
+        if (defeated.length > 0) {
+          pbEl.textContent = '✓ ' + defeated.join(', ');
+          pbEl.style.color = '#2ecc71';
+        }
+      }
+    })();
+    // ── End Boss Battle card setup ──
+
+    function _wireBossVictoryButtons() {
+      var playAgainBtn = document.getElementById('bvs-play-again-btn');
+      var mainMenuBtn  = document.getElementById('bvs-main-menu-btn');
+      if (playAgainBtn && !playAgainBtn._bvsWired) {
+        playAgainBtn._bvsWired = true;
+        playAgainBtn.addEventListener('click', function () {
+          var el = document.getElementById('boss-victory-screen');
+          if (el) { el.classList.remove('bvs-visible'); el.style.display = 'none'; }
+          resetGame();
+          var bossOverlay = document.getElementById('boss-selector-overlay');
+          if (bossOverlay) bossOverlay.style.display = 'flex';
+          var modeSelectEl = document.getElementById('mode-select');
+          if (modeSelectEl) modeSelectEl.style.display = 'flex';
+          var blockerEl = document.getElementById('blocker');
+          if (blockerEl) blockerEl.style.display = 'none';
+        });
+      }
+      if (mainMenuBtn && !mainMenuBtn._bvsWired) {
+        mainMenuBtn._bvsWired = true;
+        mainMenuBtn.addEventListener('click', function () {
+          var el = document.getElementById('boss-victory-screen');
+          if (el) { el.classList.remove('bvs-visible'); el.style.display = 'none'; }
+          resetGame();
+        });
+      }
+    }
 
     const survivalCardEl = document.getElementById("mode-card-survival");
     if (survivalCardEl) {

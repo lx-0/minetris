@@ -308,6 +308,63 @@ const COSMETIC_REGISTRY = [
     description:     'Shifting depth colors — animated border',
   },
 
+  // ── Boss Battle Cosmetics ─────────────────────────────────────────────────
+  // Unlocked by defeating each boss in Boss Battle mode.
+  {
+    id:              'boss_block_skin_wither',
+    category:        'block_skin',
+    name:            'Wither Bone',
+    rarity:          'epic',
+    unlockCondition: { type: 'boss_defeat', value: 'wither' },
+    assets:          { themeKey: 'wither' },
+    description:     'Dark bone-and-soul sand texture — proof of Wither mastery',
+  },
+  {
+    id:              'boss_title_wither_slayer',
+    category:        'title',
+    name:            'Wither Slayer',
+    rarity:          'epic',
+    unlockCondition: { type: 'boss_defeat', value: 'wither' },
+    assets:          { displayText: 'Wither Slayer', nameColor: '#888' },
+    description:     'Defeated the Wither in Boss Battle mode',
+  },
+  {
+    id:              'boss_block_skin_ender',
+    category:        'block_skin',
+    name:            'End Stone',
+    rarity:          'legendary',
+    unlockCondition: { type: 'boss_defeat', value: 'ender_dragon' },
+    assets:          { themeKey: 'ender' },
+    description:     'Purple-veined End Stone blocks — proof of Dragon mastery',
+  },
+  {
+    id:              'boss_title_dragon_slayer',
+    category:        'title',
+    name:            'Dragon Slayer',
+    rarity:          'legendary',
+    unlockCondition: { type: 'boss_defeat', value: 'ender_dragon' },
+    assets:          { displayText: 'Dragon Slayer', nameColor: '#ce8aff' },
+    description:     'Defeated the Ender Dragon in Boss Battle mode',
+  },
+  {
+    id:              'boss_block_skin_warden',
+    category:        'block_skin',
+    name:            'Sculk',
+    rarity:          'legendary',
+    unlockCondition: { type: 'boss_defeat', value: 'warden' },
+    assets:          { themeKey: 'sculk' },
+    description:     'Deep Dark sculk texture — proof of Warden mastery',
+  },
+  {
+    id:              'boss_title_warden_walker',
+    category:        'title',
+    name:            'Warden Walker',
+    rarity:          'legendary',
+    unlockCondition: { type: 'boss_defeat', value: 'warden' },
+    assets:          { displayText: 'Warden Walker', nameColor: '#5dade2' },
+    description:     'Defeated the Warden in Boss Battle mode',
+  },
+
 ];
 
 // ── Persistence helpers ─────────────────────────────────────────────────────────
@@ -476,6 +533,9 @@ function checkUnlockCondition(cosmetic) {
     }
     case 'infinite_depths_floor': {
       return _loadHighestInfiniteDepthsFloor() >= cond.value;
+    }
+    case 'boss_defeat': {
+      try { return localStorage.getItem('mineCtris_bossDefeated_' + cond.value) === 'true'; } catch (_) { return false; }
     }
     case 'season': {
       // Season unlock — not yet wired

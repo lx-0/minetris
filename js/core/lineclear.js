@@ -148,6 +148,14 @@ function checkLineClear(newBlocks) {
   if (typeof lastPieceTSpin !== 'undefined') lastPieceTSpin = false;
   if (_lcIsTSpin) sessionTSpins++;
 
+  // Boss Battle: deal damage from this line clear
+  if (typeof isBossBattleMode !== 'undefined' && isBossBattleMode) {
+    if (typeof bossDealDamage === 'function') {
+      var _bossCombo = (typeof comboCount !== 'undefined') ? comboCount : 1;
+      bossDealDamage(completeLevels.length, _bossCombo, _lcIsTSpin);
+    }
+  }
+
   // Perfect Clear: will the board be empty after removing these rows?
   // Count occupied cells outside the soon-to-be-cleared levels.
   {
