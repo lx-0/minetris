@@ -1,72 +1,57 @@
-// tutorial.js — First-run interactive tutorial (v2.0).
-// Shows a ~30-second guided intro on the player's very first visit.
-// Teaches mining in context with slowed piece speed and arrow indicators.
-// Each step advances on a specific player action; a Skip button is always visible.
+// tutorial.js — First-run interactive tutorial (v3.0).
+// 5-step guided overlay shown at the start of the player's very first Classic game.
+// Each step pauses gameplay, highlights the relevant control, and shows a "Got it!" button.
+// A Skip button is always visible so experienced players can bail immediately.
 // Requires: state.js loaded first (for global flags).
 
 const TUTORIAL_DONE_KEY = 'mineCtris_tutorialDone';
 const CRAFT_HINT_KEY    = 'mineCtris_craftHintShown';
 
-// Step definitions — trigger values matched by tutorialNotify(event).
-// Steps with autoDelay auto-advance after that many seconds regardless of trigger.
-// 'dismiss' steps show a "Got it!" button.
-// slowPieces: true → pieces fall at 50% speed during this step.
-// suppressSpawn: true → no new pieces spawn during this step.
-// arrow: 'down' | 'crosshair' | null → which arrow indicator to show.
+// ── Step definitions ──────────────────────────────────────────────────────────
+// trigger: not used for pause-based flow (all steps advance via "Got it!" button).
+// highlight: id of the icon variant shown in #tutorial-highlight-icon.
+// pauseGame: true on all real steps; false only on the final "You're ready!" wrap-up.
 const TUTORIAL_STEPS = [
   {
-    id: 'falling',
-    text: 'A piece is falling!',
-    subtext: 'Watch it descend slowly.',
-    trigger: 'pieceLand',
-    autoDelay: 8,
-    slowPieces: true,
-    suppressSpawn: true,
-    arrow: 'down',
+    id: 'move',
+    text: 'Move & Rotate',
+    subtext: 'Use WASD or Arrow Keys to steer the falling piece. Press Q / E (or Z / X) to rotate it.',
+    highlight: 'move',
+    pauseGame: true,
   },
   {
-    id: 'mine',
-    text: 'Mine this block before it lands!',
-    subtext: 'Aim at any block and left-click to break it.',
-    trigger: 'blockMine',
-    slowPieces: true,
-    suppressSpawn: true,
-    arrow: 'crosshair',
+    id: 'drop',
+    text: 'Hard Drop',
+    subtext: 'Press Space to instantly slam the piece to the bottom. On mobile, swipe down fast.',
+    highlight: 'drop',
+    pauseGame: true,
   },
   {
-    id: 'mined',
-    text: 'Nice! Mining clears space and gives you resources.',
-    subtext: 'Mined blocks go into your inventory.',
-    trigger: null,
-    autoDelay: 3,
-    slowPieces: true,
-    suppressSpawn: true,
-    arrow: null,
+    id: 'hold',
+    text: 'Hold Piece',
+    subtext: 'Press Shift (or C) to save the current piece. Tap again later to swap it back in.',
+    highlight: 'hold',
+    pauseGame: true,
   },
   {
-    id: 'lines',
-    text: 'Lines clear when a full row is complete — keep mining and they\'ll happen naturally!',
-    subtext: null,
-    trigger: null,
-    autoDelay: 6,
-    slowPieces: true,
-    suppressSpawn: false,
-    arrow: null,
+    id: 'craft',
+    text: 'Ore Blocks & Crafting',
+    subtext: 'Mine gold, diamond and lava blocks as they fall — collect materials, then press C to craft tools and power-ups.',
+    highlight: 'craft',
+    pauseGame: true,
   },
   {
-    id: 'done',
-    text: 'You\'re ready. Good luck!',
-    subtext: null,
-    trigger: 'dismiss',
-    slowPieces: false,
-    suppressSpawn: false,
-    arrow: null,
+    id: 'score',
+    text: 'Line Clears & Scoring',
+    subtext: 'Fill a complete row to clear it. Clear multiple rows at once for big bonuses. Dungeon entries award bonus XP!',
+    highlight: 'score',
+    pauseGame: true,
   },
 ];
 
-let _tutorialActive = false;
-let _tutorialStep = 0;
-let _tutorialStepAge = 0; // seconds spent on current step
+let _tutorialActive  = false;
+let _tutorialPaused  = false; // true while any pauseGame step is showing
+let _tutorialStep    = 0;
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -74,34 +59,17 @@ let _tutorialStepAge = 0; // seconds spent on current step
 function initTutorial() {
   if (_isTutorialDone()) return;
   _tutorialActive = true;
-  _tutorialStep = 0;
-  _tutorialStepAge = 0;
+  _tutorialStep   = 0;
   _showStep(0);
 }
 
 /**
- * Notify the tutorial that a player action occurred.
- * @param {string} event  One of: 'pieceLand', 'blockMine', 'blockPlace', 'lineClear', 'cameraMove', 'craftingOpen'
+ * Advance to the next step (called by the "Got it!" button).
+ * On the last step this ends the tutorial instead.
  */
-function tutorialNotify(event) {
+function dismissTutorialStep() {
   if (!_tutorialActive) return;
-  const step = TUTORIAL_STEPS[_tutorialStep];
-  if (step && step.trigger === event) {
-    _advanceStep();
-  }
-}
-
-/**
- * Tick the tutorial. Call every frame during active gameplay.
- * @param {number} delta  Seconds since last frame.
- */
-function updateTutorial(delta) {
-  if (!_tutorialActive) return;
-  _tutorialStepAge += delta;
-  const step = TUTORIAL_STEPS[_tutorialStep];
-  if (step && step.autoDelay && _tutorialStepAge >= step.autoDelay) {
-    _advanceStep();
-  }
+  _advanceStep();
 }
 
 /** Skip the tutorial immediately. */
@@ -109,18 +77,34 @@ function skipTutorial() {
   _endTutorial();
 }
 
-/** Returns true when tutorial wants pieces to fall at 50% speed. */
-function isTutorialSlowActive() {
-  if (!_tutorialActive) return false;
-  const step = TUTORIAL_STEPS[_tutorialStep];
-  return step && step.slowPieces === true;
+/**
+ * Notify the tutorial that a player action occurred.
+ * Kept for compatibility — no steps currently advance on events,
+ * but callers in lineclear.js / input.js etc. still fire this.
+ */
+function tutorialNotify(/* event */) {
+  // no-op in v3.0 — all advancement is via Got it! / Skip
 }
 
-/** Returns true when tutorial wants to suppress new piece spawns. */
+/**
+ * Tick the tutorial — no auto-advance timers in v3.0.
+ * Kept so game-loop.js call continues to work.
+ */
+function updateTutorial(/* delta */) {}
+
+/** Returns true when the tutorial wants gameplay completely paused. */
+function isTutorialPaused() {
+  return _tutorialPaused;
+}
+
+/** Returns true when tutorial wants pieces to fall at 50% speed (unused in v3, kept for compat). */
+function isTutorialSlowActive() {
+  return false;
+}
+
+/** Returns true when tutorial wants to suppress new piece spawns (unused in v3, kept for compat). */
 function isTutorialSpawnSuppressed() {
-  if (!_tutorialActive) return false;
-  const step = TUTORIAL_STEPS[_tutorialStep];
-  return step && step.suppressSpawn === true;
+  return false;
 }
 
 /** Returns true when the tutorial is actively running. */
@@ -188,7 +172,8 @@ function _showStep(idx) {
   const subtextEl   = document.getElementById('tutorial-subtext');
   const dismissBtn  = document.getElementById('tutorial-dismiss-btn');
   const stepCountEl = document.getElementById('tutorial-step-count');
-  const ckeyEl      = document.getElementById('tutorial-ckey-icon');
+  const hlIconEl    = document.getElementById('tutorial-highlight-icon');
+  // Legacy arrow indicators — hide them in v3
   const arrowDown   = document.getElementById('tutorial-arrow-down');
   const arrowCross  = document.getElementById('tutorial-arrow-crosshair');
 
@@ -203,22 +188,9 @@ function _showStep(idx) {
     subtextEl.style.display = step.subtext ? 'block' : 'none';
   }
 
-  // Show dismiss button only on the final step
+  // "Got it!" shown on every step
   if (dismissBtn) {
-    dismissBtn.style.display = step.trigger === 'dismiss' ? 'inline-block' : 'none';
-  }
-
-  // Hide C-key icon (not used in v2.0 steps but element may still exist)
-  if (ckeyEl) {
-    ckeyEl.style.display = step.showCKey ? 'flex' : 'none';
-  }
-
-  // Arrow indicators
-  if (arrowDown) {
-    arrowDown.style.display = step.arrow === 'down' ? 'block' : 'none';
-  }
-  if (arrowCross) {
-    arrowCross.style.display = step.arrow === 'crosshair' ? 'block' : 'none';
+    dismissBtn.style.display = 'inline-block';
   }
 
   // Step counter e.g. "2 / 5"
@@ -226,17 +198,56 @@ function _showStep(idx) {
     stepCountEl.textContent = (idx + 1) + ' / ' + TUTORIAL_STEPS.length;
   }
 
+  // Highlight icon — swap CSS class on the icon container
+  if (hlIconEl) {
+    hlIconEl.className = 'tutorial-hl-' + (step.highlight || '');
+    hlIconEl.style.display = step.highlight ? 'flex' : 'none';
+    hlIconEl.innerHTML = _buildHighlightHTML(step.highlight);
+  }
+
+  // Hide legacy arrows
+  if (arrowDown)  arrowDown.style.display  = 'none';
+  if (arrowCross) arrowCross.style.display = 'none';
+
+  // Pause gameplay while this step is showing
+  _tutorialPaused = !!step.pauseGame;
+
   overlayEl.style.display = 'flex';
+}
+
+/** Returns the inner HTML for a highlight icon given a highlight key. */
+function _buildHighlightHTML(key) {
+  switch (key) {
+    case 'move':
+      return (
+        '<div class="thl-grid">' +
+          '<span></span><span class="thl-key">&#x2191;</span><span></span>' +
+          '<span class="thl-key">&#x2190;</span><span class="thl-key">&#x2193;</span><span class="thl-key">&#x2192;</span>' +
+          '<span class="thl-sep">+</span>' +
+          '<span class="thl-key thl-wide">Q</span><span class="thl-sep">/</span><span class="thl-key thl-wide">E</span>' +
+        '</div>'
+      );
+    case 'drop':
+      return '<span class="thl-key thl-spacebar">SPACE</span>';
+    case 'hold':
+      return '<span class="thl-key thl-widekey">SHIFT</span>';
+    case 'craft':
+      return '<span class="thl-key thl-ckey">C</span>';
+    case 'score':
+      return '<span class="thl-score-icon">&#x1F4CA;</span>';
+    default:
+      return '';
+  }
 }
 
 function _advanceStep() {
   _tutorialStep++;
-  _tutorialStepAge = 0;
+  _tutorialPaused = false;
   _showStep(_tutorialStep);
 }
 
 function _endTutorial() {
-  // Metrics: distinguish between completing all steps vs skipping early
+  // Metrics: distinguish complete vs skip
   var reachedFinalStep = _tutorialStep >= TUTORIAL_STEPS.length - 1;
   if (reachedFinalStep) {
     if (typeof metricsTutorialComplete === 'function') metricsTutorialComplete();
@@ -244,6 +255,7 @@ function _endTutorial() {
     if (typeof metricsTutorialSkip === 'function') metricsTutorialSkip();
   }
   _tutorialActive = false;
+  _tutorialPaused = false;
   _markTutorialDone();
   // Transition from minimal to full menu for next visit
   var instrEl = document.getElementById('instructions');
@@ -252,9 +264,4 @@ function _endTutorial() {
   if (typeof awardTutorialXP === 'function') awardTutorialXP();
   const overlayEl = document.getElementById('tutorial-overlay');
   if (overlayEl) overlayEl.style.display = 'none';
-  // Hide arrows
-  const arrowDown = document.getElementById('tutorial-arrow-down');
-  const arrowCross = document.getElementById('tutorial-arrow-crosshair');
-  if (arrowDown) arrowDown.style.display = 'none';
-  if (arrowCross) arrowCross.style.display = 'none';
 }

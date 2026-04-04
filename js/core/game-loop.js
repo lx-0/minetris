@@ -38,7 +38,7 @@ function animate() {
   // Poll gamepad each frame so movement flags and one-shot actions stay in sync.
   if (typeof pollGamepad === 'function') pollGamepad();
 
-  if (!isGameOver && !isPaused) {
+  if (!isGameOver && !isPaused && !(typeof isTutorialPaused === 'function' && isTutorialPaused())) {
     // Fire recorded inputs during replay playback
     if (typeof replayTick === 'function' && typeof isReplayMode !== 'undefined' && isReplayMode) {
       replayTick(typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);

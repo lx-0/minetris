@@ -431,11 +431,11 @@ function init() {
         if (typeof startBgMusic === "function") startBgMusic();
         // Transition from menu mood → calm when gameplay begins
         if (typeof forceAmbientMood === "function") forceAmbientMood("calm");
-        // First-run tutorial (v2.0 — starts immediately with falling piece)
+        // First-run tutorial (v3.0 — 5-step pause-based overlay)
         if (typeof initTutorial === "function" &&
             !(typeof isReplayMode !== 'undefined' && isReplayMode)) {
           initTutorial();
-          // Wire skip / dismiss buttons
+          // Wire skip / dismiss buttons (bound once; safe to re-enter on resume)
           const skipBtn = document.getElementById("tutorial-skip-btn");
           if (skipBtn && !skipBtn._tutorialBound) {
             skipBtn._tutorialBound = true;
@@ -446,8 +446,9 @@ function init() {
           const dismissBtn = document.getElementById("tutorial-dismiss-btn");
           if (dismissBtn && !dismissBtn._tutorialBound) {
             dismissBtn._tutorialBound = true;
+            // "Got it!" advances to the next step; skipTutorial ends on the last step
             dismissBtn.addEventListener("click", function () {
-              if (typeof skipTutorial === "function") skipTutorial();
+              if (typeof dismissTutorialStep === "function") dismissTutorialStep();
             });
           }
         }
