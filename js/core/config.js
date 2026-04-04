@@ -522,12 +522,62 @@ const COSMETIC_CRYSTAL_TRAIL_EMISSIVE = {
   3: 0xffee44, 4: 0x88ffee, 6: 0xff4488, 7: 0xddaaff, 8: 0x00bbff,
 };
 
+// Desert biome — sandy yellows, terracotta oranges, dry browns
+// Unlocked at expedition start when the desert biome node is selected.
+const BIOME_DESERT_COLORS = [
+  null,
+  0xc8a86a, // 1 → warm sand
+  0xb8864a, // 2 → dry sandstone
+  0xe8c870, // 3 → sun-bleached gold
+  0xf0d890, // 4 → pale dune crest
+  0xa06030, // 5 → terracotta
+  0xd04010, // 6 → red sand
+  0x886040, // 7 → dark clay
+  0x6a3820, // 8 → deep red earth
+];
+const BIOME_DESERT_TRAIL_EMISSIVE = {
+  3: 0xe8c870,
+  4: 0xf0d890,
+  6: 0xd04010,
+};
+
+// Desert — "Ancient Sandstone" board skin
+const COSMETIC_SANDSTONE_BOARD_COLORS = [
+  null,
+  0x8b7355, // 1 → weathered sandstone
+  0xa0826d, // 2 → carved stone
+  0xd2b48c, // 3 → tan / architectural detail
+  0xe8dcc8, // 4 → pale limestone
+  0x9d7e5e, // 5 → rust accent
+  0xb8860b, // 6 → dark goldenrod
+  0xcd853f, // 7 → peru mineral vein
+  0x654321, // 8 → deep dark brown
+];
+const COSMETIC_SANDSTONE_BOARD_TRAIL_EMISSIVE = { 3: 0xd2b48c, 6: 0xb8860b };
+
+// Desert — "Desert Gem" piece theme
+const COSMETIC_DESERT_GEM_COLORS = [
+  null,
+  0x40e0d0, // 1 → turquoise
+  0xffd700, // 2 → topaz / gold
+  0x2f4f4f, // 3 → obsidian
+  0xcd5c5c, // 4 → carnelian
+  0xbc8f8f, // 5 → jasper rose
+  0x8fbc8f, // 6 → agate green
+  0x9932cc, // 7 → amethyst
+  0xff6347, // 8 → coral fire
+];
+const COSMETIC_DESERT_GEM_TRAIL_EMISSIVE = {
+  1: 0x40e0d0, 2: 0xffd700, 4: 0xcd5c5c, 7: 0x9932cc,
+};
+
 // Border (edge mesh) colors per biome id — overrides the default black.
 const BIOME_BORDER_COLORS = {
   stone:  0x111111,
   forest: 0x1a3310,
   nether: 0x330000,
   ice:    0x3388aa,
+  desert: 0x5a3310,
 };
 
 // Reverse lookup: COLORS hex integer → color index (used for live material swapping).
