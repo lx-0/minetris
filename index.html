@@ -12,6 +12,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/touch-controls.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
     <!-- Post-processing: SSAO -->
@@ -350,6 +351,29 @@
 
       <div id="renderer-container"></div>
       <div id="crosshair"></div>
+
+      <!-- Touch controls overlay (mobile) -->
+      <div id="touch-controls">
+        <!-- D-pad (left side) -->
+        <div id="tc-dpad">
+          <button class="tc-btn tc-dpad-btn" id="tc-dpad-up"    aria-label="Hard Drop">&#9650;</button>
+          <button class="tc-btn tc-dpad-btn" id="tc-dpad-left"  aria-label="Move Left">&#9664;</button>
+          <button class="tc-btn tc-dpad-btn" id="tc-dpad-right" aria-label="Move Right">&#9654;</button>
+          <button class="tc-btn tc-dpad-btn" id="tc-dpad-down"  aria-label="Soft Drop">&#9660;</button>
+        </div>
+        <!-- Action buttons (right side) -->
+        <div id="tc-actions">
+          <div id="tc-rotate-row">
+            <button class="tc-btn" id="tc-rotate-ccw" aria-label="Rotate CCW">CCW</button>
+            <button class="tc-btn" id="tc-rotate-cw"  aria-label="Rotate CW">CW</button>
+          </div>
+          <button class="tc-btn" id="tc-hold" aria-label="Use Power-up">PWR</button>
+        </div>
+        <!-- Pause (top-right) -->
+        <div id="tc-pause">
+          <button class="tc-btn" id="tc-pause-btn" aria-label="Pause">&#9646;&#9646;</button>
+        </div>
+      </div>
 
       <!-- Cave mouth interaction prompt -->
       <div id="cave-mouth-prompt" style="display:none;">
@@ -849,6 +873,15 @@
             </label>
           </div>
           <div class="settings-hint">Bypass level requirements — all modes playable</div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="touch-controls-toggle">Touch Controls</label>
+            <label class="cb-toggle-switch">
+              <input type="checkbox" id="touch-controls-toggle">
+              <span class="cb-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-hint">Virtual D-pad overlay for touch devices</div>
           <div class="settings-section-divider"></div>
           <div class="settings-label settings-label-section">Leaderboard Name</div>
           <div id="settings-displayname-row" class="settings-row">
@@ -1928,6 +1961,7 @@
     <script src="js/battle/battle-spectator-init.js"></script>
     <script src="js/social/tournament-init.js"></script>
     <script src="js/ui/share-modal-init.js"></script>
+    <script src="js/player/touch-controls.js"></script>
     <script src="js/player/input.js"></script>
     <script src="js/player/powerups.js"></script>
     <script src="js/core/game-loop.js"></script>

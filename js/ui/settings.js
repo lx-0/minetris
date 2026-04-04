@@ -519,6 +519,15 @@ function initSettings() {
     });
   }
 
+  // Wire up touch controls toggle.
+  const tcToggle = document.getElementById("touch-controls-toggle");
+  if (tcToggle) {
+    tcToggle.checked = (typeof isTouchControlsEnabled === "function") && isTouchControlsEnabled();
+    tcToggle.addEventListener("change", function() {
+      if (typeof setTouchControlsEnabled === "function") setTouchControlsEnabled(this.checked);
+    });
+  }
+
   // Wire up display name field.
   const dnInput    = document.getElementById("settings-displayname-input");
   const dnSaveBtn  = document.getElementById("settings-displayname-save-btn");
@@ -565,6 +574,8 @@ function openSettings(onClose) {
   if (cbToggle) cbToggle.checked = colorblindMode;
   const samToggleSync = document.getElementById("show-all-modes-toggle");
   if (samToggleSync) samToggleSync.checked = (typeof isShowAllModesEnabled === "function") && isShowAllModesEnabled();
+  const tcToggleSync = document.getElementById("touch-controls-toggle");
+  if (tcToggleSync) tcToggleSync.checked = (typeof isTouchControlsEnabled === "function") && isTouchControlsEnabled();
   _syncThemeButtons();
   _syncDisplayNameField();
   _syncKeybindTable();

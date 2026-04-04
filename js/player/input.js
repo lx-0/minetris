@@ -1,5 +1,6 @@
 // Player input handlers — wheel zoom, block placement, mouse clicks.
 // Requires: state.js, world/mining.js, player/crafting.js loaded first.
+// Touch gate: initialises virtual touch controls on touch-capable devices.
 
 function onWheel(event) {
   if (!controls || !controls.isLocked || isGameOver) return;
@@ -340,3 +341,14 @@ function onMouseDown(event) {
   }
 }
 
+// ── Touch detection gate ──────────────────────────────────────────────────────
+// Initialise the virtual touch overlay when a touch-capable device is detected
+// (or when the user has force-enabled it via settings).
+(function () {
+  if (typeof initTouchControls !== 'function') return;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTouchControls);
+  } else {
+    initTouchControls();
+  }
+}());

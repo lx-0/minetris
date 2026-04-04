@@ -1,0 +1,130 @@
+/* Touch controls overlay — virtual D-pad + action buttons for mobile gameplay.
+ * Only visible on touch-capable devices (or when force-enabled in settings).
+ */
+
+#touch-controls {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 500;
+  display: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+#touch-controls.tc-visible {
+  display: block;
+}
+
+/* ── D-pad (left side) ──────────────────────────────────────────────────────── */
+#tc-dpad {
+  position: absolute;
+  bottom: 36px;
+  left: 28px;
+  width: 120px;
+  height: 120px;
+  pointer-events: auto;
+}
+
+/* ── Action buttons (right side) ─────────────────────────────────────────────── */
+#tc-actions {
+  position: absolute;
+  bottom: 36px;
+  right: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+#tc-rotate-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ── Pause button (top-right) ─────────────────────────────────────────────────── */
+#tc-pause {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  pointer-events: auto;
+}
+
+/* ── Base button ──────────────────────────────────────────────────────────────── */
+.tc-btn {
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  background: rgba(30, 30, 40, 0.40);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'Press Start 2P', monospace;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.06s ease, border-color 0.06s ease, transform 0.06s ease;
+  box-sizing: border-box;
+  text-align: center;
+  line-height: 1;
+}
+
+.tc-btn.tc-active {
+  background: rgba(80, 80, 110, 0.60);
+  border-color: rgba(255, 255, 255, 0.9);
+  transform: scale(0.93);
+}
+
+/* ── D-pad buttons ───────────────────────────────────────────────────────────── */
+.tc-dpad-btn {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+}
+
+#tc-dpad-left  { left: 0;   top: 38px; }
+#tc-dpad-right { right: 0;  top: 38px; }
+#tc-dpad-up    { left: 38px; top: 0; }
+#tc-dpad-down  { left: 38px; bottom: 0; }
+
+/* ── Action buttons ──────────────────────────────────────────────────────────── */
+#tc-rotate-cw {
+  width: 80px;
+  height: 80px;
+  font-size: 13px;
+  background: rgba(50, 30, 70, 0.40);
+}
+
+#tc-rotate-ccw {
+  width: 64px;
+  height: 64px;
+  font-size: 11px;
+  background: rgba(30, 40, 70, 0.40);
+}
+
+#tc-hold {
+  width: 52px;
+  height: 52px;
+  font-size: 9px;
+  letter-spacing: -0.5px;
+}
+
+/* ── Pause button ────────────────────────────────────────────────────────────── */
+#tc-pause-btn {
+  width: 42px;
+  height: 42px;
+  font-size: 14px;
+  border-radius: 10px;
+}
+
+/* ── Landscape-only visibility ───────────────────────────────────────────────── */
+@media (orientation: portrait) {
+  #touch-controls.tc-visible {
+    /* Still show in portrait but smaller */
+    opacity: 0.75;
+  }
+}
