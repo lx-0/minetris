@@ -1888,7 +1888,9 @@
         <div id="spectator-players" style="display:flex;gap:24px;width:100%;max-width:800px;justify-content:center;align-items:flex-start;flex-wrap:wrap;">
 
           <!-- Host (P1) panel -->
-          <div class="spectator-player-panel" style="flex:0 0 auto;background:rgba(255,255,255,0.04);border:1px solid rgba(0,180,255,0.35);border-radius:6px;padding:10px;display:flex;flex-direction:column;align-items:center;">
+          <div id="spectator-host-panel" class="spectator-player-panel" style="flex:0 0 auto;background:rgba(255,255,255,0.04);border:1px solid rgba(0,180,255,0.35);border-radius:6px;padding:10px;display:flex;flex-direction:column;align-items:center;">
+            <!-- Auto-follow label -->
+            <div id="spectator-host-autofocus-label" class="spec-autofocus-label" style="display:none;"></div>
             <!-- Name + rating header -->
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;width:100%;">
               <span id="spectator-host-name" style="font-weight:bold;color:#4db8ff;font-size:1em;">P1</span>
@@ -1911,7 +1913,9 @@
           <div style="display:flex;align-items:center;font-size:1.1em;font-weight:bold;opacity:0.45;padding-top:130px;">VS</div>
 
           <!-- Guest (P2) panel -->
-          <div class="spectator-player-panel" style="flex:0 0 auto;background:rgba(255,255,255,0.04);border:1px solid rgba(0,255,140,0.35);border-radius:6px;padding:10px;display:flex;flex-direction:column;align-items:center;">
+          <div id="spectator-guest-panel" class="spectator-player-panel" style="flex:0 0 auto;background:rgba(255,255,255,0.04);border:1px solid rgba(0,255,140,0.35);border-radius:6px;padding:10px;display:flex;flex-direction:column;align-items:center;">
+            <!-- Auto-follow label -->
+            <div id="spectator-guest-autofocus-label" class="spec-autofocus-label" style="display:none;"></div>
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;width:100%;">
               <span id="spectator-guest-name" style="font-weight:bold;color:#00ff8c;font-size:1em;">P2</span>
               <span id="spectator-guest-rating" style="font-size:0.75em;opacity:0.65;"></span>

@@ -13,6 +13,10 @@ function _initBattleSpectator() {
       var _spectatorTimerLast = 0;
       var _spectatorTickerEvents = []; // last 5 ticker events
 
+      // Auto-follow: track max column heights per player to highlight the one closer to topping out
+      var _hostMaxHeight  = 0;
+      var _guestMaxHeight = 0;
+
       var _SPEC_PU_DEFS = {
         row_bomb:   { icon: '\uD83D\uDCA3', name: 'Row Bomb' },
         slow_down:  { icon: '\u23F1',       name: 'Slow Down' },
@@ -243,25 +247,129 @@ function _initBattleSpectator() {
         }
       }
 
-      // Render a column array to a spectator board canvas
+      // Render a column-heights array to a spectator board canvas.
+      // cols is a 10-element array of heights (negative = rubble/garbage).
+      // Matches the bar-chart approach used by battle-hud.js.
+      var _SPEC_MAX_HEIGHT = 20; // game-over height in grid units
       function _drawSpectatorBoard(canvasId, cols) {
         var canvas = document.getElementById(canvasId);
-        if (!canvas || !cols) return;
+        if (!canvas || !cols || !cols.length) return;
         var ctx = canvas.getContext("2d");
         var cw = canvas.width, ch = canvas.height;
         ctx.clearRect(0, 0, cw, ch);
-        var numCols = cols.length;
-        var numRows = numCols > 0 ? cols[0].length : 0;
-        if (!numCols || !numRows) return;
-        var cellW = cw / numCols;
-        var cellH = ch / numRows;
+
+        // Background
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(0, 0, cw, ch);
+
+        var numCols  = cols.length;
+        var barW     = Math.floor(cw / numCols);
+        var gap      = 1;
+        var usableH  = ch - 2;
+
         for (var c = 0; c < numCols; c++) {
-          for (var r = 0; r < numRows; r++) {
-            var cell = cols[c][r];
-            if (cell) {
-              ctx.fillStyle = typeof cell === 'string' ? cell : '#4a9eff';
-              ctx.fillRect(c * cellW + 1, r * cellH + 1, cellW - 2, cellH - 2);
+          var raw      = cols[c] || 0;
+          var isRubble = raw < 0;
+          var height   = Math.abs(raw);
+          var barH     = Math.min(Math.round((height / _SPEC_MAX_HEIGHT) * usableH), usableH);
+          var x        = c * barW + gap;
+          var y        = ch - barH - 1;
+          var w        = barW - gap * 2;
+          var danger   = height >= _SPEC_MAX_HEIGHT * 0.75;
+
+          // Column track
+          ctx.fillStyle = 'rgba(255,255,255,0.05)';
+          ctx.fillRect(x, 1, w, usableH);
+
+          // Bar fill
+          if (barH > 0) {
+            if (isRubble) {
+              ctx.fillStyle = danger ? '#d45020' : '#a06030';
+            } else {
+              ctx.fillStyle = danger ? '#cc4444' : '#778899';
             }
+            ctx.fillRect(x, y, w, barH);
+          }
+        }
+
+        // Danger threshold line at 75%
+        var threshY = Math.round(ch - 0.75 * usableH) - 1;
+        ctx.strokeStyle = 'rgba(255,80,80,0.5)';
+        ctx.lineWidth   = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(0, threshY);
+        ctx.lineTo(cw, threshY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Auto-follow: update focus indicator based on which player is closer to topping out.
+      // Adds a pulsing "DANGER" label and border glow to the panel in the critical zone.
+      var _DANGER_THRESHOLD = _SPEC_MAX_HEIGHT * 0.75; // 75% = 15 grid units
+      var _FOCUS_THRESHOLD  = _SPEC_MAX_HEIGHT * 0.50; // 50% = 10 grid units — min height to show focus
+
+      function _updateAutoFollow() {
+        var hostPanel  = document.getElementById('spectator-host-panel');
+        var guestPanel = document.getElementById('spectator-guest-panel');
+        var hostLabel  = document.getElementById('spectator-host-autofocus-label');
+        var guestLabel = document.getElementById('spectator-guest-autofocus-label');
+
+        if (!hostPanel || !guestPanel) return;
+
+        // Determine which player is in danger (height above threshold)
+        var hostDanger  = _hostMaxHeight  >= _DANGER_THRESHOLD;
+        var guestDanger = _guestMaxHeight >= _DANGER_THRESHOLD;
+
+        // Auto-focus highlights the player with the higher stack when above 50%
+        var hostFocused  = false;
+        var guestFocused = false;
+
+        if (hostDanger || guestDanger) {
+          // Both in danger — focus the one higher
+          if (_hostMaxHeight >= _guestMaxHeight) {
+            hostFocused = true;
+          } else {
+            guestFocused = true;
+          }
+        } else if (_hostMaxHeight >= _FOCUS_THRESHOLD || _guestMaxHeight >= _FOCUS_THRESHOLD) {
+          // Neither in critical danger but one is climbing — soft focus
+          if (_hostMaxHeight > _guestMaxHeight) {
+            hostFocused = true;
+          } else if (_guestMaxHeight > _hostMaxHeight) {
+            guestFocused = true;
+          }
+        }
+
+        hostPanel.classList.toggle('spec-panel-danger',  hostDanger);
+        hostPanel.classList.toggle('spec-panel-focused', hostFocused && !hostDanger);
+        guestPanel.classList.toggle('spec-panel-danger',  guestDanger);
+        guestPanel.classList.toggle('spec-panel-focused', guestFocused && !guestDanger);
+
+        if (hostLabel) {
+          if (hostDanger) {
+            hostLabel.textContent = '\u26a0 DANGER';
+            hostLabel.className = 'spec-autofocus-label spec-autofocus-danger';
+            hostLabel.style.display = '';
+          } else if (hostFocused) {
+            hostLabel.textContent = '\uD83D\uDC41 FOCUS';
+            hostLabel.className = 'spec-autofocus-label spec-autofocus-watch';
+            hostLabel.style.display = '';
+          } else {
+            hostLabel.style.display = 'none';
+          }
+        }
+        if (guestLabel) {
+          if (guestDanger) {
+            guestLabel.textContent = '\u26a0 DANGER';
+            guestLabel.className = 'spec-autofocus-label spec-autofocus-danger';
+            guestLabel.style.display = '';
+          } else if (guestFocused) {
+            guestLabel.textContent = '\uD83D\uDC41 FOCUS';
+            guestLabel.className = 'spec-autofocus-label spec-autofocus-watch';
+            guestLabel.style.display = '';
+          } else {
+            guestLabel.style.display = 'none';
           }
         }
       }
@@ -280,6 +388,21 @@ function _initBattleSpectator() {
         if (scoreEl) scoreEl.textContent = msg.score != null ? msg.score : '\u2014';
         if (linesEl) linesEl.textContent = msg.linesCleared != null ? msg.linesCleared : '\u2014';
         _drawSpectatorBoard(boardId, msg.cols);
+
+        // Track max heights for auto-follow
+        if (msg.cols && msg.cols.length) {
+          var maxH = 0;
+          for (var i = 0; i < msg.cols.length; i++) {
+            var h = Math.abs(msg.cols[i] || 0);
+            if (h > maxH) maxH = h;
+          }
+          if (from === 'host') {
+            _hostMaxHeight = maxH;
+          } else {
+            _guestMaxHeight = maxH;
+          }
+          _updateAutoFollow();
+        }
       }
 
       function _onSpectatorBattleAttack(msg) {
@@ -672,6 +795,10 @@ function _initBattleSpectator() {
       var _origOpenSpectatorOverlay = _openSpectatorOverlay;
       _openSpectatorOverlay = function (roomCode) {
         _origOpenSpectatorOverlay(roomCode);
+        // Reset auto-follow state
+        _hostMaxHeight  = 0;
+        _guestMaxHeight = 0;
+        _updateAutoFollow();
         // Reset hype state
         _hypeLevel = 0;
         _hypeElectric = false;
