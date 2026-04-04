@@ -47,6 +47,11 @@ function animate() {
       replayTick(typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);
     }
 
+    // Tick endless survival timers (speed escalation + modifier activation)
+    if (isEndlessSurvivalMode && typeof tickEndlessSurvival === 'function') {
+      tickEndlessSurvival(delta);
+    }
+
     // Tick the sprint timer (starts only once the first piece begins falling)
     if (isSprintMode && sprintTimerActive && !sprintComplete) {
       sprintElapsedMs += delta * 1000;

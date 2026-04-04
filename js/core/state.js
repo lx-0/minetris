@@ -427,6 +427,17 @@ let _creeperWalkPhase = 0;
 let isSurvivalMode      = false;
 let survivalSessionNumber = 1;
 
+// ── Endless Survival mode state ───────────────────────────────────────────────
+let isEndlessSurvivalMode       = false;
+let endlessActiveModifiers      = [];   // array of active modifier IDs (max 3)
+let endlessSurvivalSpeedTimer   = 0;    // seconds since last speed-up
+let endlessSurvivalModTimer     = 0;    // seconds since last modifier activation
+let endlessSurvivalSpeedLevel   = 0;    // how many speed-ups applied so far
+let endlessMirrorActive         = false; // flips left/right nudge when true
+let endlessGravityActive        = false; // applies gravity pass on piece land
+let endlessPoisonActive         = false; // poisons a block every 10s
+let endlessShrinkLevel          = 0;    // number of Shrink activations
+
 // ── Session stats (reset each game, accumulated for lifetime stats on game over) ──
 let blocksPlaced = 0;
 let sessionCrafts = 0;

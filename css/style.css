@@ -2231,6 +2231,91 @@ body {
   image-rendering: pixelated;
 }
 
+/* ── Endless Survival mode card — deep red/orange accent ── */
+.mode-card-endless {
+  border-color: rgba(220, 60, 30, 0.5);
+  box-shadow: 0 0 14px rgba(220, 60, 30, 0.15);
+}
+.mode-card-endless .mode-card-name {
+  color: #ff6644;
+  text-shadow: 0 0 6px #cc3311;
+}
+.mode-card-endless .mode-card-desc {
+  color: #ffaa88;
+}
+.mode-card-endless:hover {
+  border-color: #ff6644 !important;
+  box-shadow: 0 0 22px rgba(220, 60, 30, 0.45) !important;
+}
+.mode-card-endless.mode-card-highlighted {
+  border-color: #ff6644;
+  box-shadow: 0 0 28px rgba(220, 60, 30, 0.55);
+}
+
+/* ── Endless Survival HUD: badge + modifier icons ── */
+#endless-badge {
+  position: absolute;
+  top: 46px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #ff6644;
+  text-shadow: 0 0 8px #cc3311;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4px 10px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 150;
+  white-space: nowrap;
+}
+#endless-modifier-hud {
+  position: absolute;
+  top: 66px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 100, 60, 0.4);
+  pointer-events: none;
+  z-index: 150;
+}
+.endless-mod-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.endless-mod-mult {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #ffd700;
+  text-shadow: 0 0 6px #ffd700;
+  margin-left: 4px;
+}
+
+/* ── Endless Survival game-over section ── */
+#endless-go-section {
+  margin: 12px 0;
+}
+.endless-go-stats {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #ccc;
+}
+.endless-go-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.endless-go-best {
+  color: #ff9944;
+  font-weight: bold;
+}
+
 /* ── The Depths mode card — indigo/violet accent ── */
 .mode-card-depths {
   border-color: rgba(120, 80, 220, 0.5);

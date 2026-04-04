@@ -998,10 +998,11 @@ let _lbActiveModeTab = 'classic'; // 'classic' | 'sprint' | 'blitz' | 'depths'
 let _lbModeRange = 'weekly';      // 'weekly' | 'alltime'
 
 const _MODE_LB_CONFIG = {
-  classic: { label: 'Classic', icon: '\u26cf\ufe0f', scoreLabel: 'Score',   sortAsc: false },
-  sprint:  { label: 'Sprint',  icon: '\u26a1',        scoreLabel: 'Time',    sortAsc: true  },
-  blitz:   { label: 'Blitz',   icon: '\u23f1',        scoreLabel: 'Score',   sortAsc: false },
-  depths:  { label: 'Depths',  icon: '\u{1F573}\ufe0f', scoreLabel: 'Score', sortAsc: false },
+  classic: { label: 'Classic',  icon: '\u26cf\ufe0f',   scoreLabel: 'Score',   sortAsc: false },
+  sprint:  { label: 'Sprint',   icon: '\u26a1',          scoreLabel: 'Time',    sortAsc: true  },
+  blitz:   { label: 'Blitz',    icon: '\u23f1',          scoreLabel: 'Score',   sortAsc: false },
+  endless: { label: 'Endless',  icon: '\u267E\ufe0f',    scoreLabel: 'Score',   sortAsc: false },
+  depths:  { label: 'Depths',   icon: '\u{1F573}\ufe0f', scoreLabel: 'Score',   sortAsc: false },
 };
 
 async function apiSubmitModeScore(displayName, mode, score, linesCleared) {

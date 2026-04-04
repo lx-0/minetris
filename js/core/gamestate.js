@@ -5,6 +5,9 @@
 function addScore(pts) {
   const _wmod = typeof getWorldModifier === 'function' ? getWorldModifier() : null;
   let _mult = _wmod ? _wmod.scoreMultiplier : 1.0;
+  if (isEndlessSurvivalMode && typeof getEndlessScoreMultiplier === 'function') {
+    _mult *= getEndlessScoreMultiplier();
+  }
   if (isCoopMode) _mult *= coopScoreMultiplier;
   // Desert biome: 2× clear skies bonus after sandstorm
   if (typeof clearSkiesActive !== 'undefined' && clearSkiesActive) _mult *= 2.0;
@@ -288,13 +291,13 @@ function triggerGameOver() {
     tSpins: sessionTSpins,
     perfectClears: sessionPerfectClears,
     durationSecs: state.elapsedSeconds,
-    mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isSurvivalMode ? 'survival' : 'classic'),
+    mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isEndlessSurvivalMode ? 'endless' : (isSurvivalMode ? 'survival' : 'classic')),
   });
 
   // Log session for history graphs
   if (typeof logSession === 'function') {
     logSession({
-      mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isSurvivalMode ? 'survival' : 'classic'),
+      mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isEndlessSurvivalMode ? 'endless' : (isSurvivalMode ? 'survival' : 'classic')),
       score: state.score,
       lines: state.linesCleared,
       durationSecs: state.elapsedSeconds,
@@ -375,9 +378,9 @@ function triggerGameOver() {
       (_goTitle ? `<span class="go-level-title"> ${_goTitle}</span>` : '');
   }
 
-  // Submit and render high scores (not for survival or expedition — each has its own screen)
+  // Submit and render high scores (not for survival/endless/expedition — each has its own screen)
   const _inExpedition = (typeof activeBiomeId !== 'undefined') && !!activeBiomeId;
-  if (!isSurvivalMode && !_inExpedition) {
+  if (!isSurvivalMode && !isEndlessSurvivalMode && !_inExpedition) {
     const hsRank = submitHighScore(
       state.score,
       state.elapsedSeconds,
@@ -386,11 +389,34 @@ function triggerGameOver() {
     );
     renderHighScoresGameOver(hsRank);
   } else {
-    // Hide classic HS table in survival mode
+    // Hide classic HS table in survival/endless mode
     const hsLabelEl = document.getElementById("hs-go-label");
     const hsTableEl = document.getElementById("hs-go-table");
     if (hsLabelEl) hsLabelEl.style.display = "none";
     if (hsTableEl) hsTableEl.style.display = "none";
+  }
+
+  // Endless Survival score tracking
+  if (isEndlessSurvivalMode) {
+    const _endlessMaxMods = endlessActiveModifiers ? endlessActiveModifiers.length : 0;
+    const _isNewEndlessBest = typeof submitEndlessScore === 'function'
+      ? submitEndlessScore(state.score, state.elapsedSeconds, state.linesCleared, _endlessMaxMods)
+      : false;
+    if (typeof renderEndlessBestGameOver === 'function') {
+      renderEndlessBestGameOver(
+        _isNewEndlessBest,
+        state.score,
+        state.elapsedSeconds,
+        endlessSurvivalSpeedLevel || 0,
+        _endlessMaxMods
+      );
+    }
+    if (typeof trySubmitModeScore === 'function') {
+      trySubmitModeScore('endless', state.score, state.linesCleared);
+    }
+  } else {
+    const endlessGoEl = document.getElementById('endless-go-section');
+    if (endlessGoEl) endlessGoEl.style.display = 'none';
   }
 
   // Daily challenge score tracking

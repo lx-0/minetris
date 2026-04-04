@@ -89,10 +89,16 @@
             : "";
         }
       }
+      // Populate Endless Survival personal best
+      const endlessPbEl = document.getElementById("mode-pb-endless");
+      if (endlessPbEl && typeof loadEndlessBest === 'function') {
+        const endlessBest = loadEndlessBest();
+        endlessPbEl.textContent = endlessBest ? "Best: " + endlessBest.score.toLocaleString() : "";
+      }
       // Render World Card stats panel
       if (typeof renderWorldCard === "function") renderWorldCard();
       // Apply highlight to the specified mode card
-      ["classic", "sprint", "blitz", "practice", "daily", "weekly", "puzzle", "survival", "depths", "expedition", "boss_battle", "coop", "battle", "tournament"].forEach(function (mode) {
+      ["classic", "sprint", "blitz", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament"].forEach(function (mode) {
         const cardEl = document.getElementById("mode-card-" + mode);
         if (cardEl) {
           if (mode === highlightMode) {
@@ -736,6 +742,39 @@
         if (!localStorage.getItem("mineCtris_tutorialShown")) {
           _showSurvivalTutorialPrompt();
         }
+      });
+    }
+
+    // ── Endless Survival mode card ────────────────────────────────────────────
+    const endlessCardEl = document.getElementById("mode-card-endless");
+    if (endlessCardEl) {
+      // Populate personal best
+      const endlessPbEl = document.getElementById("mode-pb-endless");
+      if (endlessPbEl) {
+        const endlessBest = typeof loadEndlessBest === 'function' ? loadEndlessBest() : null;
+        endlessPbEl.textContent = endlessBest ? "Best: " + endlessBest.score.toLocaleString() : "";
+      }
+      endlessCardEl.addEventListener("click", function (e) {
+        if (e.target && e.target.tagName === 'BUTTON') return;
+        isEndlessSurvivalMode = true;
+        isDailyChallenge = false;
+        gameRng = null;
+        endlessActiveModifiers = [];
+        endlessSurvivalSpeedTimer = 0;
+        endlessSurvivalModTimer = 0;
+        endlessSurvivalSpeedLevel = 0;
+        endlessMirrorActive = false;
+        endlessGravityActive = false;
+        endlessPoisonActive = false;
+        endlessShrinkLevel = 0;
+        // Show badge and clear modifier HUD
+        const endlessBadgeEl = document.getElementById("endless-badge");
+        if (endlessBadgeEl) endlessBadgeEl.style.display = "block";
+        if (typeof updateEndlessModifierHUD === 'function') updateEndlessModifierHUD();
+        try { localStorage.setItem("mineCtris_lastMode", "endless"); } catch (_) {}
+        if (typeof metricsModePlayed === 'function') metricsModePlayed('endless');
+        hideModeSelect();
+        requestPointerLock();
       });
     }
 

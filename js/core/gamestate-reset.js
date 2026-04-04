@@ -232,6 +232,26 @@ function resetGame() {
   const hsTableEl2 = document.getElementById('hs-go-table');
   if (hsTableEl2) hsTableEl2.style.display = '';
 
+  // Reset endless survival mode state
+  if (isEndlessSurvivalMode && typeof deactivateAllEndlessModifiers === 'function') {
+    deactivateAllEndlessModifiers();
+  }
+  isEndlessSurvivalMode     = false;
+  endlessActiveModifiers    = [];
+  endlessSurvivalSpeedTimer = 0;
+  endlessSurvivalModTimer   = 0;
+  endlessSurvivalSpeedLevel = 0;
+  endlessMirrorActive       = false;
+  endlessGravityActive      = false;
+  endlessPoisonActive       = false;
+  endlessShrinkLevel        = 0;
+  const endlessBadgeEl = document.getElementById('endless-badge');
+  if (endlessBadgeEl) endlessBadgeEl.style.display = 'none';
+  const endlessModHud = document.getElementById('endless-modifier-hud');
+  if (endlessModHud) endlessModHud.style.display = 'none';
+  const endlessGoEl = document.getElementById('endless-go-section');
+  if (endlessGoEl) endlessGoEl.style.display = 'none';
+
   // Clear expedition biome theme (restores user's cosmetic theme)
   if (typeof clearBiomeTheme === "function") clearBiomeTheme();
 

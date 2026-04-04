@@ -428,6 +428,13 @@
                   <div id="survival-world-card" class="survival-world-card"></div>
                   <button id="survival-reset-btn" class="survival-reset-btn" style="display:none;">&#128465; Reset World</button>
                 </div>
+                <div class="mode-card mode-card-endless" id="mode-card-endless" data-mode="endless" tabindex="0" role="button" aria-label="Endless Survival mode — no speed cap, random modifiers, pure endurance">
+                  <div class="mode-card-icon">&#9854;</div>
+                  <div class="mode-card-name">Endless Survival</div>
+                  <div class="mode-card-desc">No speed cap. Modifiers stack every 60s. How long can you last?</div>
+                  <div class="mode-card-pb" id="mode-pb-endless"></div>
+                  <button class="mode-card-lb-btn" data-lb-tab="endless" title="Leaderboard">&#127942;</button>
+                </div>
                 <div class="mode-card mode-card-depths" id="mode-card-depths" data-mode="depths" tabindex="0" role="button" aria-label="The Depths mode — Roguelike dungeon runs with tiered challenges">
                   <div class="mode-card-icon">&#9935;</div>
                   <div class="mode-card-name">The Depths</div>
@@ -585,6 +592,10 @@
 
       <!-- Survival mode badge (shown during survival runs) -->
       <div id="survival-badge" style="display:none;">&#129430; Survival</div>
+
+      <!-- Endless Survival mode badge and active modifier icons -->
+      <div id="endless-badge" style="display:none;">&#9854; Endless</div>
+      <div id="endless-modifier-hud" style="display:none;"></div>
 
       <!-- Practice mode badge (shown during practice runs) -->
       <div id="practice-badge" style="display:none;">&#127979; Practice — not scored</div>
@@ -845,6 +856,7 @@
         <div id="weekly-go-section" style="display:none;"></div>
         <div id="infinite-weekly-go-section" style="display:none;"></div>
         <div id="survival-go-section" style="display:none;"></div>
+        <div id="endless-go-section" style="display:none;"></div>
         <button id="go-share-btn">Share Score</button>
         <div id="go-share-feedback"></div>
         <button id="lb-submit-btn" style="display:none;">Submit to Leaderboard</button>
@@ -2466,6 +2478,7 @@
     <script src="js/progression/season-missions.js"></script>
     <script src="js/core/savestate.js"></script>
     <script src="js/modes/survival.js"></script>
+    <script src="js/modes/endless-survival.js"></script>
     <script src="js/ui/shareland.js"></script>
     <script src="js/events/events.js"></script>
     <script src="js/events/events-creeper.js"></script>

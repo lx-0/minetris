@@ -504,6 +504,9 @@ function applyNudge(dx, dz) {
   const piece = getNudgeTargetPiece();
   if (!piece) return;
 
+  // Mirror modifier: flip left/right controls
+  if (typeof endlessMirrorActive !== 'undefined' && endlessMirrorActive) dx = -dx;
+
   const newOffsetX = piece.userData.nudgeOffsetX + dx;
   const newOffsetZ = piece.userData.nudgeOffsetZ + dz;
 
@@ -797,6 +800,7 @@ function updateFallingPieces(delta) {
     }
     if (typeof saveGameState === "function") saveGameState();
     if (isSurvivalMode && typeof saveSurvivalWorld === "function") saveSurvivalWorld();
+    if (isEndlessSurvivalMode && typeof applyEndlessGravityPass === 'function') applyEndlessGravityPass();
     if (typeof tutorialNotify === "function") tutorialNotify("pieceLand");
     // Contextual game tooltip: check for nearly-complete rows
     if (typeof gameTooltipCheckNearlyFull === 'function') gameTooltipCheckNearlyFull();
