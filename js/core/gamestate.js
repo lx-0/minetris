@@ -279,6 +279,16 @@ function triggerGameOver() {
     isDailyChallenge,
   });
 
+  // Log session for history graphs
+  if (typeof logSession === 'function') {
+    logSession({
+      mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isSurvivalMode ? 'survival' : 'classic'),
+      score: state.score,
+      lines: state.linesCleared,
+      durationSecs: state.elapsedSeconds,
+    });
+  }
+
   // Metrics: log session end
   if (typeof metricsSessionEnd === 'function') {
     metricsSessionEnd({ score: state.score, linesCleared: state.linesCleared, blocksMined: state.blocksMined });

@@ -345,7 +345,351 @@ function _onWardrobeCardClick(e) {
   if (equippedEl) equippedEl.innerHTML = _renderEquippedCosmetics();
 }
 
+// ── History tab ───────────────────────────────────────────────────────────────
+
+var _historyModeFilter = 'all';
+
+var _HISTORY_MODES = [
+  { key: 'all',      label: 'All' },
+  { key: 'classic',  label: 'Classic' },
+  { key: 'sprint',   label: 'Sprint' },
+  { key: 'blitz',    label: 'Blitz' },
+  { key: 'daily',    label: 'Daily' },
+  { key: 'survival', label: 'Survival' },
+  { key: 'battle',   label: 'Battle' },
+  { key: 'puzzle',   label: 'Puzzle' },
+];
+
+var _HISTORY_MODE_COLORS = {
+  classic:  '#4fc3f7',
+  sprint:   '#81c784',
+  blitz:    '#ff8a65',
+  daily:    '#ffd740',
+  weekly:   '#ce93d8',
+  survival: '#a5d6a7',
+  battle:   '#ef9a9a',
+  puzzle:   '#b39ddb',
+  all:      '#4fc3f7',
+};
+
+function _historyISODateMinus(days) {
+  var d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+function _historyDatesRange(days) {
+  var dates = [];
+  for (var i = days - 1; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
+function _renderHistoryTab() {
+  var history = typeof loadSessionHistory === 'function' ? loadSessionHistory() : [];
+
+  var html = '<div class="ph-top-bar">';
+  html += '<div class="ph-section-title">PLAY HISTORY</div>';
+  html += '<div class="ph-mode-filter">';
+  for (var i = 0; i < _HISTORY_MODES.length; i++) {
+    var m = _HISTORY_MODES[i];
+    var active = m.key === _historyModeFilter ? ' ph-filter-active' : '';
+    html += '<button class="ph-filter-btn' + active + '" data-ph-mode="' + m.key + '">' + m.label + '</button>';
+  }
+  html += '</div></div>';
+
+  if (history.length === 0) {
+    html += '<div class="ph-empty">No sessions recorded yet. Play a game to see your history!</div>';
+    return html;
+  }
+
+  html += '<div class="ph-charts-grid">';
+  html += '<div class="ph-chart-box ph-chart-trend"><div class="ph-chart-title">Score Trend (Last 30 Days)</div><canvas id="ph-canvas-trend" width="480" height="160"></canvas></div>';
+  html += '<div class="ph-chart-box ph-chart-donut"><div class="ph-chart-title">Mode Distribution</div><canvas id="ph-canvas-donut" width="200" height="160"></canvas></div>';
+  html += '</div>';
+  html += '<div class="ph-chart-box ph-chart-heatmap"><div class="ph-chart-title">Play Frequency (Last 90 Days)</div><div id="ph-heatmap-container"></div></div>';
+  html += '<div class="ph-recent-title">RECENT SESSIONS</div>';
+  html += _renderSessionTable(history, _historyModeFilter);
+
+  return html;
+}
+
+function _renderSessionTable(history, modeFilter) {
+  var filtered = modeFilter === 'all' ? history : history.filter(function(s) { return s.mode === modeFilter; });
+  var recent = filtered.slice(0, 10);
+
+  if (recent.length === 0) {
+    return '<div class="ph-empty">No sessions for this mode yet.</div>';
+  }
+
+  var html = '<div class="ph-table-wrap"><table class="ph-table">';
+  html += '<thead><tr><th>Date</th><th>Mode</th><th>Score</th><th>Lines</th><th>Duration</th><th>Result</th></tr></thead><tbody>';
+  for (var i = 0; i < recent.length; i++) {
+    var s = recent[i];
+    var mins = Math.floor((s.durationSecs || 0) / 60);
+    var secs = (s.durationSecs || 0) % 60;
+    var durStr = mins + ':' + (secs < 10 ? '0' : '') + secs;
+    var modeColor = _HISTORY_MODE_COLORS[s.mode] || '#aaa';
+    html += '<tr>';
+    html += '<td>' + _escProfileHtml(s.date) + '</td>';
+    html += '<td><span class="ph-mode-badge" style="color:' + modeColor + '">' + _escProfileHtml(s.mode) + '</span></td>';
+    html += '<td>' + (s.score || 0).toLocaleString() + '</td>';
+    html += '<td>' + (s.lines || 0) + '</td>';
+    html += '<td>' + durStr + '</td>';
+    html += '<td>' + _escProfileHtml(s.result || '—') + '</td>';
+    html += '</tr>';
+  }
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function _drawTrendChart(history, modeFilter) {
+  var canvas = document.getElementById('ph-canvas-trend');
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  var dates = _historyDatesRange(30);
+  var filtered = modeFilter === 'all' ? history : history.filter(function(s) { return s.mode === modeFilter; });
+
+  // Best score per day
+  var scoreByDate = {};
+  for (var i = 0; i < filtered.length; i++) {
+    var s = filtered[i];
+    if (!scoreByDate[s.date] || s.score > scoreByDate[s.date]) {
+      scoreByDate[s.date] = s.score;
+    }
+  }
+
+  var values = dates.map(function(d) { return scoreByDate[d] || 0; });
+  var maxVal = Math.max.apply(null, values) || 1;
+
+  var padL = 44, padR = 8, padT = 10, padB = 28;
+  var chartW = W - padL - padR;
+  var chartH = H - padT - padB;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  for (var gi = 0; gi <= 4; gi++) {
+    var gy = padT + chartH - (gi / 4) * chartH;
+    ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + chartW, gy); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round((gi / 4) * maxVal).toLocaleString(), padL - 3, gy + 3);
+  }
+
+  // X-axis labels (every 7 days)
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  for (var di = 0; di < dates.length; di += 7) {
+    var dx = padL + (di / (dates.length - 1)) * chartW;
+    ctx.fillText(dates[di].slice(5), dx, H - padB + 12);
+  }
+
+  var color = _HISTORY_MODE_COLORS[modeFilter] || '#4fc3f7';
+
+  // Area fill
+  ctx.beginPath();
+  for (var vi = 0; vi < values.length; vi++) {
+    var vx = padL + (vi / (values.length - 1)) * chartW;
+    var vy = padT + chartH - (values[vi] / maxVal) * chartH;
+    if (vi === 0) ctx.moveTo(vx, vy); else ctx.lineTo(vx, vy);
+  }
+  ctx.lineTo(padL + chartW, padT + chartH);
+  ctx.lineTo(padL, padT + chartH);
+  ctx.closePath();
+  ctx.fillStyle = color.replace(')', ', 0.15)').replace('rgb', 'rgba');
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  for (var li = 0; li < values.length; li++) {
+    var lx = padL + (li / (values.length - 1)) * chartW;
+    var ly = padT + chartH - (values[li] / maxVal) * chartH;
+    if (li === 0) ctx.moveTo(lx, ly); else ctx.lineTo(lx, ly);
+  }
+  ctx.stroke();
+
+  // Dots on non-zero days
+  for (var pi = 0; pi < values.length; pi++) {
+    if (values[pi] > 0) {
+      var px = padL + (pi / (values.length - 1)) * chartW;
+      var py = padT + chartH - (values[pi] / maxVal) * chartH;
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+  }
+}
+
+function _drawDonutChart(history) {
+  var canvas = document.getElementById('ph-canvas-donut');
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Count by mode
+  var counts = {};
+  for (var i = 0; i < history.length; i++) {
+    var m = history[i].mode || 'classic';
+    counts[m] = (counts[m] || 0) + 1;
+  }
+
+  var modes = Object.keys(counts);
+  if (modes.length === 0) return;
+
+  var total = history.length;
+  var cx = 70, cy = H / 2, outerR = 58, innerR = 30;
+  var startAngle = -Math.PI / 2;
+
+  for (var j = 0; j < modes.length; j++) {
+    var modeKey = modes[j];
+    var slice = (counts[modeKey] / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, outerR, startAngle, startAngle + slice);
+    ctx.closePath();
+    ctx.fillStyle = _HISTORY_MODE_COLORS[modeKey] || '#aaa';
+    ctx.fill();
+    startAngle += slice;
+  }
+
+  // Donut hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fill();
+
+  // Center label
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(total, cx, cy + 4);
+
+  // Legend
+  var legendX = 142, legendY = 16;
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'left';
+  for (var k = 0; k < modes.length; k++) {
+    var lm = modes[k];
+    var lc = _HISTORY_MODE_COLORS[lm] || '#aaa';
+    var pct = Math.round((counts[lm] / total) * 100);
+    ctx.fillStyle = lc;
+    ctx.fillRect(legendX, legendY + k * 18, 10, 10);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText(lm + ' ' + pct + '%', legendX + 14, legendY + k * 18 + 9);
+  }
+}
+
+function _renderHeatmap(history) {
+  var container = document.getElementById('ph-heatmap-container');
+  if (!container) return;
+
+  var dates = _historyDatesRange(91);
+  // Count by date
+  var countByDate = {};
+  for (var i = 0; i < history.length; i++) {
+    var d = history[i].date;
+    if (d) countByDate[d] = (countByDate[d] || 0) + 1;
+  }
+  var maxCount = Math.max.apply(null, Object.keys(countByDate).map(function(k) { return countByDate[k]; }).concat([1]));
+
+  // Build week columns: group days into weeks
+  var firstDate = new Date(dates[0]);
+  var dayOfWeek = firstDate.getDay(); // 0=Sun
+  // Pad start so week starts on Sunday
+  var padded = [];
+  for (var p = 0; p < dayOfWeek; p++) padded.push(null);
+  for (var q = 0; q < dates.length; q++) padded.push(dates[q]);
+
+  var weeks = [];
+  for (var w = 0; w < padded.length; w += 7) {
+    weeks.push(padded.slice(w, w + 7));
+  }
+
+  var html = '<div class="ph-heatmap">';
+  // Day labels
+  html += '<div class="ph-heatmap-labels">';
+  var dayLabels = ['S','M','T','W','T','F','S'];
+  for (var dl = 0; dl < 7; dl++) {
+    html += '<div class="ph-heatmap-day-label">' + dayLabels[dl] + '</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="ph-heatmap-grid">';
+  for (var wi = 0; wi < weeks.length; wi++) {
+    html += '<div class="ph-heatmap-week">';
+    for (var di = 0; di < 7; di++) {
+      var date = weeks[wi][di];
+      if (!date) {
+        html += '<div class="ph-heatmap-cell ph-heatmap-empty"></div>';
+      } else {
+        var cnt = countByDate[date] || 0;
+        var intensity = cnt === 0 ? 0 : Math.ceil((cnt / maxCount) * 4);
+        var title = date + (cnt > 0 ? ': ' + cnt + ' game' + (cnt > 1 ? 's' : '') : ': no games');
+        html += '<div class="ph-heatmap-cell ph-heatmap-l' + intensity + '" title="' + title + '"></div>';
+      }
+    }
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  container.innerHTML = html;
+}
+
+function _renderHistoryContent() {
+  var histEl = document.getElementById('profile-history-content');
+  if (!histEl) return;
+  histEl.innerHTML = _renderHistoryTab();
+
+  var history = typeof loadSessionHistory === 'function' ? loadSessionHistory() : [];
+  _drawTrendChart(history, _historyModeFilter);
+  _drawDonutChart(history);
+  _renderHeatmap(history);
+
+  // Wire mode filter buttons
+  var btns = histEl.querySelectorAll('.ph-filter-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function(e) {
+      _historyModeFilter = e.currentTarget.getAttribute('data-ph-mode') || 'all';
+      var allBtns = document.querySelectorAll('.ph-filter-btn');
+      for (var j = 0; j < allBtns.length; j++) {
+        allBtns[j].classList.toggle('ph-filter-active', allBtns[j].getAttribute('data-ph-mode') === _historyModeFilter);
+      }
+      // Redraw trend chart and session table
+      var hist2 = typeof loadSessionHistory === 'function' ? loadSessionHistory() : [];
+      _drawTrendChart(hist2, _historyModeFilter);
+      var tableEl = histEl.querySelector('.ph-table-wrap') || histEl.querySelector('.ph-empty');
+      if (tableEl && tableEl.parentNode) {
+        var newTable = document.createElement('div');
+        newTable.innerHTML = _renderSessionTable(hist2, _historyModeFilter);
+        tableEl.parentNode.replaceChild(newTable.firstChild || newTable, tableEl);
+      }
+    });
+  }
+}
+
 // ── Main render + open/close ──────────────────────────────────────────────────
+
+var _profileMainTab = 'wardrobe'; // 'wardrobe' | 'history'
+
+function _renderProfileMainTabs() {
+  return '<div class="profile-main-tabs">' +
+    '<button class="profile-main-tab' + (_profileMainTab === 'wardrobe' ? ' profile-main-tab-active' : '') + '" data-main-tab="wardrobe">Wardrobe</button>' +
+    '<button class="profile-main-tab' + (_profileMainTab === 'history' ? ' profile-main-tab-active' : '') + '" data-main-tab="history">&#128202; History</button>' +
+  '</div>';
+}
 
 function renderProfilePage() {
   var body = document.getElementById('profile-page-body');
@@ -356,12 +700,37 @@ function renderProfilePage() {
   html += _renderProfileStats();
   html += '<div id="profile-equipped-section">' + _renderEquippedCosmetics() + '</div>';
   html += _renderMasteryBadges();
+  html += _renderProfileMainTabs();
+  html += '<div id="profile-wardrobe-section"' + (_profileMainTab === 'history' ? ' style="display:none"' : '') + '>';
   html += _renderWardrobeTabs();
+  html += '</div>';
+  html += '<div id="profile-history-content"' + (_profileMainTab === 'wardrobe' ? ' style="display:none"' : '') + '></div>';
 
   body.innerHTML = html;
 
-  // Render initial wardrobe tab
-  _renderWardrobeContent(_profileActiveTab);
+  // Wire main tab clicks
+  var mainTabs = body.querySelectorAll('.profile-main-tab');
+  for (var mt = 0; mt < mainTabs.length; mt++) {
+    mainTabs[mt].addEventListener('click', function(e) {
+      _profileMainTab = e.currentTarget.getAttribute('data-main-tab') || 'wardrobe';
+      var allMainTabs = document.querySelectorAll('.profile-main-tab');
+      for (var k = 0; k < allMainTabs.length; k++) {
+        allMainTabs[k].classList.toggle('profile-main-tab-active', allMainTabs[k].getAttribute('data-main-tab') === _profileMainTab);
+      }
+      var wardrobeEl = document.getElementById('profile-wardrobe-section');
+      var historyEl = document.getElementById('profile-history-content');
+      if (wardrobeEl) wardrobeEl.style.display = _profileMainTab === 'wardrobe' ? '' : 'none';
+      if (historyEl) historyEl.style.display = _profileMainTab === 'history' ? '' : 'none';
+      if (_profileMainTab === 'history') _renderHistoryContent();
+    });
+  }
+
+  if (_profileMainTab === 'wardrobe') {
+    // Render initial wardrobe tab
+    _renderWardrobeContent(_profileActiveTab);
+  } else {
+    _renderHistoryContent();
+  }
 
   // Wire mastery card clicks
   var masteryCards = body.querySelectorAll('.profile-mastery-card');
@@ -385,7 +754,7 @@ function renderProfilePage() {
     });
   }
 
-  // Wire tab clicks
+  // Wire wardrobe tab clicks
   var tabs = body.querySelectorAll('.profile-tab-btn');
   for (var i = 0; i < tabs.length; i++) {
     tabs[i].addEventListener('click', function (e) {

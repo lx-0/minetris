@@ -4504,6 +4504,192 @@ body {
   padding: 16px;
   grid-column: 1 / -1;
 }
+/* ── Profile main tabs (Wardrobe / History) ─────────────────────────────── */
+.profile-main-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0 8px;
+  border-bottom: 1px solid rgba(0,255,0,0.15);
+  padding-bottom: 8px;
+}
+.profile-main-tab {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid rgba(0,255,0,0.25);
+  border-radius: 3px;
+  color: rgba(0,255,0,0.55);
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.profile-main-tab:hover { border-color: #0f0; color: #0f0; }
+.profile-main-tab-active {
+  border-color: #0f0;
+  color: #0f0;
+  background: rgba(0,255,0,0.08);
+}
+
+/* ── Play History Tab ────────────────────────────────────────────────────── */
+.ph-top-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.ph-section-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: #0f0;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+.ph-mode-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.ph-filter-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid rgba(0,255,0,0.2);
+  border-radius: 3px;
+  color: rgba(0,255,0,0.45);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+.ph-filter-btn:hover { border-color: #0f0; color: #0f0; }
+.ph-filter-active { border-color: #0f0; color: #0f0; background: rgba(0,255,0,0.08); }
+
+.ph-empty {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: rgba(0,255,0,0.35);
+  text-align: center;
+  padding: 24px 0;
+  line-height: 1.8;
+}
+
+.ph-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.ph-chart-box {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,255,0,0.12);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.ph-chart-heatmap { padding: 10px 12px 8px; }
+.ph-chart-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: rgba(0,255,0,0.6);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.ph-chart-trend canvas,
+.ph-chart-donut canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Heatmap */
+.ph-heatmap {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+}
+.ph-heatmap-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+}
+.ph-heatmap-day-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  color: rgba(0,255,0,0.3);
+  height: 13px;
+  line-height: 13px;
+  width: 10px;
+  text-align: right;
+}
+.ph-heatmap-grid {
+  display: flex;
+  gap: 2px;
+}
+.ph-heatmap-week {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ph-heatmap-cell {
+  width: 13px;
+  height: 13px;
+  border-radius: 2px;
+}
+.ph-heatmap-empty { background: transparent; }
+.ph-heatmap-l0 { background: rgba(0,255,0,0.06); }
+.ph-heatmap-l1 { background: rgba(0,255,0,0.22); }
+.ph-heatmap-l2 { background: rgba(0,255,0,0.42); }
+.ph-heatmap-l3 { background: rgba(0,255,0,0.62); }
+.ph-heatmap-l4 { background: rgba(0,255,0,0.85); }
+
+/* Session table */
+.ph-recent-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: rgba(0,255,0,0.7);
+  margin: 14px 0 8px;
+  letter-spacing: 1px;
+}
+.ph-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 12px;
+}
+.ph-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+}
+.ph-table th {
+  color: rgba(0,255,0,0.5);
+  text-align: left;
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(0,255,0,0.15);
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+.ph-table td {
+  color: rgba(255,255,255,0.7);
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  white-space: nowrap;
+}
+.ph-table tr:last-child td { border-bottom: none; }
+.ph-table tr:hover td { background: rgba(0,255,0,0.04); }
+.ph-mode-badge {
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  letter-spacing: 0.3px;
+}
+
+/* Responsive: stack charts on narrow screens */
+@media (max-width: 560px) {
+  .ph-charts-grid { grid-template-columns: 1fr; }
+  .ph-chart-trend canvas { width: 100% !important; }
+}
+
 #profile-close-btn {
   font-family: "Press Start 2P", cursive;
   font-size: 11px;

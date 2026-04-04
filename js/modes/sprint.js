@@ -80,6 +80,11 @@ function triggerSprintComplete() {
     isDailyChallenge:      false,
   });
 
+  // Log session for history graphs
+  if (typeof logSession === 'function') {
+    logSession({ mode: 'sprint', score: score, lines: linesCleared, durationSecs: Math.floor((sprintElapsedMs || 0) / 1000), result: 'complete' });
+  }
+
   // Metrics: log session end
   if (typeof metricsSessionEnd === 'function') {
     metricsSessionEnd({ score: score, linesCleared: linesCleared, blocksMined: blocksMined });

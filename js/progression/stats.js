@@ -74,6 +74,50 @@ function submitLifetimeStats({ score, blocksMined, linesCleared, blocksPlaced, t
   return stats;
 }
 
+// ── Session history ───────────────────────────────────────────────────────────
+
+const SESSION_HISTORY_KEY = 'mineCtris_sessionHistory';
+const SESSION_HISTORY_LIMIT = 500;
+
+/**
+ * Load session history array from localStorage (newest first).
+ * Each entry: { date, mode, score, lines, durationSecs, result }
+ */
+function loadSessionHistory() {
+  try {
+    const raw = localStorage.getItem(SESSION_HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+/**
+ * Log a completed play session.
+ * @param {object} params
+ * @param {string} params.mode        e.g. 'classic', 'blitz', 'sprint', 'battle', 'puzzle'
+ * @param {number} params.score
+ * @param {number} params.lines       lines cleared
+ * @param {number} params.durationSecs
+ * @param {string} [params.result]    'win' | 'loss' | 'complete' (optional)
+ */
+function logSession({ mode, score, lines, durationSecs, result }) {
+  try {
+    const history = loadSessionHistory();
+    history.unshift({
+      date: new Date().toISOString().slice(0, 10),
+      mode: mode || 'classic',
+      score: score || 0,
+      lines: lines || 0,
+      durationSecs: Math.floor(durationSecs || 0),
+      result: result || 'complete',
+    });
+    // Keep only the most recent entries
+    if (history.length > SESSION_HISTORY_LIMIT) history.length = SESSION_HISTORY_LIMIT;
+    localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(history));
+  } catch (_) {}
+}
+
 // XP multipliers per game mode
 const XP_MODE_MULTIPLIERS = {
   classic: 1.0,

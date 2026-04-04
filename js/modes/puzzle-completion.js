@@ -45,6 +45,11 @@ function _triggerPuzzleWin() {
     });
   }
 
+  // Log session for history graphs
+  if (typeof logSession === 'function') {
+    logSession({ mode: 'puzzle', score: score, lines: linesCleared, durationSecs: typeof getGameState === 'function' ? Math.floor(getGameState().elapsedSeconds || 0) : 0, result: 'complete' });
+  }
+
   // Metrics: log session end
   if (typeof metricsSessionEnd === 'function') {
     metricsSessionEnd({ score: score, linesCleared: linesCleared, blocksMined: blocksMined });
