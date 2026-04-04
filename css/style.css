@@ -15448,3 +15448,56 @@ button:focus-visible {
   outline: 2px solid #00ff88;
   outline-offset: 2px;
 }
+
+/* ── Transfer Progress section ─────────────────────────────────────────────── */
+.transfer-last-export {
+  color: #555;
+}
+.transfer-progress-btns {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 0;
+}
+.transfer-progress-btns .settings-link-btn {
+  flex: 1;
+}
+.transfer-import-preview {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  background: #111;
+  border: 1px solid #0a0;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.transfer-import-preview-text {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #0f0;
+  margin-bottom: 6px;
+}
+.transfer-import-preview-warn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: #fa0;
+  margin-bottom: 8px;
+}
+.transfer-import-preview-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.transfer-import-confirm-btn {
+  flex: 1;
+  border-color: #0f0;
+  color: #0f0;
+}
+.transfer-import-cancel-btn {
+  flex: 1;
+  border-color: #f55;
+  color: #f55;
+}
+.transfer-feedback {
+  color: #0f0;
+}

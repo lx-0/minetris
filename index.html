@@ -974,6 +974,25 @@
           <div class="settings-section-divider"></div>
           <button id="settings-metrics-btn" class="settings-link-btn">&#128202; Player Metrics</button>
           <button id="settings-replay-tutorial-btn" class="settings-link-btn">&#127891; Replay Tutorial</button>
+          <div class="settings-section-divider"></div>
+          <div class="settings-label settings-label-section">Transfer Progress</div>
+          <div class="settings-hint">Back up or move your saves to another device</div>
+          <div id="transfer-last-export" class="settings-hint transfer-last-export" style="display:none"></div>
+          <div class="transfer-progress-btns">
+            <button id="settings-export-btn" class="settings-link-btn">&#128190; Export File</button>
+            <button id="settings-clipboard-btn" class="settings-link-btn">&#128203; Copy</button>
+          </div>
+          <button id="settings-import-btn" class="settings-link-btn" style="margin-top:4px">&#128229; Import Progress</button>
+          <input type="file" id="settings-import-file" accept=".minectris" style="display:none">
+          <div id="transfer-import-preview" class="transfer-import-preview" style="display:none">
+            <div id="transfer-import-preview-text" class="transfer-import-preview-text"></div>
+            <div class="transfer-import-preview-warn">&#9888; Existing progress will be overwritten.</div>
+            <div class="transfer-import-preview-actions">
+              <button id="transfer-import-confirm-btn" class="settings-link-btn transfer-import-confirm-btn">&#10003; Confirm Import</button>
+              <button id="transfer-import-cancel-btn" class="settings-link-btn transfer-import-cancel-btn">&#10007; Cancel</button>
+            </div>
+          </div>
+          <div id="transfer-feedback" class="settings-hint transfer-feedback" style="display:none"></div>
           </div><!-- end #settings-pane-general -->
 
           <!-- Pane: Controls (keybindings) -->

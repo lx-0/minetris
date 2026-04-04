@@ -3,6 +3,9 @@
 //           world.js (createBlockMesh), shaders.js (createBlockMaterialColorblind),
 //           achievements.js (loadAchievements)
 
+const GAME_VERSION = "2.2";
+const TRANSFER_LAST_EXPORT_KEY = "mineCtris_lastExportTime";
+
 const AUDIO_SETTINGS_KEY = "mineCtris_audioSettings";
 const COLORBLIND_KEY = "mineCtris_colorblindMode";
 const THEME_STORAGE_KEY = "mineCtris_theme";
@@ -451,6 +454,240 @@ function setMobileDifficultyEnabled(val) {
   _saveMobileDifficulty();
 }
 
+// ── Transfer Progress (export / import) ───────────────────────────────────────
+
+/** Collect all mineCtris_* localStorage keys into a plain object. */
+function _collectProgressData() {
+  const data = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("mineCtris_")) {
+        data[key] = localStorage.getItem(key);
+      }
+    }
+  } catch (_) {}
+  return data;
+}
+
+/** Build preview summary string from raw progress data object. */
+function _buildProgressPreview(data) {
+  let level = 1;
+  let achCount = 0;
+  let cosmeticCount = 0;
+  try {
+    const stats = data["mineCtris_stats"] ? JSON.parse(data["mineCtris_stats"]) : null;
+    if (stats && typeof getLevelFromXP === "function") {
+      level = getLevelFromXP(stats.playerXP || 0);
+    } else if (stats && stats.playerXP) {
+      level = Math.max(1, Math.floor(Math.sqrt(stats.playerXP / 50)));
+    }
+  } catch (_) {}
+  try {
+    const achs = data["mineCtris_achievements"] ? JSON.parse(data["mineCtris_achievements"]) : null;
+    if (achs && typeof achs === "object") {
+      achCount = Object.keys(achs).filter(function(k) { return achs[k]; }).length;
+    }
+  } catch (_) {}
+  try {
+    const rewards = data["mineCtris_seasonRewards"] ? JSON.parse(data["mineCtris_seasonRewards"]) : null;
+    if (rewards && typeof rewards === "object") {
+      cosmeticCount = Object.keys(rewards).length;
+    }
+  } catch (_) {}
+  return "Level " + level + ", " + achCount + " achievement" + (achCount !== 1 ? "s" : "") +
+    (cosmeticCount > 0 ? ", " + cosmeticCount + " cosmetic" + (cosmeticCount !== 1 ? "s" : "") : "");
+}
+
+/** Build the full export payload: metadata + all progress keys, base64-encoded. */
+function _buildExportPayload() {
+  const data = _collectProgressData();
+  const stats = data["mineCtris_stats"] ? (function() { try { return JSON.parse(data["mineCtris_stats"]); } catch(_) { return {}; } })() : {};
+  const meta = {
+    version: GAME_VERSION,
+    exportedAt: new Date().toISOString(),
+    playerLevel: (typeof getLevelFromXP === "function") ? getLevelFromXP(stats.playerXP || 0) : 1,
+    gamesPlayed: stats.gamesPlayed || 0,
+  };
+  data["_meta"] = meta;
+  return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+}
+
+/** Trigger a .minectris file download. */
+function exportProgress() {
+  try {
+    const encoded = _buildExportPayload();
+    const blob = new Blob([encoded], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "minectris_save_" + new Date().toISOString().slice(0, 10) + ".minectris";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    _recordExportTime();
+    _showTransferFeedback("Exported!", "#0f0");
+  } catch (e) {
+    _showTransferFeedback("Export failed.", "#f55");
+  }
+}
+
+/** Copy encoded save to clipboard. */
+function copyProgressToClipboard() {
+  try {
+    const encoded = _buildExportPayload();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(encoded).then(function() {
+        _recordExportTime();
+        _showTransferFeedback("Copied to clipboard!", "#0f0");
+      }, function() {
+        _showTransferFeedback("Copy failed — try Export File.", "#f55");
+      });
+    } else {
+      // Fallback for older browsers.
+      const ta = document.createElement("textarea");
+      ta.value = encoded;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      _recordExportTime();
+      _showTransferFeedback("Copied to clipboard!", "#0f0");
+    }
+  } catch (_) {
+    _showTransferFeedback("Copy failed — try Export File.", "#f55");
+  }
+}
+
+function _recordExportTime() {
+  try {
+    const ts = new Date().toISOString();
+    localStorage.setItem(TRANSFER_LAST_EXPORT_KEY, ts);
+    _syncLastExportLabel();
+  } catch (_) {}
+}
+
+function _syncLastExportLabel() {
+  const el = document.getElementById("transfer-last-export");
+  if (!el) return;
+  try {
+    const ts = localStorage.getItem(TRANSFER_LAST_EXPORT_KEY);
+    if (ts) {
+      const d = new Date(ts);
+      el.textContent = "Last export: " + d.toLocaleDateString() + " " + d.toLocaleTimeString();
+      el.style.display = "";
+    } else {
+      el.style.display = "none";
+    }
+  } catch (_) {
+    el.style.display = "none";
+  }
+}
+
+let _pendingImportData = null;
+
+/** Parse and validate an import string (base64-encoded JSON). Returns data object or throws. */
+function _parseImportString(str) {
+  const json = decodeURIComponent(escape(atob(str.trim())));
+  const data = JSON.parse(json);
+  if (!data || typeof data !== "object") throw new Error("Invalid format");
+  // _meta is optional but keys must include at least one mineCtris_ key.
+  const hasKeys = Object.keys(data).some(function(k) { return k.startsWith("mineCtris_"); });
+  if (!hasKeys) throw new Error("No progress data found");
+  return data;
+}
+
+/** Show the import preview area with parsed data. */
+function _showImportPreview(data) {
+  _pendingImportData = data;
+  const previewText = document.getElementById("transfer-import-preview-text");
+  if (previewText) previewText.textContent = _buildProgressPreview(data);
+  const previewArea = document.getElementById("transfer-import-preview");
+  if (previewArea) previewArea.style.display = "";
+}
+
+function _hideImportPreview() {
+  _pendingImportData = null;
+  const previewArea = document.getElementById("transfer-import-preview");
+  if (previewArea) previewArea.style.display = "none";
+}
+
+/** Apply the pending import: write all mineCtris_* keys to localStorage, then reload. */
+function _applyImport() {
+  if (!_pendingImportData) return;
+  try {
+    const data = _pendingImportData;
+    Object.keys(data).forEach(function(key) {
+      if (key.startsWith("mineCtris_")) {
+        try { localStorage.setItem(key, data[key]); } catch (_) {}
+      }
+    });
+    window.location.reload();
+  } catch (e) {
+    _hideImportPreview();
+    _showTransferFeedback("Import failed: " + e.message, "#f55");
+  }
+}
+
+/** Show a brief feedback message below the transfer section. */
+function _showTransferFeedback(msg, color) {
+  const el = document.getElementById("transfer-feedback");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color || "#0f0";
+  el.style.display = "";
+  clearTimeout(el._fbTimer);
+  el._fbTimer = setTimeout(function() { el.style.display = "none"; }, 3000);
+}
+
+function _initTransferProgressSection() {
+  _syncLastExportLabel();
+
+  const exportBtn = document.getElementById("settings-export-btn");
+  if (exportBtn) exportBtn.addEventListener("click", exportProgress);
+
+  const clipboardBtn = document.getElementById("settings-clipboard-btn");
+  if (clipboardBtn) clipboardBtn.addEventListener("click", copyProgressToClipboard);
+
+  const importBtn = document.getElementById("settings-import-btn");
+  const fileInput = document.getElementById("settings-import-file");
+
+  if (importBtn && fileInput) {
+    importBtn.addEventListener("click", function() {
+      _hideImportPreview();
+      fileInput.value = "";
+      fileInput.click();
+    });
+    fileInput.addEventListener("change", function() {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = _parseImportString(e.target.result);
+          _showImportPreview(data);
+        } catch (_) {
+          _showTransferFeedback("Invalid save file.", "#f55");
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  const confirmBtn = document.getElementById("transfer-import-confirm-btn");
+  if (confirmBtn) confirmBtn.addEventListener("click", _applyImport);
+
+  const cancelBtn = document.getElementById("transfer-import-cancel-btn");
+  if (cancelBtn) cancelBtn.addEventListener("click", function() {
+    _hideImportPreview();
+    _showTransferFeedback("Import cancelled.", "#aaa");
+  });
+}
+
 /** Called once during init() — loads persisted settings and wires sliders. */
 function initSettings() {
   _loadAudioSettings();
@@ -610,6 +847,7 @@ function initSettings() {
   });
 
   _initControlsTab();
+  _initTransferProgressSection();
 
   // Escape closes the settings overlay
   document.addEventListener('keydown', function (e) {
@@ -656,6 +894,8 @@ function openSettings(onClose) {
   if (typeof _syncGraphicsQualityButtons === 'function') _syncGraphicsQualityButtons();
   _syncDisplayNameField();
   _syncKeybindTable();
+  _syncLastExportLabel();
+  _hideImportPreview();
   // Always start on the General tab.
   const paneGeneral  = document.getElementById("settings-pane-general");
   const paneControls = document.getElementById("settings-pane-controls");
