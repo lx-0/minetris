@@ -1041,15 +1041,29 @@ function onWheel(event) {
 // animate() defined in js/core/game-loop.js
 
 function hideLoadingScreen() {
-  var ls = document.getElementById('loading-screen');
-  if (ls) {
-    ls.style.transition = 'opacity 0.4s ease';
-    ls.style.opacity = '0';
-    setTimeout(function() { ls.remove(); }, 400);
+  // Stop tip rotation and block animation intervals
+  if (window.__minetrisTipInterval) {
+    clearInterval(window.__minetrisTipInterval);
+    delete window.__minetrisTipInterval;
+  }
+  if (window.__minetrisBlockInterval) {
+    clearInterval(window.__minetrisBlockInterval);
+    delete window.__minetrisBlockInterval;
   }
   if (window.__minetrisLoadingObserver) {
     window.__minetrisLoadingObserver.disconnect();
     delete window.__minetrisLoadingObserver;
+  }
+  var ls = document.getElementById('loading-screen');
+  if (ls) {
+    // Snap bar to 100% before fading
+    var bar = document.getElementById('loading-bar');
+    var pct = document.getElementById('loading-pct');
+    if (bar) bar.style.width = '100%';
+    if (pct) pct.textContent = '100%';
+    ls.style.transition = 'opacity 0.6s ease';
+    ls.style.opacity = '0';
+    setTimeout(function() { if (ls.parentNode) ls.parentNode.removeChild(ls); }, 620);
   }
 }
 

@@ -39,36 +39,127 @@
   </head>
   <body>
     <!-- Loading screen — inline styles so it works even if style.css fails -->
-    <div id="loading-screen" style="position:fixed;inset:0;z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111;color:#fff;font-family:'Press Start 2P',monospace,sans-serif;">
-      <h1 style="font-size:2rem;margin-bottom:2rem;letter-spacing:0.1em;">MINETRIS</h1>
-      <div style="width:200px;height:4px;background:#333;border-radius:2px;overflow:hidden;margin-bottom:1rem;">
-        <div id="loading-bar" style="width:0%;height:100%;background:#4ade80;border-radius:2px;transition:width 0.3s ease;"></div>
-      </div>
-      <p id="loading-status" style="font-size:0.65rem;color:#888;">Loading game...</p>
+    <div id="loading-screen" style="position:fixed;inset:0;z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0d1117;color:#fff;font-family:'Press Start 2P',monospace,sans-serif;padding:1rem;box-sizing:border-box;">
       <style>
-        @keyframes minetris-pulse { 0%,100% { opacity:0.6; } 50% { opacity:1; } }
-        #loading-screen h1 { animation: minetris-pulse 2s ease-in-out infinite; }
+        @keyframes ls-pulse { 0%,100% { opacity:0.7; } 50% { opacity:1; } }
+        @keyframes ls-tip-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes ls-tip-out { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-6px); } }
+        @keyframes ls-block-spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
+        #loading-screen-title { animation: ls-pulse 2.4s ease-in-out infinite; color:#4ade80; text-shadow:0 0 18px rgba(74,222,128,0.45); font-size:clamp(1.2rem,5vw,2.2rem); letter-spacing:0.12em; margin-bottom:0.5rem; }
+        #loading-screen-subtitle { font-size:clamp(0.4rem,2vw,0.55rem); color:#6b8a6b; letter-spacing:0.25em; margin-bottom:2.5rem; }
+        #loading-blocks { display:flex; gap:6px; margin-bottom:2rem; }
+        .ls-block { width:18px; height:18px; border-radius:3px; opacity:0.35; transition:opacity 0.3s, background 0.3s; }
+        #loading-bar-wrap { width:min(320px,80vw); height:8px; background:#1e2a1e; border-radius:4px; overflow:hidden; margin-bottom:0.6rem; border:1px solid #2a3d2a; }
+        #loading-bar { width:0%; height:100%; background:linear-gradient(90deg,#22c55e,#4ade80); border-radius:4px; transition:width 0.35s ease; box-shadow:0 0 8px rgba(74,222,128,0.5); }
+        #loading-pct { font-size:0.5rem; color:#4ade80; margin-bottom:1.8rem; min-width:4ch; text-align:center; }
+        #loading-tip-wrap { min-height:2.8em; display:flex; align-items:center; justify-content:center; }
+        #loading-tip { font-size:clamp(0.38rem,1.8vw,0.52rem); color:#8fb88f; text-align:center; max-width:min(360px,85vw); line-height:1.8; }
+        #loading-tip.tip-out { animation: ls-tip-out 0.35s ease forwards; }
+        #loading-tip.tip-in  { animation: ls-tip-in  0.35s ease forwards; }
+        #loading-tip-label { font-size:0.35rem; color:#3d5c3d; letter-spacing:0.2em; margin-bottom:0.5rem; }
       </style>
+      <!-- Minecraft block icon row -->
+      <div id="loading-blocks">
+        <div class="ls-block" style="background:#5a8a3c;" title="Grass"></div>
+        <div class="ls-block" style="background:#a0784a;" title="Wood"></div>
+        <div class="ls-block" style="background:#7a7a8a;" title="Stone"></div>
+        <div class="ls-block" style="background:#3a9fd4;" title="Diamond"></div>
+        <div class="ls-block" style="background:#e8c84a;" title="Gold"></div>
+        <div class="ls-block" style="background:#c84444;" title="Redstone"></div>
+        <div class="ls-block" style="background:#1a0a2e;" title="Obsidian"></div>
+      </div>
+      <h1 id="loading-screen-title">MINETRIS</h1>
+      <p id="loading-screen-subtitle">MINE &bull; BUILD &bull; SURVIVE THE FALL</p>
+      <div id="loading-bar-wrap">
+        <div id="loading-bar"></div>
+      </div>
+      <p id="loading-pct">0%</p>
+      <p id="loading-tip-label">TIP</p>
+      <div id="loading-tip-wrap">
+        <p id="loading-tip">Use WASD to move and Space to jump.</p>
+      </div>
     </div>
     <script>
-      // Track script loading progress
+      // ── Loading screen: progress tracking + rotating tips ────────────────────
       (function() {
+        var TIPS = [
+          // Controls
+          "Use WASD to move and Space to jump around the world.",
+          "Left-click to mine blocks. Right-click to place them.",
+          "Scroll the mouse wheel or press 1\u20137 to switch your held block.",
+          "Press C to open the Crafting Bench and upgrade your pickaxe.",
+          "Press Esc to pause and access the menu at any time.",
+          "Press Q/E to nudge the falling piece left or right. Z/X nudge depth.",
+          // Advanced techniques
+          "T-spin: rotate a T-piece into a tight gap to earn bonus points!",
+          "Back-to-Back bonus: clear Tetrises (4 lines) in a row for extra XP.",
+          "Combos keep scoring multipliers alive \u2014 don\u2019t let the chain break!",
+          "A Perfect Clear wipes the board and gives a massive score bonus.",
+          "Hold your pickaxe tier in mind \u2014 higher tiers mine faster and farther.",
+          "Tap F to activate an equipped Power-Up at the critical moment.",
+          // Mode-specific
+          "Sprint mode: race to clear 40 lines as fast as you can.",
+          "Blitz mode: score as many points as possible in 2 minutes.",
+          "Daily Challenge uses a fixed seed \u2014 everyone gets the same pieces!",
+          "Expedition mode sends you deep underground for rare ore rewards.",
+          "Survival mode ramps up speed over time \u2014 stay calm under pressure.",
+          // Minecraft flavour
+          "Obsidian blocks fall slowly but are worth triple points when cleared.",
+          "Diamond ore pieces are rare and score big \u2014 plan for them!",
+          "Every biome has unique block types and special combo animations.",
+          "Seasons change the world theme and unlock limited-time cosmetics.",
+          "Guild members share score milestones and unlock community rewards.",
+        ];
+
+        var tipIndex = Math.floor(Math.random() * TIPS.length);
+        var tipEl = document.getElementById('loading-tip');
+        var tipInterval = null;
+
+        function rotateTip() {
+          if (!tipEl) return;
+          tipEl.classList.remove('tip-in');
+          tipEl.classList.add('tip-out');
+          setTimeout(function() {
+            tipIndex = (tipIndex + 1) % TIPS.length;
+            tipEl.textContent = TIPS[tipIndex];
+            tipEl.classList.remove('tip-out');
+            tipEl.classList.add('tip-in');
+          }, 350);
+        }
+
+        // Set first tip immediately
+        if (tipEl) {
+          tipEl.textContent = TIPS[tipIndex];
+          tipEl.classList.add('tip-in');
+        }
+        tipInterval = setInterval(rotateTip, 3000);
+        window.__minetrisTipInterval = tipInterval;
+
+        // Animate block icons in sequence
+        var blocks = document.querySelectorAll('.ls-block');
+        var blockIdx = 0;
+        function cycleBlocks() {
+          blocks.forEach(function(b, i) { b.style.opacity = i === blockIdx ? '1' : '0.35'; });
+          blockIdx = (blockIdx + 1) % blocks.length;
+        }
+        cycleBlocks();
+        window.__minetrisBlockInterval = setInterval(cycleBlocks, 400);
+
+        // Progress tracking
         var totalScripts = 0;
         var loadedScripts = 0;
         var bar = null;
-        var status = null;
+        var pct = null;
 
-        // Count all script tags once DOM is available
         function updateProgress() {
           if (!bar) bar = document.getElementById('loading-bar');
-          if (!status) status = document.getElementById('loading-status');
-          if (!bar || !status) return;
-          var pct = totalScripts > 0 ? Math.round((loadedScripts / totalScripts) * 100) : 0;
-          bar.style.width = pct + '%';
-          status.textContent = loadedScripts < totalScripts ? 'Loading game... ' + pct + '%' : 'Starting...';
+          if (!pct) pct = document.getElementById('loading-pct');
+          if (!bar || !pct) return;
+          var p = totalScripts > 0 ? Math.round((loadedScripts / totalScripts) * 100) : 0;
+          bar.style.width = p + '%';
+          pct.textContent = (loadedScripts < totalScripts ? p : 100) + '%';
         }
 
-        // Use MutationObserver to count script elements as they are added
         var observer = new MutationObserver(function(mutations) {
           mutations.forEach(function(m) {
             m.addedNodes.forEach(function(node) {
@@ -82,7 +173,6 @@
         });
         observer.observe(document.documentElement, { childList: true, subtree: true });
 
-        // Also count scripts already in the head
         var existing = document.querySelectorAll('script[src]');
         totalScripts += existing.length;
         existing.forEach(function(s) {
