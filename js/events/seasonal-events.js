@@ -1,317 +1,392 @@
-// Seasonal Events system — quarterly 2-week themed events with unique modifiers,
-// event-exclusive cosmetics, and community goal tie-in.
+// Seasonal Events Framework — local JSON-based time-limited themed events.
+// Events auto-activate and deactivate based on local date.
+// Each event can define themed visuals, a challenge, and exclusive rewards.
 //
-// Requires: guild.js (for GUILD_API), community-goals.js (for ticker refresh),
-//           cosmetics.js (for seasonal cosmetic unlock checks)
+// Requires: cosmetics.js (loadUnlockedCosmetics, saveUnlockedCosmetics)
 
-// ── API endpoint ──────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
-const SE_API = typeof GUILD_API !== 'undefined' ? GUILD_API : 'https://minectris-leaderboard.workers.dev';
+const SE_STORAGE_KEY      = 'mineCtris_seasonalEventProgress';
+const SE_REWARDED_KEY     = 'mineCtris_seasonalEventRewarded';
+const SE_CONFIG_PATH      = 'data/seasonal-events.json';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-let _seCache       = null;   // cached event data from server
-let _seFetchedAt   = 0;      // timestamp of last fetch (ms)
-let _seTickerInterval = null;
-let _seSessionVoidAdjacentMined = 0; // reset per game session
+let _seConfigs         = [];     // loaded event definitions
+let _seActiveEvent     = null;   // currently active event (or null)
+let _seProgress        = {};     // { [eventId]: { linesCleared: N } }
+let _seRewarded        = {};     // { [eventId]: true } — events already rewarded
+let _seTickerInterval  = null;
+let _seParticlePool    = [];     // pre-allocated flower particle meshes
+const _SE_PARTICLE_POOL_SIZE = 60;
 
-const SE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+// ── Persistence ───────────────────────────────────────────────────────────────
 
-// ── API helpers ───────────────────────────────────────────────────────────────
-
-async function _seFetch(path, options = {}) {
+function _seLoadProgress() {
   try {
-    const res  = await fetch(SE_API + path, {
-      headers: { 'Content-Type': 'application/json' },
-      ...options,
-    });
-    const data = await res.json().catch(() => ({}));
-    return { ok: res.ok, data };
-  } catch (_) {
-    return { ok: false, data: {} };
-  }
+    const raw = localStorage.getItem(SE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (_) { return {}; }
+}
+
+function _seSaveProgress() {
+  try { localStorage.setItem(SE_STORAGE_KEY, JSON.stringify(_seProgress)); } catch (_) {}
+}
+
+function _seLoadRewarded() {
+  try {
+    const raw = localStorage.getItem(SE_REWARDED_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (_) { return {}; }
+}
+
+function _seSaveRewarded() {
+  try { localStorage.setItem(SE_REWARDED_KEY, JSON.stringify(_seRewarded)); } catch (_) {}
+}
+
+// ── Date helpers ──────────────────────────────────────────────────────────────
+
+function _seIsEventActive(ev) {
+  const now   = new Date();
+  const start = new Date(ev.startDate + 'T00:00:00');
+  const end   = new Date(ev.endDate   + 'T23:59:59');
+  return now >= start && now <= end;
+}
+
+function _seDaysLeft(ev) {
+  const end = new Date(ev.endDate + 'T23:59:59');
+  return Math.max(0, Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24)));
+}
+
+// ── Config loading ────────────────────────────────────────────────────────────
+
+async function _seLoadConfigs() {
+  try {
+    const res  = await fetch(SE_CONFIG_PATH + '?v=' + Date.now());
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (_) { return []; }
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-/**
- * Fetch and cache the current seasonal event.
- * Returns event data or { active: false }.
- */
-async function fetchSeasonalEvent() {
-  const now = Date.now();
-  if (_seCache && (now - _seFetchedAt) < SE_CACHE_TTL_MS) return _seCache;
-
-  const { ok, data } = await _seFetch('/api/seasonal-events/current');
-  if (!ok) return { active: false };
-
-  _seCache    = data;
-  _seFetchedAt = now;
-  return data;
-}
-
-/**
- * Returns the cached seasonal event synchronously (may be stale / null).
- * Safe to call from pieces.js or other hot paths.
- */
+/** Returns the active seasonal event config, or null. */
 function getActiveSeasonalEvent() {
-  return (_seCache && _seCache.active) ? _seCache : null;
+  return _seActiveEvent;
+}
+
+/** Returns event progress for the active event (lines cleared so far). */
+function getSeasonalEventProgress() {
+  if (!_seActiveEvent) return null;
+  const p = _seProgress[_seActiveEvent.id] || { linesCleared: 0 };
+  const target = _seActiveEvent.challenge ? _seActiveEvent.challenge.target : 100;
+  return {
+    linesCleared: p.linesCleared || 0,
+    target,
+    pct: Math.min(100, Math.round(((p.linesCleared || 0) / target) * 100)),
+    completed: (p.linesCleared || 0) >= target,
+  };
 }
 
 /**
- * Returns the void block multiplier from the active event (1 = normal, no event).
+ * Called by lineclear.js after each line-clear event.
+ * Tracks challenge progress and grants rewards when target is met.
+ * @param {number} count — number of lines cleared this clear
  */
-function getSeasonalVoidBlockMult() {
-  const ev = getActiveSeasonalEvent();
-  if (!ev || !ev.modifiers) return 1;
-  return ev.modifiers.voidBlockMult || 1;
-}
+function onSeasonalLineClear(count) {
+  if (!_seActiveEvent || !_seActiveEvent.challenge) return;
 
-/**
- * Track a void-adjacent block mined this session.
- * Call whenever a non-void block adjacent to a void block is removed.
- */
-function recordVoidAdjacentMined() {
-  _seSessionVoidAdjacentMined++;
-}
+  const ev = _seActiveEvent;
+  if (!_seProgress[ev.id]) _seProgress[ev.id] = { linesCleared: 0 };
+  _seProgress[ev.id].linesCleared += count;
+  _seSaveProgress();
 
-/**
- * Reset session void-adjacent counter (call on game reset).
- */
-function resetSeasonalSessionStats() {
-  _seSessionVoidAdjacentMined = 0;
-}
-
-/**
- * Submit this session's void-adjacent mining contribution to the community goal.
- * Call at game end alongside submitCommunityGoalContribution.
- */
-async function submitSeasonalEventProgress() {
-  const ev = getActiveSeasonalEvent();
-  if (!ev || !_seSessionVoidAdjacentMined) return null;
-
-  const displayName = typeof loadDisplayName === 'function' ? loadDisplayName() : '';
-  const { ok, data } = await _seFetch('/api/seasonal-events/progress', {
-    method: 'POST',
-    body:   JSON.stringify({
-      voidAdjacentMined: _seSessionVoidAdjacentMined,
-      displayName,
-    }),
-  });
-
-  if (ok) {
-    // Update cached progress
-    if (_seCache) {
-      _seCache.progress = data.progress;
-      _seCache.pct      = data.pct;
-    }
-    _refreshSeEventTicker();
+  // Check if challenge just completed
+  const prog = _seProgress[ev.id].linesCleared;
+  const target = ev.challenge.target;
+  if (prog >= target && !_seRewarded[ev.id]) {
+    _seGrantEventRewards(ev);
   }
 
-  // Reset for next session
-  _seSessionVoidAdjacentMined = 0;
-  return ok ? data : null;
+  _seUpdateProgressHUD();
 }
 
-// ── Void-Adjacent Mining Detection ───────────────────────────────────────────
+// ── Reward granting ───────────────────────────────────────────────────────────
 
-/**
- * Check whether the given grid position is adjacent to any landed void block.
- * Call when a block is mined and the seasonal event is active.
- * @param {{ x: number, y: number, z: number }} gp  grid position of mined block
- * @returns {boolean}
- */
-function isAdjacentToVoid(gp) {
-  if (typeof worldGroup === 'undefined' || !worldGroup) return false;
+function _seGrantEventRewards(ev) {
+  if (!ev.challenge || !ev.challenge.rewards) return;
+  _seRewarded[ev.id] = true;
+  _seSaveRewarded();
 
-  const offsets = [
-    { x: 1, y: 0, z: 0 }, { x: -1, y: 0, z: 0 },
-    { x: 0, y: 1, z: 0 }, { x: 0,  y: -1, z: 0 },
-    { x: 0, y: 0, z: 1 }, { x: 0,  y:  0, z: -1 },
-  ];
-
-  for (let i = 0; i < worldGroup.children.length; i++) {
-    const obj = worldGroup.children[i];
-    if (obj.name !== 'landed_block' || !obj.userData.gridPos) continue;
-    if (!obj.userData.isVoid) continue;
-
-    const op = obj.userData.gridPos;
-    for (const off of offsets) {
-      if (op.x === gp.x + off.x &&
-          Math.abs(op.y - (gp.y + off.y)) < 0.1 &&
-          op.z === gp.z + off.z) {
-        return true;
+  if (typeof loadUnlockedCosmetics === 'function' &&
+      typeof saveUnlockedCosmetics === 'function') {
+    const unlocked = loadUnlockedCosmetics();
+    let changed = false;
+    for (const r of ev.challenge.rewards) {
+      if (r.cosmeticId && !unlocked.includes(r.cosmeticId)) {
+        unlocked.push(r.cosmeticId);
+        changed = true;
       }
     }
+    if (changed) saveUnlockedCosmetics(unlocked);
   }
-  return false;
+
+  _seShowRewardToast(ev);
 }
 
-// ── Visual World Tint (Corruption Spreads) ────────────────────────────────────
+function _seShowRewardToast(ev) {
+  const toastEl = document.getElementById('event-end-toast');
+  if (!toastEl) return;
 
-let _seOverlayEl    = null;
-let _seOverlayRafId = null;
+  const labels = ev.challenge.rewards.map(r => r.label).join(' + ');
+  toastEl.innerHTML =
+    `<div class="se-reward-toast">` +
+      `<span class="se-reward-toast-icon">${_seEsc(ev.icon || '🌸')}</span>` +
+      `<div class="se-reward-toast-text">` +
+        `<strong>Challenge Complete!</strong><br>` +
+        `You earned: ${_seEsc(labels)}` +
+      `</div>` +
+    `</div>`;
+  toastEl.style.display = 'block';
+  setTimeout(() => { toastEl.style.display = 'none'; }, 6000);
+}
+
+// ── Particle effects ──────────────────────────────────────────────────────────
 
 /**
- * Apply or update the corruption world tint overlay.
- * Purple-to-clean gradient based on event progress pct (0 = max corruption, 100 = clean).
+ * Pre-allocate flower particle meshes into a pool.
+ * Called from initSeasonalEvents after scene exists.
  */
-function updateSeasonalWorldTint() {
-  const ev = getActiveSeasonalEvent();
-  if (!_seOverlayEl) return;
+function _seInitParticlePool() {
+  if (typeof scene === 'undefined' || !scene || typeof THREE === 'undefined') return;
 
-  if (!ev || !ev.active) {
-    _seOverlayEl.style.display = 'none';
+  const geo = new THREE.SphereGeometry(0.15, 4, 4);
+  for (let i = 0; i < _SE_PARTICLE_POOL_SIZE; i++) {
+    const mat  = new THREE.MeshBasicMaterial({ color: 0xf9a8d4, transparent: true, opacity: 0.9 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.visible = false;
+    scene.add(mesh);
+    _seParticlePool.push({ mesh, active: false, vel: null, age: 0, maxAge: 0 });
+  }
+}
+
+function _seAcquireParticle() {
+  for (let i = 0; i < _seParticlePool.length; i++) {
+    if (!_seParticlePool[i].active) { _seParticlePool[i].active = true; return _seParticlePool[i]; }
+  }
+  return null;
+}
+
+function _seReleaseParticle(p) {
+  p.mesh.visible = false;
+  p.active = false;
+}
+
+const _seActiveParticles = [];
+
+/**
+ * Spawn cherry-blossom flower particles at a given world-space position.
+ * Call on line clears when spring event is active.
+ */
+function spawnSpringParticles(worldX, worldY, worldZ) {
+  if (!_seActiveEvent) return;
+  const colors = [0xf9a8d4, 0xfce7f3, 0xfbbf24, 0xfb7185];
+  for (let i = 0; i < 10; i++) {
+    const p = _seAcquireParticle();
+    if (!p) break;
+    p.mesh.position.set(
+      worldX + (Math.random() - 0.5) * 4,
+      worldY + Math.random() * 0.5,
+      worldZ + (Math.random() - 0.5) * 4
+    );
+    p.mesh.material.color.setHex(colors[Math.floor(Math.random() * colors.length)]);
+    p.mesh.material.opacity = 0.9;
+    p.mesh.visible = true;
+    p.vel = {
+      x: (Math.random() - 0.5) * 3,
+      y: 2 + Math.random() * 3,
+      z: (Math.random() - 0.5) * 3,
+    };
+    p.age = 0;
+    p.maxAge = 0.6 + Math.random() * 0.5;
+    _seActiveParticles.push(p);
+  }
+}
+
+/**
+ * Advance particle simulation. Call from the game loop every frame.
+ * @param {number} dt — delta time in seconds
+ */
+function updateSeasonalParticles(dt) {
+  for (let i = _seActiveParticles.length - 1; i >= 0; i--) {
+    const p = _seActiveParticles[i];
+    p.age += dt;
+    const t = p.age / p.maxAge;
+    if (t >= 1) {
+      _seReleaseParticle(p);
+      _seActiveParticles.splice(i, 1);
+      continue;
+    }
+    p.mesh.position.x += p.vel.x * dt;
+    p.mesh.position.y += p.vel.y * dt;
+    p.mesh.position.z += p.vel.z * dt;
+    p.vel.y -= 4.0 * dt;  // gentle gravity + drift
+    p.vel.x *= (1 - 0.5 * dt);
+    p.vel.z *= (1 - 0.5 * dt);
+    p.mesh.material.opacity = 0.9 * (1 - t);
+    p.mesh.scale.setScalar(1 - t * 0.5);
+  }
+}
+
+// ── HUD: event progress tracker ───────────────────────────────────────────────
+
+function _seUpdateProgressHUD() {
+  const el = document.getElementById('se-event-progress');
+  if (!el) return;
+
+  if (!_seActiveEvent || !_seActiveEvent.challenge) {
+    el.style.display = 'none';
     return;
   }
 
-  const progress = ev.pct || 0;
-  // Opacity: 0.18 at 0%, fades to 0 at 100%
-  const opacity = 0.18 * Math.max(0, (1 - progress / 100));
-  if (opacity < 0.005) {
-    _seOverlayEl.style.display = 'none';
-    return;
+  const prog = getSeasonalEventProgress();
+  if (!prog) { el.style.display = 'none'; return; }
+
+  const accent = (_seActiveEvent.theme && _seActiveEvent.theme.hudAccent) || '#f472b6';
+  const icon   = _seActiveEvent.icon || '🌸';
+
+  if (prog.completed) {
+    el.innerHTML =
+      `<div class="se-prog-inner se-prog-done">` +
+        `<span class="se-prog-icon">${icon}</span>` +
+        `<span class="se-prog-label">Spring Challenge <strong>Complete!</strong></span>` +
+        `<span class="se-prog-badge">🎖</span>` +
+      `</div>`;
+  } else {
+    el.innerHTML =
+      `<div class="se-prog-inner">` +
+        `<span class="se-prog-icon">${icon}</span>` +
+        `<span class="se-prog-label">${prog.linesCleared}/${prog.target} lines</span>` +
+        `<div class="se-prog-bar-wrap">` +
+          `<div class="se-prog-bar-fill" style="width:${prog.pct}%;background:${_seEsc(accent)}"></div>` +
+        `</div>` +
+      `</div>`;
   }
-  _seOverlayEl.style.background = `rgba(80, 0, 120, ${opacity.toFixed(3)})`;
-  _seOverlayEl.style.display    = 'block';
+  el.style.display = 'block';
 }
 
-// ── HUD Ticker ────────────────────────────────────────────────────────────────
+// ── HUD: ticker (bottom-left, stacked above community goals) ──────────────────
 
-function _seProgressBar(pct) {
-  return `<div class="se-ticker-bar-wrap">` +
-    `<div class="se-ticker-bar-fill" style="width:${pct}%"></div>` +
-    `</div>`;
-}
-
-async function _refreshSeEventTicker() {
+function _seRefreshTicker() {
   const el = document.getElementById('se-ticker');
   if (!el) return;
 
-  const ev = _seCache && _seCache.active ? _seCache : await fetchSeasonalEvent();
-  if (!ev || !ev.active) {
+  if (!_seActiveEvent) {
     el.style.display = 'none';
-    updateSeasonalWorldTint();
     return;
   }
 
-  const pct = ev.pct || 0;
-  const progress    = ev.progress || 0;
-  const target      = ev.communityGoal ? ev.communityGoal.target : 1000000;
-  const displayProg = _seFormatNum(progress) + ' / ' + _seFormatNum(target);
+  const prog   = getSeasonalEventProgress();
+  const ev     = _seActiveEvent;
+  const days   = _seDaysLeft(ev);
+  const accent = (ev.theme && ev.theme.hudAccent) || '#f472b6';
 
   el.innerHTML =
     `<div class="se-ticker-inner">` +
-      `<span class="se-ticker-label">☠ ${_seEsc(ev.name)}</span>` +
-      `<span class="se-ticker-progress">${displayProg}</span>` +
-      `<span class="se-ticker-pct">${pct}%</span>` +
-      _seProgressBar(pct) +
-      `<span class="se-ticker-players">👥 ${ev.activePlayerCount || 0}</span>` +
+      `<span class="se-ticker-label">${_seEsc(ev.icon || '🌸')} ${_seEsc(ev.name)}</span>` +
+      (prog
+        ? `<span class="se-ticker-progress">${prog.linesCleared}/${prog.target} lines</span>` +
+          `<div class="se-ticker-bar-wrap"><div class="se-ticker-bar-fill" style="width:${prog.pct}%;background:${_seEsc(accent)}"></div></div>`
+        : '') +
+      `<span class="se-ticker-days">${days}d left</span>` +
     `</div>`;
   el.style.display = 'block';
-
-  updateSeasonalWorldTint();
 }
 
-function _seFormatNum(n) {
-  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-  if (n >= 1000)    return (n / 1000).toFixed(1) + 'K';
-  return String(n);
-}
+// ── Main menu banner ──────────────────────────────────────────────────────────
 
-function _seEsc(s) {
-  return String(s || '').replace(/[&<>"']/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-// ── Event Banner (mode-select screen) ────────────────────────────────────────
-
-async function renderSeasonalEventBanner() {
+function renderSeasonalEventBanner() {
   const bannerEl = document.getElementById('se-event-banner');
   if (!bannerEl) return;
 
-  const ev = await fetchSeasonalEvent();
-  if (!ev || !ev.active) {
+  if (!_seActiveEvent) {
     bannerEl.style.display = 'none';
     return;
   }
 
-  // Compute days remaining
-  const endDate      = new Date(ev.endDate + 'T23:59:59Z');
-  const now          = new Date();
-  const daysLeft     = Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60 * 24)));
-  const daysStr      = daysLeft === 1 ? '1 day left' : `${daysLeft} days left`;
-  const pct          = ev.pct || 0;
-  const target       = ev.communityGoal ? ev.communityGoal.target : 1000000;
-  const progressText = _seFormatNum(ev.progress || 0) + ' / ' + _seFormatNum(target);
+  const ev     = _seActiveEvent;
+  const prog   = getSeasonalEventProgress();
+  const days   = _seDaysLeft(ev);
+  const daysStr = days === 1 ? '1 day left' : `${days} days left`;
+  const accent = (ev.theme && ev.theme.bannerAccent) || '#ec4899';
+  const rewarded = _seRewarded[ev.id];
 
   bannerEl.innerHTML =
-    `<div class="se-banner-inner">` +
+    `<div class="se-banner-inner" style="border-color:${_seEsc(accent)}">` +
       `<div class="se-banner-left">` +
-        `<span class="se-banner-icon">☠</span>` +
+        `<span class="se-banner-icon">${_seEsc(ev.icon || '🌸')}</span>` +
         `<div class="se-banner-text-wrap">` +
           `<span class="se-banner-label">SEASONAL EVENT</span>` +
-          `<span class="se-banner-name">${_seEsc(ev.name)}</span>` +
+          `<span class="se-banner-name" style="color:${_seEsc(accent)}">${_seEsc(ev.name)}</span>` +
           `<span class="se-banner-blurb">${_seEsc(ev.narrativeBlurb)}</span>` +
         `</div>` +
       `</div>` +
       `<div class="se-banner-right">` +
         `<div class="se-banner-days">${_seEsc(daysStr)}</div>` +
-        `<div class="se-banner-goal-row">` +
-          `<span class="se-banner-goal-label">COMMUNITY GOAL</span>` +
-          `<span class="se-banner-goal-pct">${pct}%</span>` +
-        `</div>` +
-        `<div class="se-banner-goal-bar-wrap">` +
-          `<div class="se-banner-goal-bar-fill" style="width:${pct}%"></div>` +
-        `</div>` +
-        `<span class="se-banner-goal-progress">${_seEsc(progressText)}</span>` +
-        `<button class="se-banner-rewards-btn" onclick="showSeasonalEventCosmetics()">&#127873; Rewards</button>` +
+        (ev.challenge && prog
+          ? `<div class="se-banner-challenge-row">` +
+              `<span class="se-banner-challenge-label">CHALLENGE</span>` +
+              (rewarded
+                ? `<span class="se-banner-challenge-done" style="color:${_seEsc(accent)}">&#10003; Complete!</span>`
+                : `<span class="se-banner-challenge-pct">${prog.pct}%</span>`) +
+            `</div>` +
+            `<div class="se-banner-goal-bar-wrap">` +
+              `<div class="se-banner-goal-bar-fill" style="width:${prog.pct}%;background:${_seEsc(accent)}"></div>` +
+            `</div>` +
+            `<span class="se-banner-goal-progress">${prog.linesCleared} / ${prog.target} lines</span>`
+          : '') +
+        `<button class="se-banner-rewards-btn" style="border-color:${_seEsc(accent)};color:${_seEsc(accent)}" onclick="showSeasonalEventRewards()">&#127873; Rewards</button>` +
       `</div>` +
     `</div>`;
   bannerEl.style.display = 'block';
 }
 
-// ── Cosmetics Showcase Panel ──────────────────────────────────────────────────
+// ── Rewards panel ─────────────────────────────────────────────────────────────
 
-async function showSeasonalEventCosmetics() {
+function showSeasonalEventRewards() {
   const panelEl = document.getElementById('se-cosmetics-panel');
   if (!panelEl) return;
 
-  const ev = getActiveSeasonalEvent() || await fetchSeasonalEvent();
-  if (!ev || !ev.active || !ev.cosmetics || !ev.cosmetics.length) {
-    panelEl.innerHTML =
-      `<div class="se-cos-header">` +
-        `<span>EVENT REWARDS</span>` +
-        `<button class="se-cos-close" onclick="hideSeasonalEventCosmetics()">✕</button>` +
-      `</div>` +
-      `<div class="se-cos-empty">No rewards defined for this event.</div>`;
-    panelEl.style.display = 'flex';
+  const ev = _seActiveEvent;
+  if (!ev) {
+    panelEl.style.display = 'none';
     return;
   }
 
-  const rarityColors = { common: '#aaa', rare: '#4f9cf7', epic: '#b860f0', legendary: '#ffd700', seasonal: '#88ffcc' };
+  const rewards  = (ev.challenge && ev.challenge.rewards) || [];
+  const rewarded = _seRewarded[ev.id];
+  const accent   = (ev.theme && ev.theme.bannerAccent) || '#ec4899';
 
-  const cosRows = ev.cosmetics.map(c => {
-    const rc = rarityColors[c.rarity] || '#aaa';
-    const rarityLabel = (c.rarity || 'seasonal').toUpperCase();
-    return `<div class="se-cos-row">` +
-      `<span class="se-cos-icon">${c.icon || '✦'}</span>` +
+  const rows = rewards.map(r =>
+    `<div class="se-cos-row">` +
+      `<span class="se-cos-icon">${_seEsc(ev.icon || '🌸')}</span>` +
       `<div class="se-cos-info">` +
-        `<span class="se-cos-name">${_seEsc(c.name)}</span>` +
-        `<span class="se-cos-cat">${_seEsc(c.category || '')}</span>` +
-        `<span class="se-cos-rarity" style="color:${rc}">${_seEsc(rarityLabel)}</span>` +
+        `<span class="se-cos-name">${_seEsc(r.label)}</span>` +
+        `<span class="se-cos-rarity" style="color:${_seEsc(accent)}">SEASONAL</span>` +
       `</div>` +
-      `<span class="se-cos-tag">TIME-LIMITED</span>` +
-    `</div>`;
-  }).join('');
+      `<span class="se-cos-tag">${rewarded ? '&#10003; EARNED' : 'TIME-LIMITED'}</span>` +
+    `</div>`
+  ).join('');
 
   panelEl.innerHTML =
     `<div class="se-cos-header">` +
-      `<span>✦ EVENT REWARDS</span>` +
-      `<button class="se-cos-close" onclick="hideSeasonalEventCosmetics()">✕</button>` +
+      `<span>${_seEsc(ev.icon || '🌸')} EVENT REWARDS</span>` +
+      `<button class="se-cos-close" onclick="hideSeasonalEventCosmetics()">&#10005;</button>` +
     `</div>` +
-    `<div class="se-cos-subtitle">These cosmetics are only available during <em>${_seEsc(ev.name)}</em>.<br>They will never return once the event ends.</div>` +
-    `<div class="se-cos-list">${cosRows}</div>`;
+    `<div class="se-cos-subtitle">` +
+      `Complete the challenge to earn these rewards.<br>They will never return once the event ends.` +
+    `</div>` +
+    `<div class="se-cos-list">${rows}</div>`;
   panelEl.style.display = 'flex';
 }
 
@@ -320,46 +395,80 @@ function hideSeasonalEventCosmetics() {
   if (panelEl) panelEl.style.display = 'none';
 }
 
-// ── Unlock seasonal cosmetics ─────────────────────────────────────────────────
+// Legacy alias used by old se-event-banner markup
+function showSeasonalEventCosmetics() { showSeasonalEventRewards(); }
+
+// ── Block theme override ──────────────────────────────────────────────────────
 
 /**
- * Award all seasonal cosmetics from the active event to the player's unlocked set.
- * Call after a void-adjacent contribution is confirmed server-side.
- * Cosmetics are identified by their `id` field in the event's cosmetics array.
+ * Returns the spring block color for a landing block, or null for no override.
+ * Called from pieces.js when placing blocks (if it checks for seasonal themes).
  */
-function unlockSeasonalEventCosmetics() {
-  const ev = getActiveSeasonalEvent();
-  if (!ev || !ev.cosmetics || !ev.cosmetics.length) return;
+function getSeasonalBlockColor() {
+  if (!_seActiveEvent || !_seActiveEvent.theme || !_seActiveEvent.theme.blockColorOverride) return null;
+  const colors = [
+    _seActiveEvent.theme.blockColorOverride,
+    _seActiveEvent.theme.blockColorOverride2,
+    _seActiveEvent.theme.blockColorOverride3,
+  ].filter(Boolean);
+  return colors[Math.floor(Math.random() * colors.length)];
+}
 
-  if (typeof loadUnlockedCosmetics !== 'function' ||
-      typeof saveUnlockedCosmetics !== 'function') return;
+// ── Utilities ─────────────────────────────────────────────────────────────────
 
-  const unlocked = loadUnlockedCosmetics();
-  let changed = false;
-  for (const c of ev.cosmetics) {
-    if (c.id && !unlocked.includes(c.id)) {
-      unlocked.push(c.id);
-      changed = true;
-    }
-  }
-  if (changed) saveUnlockedCosmetics(unlocked);
+function _seEsc(s) {
+  return String(s || '').replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 /**
- * Initialize the seasonal events system.
- * Call once after DOM is ready (from main.js or similar).
+ * Initialize the seasonal events framework.
+ * Loads config, determines active event, sets up HUD.
+ * Called from main.js after DOM ready.
  */
 async function initSeasonalEvents() {
-  // Prepare overlay element
-  _seOverlayEl = document.getElementById('se-world-overlay');
+  _seProgress = _seLoadProgress();
+  _seRewarded = _seLoadRewarded();
 
-  await fetchSeasonalEvent();
-  await renderSeasonalEventBanner();
-  _refreshSeEventTicker();
+  _seConfigs = await _seLoadConfigs();
+
+  // Find the first active event
+  _seActiveEvent = null;
+  for (const ev of _seConfigs) {
+    if (_seIsEventActive(ev)) { _seActiveEvent = ev; break; }
+  }
+
+  // Initialize particle pool (scene must exist at this point)
+  _seInitParticlePool();
+
+  // Apply spring CSS class to game container when event is active
+  const root = document.getElementById('game-container') || document.body;
+  if (_seActiveEvent) {
+    root.classList.add('seasonal-event-active');
+    root.setAttribute('data-seasonal-event', _seActiveEvent.id);
+  } else {
+    root.classList.remove('seasonal-event-active');
+    root.removeAttribute('data-seasonal-event');
+  }
+
+  renderSeasonalEventBanner();
+  _seRefreshTicker();
+  _seUpdateProgressHUD();
 
   // Refresh ticker every 5 minutes
   if (_seTickerInterval) clearInterval(_seTickerInterval);
-  _seTickerInterval = setInterval(_refreshSeEventTicker, 5 * 60 * 1000);
+  if (_seActiveEvent) {
+    _seTickerInterval = setInterval(() => {
+      // Re-check if event expired
+      if (!_seIsEventActive(_seActiveEvent)) {
+        _seActiveEvent = null;
+        root.classList.remove('seasonal-event-active');
+        root.removeAttribute('data-seasonal-event');
+      }
+      _seRefreshTicker();
+      _seUpdateProgressHUD();
+    }, 5 * 60 * 1000);
+  }
 }

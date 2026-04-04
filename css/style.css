@@ -17254,3 +17254,187 @@ button:focus-visible {
   #theme-editor-body { flex-direction: column; }
   #te-preview-col { width: 100%; }
 }
+
+/* ── Seasonal Event: banner (main menu) ── */
+.se-banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(15, 5, 20, 0.88);
+  border: 1px solid #ec4899;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-family: inherit;
+  color: #f0e8ff;
+}
+.se-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.se-banner-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+.se-banner-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.se-banner-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #999;
+  font-weight: 700;
+}
+.se-banner-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ec4899;
+  letter-spacing: 0.5px;
+}
+.se-banner-blurb {
+  font-size: 11px;
+  color: #bbb;
+  max-width: 220px;
+}
+.se-banner-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 130px;
+}
+.se-banner-days {
+  font-size: 11px;
+  color: #ccc;
+}
+.se-banner-challenge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: space-between;
+}
+.se-banner-challenge-label {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: #888;
+  font-weight: 700;
+}
+.se-banner-challenge-pct,
+.se-banner-challenge-done {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ec4899;
+}
+.se-banner-goal-bar-wrap {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.se-banner-goal-bar-fill {
+  height: 100%;
+  background: #ec4899;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.se-banner-goal-progress {
+  font-size: 10px;
+  color: #aaa;
+}
+.se-banner-rewards-btn {
+  background: transparent;
+  border: 1px solid #ec4899;
+  color: #ec4899;
+  border-radius: 5px;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 2px;
+  transition: background 0.15s;
+}
+.se-banner-rewards-btn:hover {
+  background: rgba(236,72,153,0.15);
+}
+
+/* ── Seasonal Event: in-game progress tracker (HUD) ── */
+#se-event-progress {
+  position: fixed;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 910;
+  pointer-events: none;
+}
+.se-prog-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(10, 3, 15, 0.78);
+  border: 1px solid rgba(236,72,153,0.4);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: #f0e8ff;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.se-prog-icon {
+  font-size: 14px;
+}
+.se-prog-label {
+  font-size: 11px;
+  color: #ddd;
+}
+.se-prog-bar-wrap {
+  width: 60px;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.se-prog-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+.se-prog-done {
+  border-color: rgba(236,72,153,0.8);
+}
+.se-prog-badge {
+  font-size: 14px;
+}
+
+/* ── Seasonal Event: reward toast ── */
+.se-reward-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(10, 3, 15, 0.92);
+  border: 1px solid #ec4899;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-family: inherit;
+  color: #f0e8ff;
+  font-size: 13px;
+  box-shadow: 0 0 20px rgba(236,72,153,0.4);
+}
+.se-reward-toast-icon {
+  font-size: 24px;
+}
+.se-reward-toast-text strong {
+  color: #ec4899;
+}
+
+/* ── Seasonal Event: ticker (bottom HUD) ── */
+.se-ticker-days {
+  font-size: 9px;
+  color: #999;
+  margin-left: 4px;
+}

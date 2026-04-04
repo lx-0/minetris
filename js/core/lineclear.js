@@ -165,6 +165,9 @@ function checkLineClear(newBlocks) {
   // Daily missions: track line clears
   if (typeof onMissionLineClear === "function") onMissionLineClear(completeLevels.length);
 
+  // Seasonal events: track challenge progress
+  if (typeof onSeasonalLineClear === "function") onSeasonalLineClear(completeLevels.length);
+
   // Sprint: end the game when 40 lines are cleared
   if (isSprintMode && linesCleared >= SPRINT_LINE_TARGET &&
       typeof triggerSprintComplete === "function") {
@@ -509,6 +512,15 @@ function _lcDetonate() {
     worldGroup.remove(b);
   });
   lineClearFlashBlocks = [];
+
+  // Seasonal event: spawn flower particles along cleared rows
+  if (typeof spawnSpringParticles === 'function' && typeof getActiveSeasonalEvent === 'function' && getActiveSeasonalEvent()) {
+    const midX = 0;
+    const midZ = 0;
+    for (let i = 0; i < worldYs.length; i++) {
+      spawnSpringParticles(midX, worldYs[i], midZ);
+    }
+  }
   // Puzzle / custom puzzle mode: check win/lose after line clear
   if ((isPuzzleMode || isCustomPuzzleMode) && typeof checkPuzzleConditions === "function") {
     checkPuzzleConditions();

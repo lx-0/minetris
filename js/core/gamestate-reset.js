@@ -235,8 +235,8 @@ function resetGame() {
   // Reset event engine
   if (typeof resetEventEngine === "function") resetEventEngine();
 
-  // Seasonal event: reset session counter
-  if (typeof resetSeasonalSessionStats === 'function') resetSeasonalSessionStats();
+  // Seasonal event: refresh progress HUD on game reset
+  if (typeof _seUpdateProgressHUD === 'function') _seUpdateProgressHUD();
 
   // Reset world modifier
   if (typeof resetWorldModifier === 'function') resetWorldModifier();

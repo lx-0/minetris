@@ -222,6 +222,31 @@ const COSMETIC_REGISTRY = [
     timeLimited:     true,
   },
 
+  // ── Seasonal Event Cosmetics — "Spring Mining Festival" (2026) ───────────
+  // Earned by clearing 100 lines during the Spring Mining Festival event window.
+  {
+    id:              'seasonal_spring_badge',
+    category:        'badge',
+    name:            'Spring Miner',
+    rarity:          'seasonal',
+    unlockCondition: { type: 'seasonal', eventId: 'spring_mining_festival_2026' },
+    assets:          { icon: '🌸', nameColor: '#ec4899' },
+    icon:            '🌸',
+    timeLimited:     true,
+    description:     'Awarded for clearing 100 lines during the Spring Mining Festival.',
+  },
+  {
+    id:              'seasonal_spring_border',
+    category:        'border',
+    name:            'Cherry Blossom',
+    rarity:          'seasonal',
+    unlockCondition: { type: 'seasonal', eventId: 'spring_mining_festival_2026' },
+    assets:          { borderKey: 'cherry_blossom', nameColor: '#ec4899' },
+    icon:            '🌸',
+    timeLimited:     true,
+    description:     'A delicate pink border for Spring Festival champions.',
+  },
+
   // ── Infinite Depths — Free Progression Milestone Cosmetics ───────────────
   //
   // FREE / PREMIUM COSMETIC BOUNDARY (design rule):

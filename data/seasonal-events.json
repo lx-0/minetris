@@ -1,0 +1,34 @@
+[
+  {
+    "id": "spring_mining_festival_2026",
+    "name": "Spring Mining Festival",
+    "narrativeBlurb": "Cherry blossoms bloom underground! Mine through spring for exclusive rewards.",
+    "icon": "🌸",
+    "startDate": "2026-03-20",
+    "endDate": "2026-04-20",
+    "theme": {
+      "blockColorOverride": "#f9a8d4",
+      "blockColorOverride2": "#fbcfe8",
+      "blockColorOverride3": "#fce7f3",
+      "particleEffect": "cherry_blossom",
+      "bannerAccent": "#ec4899",
+      "hudAccent": "#f472b6"
+    },
+    "challenge": {
+      "id": "spring_100_lines",
+      "description": "Clear 100 lines during the Spring Mining Festival",
+      "target": 100,
+      "metric": "lines_cleared",
+      "rewards": [
+        {
+          "cosmeticId": "seasonal_spring_badge",
+          "label": "Spring Miner badge"
+        },
+        {
+          "cosmeticId": "seasonal_spring_border",
+          "label": "Cherry Blossom border"
+        }
+      ]
+    }
+  }
+]
