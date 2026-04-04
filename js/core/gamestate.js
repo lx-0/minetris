@@ -451,6 +451,20 @@ function triggerGameOver() {
     checkInfiniteDepthsMilestones(_idFloor);
   }
 
+  // Per-mode leaderboard score submission (best-score model, silent)
+  if (typeof trySubmitModeScore === 'function') {
+    if (isBlitzMode && !isDailyChallenge && !isWeeklyChallenge) {
+      trySubmitModeScore('blitz', state.score, state.linesCleared);
+    } else if (typeof activeDungeonId !== 'undefined' && activeDungeonId) {
+      trySubmitModeScore('depths', state.score, state.linesCleared);
+    } else if (!isDailyChallenge && !isWeeklyChallenge && !isBlitzMode &&
+               !isSurvivalMode && !isPuzzleMode && !isBattleMode &&
+               !(typeof isSprintMode !== 'undefined' && isSprintMode)) {
+      // Classic mode
+      trySubmitModeScore('classic', state.score, state.linesCleared);
+    }
+  }
+
   // Hide survival section when not in survival mode
   if (!isSurvivalMode) {
     const survGoEl = document.getElementById('survival-go-section');

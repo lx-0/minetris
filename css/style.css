@@ -5332,6 +5332,69 @@ body.theme-candy .inv-slot.selected {
   border-bottom: 1px solid rgba(0,255,0,0.08);
 }
 .lb-row-me td { color: #ff0; }
+
+/* ── Per-Mode Leaderboard ── */
+.lb-mode-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.lb-mode-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.lb-mode-tab {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  background: transparent;
+  border: 1px solid rgba(0,255,136,0.25);
+  border-radius: 4px;
+  color: #8ab;
+  padding: 5px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.lb-mode-tab:hover { color: #00ff88; border-color: #00ff88; }
+.lb-mode-tab-active { color: #00ff88; border-color: #00ff88; background: rgba(0,255,136,0.1); }
+.lb-mode-range-toggle {
+  display: flex;
+  gap: 4px;
+}
+.lb-mode-range-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  background: transparent;
+  border: 1px solid rgba(100,200,255,0.25);
+  border-radius: 4px;
+  color: #89b;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.lb-mode-range-btn:hover { color: #88ddff; border-color: #88ddff; }
+.lb-mode-range-active { color: #88ddff; border-color: #88ddff; background: rgba(100,200,255,0.1); }
+.lb-mode-own-entry {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: #ff0;
+  background: rgba(255,255,0,0.07);
+  border: 1px solid rgba(255,255,0,0.2);
+  border-radius: 4px;
+  padding: 5px 8px;
+  margin-bottom: 6px;
+}
+.lb-mode-own-entry-pinned {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+/* Rank change indicators */
+.lb-rank-up   { color: #4caf50; font-size: 0.85em; }
+.lb-rank-down { color: #f55;    font-size: 0.85em; }
+.lb-rank-same { color: #666;    font-size: 0.85em; }
+.lb-rank-new  { color: #88ddff; font-size: 0.75em; font-style: italic; }
+
 #lb-panel-close-btn {
   font-family: "Press Start 2P", cursive;
   font-size: 9px;

@@ -4,6 +4,8 @@
  * Routes:
  *   POST /api/scores               — validate and submit a daily score
  *   GET  /api/leaderboard/:date    — return top 20 for a given date (YYYY-MM-DD)
+ *   POST /api/scores/mode          — submit per-mode score (best-score update model); modes: classic,sprint,blitz,depths
+ *   GET  /api/leaderboard/mode/:m  — per-mode leaderboard; ?range=weekly|alltime&week=YYYY-Www&displayName=X
  *   POST /api/scores/weekly        — validate and submit a weekly score
  *   GET  /api/leaderboard/week/:w  — return top 20 for a given ISO week (YYYY-Www)
  *   GET  /api/season               — return current season config (or { active: false })
@@ -6778,6 +6780,252 @@ async function handleAdminSetSeasonalEvent(request, env) {
   return jsonResponse({ ok: true, event: eventData });
 }
 
+// ── Per-Mode Leaderboard ──────────────────────────────────────────────────────
+
+const MODE_LB_CONFIGS = {
+  classic: { sortAsc: false, maxScore: 2000000,  label: 'Classic' },
+  sprint:  { sortAsc: true,  maxScore: 3600000,  label: 'Sprint'  },  // timeMs (lower is better)
+  blitz:   { sortAsc: false, maxScore: 200000,   label: 'Blitz'   },
+  depths:  { sortAsc: false, maxScore: 2000000,  label: 'Depths'  },
+};
+const VALID_MODE_IDS = new Set(Object.keys(MODE_LB_CONFIGS));
+const MODE_LB_MAX = 100;
+
+function _compareModeScores(a, b, sortAsc) {
+  return sortAsc ? a.score - b.score : b.score - a.score;
+}
+
+/**
+ * Return the ISO week string for the week before weekStr.
+ * Input/output format: "YYYY-Www"
+ */
+function _getPrevWeek(weekStr) {
+  const [yearStr, wStr] = weekStr.split('-W');
+  let year = parseInt(yearStr, 10);
+  let week = parseInt(wStr, 10);
+  week -= 1;
+  if (week < 1) {
+    year -= 1;
+    // Compute the last ISO week of the previous year
+    const dec28 = new Date(Date.UTC(year, 11, 28));
+    const dayNum = dec28.getUTCDay() || 7;
+    dec28.setUTCDate(dec28.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(dec28.getUTCFullYear(), 0, 1));
+    week = Math.ceil(((dec28 - yearStart) / 86400000 + 1) / 7);
+    year = dec28.getUTCFullYear();
+  }
+  return year + '-W' + String(week).padStart(2, '0');
+}
+
+/**
+ * POST /api/scores/mode
+ * Submit a score for a specific game mode.
+ * Best-score updates are allowed (no one-per-period limit beyond IP spam guard).
+ * Body: { displayName, mode, score, linesCleared, week, clientTimestamp }
+ * Returns: { ok, mode, weeklyImproved, allTimeImproved, weekRank, allTimeRank, totalWeekly, totalAllTime }
+ */
+async function handlePostModeScore(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON' }, 400); }
+
+  const { displayName, mode, score, linesCleared, week, clientTimestamp } = body;
+
+  if (!displayName || !DISPLAY_NAME_REGEX.test(displayName)) {
+    return jsonResponse({ error: 'Invalid display name' }, 400);
+  }
+  if (!mode || !VALID_MODE_IDS.has(mode)) {
+    return jsonResponse({ error: 'Invalid mode. Must be: classic, sprint, blitz, depths' }, 400);
+  }
+
+  const scoreNum = parseInt(score, 10);
+  if (!Number.isInteger(scoreNum) || scoreNum < 0) {
+    return jsonResponse({ error: 'Invalid score' }, 400);
+  }
+
+  const cfg = MODE_LB_CONFIGS[mode];
+  if (scoreNum > cfg.maxScore) {
+    return jsonResponse({ error: 'Score exceeds maximum plausible value' }, 400);
+  }
+
+  const linesNum = Math.max(0, parseInt(linesCleared, 10) || 0);
+
+  // Validate week (must be current week)
+  const weekStr = week || currentISOWeek();
+  if (!isValidWeek(weekStr) || weekStr !== currentISOWeek()) {
+    return jsonResponse({ error: 'Invalid or stale week' }, 400);
+  }
+
+  const now = new Date().toISOString();
+  const nameLower = displayName.toLowerCase();
+
+  // IP-based spam guard (generous limit since best-score updates are expected)
+  const ip = request.headers.get('CF-Connecting-IP') ||
+             request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() ||
+             '0.0.0.0';
+  const ipHash = await hashIP(ip);
+  const ipKey = `mode:ip:${mode}:${ipHash}:${weekStr}`;
+  const ipEntry = await env.LEADERBOARD_KV.get(ipKey, { type: 'json' });
+  if (ipEntry && ipEntry.count >= 50) {
+    return jsonResponse({ error: 'Too many submissions from this IP this week' }, 429);
+  }
+
+  // ── Weekly board ─────────────────────────────────────────────────────────────
+  const weekPlayerKey = `mode:player:${mode}:week:${nameLower}:${weekStr}`;
+  const existingWeek = await env.LEADERBOARD_KV.get(weekPlayerKey, { type: 'json' });
+  const isBetterThanWeek = !existingWeek ||
+    (cfg.sortAsc ? scoreNum < existingWeek.score : scoreNum > existingWeek.score);
+
+  const weekLbKey = `mode:lb:${mode}:week:${weekStr}`;
+  let weekLb = (await env.LEADERBOARD_KV.get(weekLbKey, { type: 'json' })) || [];
+
+  let weekRank = null;
+  if (isBetterThanWeek) {
+    weekLb = weekLb.filter(e => e.displayName.toLowerCase() !== nameLower);
+    weekLb.push({ displayName, score: scoreNum, linesCleared: linesNum, submittedAt: now });
+    weekLb.sort((a, b) => _compareModeScores(a, b, cfg.sortAsc));
+    if (weekLb.length > MODE_LB_MAX) weekLb = weekLb.slice(0, MODE_LB_MAX);
+    weekRank = weekLb.findIndex(e => e.displayName.toLowerCase() === nameLower) + 1 || null;
+
+    const weekTtl = 60 * 60 * 24 * 14; // 14 days
+    await Promise.all([
+      env.LEADERBOARD_KV.put(weekLbKey, JSON.stringify(weekLb), { expirationTtl: weekTtl }),
+      env.LEADERBOARD_KV.put(weekPlayerKey, JSON.stringify({ score: scoreNum, submittedAt: now }), { expirationTtl: weekTtl }),
+      env.LEADERBOARD_KV.put(ipKey, JSON.stringify({ count: (ipEntry?.count || 0) + 1 }), { expirationTtl: 60 * 60 * 24 * 7 }),
+    ]);
+  } else {
+    weekRank = weekLb.findIndex(e => e.displayName.toLowerCase() === nameLower) + 1 || null;
+  }
+
+  // ── All-time board ────────────────────────────────────────────────────────────
+  const allTimeBestKey = `mode:player:${mode}:best:${nameLower}`;
+  const existingBest = await env.LEADERBOARD_KV.get(allTimeBestKey, { type: 'json' });
+  const isBetterAllTime = !existingBest ||
+    (cfg.sortAsc ? scoreNum < existingBest.score : scoreNum > existingBest.score);
+
+  const allTimeLbKey = `mode:lb:${mode}:alltime`;
+  let allTimeLb = (await env.LEADERBOARD_KV.get(allTimeLbKey, { type: 'json' })) || [];
+
+  let allTimeRank = null;
+  if (isBetterAllTime) {
+    allTimeLb = allTimeLb.filter(e => e.displayName.toLowerCase() !== nameLower);
+    allTimeLb.push({ displayName, score: scoreNum, linesCleared: linesNum, submittedAt: now });
+    allTimeLb.sort((a, b) => _compareModeScores(a, b, cfg.sortAsc));
+    if (allTimeLb.length > MODE_LB_MAX) allTimeLb = allTimeLb.slice(0, MODE_LB_MAX);
+    allTimeRank = allTimeLb.findIndex(e => e.displayName.toLowerCase() === nameLower) + 1 || null;
+
+    await Promise.all([
+      env.LEADERBOARD_KV.put(allTimeLbKey, JSON.stringify(allTimeLb)),  // no TTL — permanent
+      env.LEADERBOARD_KV.put(allTimeBestKey, JSON.stringify({ score: scoreNum, submittedAt: now })),
+    ]);
+  } else {
+    allTimeRank = allTimeLb.findIndex(e => e.displayName.toLowerCase() === nameLower) + 1 || null;
+  }
+
+  return jsonResponse({
+    ok: true,
+    mode,
+    weeklyImproved: isBetterThanWeek,
+    allTimeImproved: isBetterAllTime,
+    weekRank,
+    allTimeRank,
+    totalWeekly: weekLb.length,
+    totalAllTime: allTimeLb.length,
+  });
+}
+
+/**
+ * GET /api/leaderboard/mode/:modeId
+ * Fetch per-mode leaderboard.
+ * Query params:
+ *   range=weekly|alltime  (default: weekly)
+ *   week=YYYY-Www         (default: current week; only used for range=weekly)
+ *   displayName=X         (optional; returns ownEntry with player's rank + best score)
+ * Returns: { mode, range, week?, entries, total, ownEntry }
+ *   entries: [{ rank, displayName, score, linesCleared, rankChange? }]
+ *   rankChange: positive = improved vs last week, negative = dropped, null = new entry
+ */
+async function handleGetModeLeaderboard(modeId, request, env) {
+  if (!modeId || !VALID_MODE_IDS.has(modeId)) {
+    return jsonResponse({ error: 'Invalid mode' }, 400);
+  }
+
+  const url = new URL(request.url);
+  const range = url.searchParams.get('range') === 'alltime' ? 'alltime' : 'weekly';
+  const displayName = (url.searchParams.get('displayName') || '').trim();
+  const weekParam = url.searchParams.get('week');
+  const weekStr = weekParam && isValidWeek(weekParam) ? weekParam : currentISOWeek();
+
+  const cfg = MODE_LB_CONFIGS[modeId];
+
+  if (range === 'alltime') {
+    const lbKey = `mode:lb:${modeId}:alltime`;
+    const lb = (await env.LEADERBOARD_KV.get(lbKey, { type: 'json' })) || [];
+    const entries = lb.slice(0, MODE_LB_MAX).map((e, i) => ({
+      rank: i + 1,
+      displayName: e.displayName,
+      score: e.score,
+      linesCleared: e.linesCleared,
+    }));
+
+    let ownEntry = null;
+    if (displayName && DISPLAY_NAME_REGEX.test(displayName)) {
+      const nameLower = displayName.toLowerCase();
+      const bestKey = `mode:player:${modeId}:best:${nameLower}`;
+      const best = await env.LEADERBOARD_KV.get(bestKey, { type: 'json' });
+      if (best) {
+        const rank = lb.findIndex(e => e.displayName.toLowerCase() === nameLower) + 1;
+        ownEntry = { displayName, score: best.score, rank: rank || null };
+      }
+    }
+
+    return jsonResponse({ mode: modeId, range: 'alltime', entries, total: lb.length, ownEntry });
+  }
+
+  // Weekly range — include rank change vs last week
+  const lbKey = `mode:lb:${modeId}:week:${weekStr}`;
+  const lb = (await env.LEADERBOARD_KV.get(lbKey, { type: 'json' })) || [];
+
+  const prevWeekStr = _getPrevWeek(weekStr);
+  const prevLbKey = `mode:lb:${modeId}:week:${prevWeekStr}`;
+  const prevLb = (await env.LEADERBOARD_KV.get(prevLbKey, { type: 'json' })) || [];
+
+  const prevRankMap = new Map();
+  prevLb.forEach((e, i) => prevRankMap.set(e.displayName.toLowerCase(), i + 1));
+
+  const entries = lb.slice(0, MODE_LB_MAX).map((e, i) => {
+    const currRank = i + 1;
+    const prevRank = prevRankMap.get(e.displayName.toLowerCase());
+    const rankChange = prevRank != null ? prevRank - currRank : null;  // positive = moved up
+    return {
+      rank: currRank,
+      displayName: e.displayName,
+      score: e.score,
+      linesCleared: e.linesCleared,
+      rankChange,
+    };
+  });
+
+  let ownEntry = null;
+  if (displayName && DISPLAY_NAME_REGEX.test(displayName)) {
+    const nameLower = displayName.toLowerCase();
+    const playerKey = `mode:player:${modeId}:week:${nameLower}:${weekStr}`;
+    const playerBest = await env.LEADERBOARD_KV.get(playerKey, { type: 'json' });
+    if (playerBest) {
+      const rank = lb.findIndex(e => e.displayName.toLowerCase() === nameLower) + 1;
+      ownEntry = { displayName, score: playerBest.score, rank: rank || null };
+    }
+  }
+
+  return jsonResponse({
+    mode: modeId,
+    range: 'weekly',
+    week: weekStr,
+    entries,
+    total: lb.length,
+    ownEntry,
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -6928,6 +7176,11 @@ export default {
     } else if (method === 'GET' && url.pathname.startsWith('/api/leaderboard/coop/')) {
       const date = url.pathname.replace('/api/leaderboard/coop/', '');
       response = await handleGetCoopLeaderboard(date, false, env);
+    } else if (method === 'POST' && url.pathname === '/api/scores/mode') {
+      response = await handlePostModeScore(request, env);
+    } else if (method === 'GET' && /^\/api\/leaderboard\/mode\/[a-z]+$/.test(url.pathname)) {
+      const modeId = url.pathname.split('/').pop();
+      response = await handleGetModeLeaderboard(modeId, request, env);
     } else if (method === 'GET' && url.pathname.startsWith('/api/leaderboard/')) {
       const date = url.pathname.replace('/api/leaderboard/', '');
       response = await handleGetLeaderboard(date, env);

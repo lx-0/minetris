@@ -183,7 +183,7 @@ function openDisplayNameModal(onConfirm) {
 
 // ── Leaderboard Panel ─────────────────────────────────────────────────────────
 
-let _lbActiveTab = 'today'; // 'today' | 'yesterday' | 'thisweek' | 'lastweek' | 'season' | 'seasonrating' | 'coop' | 'dailycoop' | 'battle' | 'mastery'
+let _lbActiveTab = 'today'; // 'today' | 'yesterday' | 'thisweek' | 'lastweek' | 'season' | 'seasonrating' | 'coop' | 'dailycoop' | 'battle' | 'mastery' | 'modes'
 
 function openLeaderboardPanel(defaultTab) {
   const overlay = document.getElementById('lb-panel-overlay');
@@ -210,6 +210,7 @@ function _syncLbTabs() {
   const dailyCoopBtn    = document.getElementById('lb-tab-dailycoop');
   const battleBtn       = document.getElementById('lb-tab-battle');
   const masteryBtn      = document.getElementById('lb-tab-mastery');
+  const modesBtn        = document.getElementById('lb-tab-modes');
   if (todayBtn)        todayBtn.classList.toggle('lb-tab-active',        _lbActiveTab === 'today');
   if (yestBtn)         yestBtn.classList.toggle('lb-tab-active',         _lbActiveTab === 'yesterday');
   if (thisWeekBtn)     thisWeekBtn.classList.toggle('lb-tab-active',     _lbActiveTab === 'thisweek');
@@ -220,6 +221,7 @@ function _syncLbTabs() {
   if (dailyCoopBtn)    dailyCoopBtn.classList.toggle('lb-tab-active',    _lbActiveTab === 'dailycoop');
   if (battleBtn)       battleBtn.classList.toggle('lb-tab-active',       _lbActiveTab === 'battle');
   if (masteryBtn)      masteryBtn.classList.toggle('lb-tab-active',      _lbActiveTab === 'mastery');
+  if (modesBtn)        modesBtn.classList.toggle('lb-tab-active',        _lbActiveTab === 'modes');
 }
 
 function _getYesterdayString() {
@@ -306,6 +308,12 @@ async function _loadLbTab(tab) {
       const data = await apiFetchMasteryLeaderboard(myName);
       if (!data || !data.entries) throw new Error('bad response');
       _renderMasteryLeaderboard(body, data.entries, data.ownEntry);
+    } else if (tab === 'modes') {
+      const myName = loadDisplayName();
+      const data = await apiFetchModeLeaderboard(_lbActiveModeTab, _lbModeRange, myName);
+      if (!data || !data.entries) throw new Error('bad response');
+      _renderModeLeaderboard(body, data, _lbActiveModeTab, _lbModeRange);
+      return; // _renderModeLeaderboard sets innerHTML itself
     } else {
       const date = tab === 'today' ? getDailyDateString() : _getYesterdayString();
       const data = await apiFetchLeaderboard(date);
@@ -790,6 +798,15 @@ function initLeaderboard() {
     });
   }
 
+  const modesTabBtn = document.getElementById('lb-tab-modes');
+  if (modesTabBtn) {
+    modesTabBtn.addEventListener('click', function() {
+      _lbActiveTab = 'modes';
+      _syncLbTabs();
+      _loadLbTab('modes');
+    });
+  }
+
   // Leaderboard panel refresh button
   const refreshBtn = document.getElementById('lb-panel-refresh-btn');
   if (refreshBtn) {
@@ -806,7 +823,13 @@ function initLeaderboard() {
       if (!btn) return;
       e.stopPropagation(); // don't trigger mode card click
       var tab = btn.getAttribute('data-lb-tab') || 'today';
-      openLeaderboardPanel(tab);
+      // Mode-specific tabs route through the Modes tab
+      if (tab === 'depths' || tab === 'classic' || tab === 'sprint' || tab === 'blitz') {
+        _lbActiveModeTab = tab;
+        openLeaderboardPanel('modes');
+      } else {
+        openLeaderboardPanel(tab);
+      }
     });
   }
 
@@ -966,4 +989,197 @@ async function _loadHofSeason(seasonId, body) {
 function closeHallOfFamePanel() {
   const overlay = document.getElementById('hof-overlay');
   if (overlay) overlay.style.display = 'none';
+}
+
+// ── Per-Mode Leaderboard ──────────────────────────────────────────────────────
+
+// Mode sub-tab state (persists across range toggles)
+let _lbActiveModeTab = 'classic'; // 'classic' | 'sprint' | 'blitz' | 'depths'
+let _lbModeRange = 'weekly';      // 'weekly' | 'alltime'
+
+const _MODE_LB_CONFIG = {
+  classic: { label: 'Classic', icon: '\u26cf\ufe0f', scoreLabel: 'Score',   sortAsc: false },
+  sprint:  { label: 'Sprint',  icon: '\u26a1',        scoreLabel: 'Time',    sortAsc: true  },
+  blitz:   { label: 'Blitz',   icon: '\u23f1',        scoreLabel: 'Score',   sortAsc: false },
+  depths:  { label: 'Depths',  icon: '\u{1F573}\ufe0f', scoreLabel: 'Score', sortAsc: false },
+};
+
+async function apiSubmitModeScore(displayName, mode, score, linesCleared) {
+  const week = typeof getWeeklyDateString === 'function' ? getWeeklyDateString() : null;
+  const resp = await fetch(LEADERBOARD_WORKER_URL + '/api/scores/mode', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ displayName, mode, score, linesCleared, week, clientTimestamp: Date.now() }),
+  });
+  return resp.json();
+}
+
+async function apiFetchModeLeaderboard(mode, range, displayName) {
+  const week = typeof getWeeklyDateString === 'function' ? getWeeklyDateString() : null;
+  let url = LEADERBOARD_WORKER_URL + '/api/leaderboard/mode/' + mode + '?range=' + range;
+  if (range === 'weekly' && week) url += '&week=' + encodeURIComponent(week);
+  if (displayName) url += '&displayName=' + encodeURIComponent(displayName);
+  const resp = await fetch(url);
+  return resp.json();
+}
+
+/**
+ * Attempt to submit a per-mode score silently (no UI feedback needed).
+ * Called from game-over handlers. Skips if no display name is set.
+ */
+function trySubmitModeScore(mode, score, linesCleared) {
+  const name = loadDisplayName();
+  if (!name) return;
+  apiSubmitModeScore(name, mode, score, linesCleared || 0).catch(function() {});
+}
+
+function _renderModeLeaderboard(container, data, mode, range) {
+  const cfg = _MODE_LB_CONFIG[mode] || _MODE_LB_CONFIG.classic;
+  const entries = data.entries || [];
+  const ownEntry = data.ownEntry || null;
+  const myName = loadDisplayName().toLowerCase();
+
+  // ── Mode sub-tabs ─────────────────────────────────────────────────────────
+  let html = '<div class="lb-mode-header">';
+
+  // Mode selector
+  html += '<div class="lb-mode-tabs">';
+  Object.keys(_MODE_LB_CONFIG).forEach(function(mId) {
+    const mc = _MODE_LB_CONFIG[mId];
+    const active = mId === mode ? ' lb-mode-tab-active' : '';
+    html += '<button class="lb-mode-tab' + active + '" data-mode="' + mId + '">' +
+      mc.label + '</button>';
+  });
+  html += '</div>';
+
+  // Weekly / All-Time toggle
+  html += '<div class="lb-mode-range-toggle">' +
+    '<button class="lb-mode-range-btn' + (range === 'weekly' ? ' lb-mode-range-active' : '') + '" data-range="weekly">Weekly</button>' +
+    '<button class="lb-mode-range-btn' + (range === 'alltime' ? ' lb-mode-range-active' : '') + '" data-range="alltime">All-Time</button>' +
+    '</div>';
+
+  html += '</div>'; // lb-mode-header
+
+  // ── Personal best ─────────────────────────────────────────────────────────
+  if (ownEntry) {
+    const pbScore = cfg.sortAsc
+      ? (typeof fmtSprintTime === 'function' && mode === 'sprint' ? fmtSprintTime(ownEntry.score) : ownEntry.score)
+      : (ownEntry.score || 0).toLocaleString();
+    const rankTxt = ownEntry.rank ? '#' + ownEntry.rank : 'unranked';
+    html += '<div class="lb-mode-own-entry">Your best: <strong>' + _escHtml(pbScore + '') + '</strong> &mdash; ' + rankTxt + '</div>';
+  } else {
+    // Try to show local PB even if not on leaderboard
+    let localPb = null;
+    if (mode === 'sprint') {
+      try {
+        const raw = localStorage.getItem('mineCtris_sprintBest');
+        if (raw) { const pb = JSON.parse(raw); localPb = typeof fmtSprintTime === 'function' ? fmtSprintTime(pb.timeMs) : pb.timeMs + 'ms'; }
+      } catch (_) {}
+    } else if (mode === 'blitz') {
+      try {
+        const raw = localStorage.getItem('mineCtris_blitzBest');
+        if (raw) { const pb = JSON.parse(raw); localPb = (pb.score || 0).toLocaleString(); }
+      } catch (_) {}
+    }
+    if (localPb) {
+      html += '<div class="lb-mode-own-entry">Your best (local): <strong>' + _escHtml(localPb + '') + '</strong></div>';
+    }
+  }
+
+  // ── Table ─────────────────────────────────────────────────────────────────
+  if (!entries.length) {
+    html += '<div class="lb-empty">No scores yet. Be the first!</div>';
+    container.innerHTML = html;
+    _attachModeTabListeners(container, mode, range);
+    return;
+  }
+
+  const col2Label = cfg.sortAsc ? 'Lines' : 'Lines';
+
+  html += '<table class="lb-table"><thead><tr>' +
+    '<th>#</th><th>Name</th><th>' + cfg.scoreLabel + '</th><th>Lines</th>';
+  if (range === 'weekly') html += '<th>\u0394</th>';
+  html += '</tr></thead><tbody>';
+
+  const _myLevel = (function() {
+    if (typeof getLevelFromXP !== 'function' || typeof loadLifetimeStats !== 'function') return 1;
+    return getLevelFromXP(loadLifetimeStats().playerXP || 0);
+  })();
+  const _myTitle = typeof getLevelTitle === 'function' ? getLevelTitle(_myLevel) : '';
+
+  entries.forEach(function(e) {
+    const isMe = myName && e.displayName.toLowerCase() === myName;
+    const cls  = isMe ? ' class="lb-row-me"' : '';
+
+    // Score formatting
+    let scoreStr;
+    if (cfg.sortAsc && mode === 'sprint') {
+      scoreStr = typeof fmtSprintTime === 'function' ? fmtSprintTime(e.score) : e.score + 'ms';
+    } else {
+      scoreStr = (e.score || 0).toLocaleString();
+    }
+
+    // Name cell
+    let nameCell = _escHtml(e.displayName);
+    if (isMe) {
+      const _prestigeHtml = typeof getPrestigeStarsHtml === 'function' ? getPrestigeStarsHtml() : '';
+      if (_prestigeHtml) nameCell = _prestigeHtml + ' ' + nameCell;
+      const badgeLabel = typeof getLevelBadgeLabel === 'function' ? getLevelBadgeLabel(_myLevel) : 'L' + _myLevel;
+      nameCell += ' <span class="lb-level-badge">' + badgeLabel + '</span>';
+      if (_myTitle) nameCell += ' <span class="lb-level-title">' + _myTitle + '</span>';
+      nameCell += ' \u25c4';
+    }
+
+    // Rank change column (weekly only)
+    let changeCell = '';
+    if (range === 'weekly') {
+      if (e.rankChange == null) {
+        changeCell = '<td class="lb-rank-new" title="New entry this week">new</td>';
+      } else if (e.rankChange > 0) {
+        changeCell = '<td class="lb-rank-up" title="Up ' + e.rankChange + '">\u2191' + e.rankChange + '</td>';
+      } else if (e.rankChange < 0) {
+        changeCell = '<td class="lb-rank-down" title="Down ' + Math.abs(e.rankChange) + '">\u2193' + Math.abs(e.rankChange) + '</td>';
+      } else {
+        changeCell = '<td class="lb-rank-same">&ndash;</td>';
+      }
+    }
+
+    html += '<tr' + cls + '>' +
+      '<td>' + e.rank + '</td>' +
+      '<td>' + nameCell + '</td>' +
+      '<td>' + _escHtml(scoreStr) + '</td>' +
+      '<td>' + (e.linesCleared != null ? e.linesCleared : '-') + '</td>' +
+      changeCell +
+      '</tr>';
+  });
+
+  html += '</tbody></table>';
+
+  // Pinned own-row if player is outside top 100
+  if (myName && ownEntry && ownEntry.rank && !entries.find(function(e) { return e.displayName.toLowerCase() === myName; })) {
+    let pbStr = cfg.sortAsc && mode === 'sprint'
+      ? (typeof fmtSprintTime === 'function' ? fmtSprintTime(ownEntry.score) : ownEntry.score + 'ms')
+      : (ownEntry.score || 0).toLocaleString();
+    html += '<div class="lb-mode-own-entry lb-mode-own-entry-pinned">You \u2014 Rank #' + ownEntry.rank + ' &mdash; ' + _escHtml(pbStr + '') + '</div>';
+  }
+
+  container.innerHTML = html;
+  _attachModeTabListeners(container, mode, range);
+}
+
+function _attachModeTabListeners(container, currentMode, currentRange) {
+  // Mode sub-tab clicks
+  container.querySelectorAll('.lb-mode-tab').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      _lbActiveModeTab = btn.getAttribute('data-mode') || 'classic';
+      _loadLbTab('modes');
+    });
+  });
+  // Range toggle clicks
+  container.querySelectorAll('.lb-mode-range-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      _lbModeRange = btn.getAttribute('data-range') || 'weekly';
+      _loadLbTab('modes');
+    });
+  });
 }

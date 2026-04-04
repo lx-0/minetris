@@ -105,6 +105,11 @@ function triggerSprintComplete() {
   const isNewBest   = saveSprintBest(finalTimeMs);
   const best        = loadSprintBest();
 
+  // Submit to per-mode leaderboard (silent, best-time model)
+  if (typeof trySubmitModeScore === 'function') {
+    trySubmitModeScore('sprint', finalTimeMs, linesCleared);
+  }
+
   // Achievements: Sprinter, Speed Sprinter
   if (typeof achOnSprintComplete === "function") achOnSprintComplete(finalTimeMs);
 
