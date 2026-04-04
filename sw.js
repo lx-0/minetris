@@ -1,6 +1,6 @@
 // MINETRIS Service Worker
 // Cache version — bump this string to trigger an update toast in the game
-const CACHE_VERSION = 'minetris-v1';
+const CACHE_VERSION = 'minetris-v2.6';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
