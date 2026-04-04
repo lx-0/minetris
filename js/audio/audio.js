@@ -23,6 +23,7 @@ let crumbleCrackleSynth = null;
 let magmaSizzleSynth    = null;
 let _magmaSizzleGain    = null;
 let voidHumSynth        = null;
+let entropyDissolveSynth = null;  // crystalline dissolve for Entropy modifier block decay
 // ── Enhanced SFX synths ─────────────────────────────────────────────────────
 let blockHitSynth       = null;   // Tone.js layer for block hits (musical pitch)
 let blockBreakSynth     = null;   // Tone.js layer for block breaks
@@ -183,6 +184,17 @@ function initAudio() {
       envelope: { attack: 0.05, decay: 0.4, sustain: 0.1, release: 0.6 },
     }).connect(masterCompressor);
     voidHumSynth.volume.value = -16;
+
+    // Entropy dissolve — ethereal crystalline shimmer on block decay
+    // Two-oscillator approach: high-frequency triangle + slow AM shimmer
+    entropyDissolveSynth = new Tone.PolySynth(Tone.Synth, {
+      maxPolyphony: 3,
+      options: {
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.02, decay: 0.5, sustain: 0.05, release: 0.9 },
+      },
+    }).connect(masterCompressor);
+    entropyDissolveSynth.volume.value = -13;
 
     // ── Enhanced SFX synths ────────────────────────────────────────────────
     // Block hit layer — sine with short decay, pitched per block type

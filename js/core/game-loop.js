@@ -171,6 +171,7 @@ function animate() {
       }
       updateLineClear(delta);
       if (typeof updateHazardBlocks === 'function') updateHazardBlocks(delta);
+      if (typeof tickDungeonModifiers === 'function') tickDungeonModifiers(delta);
       updateFallingPieces(delta);
       if (isBattleMode && typeof battleHud !== 'undefined') battleHud.tick(delta);
       if (isBattleMode && typeof checkBattleScoreRace === 'function') checkBattleScoreRace(delta);

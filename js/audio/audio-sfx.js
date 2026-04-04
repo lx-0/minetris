@@ -300,6 +300,22 @@ function playVoidHum() {
   voidHumSynth.triggerAttackRelease("D2", "8n", Tone.now());
 }
 
+/**
+ * Crystalline dissolve sound played on Entropy block decay.
+ * Plays a soft ascending two-note shimmer (similar vibe to crumble but more ethereal).
+ */
+let _lastEntropyDissolveTime = 0;
+function playEntropyDissolve() {
+  if (!audioReady || !entropyDissolveSynth) return;
+  var now = performance.now();
+  if (now - _lastEntropyDissolveTime < 150) return;
+  _lastEntropyDissolveTime = now;
+  var t = Tone.now();
+  // Soft two-note rising chord — G5 + B5 for a crystal-clear dissolve
+  entropyDissolveSynth.triggerAttackRelease("G5",  "4n", t);
+  entropyDissolveSynth.triggerAttackRelease("B5",  "4n", t + 0.06);
+}
+
 // ── Volume settings ───────────────────────────────────────────────────────────
 
 /**

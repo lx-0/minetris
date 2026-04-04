@@ -269,6 +269,29 @@ function spawnDustParticles(block, opts) {
         (Math.random() - 0.5) * 2
       ).normalize().multiplyScalar(speed);
     };
+  } else if (opts.entropyDissolve) {
+    // Entropy decay — purple crystalline wisps (full dissolve burst)
+    count = Math.floor(Math.random() * 4) + 10;
+    dustColor = new THREE.Color(0x9933ff);
+    lifetime = 0.55;
+    velocityFn = () => {
+      var speed = 1.5 + Math.random() * 2.5;
+      return new THREE.Vector3(
+        (Math.random() - 0.5) * 2,
+        Math.random() * 1.8 + 0.4,
+        (Math.random() - 0.5) * 2
+      ).normalize().multiplyScalar(speed);
+    };
+  } else if (opts.entropyWisp) {
+    // Entropy warning phase — small rising purple wisps
+    count = Math.floor(Math.random() * 2) + 2;
+    dustColor = new THREE.Color(0xbb66ff);
+    lifetime = 0.4;
+    velocityFn = () => new THREE.Vector3(
+      (Math.random() - 0.5) * 1.5,
+      Math.random() * 1.2 + 0.8,
+      (Math.random() - 0.5) * 1.5
+    );
   } else {
     // Default: landed_block — unchanged behavior
     count = 4;

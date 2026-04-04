@@ -237,6 +237,9 @@ function resetGame() {
   const worldModBadgeEl = document.getElementById('world-modifier-badge');
   if (worldModBadgeEl) worldModBadgeEl.style.display = 'none';
 
+  // Reset dungeon modifier state (Entropy and session tracking)
+  if (typeof resetDungeonModifiers === 'function') resetDungeonModifiers();
+
   // Reset puzzle mode state
   isPuzzleMode = false;
   puzzlePuzzleId = 1;
