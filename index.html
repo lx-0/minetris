@@ -1556,8 +1556,21 @@
             <button id="battle-quickmatch-btn">&#9889; Quick Match</button>
             <div id="battle-watch-divider">— or —</div>
             <button id="battle-watch-btn">&#128065; Watch a Match</button>
-            <div id="battle-live-rooms"></div>
             <button id="battle-choice-cancel-btn">&#8592; Back</button>
+          </div>
+          <!-- Spectator lobby view: browse and watch live matches -->
+          <div id="battle-lobby-view" style="display:none;">
+            <div id="battle-title">&#128065; WATCH LIVE</div>
+            <div id="battle-subtitle">Spectate active matches</div>
+            <div id="battle-lobby-controls">
+              <button id="battle-lobby-refresh-btn">&#8635; Refresh</button>
+              <button id="battle-lobby-code-btn">&#128279; Enter Code</button>
+            </div>
+            <div id="battle-lobby-rooms">
+              <div id="battle-lobby-loading" style="font-size:0.5em;color:#886666;">Loading matches&#8230;</div>
+            </div>
+            <div id="battle-lobby-empty" style="display:none;font-size:0.5em;color:#886666;text-align:center;">No live matches right now.<br>Check back soon!</div>
+            <button id="battle-lobby-back-btn">&#8592; Back</button>
           </div>
           <!-- Spectate view: enter room code to watch -->
           <div id="battle-spectate-view" style="display:none;">

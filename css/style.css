@@ -2532,7 +2532,7 @@ body {
   border-radius: 10px;
   padding: 40px 48px;
   min-width: 320px;
-  max-width: 460px;
+  max-width: 520px;
   font-family: "Press Start 2P", cursive;
   text-align: center;
 }
@@ -2601,6 +2601,156 @@ body {
   background: rgba(255, 200, 60, 0.25);
   border-color: #ffcc44;
 }
+/* ── Spectator lobby ─────────────────────────────────────────────────────── */
+#battle-lobby-controls {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+}
+#battle-lobby-refresh-btn,
+#battle-lobby-code-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.5em;
+  padding: 8px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+#battle-lobby-refresh-btn {
+  background: rgba(255, 60, 60, 0.1);
+  border: 1px solid rgba(255, 60, 60, 0.4);
+  color: #ff9999;
+}
+#battle-lobby-refresh-btn:hover { background: rgba(255, 60, 60, 0.22); }
+#battle-lobby-code-btn {
+  background: rgba(255, 140, 60, 0.1);
+  border: 1px solid rgba(255, 140, 60, 0.4);
+  color: #ffbb88;
+}
+#battle-lobby-code-btn:hover { background: rgba(255, 140, 60, 0.22); }
+#battle-lobby-rooms {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.battle-lobby-card {
+  background: rgba(255, 60, 60, 0.07);
+  border: 1px solid rgba(255, 60, 60, 0.3);
+  border-radius: 7px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.battle-lobby-card:hover {
+  background: rgba(255, 60, 60, 0.13);
+  border-color: rgba(255, 60, 60, 0.55);
+}
+.battle-lobby-card-full {
+  opacity: 0.5;
+}
+.blc-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.blc-code {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.75em;
+  color: #ff6666;
+  letter-spacing: 3px;
+}
+.blc-badge {
+  font-size: 0.42em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: "Press Start 2P", cursive;
+}
+.blc-badge-tournament {
+  background: rgba(255, 200, 60, 0.15);
+  border: 1px solid rgba(255, 200, 60, 0.5);
+  color: #ffd444;
+}
+.blc-badge-mode {
+  background: rgba(100, 180, 255, 0.1);
+  border: 1px solid rgba(100, 180, 255, 0.35);
+  color: #88ccff;
+}
+.blc-players {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.48em;
+}
+.blc-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 60px;
+}
+.blc-pname {
+  color: #ffdddd;
+  font-size: 1em;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.blc-prating {
+  color: #ffaa44;
+  font-size: 0.85em;
+}
+.blc-vs {
+  color: #664444;
+  font-size: 0.9em;
+}
+.blc-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.42em;
+  justify-content: space-between;
+}
+.blc-duration {
+  color: #886666;
+}
+.blc-spectators {
+  color: #7799bb;
+}
+.blc-watch-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 1em;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: rgba(255, 60, 60, 0.18);
+  border: 1px solid rgba(255, 60, 60, 0.6);
+  color: #ff6666;
+  transition: background 0.15s;
+  margin-left: auto;
+}
+.blc-watch-btn:hover:not(:disabled) { background: rgba(255, 60, 60, 0.32); }
+.blc-watch-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+#battle-lobby-empty {
+  font-size: 0.5em;
+  color: #886666;
+  text-align: center;
+  padding: 20px 0;
+  line-height: 2;
+}
+
 #battle-room-code-label {
   font-size: 0.5em;
   color: #ff9999;
@@ -2727,7 +2877,8 @@ body {
 #battle-choice-cancel-btn,
 #battle-create-cancel-btn,
 #battle-join-cancel-btn,
-#battle-ready-cancel-btn {
+#battle-ready-cancel-btn,
+#battle-lobby-back-btn {
   font-family: "Press Start 2P", cursive;
   font-size: 0.52em;
   padding: 8px 16px;
@@ -2741,7 +2892,8 @@ body {
 #battle-choice-cancel-btn:hover,
 #battle-create-cancel-btn:hover,
 #battle-join-cancel-btn:hover,
-#battle-ready-cancel-btn:hover {
+#battle-ready-cancel-btn:hover,
+#battle-lobby-back-btn:hover {
   color: #ccc;
   border-color: rgba(200, 150, 150, 0.5);
 }

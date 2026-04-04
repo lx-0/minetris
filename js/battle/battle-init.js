@@ -9,11 +9,12 @@ function _initBattleHandlers() {
       var battleJoinView     = document.getElementById("battle-join-view");
       var battleReadyView    = document.getElementById("battle-ready-view");
       var battleSpectateView = document.getElementById("battle-spectate-view");
+      var battleLobbyView    = document.getElementById("battle-lobby-view");
 
       if (!battleOverlay || typeof battle === "undefined") return;
 
       function showBattleView(name) {
-        [battleChoiceView, battleCreateView, battleJoinView, battleReadyView, battleSpectateView].forEach(function (v) {
+        [battleChoiceView, battleCreateView, battleJoinView, battleReadyView, battleSpectateView, battleLobbyView].forEach(function (v) {
           if (v) v.style.display = "none";
         });
         var target = {
@@ -22,6 +23,7 @@ function _initBattleHandlers() {
           join:     battleJoinView,
           ready:    battleReadyView,
           spectate: battleSpectateView,
+          lobby:    battleLobbyView,
         }[name];
         if (target) target.style.display = "";
       }
@@ -39,40 +41,105 @@ function _initBattleHandlers() {
             ' <span class="battle-rank-pts">' + rd.rating + ' pts</span>' +
             ' <span class="battle-rank-record">' + rd.wins + 'W&nbsp;' + rd.losses + 'L&nbsp;' + rd.draws + 'D</span>';
         }
-        // Load live rooms for Watch section
-        _loadLiveRooms();
       }
 
-      function _loadLiveRooms() {
-        var liveEl = document.getElementById('battle-live-rooms');
-        if (!liveEl) return;
-        liveEl.textContent = '';
+      function _loadLobbyRooms() {
+        var listEl   = document.getElementById('battle-lobby-rooms');
+        var emptyEl  = document.getElementById('battle-lobby-empty');
+        var loadEl   = document.getElementById('battle-lobby-loading');
+        if (!listEl) return;
+        if (loadEl)  { loadEl.style.display = ''; }
+        if (emptyEl) { emptyEl.style.display = 'none'; }
         fetch('https://minectris-leaderboard.workers.dev/battle/rooms/live')
           .then(function (r) { return r.json(); })
           .then(function (data) {
-            if (!data.rooms || data.rooms.length === 0) return;
-            var html = '<div style="font-size:0.78em;opacity:0.6;margin-bottom:4px;">Live matches:</div>';
-            data.rooms.slice(0, 5).forEach(function (room) {
-              var full = room.spectatorFull;
-              var badge = room.isTournament ? ' &#127942;' : '';
-              html += '<div style="display:flex;align-items:center;gap:8px;margin:3px 0;">' +
-                '<span style="font-family:monospace;font-size:0.9em;letter-spacing:2px;">' + room.code + '</span>' +
-                badge +
-                '<span style="font-size:0.75em;opacity:0.55;">' + room.spectatorCount + ' watching</span>' +
-                '<button data-code="' + room.code + '" data-full="' + full + '" class="battle-live-watch-btn" style="font-size:0.75em;padding:2px 8px;' + (full ? 'opacity:0.4;cursor:not-allowed;' : '') + '">' +
+            if (loadEl) loadEl.style.display = 'none';
+            var rooms = (data.rooms || []).slice(0, 8);
+            if (rooms.length === 0) {
+              if (emptyEl) emptyEl.style.display = '';
+              listEl.innerHTML = '';
+              return;
+            }
+            listEl.innerHTML = '';
+            rooms.forEach(function (room) {
+              var full    = room.spectatorFull;
+              var card    = document.createElement('div');
+              card.className = 'battle-lobby-card' + (full ? ' battle-lobby-card-full' : '');
+
+              // Header row: room code + badges
+              var header = '<div class="blc-header">' +
+                '<span class="blc-code">' + room.code + '</span>';
+              if (room.isTournament) header += '<span class="blc-badge blc-badge-tournament">&#127942; Tournament</span>';
+              var mode = room.mode || (room.isCoop ? 'co-op' : 'battle');
+              header += '<span class="blc-badge blc-badge-mode">' + (mode === 'co-op' ? '&#129309; Co-op' : '&#9876; Battle') + '</span>';
+              header += '</div>';
+
+              // Players row
+              var players = '';
+              if (room.players && room.players.length >= 2) {
+                var p1 = room.players[0];
+                var p2 = room.players[1];
+                players = '<div class="blc-players">' +
+                  '<span class="blc-player">' +
+                    '<span class="blc-pname">' + (p1.name || 'Player 1') + '</span>' +
+                    (typeof p1.rating === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + p1.rating + '</span>' : '') +
+                  '</span>' +
+                  '<span class="blc-vs">vs</span>' +
+                  '<span class="blc-player">' +
+                    '<span class="blc-pname">' + (p2.name || 'Player 2') + '</span>' +
+                    (typeof p2.rating === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + p2.rating + '</span>' : '') +
+                  '</span>' +
+                '</div>';
+              } else if (room.playerNames && room.playerNames.length >= 2) {
+                // Flat arrays fallback
+                var ratings = room.eloRatings || [];
+                players = '<div class="blc-players">' +
+                  '<span class="blc-player">' +
+                    '<span class="blc-pname">' + room.playerNames[0] + '</span>' +
+                    (typeof ratings[0] === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + ratings[0] + '</span>' : '') +
+                  '</span>' +
+                  '<span class="blc-vs">vs</span>' +
+                  '<span class="blc-player">' +
+                    '<span class="blc-pname">' + room.playerNames[1] + '</span>' +
+                    (typeof ratings[1] === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + ratings[1] + '</span>' : '') +
+                  '</span>' +
+                '</div>';
+              }
+
+              // Footer: duration + spectator count + watch button
+              var durationStr = '';
+              if (typeof room.durationSeconds === 'number') {
+                var mm = Math.floor(room.durationSeconds / 60);
+                var ss = room.durationSeconds % 60;
+                durationStr = '<span class="blc-duration">&#128336;&nbsp;' + mm + ':' + (ss < 10 ? '0' : '') + ss + '</span>';
+              } else if (typeof room.startedAt === 'number') {
+                var elapsed = Math.floor((Date.now() - room.startedAt) / 1000);
+                var mm2 = Math.floor(elapsed / 60);
+                var ss2 = elapsed % 60;
+                durationStr = '<span class="blc-duration">&#128336;&nbsp;' + mm2 + ':' + (ss2 < 10 ? '0' : '') + ss2 + '</span>';
+              }
+              var footer = '<div class="blc-footer">' +
+                durationStr +
+                '<span class="blc-spectators">&#128065;&nbsp;' + (room.spectatorCount || 0) + ' watching</span>' +
+                '<button class="blc-watch-btn" data-code="' + room.code + '" data-full="' + full + '"' + (full ? ' disabled' : '') + '>' +
                   (full ? 'Full' : 'Watch') +
                 '</button>' +
               '</div>';
+
+              card.innerHTML = header + players + footer;
+              listEl.appendChild(card);
             });
-            liveEl.innerHTML = html;
-            liveEl.querySelectorAll('.battle-live-watch-btn').forEach(function (btn) {
+            listEl.querySelectorAll('.blc-watch-btn').forEach(function (btn) {
               btn.addEventListener('click', function () {
-                if (this.dataset.full === 'true') return;
+                if (this.disabled || this.dataset.full === 'true') return;
                 _startWatchRoom(this.dataset.code);
               });
             });
           })
-          .catch(function () {});
+          .catch(function () {
+            if (loadEl) loadEl.style.display = 'none';
+            if (emptyEl) { emptyEl.textContent = 'Could not load matches.'; emptyEl.style.display = ''; }
+          });
       }
 
       function closeBattleOverlay() {
@@ -282,15 +349,38 @@ function _initBattleHandlers() {
         });
       }
 
-      // ── Watch button (opens spectate code input view) ──
+      // ── Watch button (opens spectator lobby) ──
       var battleWatchBtn = document.getElementById("battle-watch-btn");
       if (battleWatchBtn) {
         battleWatchBtn.addEventListener("click", function () {
+          showBattleView("lobby");
+          _loadLobbyRooms();
+        });
+      }
+
+      // ── Spectator lobby: refresh and enter-code buttons ──
+      var battleLobbyRefreshBtn = document.getElementById("battle-lobby-refresh-btn");
+      if (battleLobbyRefreshBtn) {
+        battleLobbyRefreshBtn.addEventListener("click", function () {
+          _loadLobbyRooms();
+        });
+      }
+
+      var battleLobbyCodeBtn = document.getElementById("battle-lobby-code-btn");
+      if (battleLobbyCodeBtn) {
+        battleLobbyCodeBtn.addEventListener("click", function () {
           showBattleView("spectate");
           var inp = document.getElementById("battle-spectate-code-input");
           var msg = document.getElementById("battle-spectate-status-msg");
           if (inp) { inp.value = ""; inp.focus(); }
           if (msg) msg.textContent = "";
+        });
+      }
+
+      var battleLobbyBackBtn = document.getElementById("battle-lobby-back-btn");
+      if (battleLobbyBackBtn) {
+        battleLobbyBackBtn.addEventListener("click", function () {
+          showBattleView("choice");
         });
       }
 
@@ -324,7 +414,9 @@ function _initBattleHandlers() {
       var spectateCancelBtn = document.getElementById("battle-spectate-cancel-btn");
       if (spectateCancelBtn) {
         spectateCancelBtn.addEventListener("click", function () {
-          showBattleView("choice");
+          // Return to lobby if available, otherwise choice
+          showBattleView("lobby");
+          _loadLobbyRooms();
         });
       }
 
