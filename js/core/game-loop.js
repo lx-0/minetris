@@ -1,6 +1,15 @@
 // Main animation loop — called by init(), drives all per-frame updates.
 // Requires: all other modules loaded first (loaded as part of main.js).
 
+// ── Background-animation throttle state ──────────────────────────────────────
+// Sky + obsidian shimmer run at 30fps; lava-light sort runs at 10fps.
+// Keeping gameplay physics and particles at full 60fps.
+let _bgThrottleAcc     = 0;       // accumulator for sky/obsidian (target: 1/30 s)
+let _lavaLightAcc      = 0;       // accumulator for lava block sort (target: 1/10 s)
+let _cachedLavaBlocks  = [];      // sorted nearest-lava cache, rebuilt at 10fps
+const _BG_INTERVAL     = 1 / 30; // ~33 ms
+const _LAVA_INTERVAL   = 1 / 10; // 100 ms
+
 function animate() {
   requestAnimationFrame(animate);
 
@@ -15,10 +24,15 @@ function animate() {
   }
   const elapsedTime = clock.getElapsedTime();
 
-  updateSky(elapsedTime, delta);
-  // Underground ambient dimming + fog shift (overrides sky values when camera is below surface).
-  if (typeof applyUndergroundDepth === 'function' && camera) {
-    applyUndergroundDepth(camera.position.y);
+  // Background animations throttled to 30fps — imperceptible for slow sky / shimmer changes.
+  _bgThrottleAcc += delta;
+  if (_bgThrottleAcc >= _BG_INTERVAL) {
+    updateSky(elapsedTime, _bgThrottleAcc);
+    // Underground ambient dimming + fog shift (overrides sky values when camera is below surface).
+    if (typeof applyUndergroundDepth === 'function' && camera) {
+      applyUndergroundDepth(camera.position.y);
+    }
+    _bgThrottleAcc = 0;
   }
 
   if (!isGameOver && !isPaused) {
@@ -359,25 +373,31 @@ function animate() {
     if (pickaxeGroup) pickaxeGroup.rotation.z = Math.PI / 8;
   }
 
-  // Animate lava/ice: update shared time uniforms
+  // Animate lava/ice: update shared time uniforms (every frame for smooth shader animation)
   lavaUniforms.uTime.value = elapsedTime;
   iceUniforms.uTime.value  = elapsedTime;
   {
-    const camPos = camera.position;
-    const lavaBlocks = [];
-    worldGroup.children.forEach(child => {
-      if (child.userData && child.userData.materialType === 'lava') {
-        lavaBlocks.push(child);
-      }
-    });
-    lavaBlocks.sort((a, b) =>
-      a.position.distanceToSquared(camPos) - b.position.distanceToSquared(camPos)
-    );
+    // Rebuild nearest-lava cache at 10fps — block positions change rarely.
+    _lavaLightAcc += delta;
+    if (_lavaLightAcc >= _LAVA_INTERVAL) {
+      const camPos = camera.position;
+      _cachedLavaBlocks.length = 0;
+      worldGroup.children.forEach(child => {
+        if (child.userData && child.userData.materialType === 'lava') {
+          _cachedLavaBlocks.push(child);
+        }
+      });
+      _cachedLavaBlocks.sort((a, b) =>
+        a.position.distanceToSquared(camPos) - b.position.distanceToSquared(camPos)
+      );
+      _lavaLightAcc = 0;
+    }
+    // Apply pulse intensity every frame for smooth glow (cheap — no scene iteration)
     const pulse = 1.2 * (0.85 + 0.30 * Math.sin(elapsedTime * 4.4));
     for (let i = 0; i < LAVA_LIGHT_COUNT; i++) {
-      if (i < lavaBlocks.length) {
-        const p = lavaBlocks[i].position;
-        lavaLights[i].position.set(p.x, p.y + 1, p.z);
+      if (i < _cachedLavaBlocks.length) {
+        const lp = _cachedLavaBlocks[i].position;
+        lavaLights[i].position.set(lp.x, lp.y + 1, lp.z);
         lavaLights[i].intensity = pulse;
       } else {
         lavaLights[i].intensity = 0;
@@ -385,17 +405,19 @@ function animate() {
     }
   }
 
-  // Animate obsidian shimmer: subtle emissive purple pulse at ~0.8 Hz
-  for (let _oi = 0; _oi < obsidianBlocks.length; _oi++) {
-    const _ob = obsidianBlocks[_oi];
-    if (!_ob.material) continue;
-    const _t = Math.sin(elapsedTime * 1.6 + _ob.userData.shimmerOffset) * 0.5 + 0.5;
-    _ob.material.emissive.setRGB(
-      (0x3d / 255) * _t * 0.35,
-      0,
-      (0x66 / 255) * _t * 0.35
-    );
-    _ob.material.needsUpdate = true;
+  // Animate obsidian shimmer: throttled to 30fps alongside sky (0.8 Hz pulse — indistinguishable above 20fps)
+  if (_bgThrottleAcc === 0 && obsidianBlocks.length > 0) {
+    for (let _oi = 0; _oi < obsidianBlocks.length; _oi++) {
+      const _ob = obsidianBlocks[_oi];
+      if (!_ob.material) continue;
+      const _t = Math.sin(elapsedTime * 1.6 + _ob.userData.shimmerOffset) * 0.5 + 0.5;
+      _ob.material.emissive.setRGB(
+        (0x3d / 255) * _t * 0.35,
+        0,
+        (0x66 / 255) * _t * 0.35
+      );
+      _ob.material.needsUpdate = true;
+    }
   }
 
   updatePowerupOverlays();

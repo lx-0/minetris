@@ -156,14 +156,79 @@ function initGraphicsQuality() {
   _syncGraphicsQualityButtons();
 }
 
+// ── Debug FPS Counter ────────────────────────────────────────────────────────
+// Toggle via browser console: toggleFpsCounter()  or  toggleFpsCounter(true/false)
+
+let _fpsCounterEnabled = false;
+let _fpsCounterEl      = null;
+let _fpsCounterFrames  = 0;
+let _fpsCounterStart   = 0;
+
+function _ensureFpsCounterEl() {
+  if (_fpsCounterEl) return;
+  _fpsCounterEl = document.createElement('div');
+  _fpsCounterEl.id = 'debug-fps-counter';
+  Object.assign(_fpsCounterEl.style, {
+    position: 'fixed',
+    top: '8px',
+    left: '8px',
+    zIndex: '99999',
+    background: 'rgba(0,0,0,0.65)',
+    color: '#00ff44',
+    font: 'bold 12px/1.6 monospace',
+    padding: '1px 7px',
+    borderRadius: '3px',
+    pointerEvents: 'none',
+    display: 'none',
+    userSelect: 'none',
+  });
+  document.body.appendChild(_fpsCounterEl);
+}
+
+/**
+ * Toggle the debug FPS counter overlay.
+ * Usage (browser console):
+ *   toggleFpsCounter()          — flip current state
+ *   toggleFpsCounter(true)      — force on
+ *   toggleFpsCounter(false)     — force off
+ */
+function toggleFpsCounter(on) {
+  _fpsCounterEnabled = (typeof on === 'boolean') ? on : !_fpsCounterEnabled;
+  _ensureFpsCounterEl();
+  _fpsCounterEl.style.display = _fpsCounterEnabled ? 'block' : 'none';
+  if (_fpsCounterEnabled) {
+    _fpsCounterFrames = 0;
+    _fpsCounterStart  = 0;
+    _fpsCounterEl.textContent = 'FPS: --';
+  }
+  return _fpsCounterEnabled ? 'FPS counter ON' : 'FPS counter OFF';
+}
+window.toggleFpsCounter = toggleFpsCounter;
+
+function _tickFpsCounter(timestamp) {
+  if (!_fpsCounterEnabled || !_fpsCounterEl) return;
+  _fpsCounterFrames++;
+  if (_fpsCounterStart === 0) { _fpsCounterStart = timestamp; return; }
+  const elapsed = (timestamp - _fpsCounterStart) / 1000;
+  if (elapsed < 0.5) return; // update every ~0.5s
+  const fps = Math.round(_fpsCounterFrames / elapsed);
+  _fpsCounterFrames = 0;
+  _fpsCounterStart  = timestamp;
+  _fpsCounterEl.style.color = fps >= 55 ? '#00ff44' : fps >= 30 ? '#ffdd00' : '#ff3333';
+  _fpsCounterEl.textContent = 'FPS: ' + fps;
+}
+
 // ── FPS Monitor ──────────────────────────────────────────────────────────────
 
 /**
  * Call every frame from animate() with performance.now() timestamp.
  * Tracks FPS over 5-second windows; shows a one-time suggestion if < 30fps.
+ * Also drives the debug FPS counter overlay when enabled.
  */
 function updateFpsMonitor(timestamp) {
-  if (_fpsSuggestionShown) return; // done — no-op going forward
+  _tickFpsCounter(timestamp);
+
+  if (_fpsSuggestionShown) return;
 
   _fpsFrameCount++;
   if (_fpsWindowStart === 0) {
