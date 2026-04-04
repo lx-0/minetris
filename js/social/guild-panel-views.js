@@ -374,6 +374,57 @@ function _renderManageView(content) {
 }
 
 // ── Browse view ───────────────────────────────────────────────────────────────
+
+function _buildGuildResultsHTML(guilds) {
+  return guilds.map(g => {
+    const isFull = (g.memberCount || 0) >= 30;
+    const eloHtml = g.eloRating != null
+      ? `<span class="guild-result-elo">⚔ ${g.eloRating} Elo</span>`
+      : (g.guildRating != null ? `<span class="guild-result-elo">⚔ ${g.guildRating} pts</span>` : '');
+    let actionHtml;
+    if (g.isPrivate) {
+      actionHtml = `<span class="guild-private-badge">Invite only</span>`;
+    } else if (isFull) {
+      actionHtml = `<span class="guild-private-badge">Full</span>`;
+    } else {
+      actionHtml = `<button class="guild-join-req-btn" data-gid="${_esc(g.id)}">Join</button>`;
+    }
+    return `<div class="guild-result-card">
+      <span class="guild-result-emblem">${_esc(g.emblem || '⚔️')}</span>
+      <div class="guild-result-info">
+        <div class="guild-result-name">${_esc(g.name)} <span class="guild-tag">[${_esc(g.tag)}]</span></div>
+        <div class="guild-result-meta">Lv.${g.level || 1} · ${g.memberCount || 0}/30${eloHtml ? ' · ' : ''}${eloHtml}</div>
+      </div>
+      ${actionHtml}
+    </div>`;
+  }).join('');
+}
+
+function _bindJoinButtons(resultsEl, onJoined) {
+  resultsEl.querySelectorAll('.guild-join-req-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = '…';
+      const res = await apiRequestToJoin(btn.dataset.gid);
+      if (res.ok) {
+        if (res.data && res.data.guild) {
+          // Immediate join — the backend enrolled the player
+          _saveMyGuildId(res.data.guild.id);
+          _myGuild = { guild: res.data.guild, members: res.data.members };
+          _showGuildJoinedToast(res.data.guild.name);
+          if (typeof onJoined === 'function') onJoined();
+        } else {
+          btn.textContent = '✓ Requested';
+        }
+      } else {
+        btn.textContent = 'Join';
+        btn.disabled = false;
+        _showGuildError(res.data.error || 'Failed to join');
+      }
+    });
+  });
+}
+
 async function _renderBrowseView(content, query) {
   _guildView = 'browse';
   content.innerHTML = `
@@ -381,6 +432,24 @@ async function _renderBrowseView(content, query) {
       <div class="guild-search-row">
         <input id="guild-search-input" type="text" placeholder="Search guilds..." value="${_esc(query)}" maxlength="32">
         <button id="guild-search-btn">🔍</button>
+      </div>
+      <div class="guild-browse-filters">
+        <div class="guild-browse-filter-group">
+          <label class="guild-browse-filter-label">Min Lv</label>
+          <input id="gbf-min-level" type="number" class="guild-browse-filter-input" min="1" max="20" placeholder="—">
+        </div>
+        <div class="guild-browse-filter-group">
+          <label class="guild-browse-filter-label">Min Elo</label>
+          <input id="gbf-min-elo" type="number" class="guild-browse-filter-input" min="0" placeholder="—">
+        </div>
+        <div class="guild-browse-filter-group">
+          <label class="guild-browse-filter-label">Max Elo</label>
+          <input id="gbf-max-elo" type="number" class="guild-browse-filter-input" min="0" placeholder="—">
+        </div>
+        <div class="guild-browse-filter-group">
+          <input id="gbf-open-slots" type="checkbox">
+          <label class="guild-browse-filter-label" for="gbf-open-slots">Open slots</label>
+        </div>
       </div>
       <div id="guild-search-results" class="guild-search-results">
         <div class="guild-loading">Searching...</div>
@@ -390,12 +459,13 @@ async function _renderBrowseView(content, query) {
       </div>
     </div>`;
 
-  document.getElementById('guild-search-btn').addEventListener('click', () => {
+  const searchBtn = document.getElementById('guild-search-btn');
+  searchBtn.addEventListener('click', () => {
     const q = document.getElementById('guild-search-input').value.trim();
     _doSearch(q);
   });
   document.getElementById('guild-search-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('guild-search-btn').click();
+    if (e.key === 'Enter') searchBtn.click();
   });
   document.getElementById('guild-create-switch-btn').addEventListener('click', () => {
     _guildView = 'create';
@@ -408,42 +478,109 @@ async function _renderBrowseView(content, query) {
     const resultsEl = document.getElementById('guild-search-results');
     if (!resultsEl) return;
     resultsEl.innerHTML = '<div class="guild-loading">Searching...</div>';
-    const res = await apiSearchGuilds(q);
+    const filters = {
+      minLevel:     (document.getElementById('gbf-min-level')?.value || '').trim() || null,
+      minElo:       (document.getElementById('gbf-min-elo')?.value || '').trim() || null,
+      maxElo:       (document.getElementById('gbf-max-elo')?.value || '').trim() || null,
+      hasOpenSlots: document.getElementById('gbf-open-slots')?.checked || false,
+    };
+    const res = await apiBrowseGuilds(q, filters);
     if (!res.ok) {
       resultsEl.innerHTML = `<div class="guild-error">Error: ${_esc(res.data.error || 'Failed to load')}</div>`;
       return;
     }
-    const guilds = res.data;
+    const guilds = Array.isArray(res.data) ? res.data : (res.data.guilds || []);
     if (!guilds.length) {
-      resultsEl.innerHTML = '<div class="guild-empty">No guilds found.</div>';
+      resultsEl.innerHTML = '<div class="guild-empty">No guilds found. Try adjusting your filters.</div>';
       return;
     }
-    resultsEl.innerHTML = guilds.map(g => `
-      <div class="guild-result-card">
+    resultsEl.innerHTML = _buildGuildResultsHTML(guilds);
+    _bindJoinButtons(resultsEl, () => _renderGuildPanel());
+  }
+}
+
+// ── Browse tab (in-guild view) ────────────────────────────────────────────────
+async function _renderBrowseTab(container) {
+  container.innerHTML = `
+    <div class="guild-browse guild-browse--tab">
+      <div class="guild-search-row">
+        <input id="gbt-search-input" type="text" placeholder="Search guilds..." maxlength="32">
+        <button id="gbt-search-btn">🔍</button>
+      </div>
+      <div class="guild-browse-filters">
+        <div class="guild-browse-filter-group">
+          <label class="guild-browse-filter-label">Min Lv</label>
+          <input id="gbt-min-level" type="number" class="guild-browse-filter-input" min="1" max="20" placeholder="—">
+        </div>
+        <div class="guild-browse-filter-group">
+          <label class="guild-browse-filter-label">Min Elo</label>
+          <input id="gbt-min-elo" type="number" class="guild-browse-filter-input" min="0" placeholder="—">
+        </div>
+        <div class="guild-browse-filter-group">
+          <label class="guild-browse-filter-label">Max Elo</label>
+          <input id="gbt-max-elo" type="number" class="guild-browse-filter-input" min="0" placeholder="—">
+        </div>
+        <div class="guild-browse-filter-group">
+          <input id="gbt-open-slots" type="checkbox">
+          <label class="guild-browse-filter-label" for="gbt-open-slots">Open slots</label>
+        </div>
+      </div>
+      <div id="gbt-results" class="guild-search-results">
+        <div class="guild-loading">Loading guilds…</div>
+      </div>
+      <div class="guild-browse-note">Leave your current guild to join another.</div>
+    </div>`;
+
+  const searchBtn = document.getElementById('gbt-search-btn');
+  searchBtn.addEventListener('click', () => {
+    const q = document.getElementById('gbt-search-input').value.trim();
+    _doTabSearch(q);
+  });
+  document.getElementById('gbt-search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchBtn.click();
+  });
+
+  _doTabSearch('');
+
+  async function _doTabSearch(q) {
+    const resultsEl = document.getElementById('gbt-results');
+    if (!resultsEl) return;
+    resultsEl.innerHTML = '<div class="guild-loading">Searching…</div>';
+    const filters = {
+      minLevel:     (document.getElementById('gbt-min-level')?.value || '').trim() || null,
+      minElo:       (document.getElementById('gbt-min-elo')?.value || '').trim() || null,
+      maxElo:       (document.getElementById('gbt-max-elo')?.value || '').trim() || null,
+      hasOpenSlots: document.getElementById('gbt-open-slots')?.checked || false,
+    };
+    const res = await apiBrowseGuilds(q, filters);
+    if (!res.ok) {
+      resultsEl.innerHTML = `<div class="guild-error">Error: ${_esc(res.data.error || 'Failed to load')}</div>`;
+      return;
+    }
+    const guilds = Array.isArray(res.data) ? res.data : (res.data.guilds || []);
+    if (!guilds.length) {
+      resultsEl.innerHTML = '<div class="guild-empty">No guilds found. Try adjusting your filters.</div>';
+      return;
+    }
+    // In-guild browse: show info only, no join buttons (must leave first)
+    resultsEl.innerHTML = guilds.map(g => {
+      const eloHtml = g.eloRating != null
+        ? `<span class="guild-result-elo">⚔ ${g.eloRating} Elo</span>`
+        : (g.guildRating != null ? `<span class="guild-result-elo">⚔ ${g.guildRating} pts</span>` : '');
+      const isFull = (g.memberCount || 0) >= 30;
+      let badge;
+      if (g.isPrivate) badge = `<span class="guild-private-badge">Invite only</span>`;
+      else if (isFull)  badge = `<span class="guild-private-badge">Full</span>`;
+      else              badge = `<span class="guild-private-badge guild-private-badge--open">Open</span>`;
+      return `<div class="guild-result-card">
         <span class="guild-result-emblem">${_esc(g.emblem || '⚔️')}</span>
         <div class="guild-result-info">
           <div class="guild-result-name">${_esc(g.name)} <span class="guild-tag">[${_esc(g.tag)}]</span></div>
-          <div class="guild-result-meta">Lv.${g.level} · ${g.memberCount}/30${g.isPrivate ? ' · 🔒' : ''}</div>
+          <div class="guild-result-meta">Lv.${g.level || 1} · ${g.memberCount || 0}/30${eloHtml ? ' · ' : ''}${eloHtml}</div>
         </div>
-        ${!g.isPrivate
-          ? `<button class="guild-join-req-btn" data-gid="${_esc(g.id)}">Request</button>`
-          : `<span class="guild-private-badge">Invite only</span>`}
-      </div>`).join('');
-
-    resultsEl.querySelectorAll('.guild-join-req-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        btn.textContent = '...';
-        const res = await apiRequestToJoin(btn.dataset.gid);
-        if (res.ok) {
-          btn.textContent = '✓ Requested';
-        } else {
-          btn.textContent = 'Request';
-          btn.disabled = false;
-          _showGuildError(res.data.error || 'Failed to request');
-        }
-      });
-    });
+        ${badge}
+      </div>`;
+    }).join('');
   }
 }
 

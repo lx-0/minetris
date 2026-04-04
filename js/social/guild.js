@@ -55,6 +55,17 @@ async function apiSearchGuilds(query) {
   return _apiFetch(`/api/guilds${q}`);
 }
 
+async function apiBrowseGuilds(query, filters = {}) {
+  const params = new URLSearchParams();
+  if (query) params.set('search', query);
+  if (filters.minLevel) params.set('minLevel', filters.minLevel);
+  if (filters.hasOpenSlots) params.set('hasOpenSlots', '1');
+  if (filters.minElo) params.set('minElo', filters.minElo);
+  if (filters.maxElo) params.set('maxElo', filters.maxElo);
+  const qs = params.toString();
+  return _apiFetch(`/api/guilds${qs ? '?' + qs : ''}`);
+}
+
 async function apiCreateGuild(name, tag, description, emblem, bannerColor, isPrivate) {
   const userId = guildUserId();
   return _apiFetch('/api/guilds', {

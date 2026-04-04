@@ -10174,6 +10174,49 @@ body.theme-diamond-season #score-display { border-color: #00e5ff; }
   color: #888;
   flex-shrink: 0;
 }
+.guild-private-badge--open {
+  color: #4bdb6a;
+}
+.guild-result-elo {
+  color: #ffaa00;
+  font-size: 7px;
+  margin-left: 2px;
+}
+.guild-browse-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 4px;
+  align-items: center;
+}
+.guild-browse-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.guild-browse-filter-label {
+  font-size: 7px;
+  color: #888;
+}
+.guild-browse-filter-input {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  width: 46px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 3px;
+  color: #eee;
+  padding: 4px 5px;
+  outline: none;
+}
+.guild-browse-filter-input:focus { border-color: rgba(255,170,0,0.5); }
+.guild-browse--tab .guild-search-results { max-height: 260px; }
+.guild-browse-note {
+  font-size: 7px;
+  color: #666;
+  margin-top: 6px;
+  text-align: center;
+}
 
 /* ── Create view ── */
 .guild-create-title {

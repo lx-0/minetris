@@ -107,6 +107,7 @@ function _renderHomeView(content) {
         <button class="guild-tab-btn" id="guild-tab-feed">📣 Feed</button>
         <button class="guild-tab-btn" id="guild-tab-expedition">🌍 Expedition</button>
         <button class="guild-tab-btn" id="guild-tab-goals">🌐 Goals</button>
+        <button class="guild-tab-btn" id="guild-tab-browse">🔍 Browse</button>
       </div>
       <div id="guild-tab-panel-roster">
         <div class="guild-section-title">MEMBERS (${guild.memberCount}/30)</div>
@@ -137,6 +138,9 @@ function _renderHomeView(content) {
       <div id="guild-tab-panel-goals" style="display:none">
         <div id="guild-goals-panel-content"><div class="guild-loading">Loading…</div></div>
       </div>
+      <div id="guild-tab-panel-browse" style="display:none">
+        <div id="guild-browse-panel-content"></div>
+      </div>
       <div class="guild-section-title">INVITE</div>
       <div class="guild-invite-row">
         <input id="guild-invite-input" type="text" placeholder="Invite player by name..." maxlength="32">
@@ -163,6 +167,7 @@ function _renderHomeView(content) {
   const feedTab        = document.getElementById('guild-tab-feed');
   const expeditionTab  = document.getElementById('guild-tab-expedition');
   const goalsTab       = document.getElementById('guild-tab-goals');
+  const browseTab      = document.getElementById('guild-tab-browse');
   const rosterPanel    = document.getElementById('guild-tab-panel-roster');
   const lbPanel        = document.getElementById('guild-tab-panel-leaderboard');
   const perksPanel     = document.getElementById('guild-tab-panel-perks');
@@ -172,11 +177,12 @@ function _renderHomeView(content) {
   const feedPanel      = document.getElementById('guild-tab-panel-feed');
   const expeditionPanel = document.getElementById('guild-tab-panel-expedition');
   const goalsPanel     = document.getElementById('guild-tab-panel-goals');
+  const browsePanel    = document.getElementById('guild-tab-panel-browse');
 
   function _switchToTab(tab) {
-    [rosterTab, lbTab, perksTab, challengesTab, warsTab, chatTab, feedTab, expeditionTab, goalsTab]
+    [rosterTab, lbTab, perksTab, challengesTab, warsTab, chatTab, feedTab, expeditionTab, goalsTab, browseTab]
       .forEach(t => t && t.classList.remove('guild-tab-btn--active'));
-    [rosterPanel, lbPanel, perksPanel, challengesPanel, warsPanel, chatPanel, feedPanel, expeditionPanel, goalsPanel]
+    [rosterPanel, lbPanel, perksPanel, challengesPanel, warsPanel, chatPanel, feedPanel, expeditionPanel, goalsPanel, browsePanel]
       .forEach(p => { if (p) p.style.display = 'none'; });
     if (tab === 'leaderboard') {
       lbTab.classList.add('guild-tab-btn--active');
@@ -222,6 +228,15 @@ function _renderHomeView(content) {
           renderCommunityGoalsTab(goalsContent);
         }
       }
+    } else if (tab === 'browse') {
+      browseTab && browseTab.classList.add('guild-tab-btn--active');
+      if (browsePanel) {
+        browsePanel.style.display = '';
+        const browseContent = document.getElementById('guild-browse-panel-content');
+        if (browseContent && typeof _renderBrowseTab === 'function') {
+          _renderBrowseTab(browseContent);
+        }
+      }
     } else {
       rosterTab.classList.add('guild-tab-btn--active');
       rosterPanel.style.display = '';
@@ -237,6 +252,7 @@ function _renderHomeView(content) {
   if (feedTab)       feedTab.addEventListener('click',       () => _switchToTab('feed'));
   if (expeditionTab) expeditionTab.addEventListener('click', () => _switchToTab('expedition'));
   if (goalsTab)      goalsTab.addEventListener('click',      () => _switchToTab('goals'));
+  if (browseTab)     browseTab.addEventListener('click',     () => _switchToTab('browse'));
 
   // Start guild chat WebSocket connection when the home panel loads
   const guildId = _loadMyGuildId();
