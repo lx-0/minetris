@@ -1927,6 +1927,161 @@ body {
   box-shadow: 0 0 28px rgba(255, 180, 0, 0.55);
 }
 
+/* Daily mode card — attempted/locked state */
+.mode-card-daily.mode-card-daily-done {
+  opacity: 0.65;
+  border-color: rgba(100, 100, 100, 0.4) !important;
+  box-shadow: none !important;
+  cursor: default;
+}
+.mode-card-daily.mode-card-daily-done .mode-card-name {
+  color: #aaa;
+  text-shadow: none;
+}
+.mode-card-daily.mode-card-daily-done .mode-card-desc {
+  color: #888;
+}
+.mode-card-daily-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 4px;
+}
+.mode-card-cal-btn {
+  background: transparent;
+  border: 1px solid rgba(255,180,0,0.4);
+  border-radius: 4px;
+  color: #ffb400;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+  line-height: 1.4;
+}
+.mode-card-cal-btn:hover {
+  background: rgba(255,180,0,0.15);
+}
+
+/* Daily rank row in game-over */
+#daily-go-rank-row {
+  margin-top: 8px;
+  font-size: 9px;
+  font-family: "Press Start 2P", cursive;
+}
+.daily-go-rank {
+  color: #ffb400;
+}
+.daily-go-sep {
+  color: #666;
+}
+.daily-go-pct {
+  color: #0cf;
+}
+.daily-go-total {
+  color: #666;
+  font-size: 7px;
+}
+
+/* Daily calendar modal */
+#daily-calendar-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0,0,0,0.75);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+#daily-calendar-panel {
+  background: #111;
+  border: 1px solid rgba(255,180,0,0.5);
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 520px;
+  width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  font-family: "Press Start 2P", cursive;
+}
+#daily-calendar-title {
+  font-size: 10px;
+  color: #ffb400;
+  text-align: center;
+  margin-bottom: 16px;
+  letter-spacing: 0.08em;
+}
+#daily-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.dcal-cell {
+  border-radius: 6px;
+  padding: 6px 4px;
+  text-align: center;
+  border: 1px solid #333;
+  min-height: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.dcal-date {
+  font-size: 5px;
+  color: #888;
+}
+.dcal-played {
+  border-color: rgba(255,180,0,0.5);
+  background: rgba(255,180,0,0.06);
+}
+.dcal-played .dcal-date { color: #ffb400; }
+.dcal-score {
+  font-size: 7px;
+  color: #fff;
+}
+.dcal-rank {
+  font-size: 5px;
+  color: #0cf;
+}
+.dcal-today {
+  border-color: rgba(0,204,255,0.5);
+  background: rgba(0,204,255,0.06);
+}
+.dcal-today .dcal-date { color: #0cf; }
+.dcal-today-label {
+  font-size: 7px;
+  color: #0cf;
+}
+.dcal-today.dcal-attempted {
+  border-color: rgba(100,220,100,0.5);
+  background: rgba(100,220,100,0.06);
+}
+.dcal-today.dcal-attempted .dcal-date { color: #8f8; }
+.dcal-today.dcal-attempted .dcal-today-label { color: #8f8; }
+.dcal-missed {
+  border-color: #222;
+  background: rgba(255,255,255,0.02);
+}
+.dcal-missed-dash {
+  font-size: 8px;
+  color: #444;
+}
+#daily-calendar-close-btn {
+  display: block;
+  margin: 16px auto 0;
+  background: transparent;
+  border: 1px solid rgba(255,180,0,0.5);
+  color: #ffb400;
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  padding: 8px 18px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+#daily-calendar-close-btn:hover {
+  background: rgba(255,180,0,0.15);
+}
+
 /* Weekly Challenge card — emerald/teal accent */
 .mode-card-weekly {
   border-color: rgba(0, 220, 140, 0.5);

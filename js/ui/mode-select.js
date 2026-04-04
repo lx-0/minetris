@@ -31,15 +31,21 @@
         const blitzBest = loadBlitzBest();
         blitzPbEl.textContent = blitzBest ? "Best: " + blitzBest.score : "";
       }
-      // Populate Daily Challenge personal best
+      // Populate Daily Challenge personal best and lock state
       const dailyPbEl = document.getElementById("mode-pb-daily");
-      if (dailyPbEl) {
+      const dailyDescEl = document.getElementById("mode-daily-desc");
+      const dailyCardEl2 = document.getElementById("mode-card-daily");
+      if (hasDailyAttemptedToday()) {
         const dailyBest = loadDailyBest();
-        if (dailyBest) {
-          dailyPbEl.textContent = getTodayLabel() + " Best: " + dailyBest.score;
-        } else {
-          dailyPbEl.textContent = getTodayLabel();
+        if (dailyPbEl) dailyPbEl.textContent = getTodayLabel() + " \u2014 " + (dailyBest ? dailyBest.score : "Done");
+        if (dailyDescEl) dailyDescEl.textContent = "Come back tomorrow for a new challenge!";
+        if (dailyCardEl2) dailyCardEl2.classList.add("mode-card-daily-done");
+      } else {
+        const dailyBest = loadDailyBest();
+        if (dailyPbEl) {
+          dailyPbEl.textContent = dailyBest ? getTodayLabel() + " Best: " + dailyBest.score : getTodayLabel();
         }
+        if (dailyCardEl2) dailyCardEl2.classList.remove("mode-card-daily-done");
       }
       // Populate Weekly Challenge — show modifier name and personal best
       const weeklyMod = getCurrentWeeklyModifier();
@@ -420,7 +426,11 @@
 
     const dailyCardEl = document.getElementById("mode-card-daily");
     if (dailyCardEl) {
-      dailyCardEl.addEventListener("click", function () {
+      dailyCardEl.addEventListener("click", function (e) {
+        // Don't start if a button inside the card was clicked
+        if (e.target && e.target.tagName === 'BUTTON') return;
+        // Enforce one attempt per day
+        if (hasDailyAttemptedToday()) return;
         isDailyChallenge = true;
         gameRng = getDailyPrng();
         // Re-seed the piece queue with today's PRNG
@@ -436,6 +446,31 @@
         if (typeof metricsModePlayed === 'function') metricsModePlayed('daily');
         hideModeSelect();
         requestPointerLock();
+      });
+    }
+
+    // Calendar button — show past daily results
+    const dailyCalBtn = document.getElementById("mode-daily-cal-btn");
+    if (dailyCalBtn) {
+      dailyCalBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (typeof openDailyCalendar === 'function') openDailyCalendar();
+      });
+    }
+
+    // Calendar modal close button
+    const calCloseBtn = document.getElementById("daily-calendar-close-btn");
+    if (calCloseBtn) {
+      calCloseBtn.addEventListener("click", function () {
+        if (typeof closeDailyCalendar === 'function') closeDailyCalendar();
+      });
+    }
+
+    // Close calendar on backdrop click
+    const calModal = document.getElementById("daily-calendar-modal");
+    if (calModal) {
+      calModal.addEventListener("click", function (e) {
+        if (e.target === calModal && typeof closeDailyCalendar === 'function') closeDailyCalendar();
       });
     }
 

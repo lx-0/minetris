@@ -404,7 +404,45 @@ function triggerGameOver() {
     renderDailyBestGameOver(isNewDailyBest);
     if (typeof achOnDailyComplete === "function") achOnDailyComplete();
     if (typeof onMissionDailyEnd === "function") onMissionDailyEnd(state.score);
-    if (typeof initLeaderboardSubmitBtn === "function") {
+
+    // Mark attempt used — one per day
+    if (typeof markDailyAttempted === 'function') markDailyAttempted();
+
+    // Save run to history (rank/percentile populated after submission below)
+    const _dailyDate = typeof getDailyDateString === 'function' ? getDailyDateString() : null;
+    if (_dailyDate && typeof saveToDailyHistory === 'function') {
+      saveToDailyHistory(_dailyDate, state.score, state.linesCleared, null, null);
+    }
+
+    // Auto-submit to online leaderboard if display name is set, then show rank/percentile
+    if (typeof loadDisplayName === 'function' && typeof apiSubmitScore === 'function') {
+      const _lbName = loadDisplayName();
+      if (_lbName && !hasSubmittedToday()) {
+        apiSubmitScore(_lbName, state.score, state.linesCleared).then(function(result) {
+          if (result && result.ok) {
+            markSubmittedToday();
+            if (typeof updateDailyRankDisplay === 'function') {
+              updateDailyRankDisplay(result.rank, result.total);
+            }
+            // Update history entry with rank/total
+            if (_dailyDate && typeof saveToDailyHistory === 'function') {
+              saveToDailyHistory(_dailyDate, state.score, state.linesCleared, result.rank, result.total);
+            }
+            // Update leaderboard submit button to show already submitted
+            const lbBtn = document.getElementById('lb-submit-btn');
+            if (lbBtn) { lbBtn.textContent = 'Submitted!'; lbBtn.disabled = true; }
+          } else if (typeof initLeaderboardSubmitBtn === 'function') {
+            initLeaderboardSubmitBtn(state.score, state.linesCleared);
+          }
+        }).catch(function() {
+          if (typeof initLeaderboardSubmitBtn === 'function') {
+            initLeaderboardSubmitBtn(state.score, state.linesCleared);
+          }
+        });
+      } else if (typeof initLeaderboardSubmitBtn === "function") {
+        initLeaderboardSubmitBtn(state.score, state.linesCleared);
+      }
+    } else if (typeof initLeaderboardSubmitBtn === "function") {
       initLeaderboardSubmitBtn(state.score, state.linesCleared);
     }
   } else {

@@ -384,9 +384,12 @@
                 <div class="mode-card mode-card-daily" id="mode-card-daily" data-mode="daily" tabindex="0" role="button" aria-label="Daily mode — Today's seed, everyone gets the same pieces">
                   <div class="mode-card-icon">&#128197;</div>
                   <div class="mode-card-name">Daily</div>
-                  <div class="mode-card-desc">Today's seed. Everyone gets the same pieces.</div>
+                  <div class="mode-card-desc" id="mode-daily-desc">Today's seed. Everyone gets the same pieces.</div>
                   <div class="mode-card-pb" id="mode-pb-daily"></div>
-                  <button class="mode-card-lb-btn" data-lb-tab="today" title="Leaderboard">&#127942;</button>
+                  <div class="mode-card-daily-actions">
+                    <button class="mode-card-lb-btn" data-lb-tab="today" title="Leaderboard">&#127942;</button>
+                    <button class="mode-card-cal-btn" id="mode-daily-cal-btn" title="View past results">&#128202;</button>
+                  </div>
                 </div>
                 <div class="mode-card mode-card-weekly" id="mode-card-weekly" data-mode="weekly" tabindex="0" role="button" aria-label="Weekly mode — This week's challenge with a special modifier">
                   <div class="mode-card-icon">&#127381;</div>
@@ -802,6 +805,15 @@
       </div>
 
       <!-- Game Over screen -->
+      <!-- Daily Challenge Calendar Modal -->
+      <div id="daily-calendar-modal" style="display:none;">
+        <div id="daily-calendar-panel">
+          <div id="daily-calendar-title">&#128197; DAILY HISTORY</div>
+          <div id="daily-calendar-grid"></div>
+          <button id="daily-calendar-close-btn">Close</button>
+        </div>
+      </div>
+
       <div id="game-over-screen">
         <div id="game-over-title">GAME OVER</div>
         <div id="game-over-stats"></div>
