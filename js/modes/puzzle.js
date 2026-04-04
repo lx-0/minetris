@@ -123,6 +123,74 @@ const PUZZLES = [
     pieces: [4, 6, 2, 7, 1, 5, 3, 4, 6, 2, 7, 1, 5, 3, 4, 6],
     winCondition: { mode: "timed_score", scoreTarget: 500, timeLimit: 120 },
   },
+
+  // ── Pack 2 ────────────────────────────────────────────────────────────────────
+  {
+    id: 11,
+    name: "The Bridge",
+    difficulty: "medium",
+    description: "Two stone pillars flank a 4-block gap. Bridge it with L and T pieces to clear 3 lines.",
+    layout: [
+      [-3, 0, 0, 2], [-2, 0, 0, 2], [1, 0, 0, 2], [2, 0, 0, 2],
+      [-3, 1, 0, 2], [-2, 1, 0, 2], [1, 1, 0, 2], [2, 1, 0, 2],
+      [-3, 2, 0, 2], [-2, 2, 0, 2], [1, 2, 0, 2], [2, 2, 0, 2],
+    ],
+    pieces: [7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1],
+    winCondition: { mode: "clear_lines", n: 3 },
+  },
+  {
+    id: 12,
+    name: "Tetris Tower",
+    difficulty: "hard",
+    description: "Stack I-pieces to reach height 15 without clearing a single line. Every clear is failure.",
+    layout: [],
+    pieces: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+    winCondition: { mode: "reach_height", targetHeight: 14 },
+  },
+  {
+    id: 13,
+    name: "Gold Rush",
+    difficulty: "medium",
+    description: "Gold ore fills the field. Clear 5 lines using only square gold pieces.",
+    layout: [
+      [-2, 0, 0, 3], [0, 0, 0, 3], [2, 0, 0, 3],
+      [-2, 1, 0, 3], [0, 1, 0, 3], [2, 1, 0, 3],
+      [-2, 2, 0, 3], [0, 2, 0, 3], [2, 2, 0, 3],
+      [-2, 3, 0, 3], [0, 3, 0, 3], [2, 3, 0, 3],
+      [-2, 4, 0, 3], [0, 4, 0, 3], [2, 4, 0, 3],
+    ],
+    pieces: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+    winCondition: { mode: "clear_lines", n: 5 },
+  },
+  {
+    id: 14,
+    name: "The Squeeze",
+    difficulty: "hard",
+    description: "Stone walls close in, leaving a narrow channel. Survive the squeeze — clear 8 lines.",
+    layout: [
+      [-4, 0, 0, 2], [-3, 0, 0, 2], [-2, 0, 0, 2], [1, 0, 0, 2], [2, 0, 0, 2], [3, 0, 0, 2],
+      [-4, 1, 0, 2], [-3, 1, 0, 2], [-2, 1, 0, 2], [1, 1, 0, 2], [2, 1, 0, 2], [3, 1, 0, 2],
+      [-4, 2, 0, 2], [-3, 2, 0, 2], [-2, 2, 0, 2], [1, 2, 0, 2], [2, 2, 0, 2], [3, 2, 0, 2],
+      [-4, 3, 0, 2], [-3, 3, 0, 2], [-2, 3, 0, 2], [1, 3, 0, 2], [2, 3, 0, 2], [3, 3, 0, 2],
+      [-4, 4, 0, 2], [-3, 4, 0, 2], [-2, 4, 0, 2], [1, 4, 0, 2], [2, 4, 0, 2], [3, 4, 0, 2],
+    ],
+    pieces: [4, 2, 1, 7, 4, 2, 1, 7, 4, 2, 1, 7, 4, 2, 1, 7, 4, 2, 1, 7],
+    winCondition: { mode: "clear_lines", n: 8 },
+  },
+  {
+    id: 15,
+    name: "Obsidian Gauntlet",
+    difficulty: "expert",
+    description: "Obsidian blocks stand scattered — each takes 8 hits to break. Endure and clear them all.",
+    layout: [
+      [-2, 0, 0, 15], [0, 0, 0, 15], [2, 0, 0, 15],
+      [-1, 1, 0, 15], [1, 1, 0, 15],
+      [-2, 2, 0, 15], [0, 2, 0, 15], [2, 2, 0, 15],
+      [-1, 3, 0, 15], [1, 3, 0, 15],
+      [0, 4, 0, 15],
+    ],
+    pieces: [1, 5, 2, 7, 3, 4, 6, 1, 5, 2, 7, 3, 4, 6, 1, 5, 2, 7, 3, 4, 6],
+  },
 ];
 
 // ── Progress persistence ───────────────────────────────────────────────────────
@@ -171,6 +239,24 @@ function countCompletedPuzzles() {
 function countThreeStarPuzzles() {
   const progress = loadPuzzleProgress();
   return Object.keys(progress).filter(id => (progress[id].stars || 0) >= 3).length;
+}
+
+/** Count completed puzzles in Pack 1 (IDs 1–10). */
+function countCompletedPack1() {
+  const progress = loadPuzzleProgress();
+  return Object.keys(progress).filter(id => {
+    const n = parseInt(id, 10);
+    return n >= 1 && n <= 10 && (progress[id].stars || 0) >= 1;
+  }).length;
+}
+
+/** Count completed puzzles in Pack 2 (IDs 11–15). */
+function countCompletedPack2() {
+  const progress = loadPuzzleProgress();
+  return Object.keys(progress).filter(id => {
+    const n = parseInt(id, 10);
+    return n >= 11 && n <= 15 && (progress[id].stars || 0) >= 1;
+  }).length;
 }
 
 // ── Runtime state ─────────────────────────────────────────────────────────────
@@ -291,7 +377,7 @@ function getPuzzleById(id) {
   return PUZZLES.find(p => p.id === id) || null;
 }
 
-// Map colorIndex (1-8) to material type string (used for mining behavior)
+// Map colorIndex (1-15) to material type string (used for mining behavior)
 const _PUZZLE_COLOR_TO_MAT = {
   1: "dirt",
   2: "stone",
@@ -301,6 +387,7 @@ const _PUZZLE_COLOR_TO_MAT = {
   6: "lava",
   7: "crystal",
   8: "diamond",
+  15: "obsidian",
 };
 
 /**
@@ -395,6 +482,19 @@ function countRemainingPresetBlocks() {
   return _puzzlePresetBlocks.filter(b => b.userData.gridPos !== null && worldGroup.children.includes(b)).length;
 }
 
+/** Return the highest y-level (0-indexed) among all landed blocks in the world. */
+function _getMaxBlockHeight() {
+  let maxY = -1;
+  if (!worldGroup) return maxY;
+  worldGroup.children.forEach(function (child) {
+    if (child.name === "landed_block" && child.position) {
+      const yLevel = Math.round(child.position.y - 0.5);
+      if (yLevel > maxY) maxY = yLevel;
+    }
+  });
+  return maxY;
+}
+
 /**
  * Check win/lose conditions. Call after each piece lands or block is mined.
  * Handles both built-in puzzle mode and editor custom puzzle mode.
@@ -465,6 +565,19 @@ function checkPuzzleConditions() {
     }
     const timeLeft = _puzzleTimeLimitSecs - _puzzleTimeElapsed;
     if (timeLeft <= 0) {
+      _triggerPuzzleLose();
+    }
+
+  } else if (wc.mode === "reach_height") {
+    if (linesCleared > 0) {
+      _triggerPuzzleLose("line_cleared");
+      return;
+    }
+    if (_getMaxBlockHeight() >= wc.targetHeight) {
+      _triggerPuzzleWin();
+      return;
+    }
+    if (puzzleFixedQueue.length === 0 && pieceQueue.length === 0 && fallingPieces.length === 0) {
       _triggerPuzzleLose();
     }
   }

@@ -144,6 +144,7 @@ const COLORS = [
   0x32cd32,  // 12: soft moss (lime green — The Creep boss)
   0x556b2f,  // 13: hardened moss (dark olive — The Creep boss)
   0x228b22,  // 14: vine (forest green — The Creep boss)
+  0x1a0020,  // 15: obsidian (near-black deep purple — puzzle use)
 ];
 
 // Deuteranopia-safe palette — blue/orange/amber/yellow/purple; never relies on red-green.
@@ -164,6 +165,7 @@ const COLORBLIND_COLORS = [
   0x88cc33, // 12 → yellow-green (soft moss)
   0x666633, // 13 → olive-grey   (hardened moss)
   0x339966, // 14 → teal-green   (vine)
+  0x5500aa, // 15 → dark violet  (obsidian — puzzle use)
 ];
 
 // Surface pattern index per color index (makes color never the sole differentiator).
@@ -184,6 +186,7 @@ const COLORBLIND_PATTERNS = [
   4, // yellow-green - diagonal stripes (soft moss)
   0, // olive-grey   - solid (hardened moss — dark, clearly distinct)
   2, // teal-green   - polka dots (vine)
+  0, // dark violet  - solid (obsidian — puzzle use)
 ];
 
 // Nether theme palette — dark stone, molten lava emphasis, crimson/obsidian tones.

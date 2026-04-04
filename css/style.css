@@ -3474,6 +3474,17 @@ body {
 .puzzle-diff-tutorial { color: #7bf07b; }
 .puzzle-diff-medium   { color: #ffd700; }
 .puzzle-diff-hard     { color: #ff6060; }
+.puzzle-diff-expert   { color: #cc44ff; }
+.puzzle-pack-header {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #a060ff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 10px 8px 4px;
+  border-bottom: 1px solid rgba(160, 96, 255, 0.3);
+  margin-bottom: 4px;
+}
 .puzzle-list-stars {
   font-family: "Press Start 2P", cursive;
   font-size: 12px;

@@ -108,6 +108,8 @@ function _showPuzzleCompleteOverlay(won, stars, isNewBest, puzzle, loseReason) {
       titleEl.textContent = "CRAFTING USED!";
     } else if (loseReason === "time_up") {
       titleEl.textContent = "TIME'S UP!";
+    } else if (loseReason === "line_cleared") {
+      titleEl.textContent = "LINE CLEARED!";
     } else {
       titleEl.textContent = "OUT OF PIECES";
     }
@@ -152,6 +154,8 @@ function _showPuzzleCompleteOverlay(won, stars, isNewBest, puzzle, loseReason) {
         remainEl.textContent = "All " + _puzzleInitialCount + " blocks cleared without crafting!";
       } else if (wc.mode === "timed_score") {
         remainEl.textContent = "Score: " + score + " / " + wc.scoreTarget + " reached!";
+      } else if (wc.mode === "reach_height") {
+        remainEl.textContent = "Reached height " + (wc.targetHeight + 1) + " with 0 line clears!";
       } else {
         remainEl.textContent = "All " + _puzzleInitialCount + " blocks cleared!";
       }
@@ -162,6 +166,12 @@ function _showPuzzleCompleteOverlay(won, stars, isNewBest, puzzle, loseReason) {
         remainEl.textContent = "Crafting was used — no-craft condition failed";
       } else if (wc.mode === "timed_score") {
         remainEl.textContent = "Score: " + score + " / " + wc.scoreTarget + " — time ran out";
+      } else if (wc.mode === "reach_height") {
+        if (loseReason === "line_cleared") {
+          remainEl.textContent = "A line was cleared — stacking only!";
+        } else {
+          remainEl.textContent = "Ran out of pieces before reaching height " + (wc.targetHeight + 1);
+        }
       } else {
         const remaining = countRemainingPresetBlocks();
         remainEl.textContent = remaining + " block" + (remaining === 1 ? "" : "s") + " remaining";
@@ -507,6 +517,11 @@ function updatePuzzleHUD() {
     const secs = timeLeft % 60;
     const timeStr = (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
     objective = "Score: " + score + "/" + wc.scoreTarget + " | Time: " + timeStr;
+  } else if (wc.mode === "reach_height") {
+    const curHeight = _getMaxBlockHeight() + 1;
+    objective = "Height: " + curHeight + "/" + (wc.targetHeight + 1) +
+      " | Lines: " + linesCleared + " (must be 0)" +
+      " | Pieces: " + piecesLeft;
   } else {
     const blocksLeft = countRemainingPresetBlocks();
     objective = "Blocks: " + blocksLeft + "/" + _puzzleInitialCount + " | Pieces: " + piecesLeft;
@@ -523,7 +538,29 @@ function renderPuzzleSelectList() {
   if (!listEl) return;
 
   listEl.innerHTML = "";
+
+  // Pack boundaries: insert a section header when crossing into a new pack.
+  const PACKS = [
+    { label: "Pack 1", startId: 1,  endId: 10, total: 10 },
+    { label: "Pack 2", startId: 11, endId: 15, total: 5  },
+  ];
+  let packIdx = -1;
+
   PUZZLES.forEach(puzzle => {
+    // Insert pack header when entering a new pack range.
+    const newPackIdx = PACKS.findIndex(p => puzzle.id >= p.startId && puzzle.id <= p.endId);
+    if (newPackIdx !== packIdx) {
+      packIdx = newPackIdx;
+      if (packIdx >= 0) {
+        const pack = PACKS[packIdx];
+        const completedInPack = packIdx === 0 ? countCompletedPack1() : countCompletedPack2();
+        const header = document.createElement("div");
+        header.className = "puzzle-pack-header";
+        header.textContent = pack.label + "  (" + completedInPack + "/" + pack.total + " solved)";
+        listEl.appendChild(header);
+      }
+    }
+
     const unlocked = isPuzzleUnlocked(puzzle.id);
     const stars = getPuzzleStars(puzzle.id);
 
