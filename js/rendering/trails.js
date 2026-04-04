@@ -148,8 +148,9 @@ function updateTrails(delta, elapsedTime) {
     const speed      = Math.abs(piece.userData.velocity.y);
     const baseSpeed  = GRAVITY / 4; // starting speed (difficultyMultiplier = 1)
     const speedRatio = THREE.MathUtils.clamp(speed / baseSpeed, 1, 3);
-    // 4 segments at base speed, 8 segments at 3× speed
-    const visSegments = Math.round(THREE.MathUtils.lerp(4, TRAIL_SEGMENTS, (speedRatio - 1) / 2));
+    // 4 segments at base speed, 8 segments at 3× speed; halved on Low quality
+    const _qualityScale = (typeof graphicsQualityTier !== 'undefined' && graphicsQualityTier === 'low') ? 0.5 : 1.0;
+    const visSegments = Math.max(1, Math.round(THREE.MathUtils.lerp(4, TRAIL_SEGMENTS, (speedRatio - 1) / 2) * _qualityScale));
 
     // ── Ground proximity → emissive glow pulse ──────────────────────────────
     let lowestY = Infinity;

@@ -426,6 +426,7 @@ function initSettings() {
   applyAudioSettings(_audioSettings.master, _audioSettings.sfx, _audioSettings.music);
   _loadColorblindMode();
   _loadTheme();
+  if (typeof initGraphicsQuality === 'function') initGraphicsQuality();
   // Apply persisted theme body class without triggering a material swap on init
   // (blocks don't exist yet — createBlockMesh will pick up activeTheme directly).
   document.body.classList.toggle("theme-nether",    activeTheme === "nether");
@@ -558,6 +559,15 @@ function initSettings() {
     });
   });
 
+  // Wire up graphics quality buttons.
+  ['low', 'medium', 'high', 'ultra'].forEach(function(tier) {
+    const btn = document.getElementById('gfx-quality-btn-' + tier);
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      if (typeof applyGraphicsPreset === 'function') applyGraphicsPreset(tier);
+    });
+  });
+
   _initControlsTab();
 }
 
@@ -577,6 +587,7 @@ function openSettings(onClose) {
   const tcToggleSync = document.getElementById("touch-controls-toggle");
   if (tcToggleSync) tcToggleSync.checked = (typeof isTouchControlsEnabled === "function") && isTouchControlsEnabled();
   _syncThemeButtons();
+  if (typeof _syncGraphicsQualityButtons === 'function') _syncGraphicsQualityButtons();
   _syncDisplayNameField();
   _syncKeybindTable();
   // Always start on the General tab.

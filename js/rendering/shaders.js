@@ -49,14 +49,45 @@ function addFaceBrightnessColors(geometry) {
 }
 
 /**
+ * Create a lightweight MeshLambertMaterial for Low graphics quality.
+ * No PBR, no shader injection — fastest GPU path on mobile.
+ */
+function createBlockMaterialLow(color) {
+  const threeColor = (color instanceof THREE.Color) ? color.clone() : new THREE.Color(color);
+  const hexColor = threeColor.getHex();
+
+  const mat = new THREE.MeshLambertMaterial({
+    color: threeColor,
+    vertexColors: true,
+  });
+
+  if (hexColor === LAVA_COLOR_HEX) {
+    mat.emissive = new THREE.Color(0x441100);
+    mat.emissiveIntensity = 0.8;
+  } else if (hexColor === ICE_COLOR_HEX) {
+    mat.transparent = true;
+    mat.opacity     = 0.85;
+    mat.depthWrite  = false;
+  }
+
+  return mat;
+}
+
+/**
  * Create a MeshStandardMaterial for a block with:
  *   - per-face brightness via vertex colors
  *   - PBR roughness/metalness appropriate to the block type
  *   - subtle procedural surface noise injected via onBeforeCompile
  *
+ * On Low graphics quality, delegates to createBlockMaterialLow() instead.
  * Compatible with mining.js: .color and .emissive properties work unchanged.
  */
 function createBlockMaterial(color) {
+  // Low quality: use lightweight Lambert materials
+  if (typeof graphicsQualityTier !== 'undefined' && graphicsQualityTier === 'low') {
+    return createBlockMaterialLow(color);
+  }
+
   const threeColor = (color instanceof THREE.Color) ? color.clone() : new THREE.Color(color);
   const hexColor = threeColor.getHex();
   const props = BLOCK_MAT_PROPS[hexColor] || { roughness: 0.75, metalness: 0.0, noiseScale: 5.0, noiseStrength: 0.10 };

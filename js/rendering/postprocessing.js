@@ -152,8 +152,13 @@ function _lerp(a, b, t) { return a + (b - a) * t; }
 /**
  * Add bloom, color grade, and vignette passes to the EffectComposer.
  * Call AFTER base passes (RenderPass, SSAOPass) have been added.
+ * Respects graphicsQualityTier to set initial enabled state.
  */
 function initBloomPasses(compsr) {
+  const _quality = (typeof graphicsQualityTier !== 'undefined') ? graphicsQualityTier : 'high';
+  const _bloomOn = (_quality !== 'low' && _quality !== 'medium');
+  const _caOn    = (_quality !== 'low');
+
   // Bloom — gracefully skip if library not loaded
   if (typeof THREE.UnrealBloomPass !== 'undefined') {
     _bloomPass = new THREE.UnrealBloomPass(
@@ -162,6 +167,7 @@ function initBloomPasses(compsr) {
       BLOOM_RADIUS,
       BLOOM_THRESHOLD
     );
+    _bloomPass.enabled = _bloomOn;
     compsr.addPass(_bloomPass);
   } else {
     console.warn('UnrealBloomPass not available — bloom disabled.');
@@ -175,7 +181,18 @@ function initBloomPasses(compsr) {
 
   // Chromatic aberration — final pass so it splits the fully-graded image
   _chromaticAberrationPass = new THREE.ShaderPass(_ChromaticAberrationShader);
+  _chromaticAberrationPass.enabled = _caOn;
   compsr.addPass(_chromaticAberrationPass);
+}
+
+/** Toggle bloom on/off at runtime (e.g. when graphics quality changes). */
+function setBloomEnabled(enabled) {
+  if (_bloomPass) _bloomPass.enabled = !!enabled;
+}
+
+/** Toggle chromatic aberration on/off at runtime. */
+function setChromaticAberrationEnabled(enabled) {
+  if (_chromaticAberrationPass) _chromaticAberrationPass.enabled = !!enabled;
 }
 
 /**

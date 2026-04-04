@@ -390,6 +390,7 @@ function animate() {
 
   updatePowerupOverlays();
   updatePostProcessing(delta);
+  if (typeof updateFpsMonitor === 'function') updateFpsMonitor(time);
 
   // Co-op: broadcast local max block height every 2 s
   if (isCoopMode && !isGameOver && typeof coop !== 'undefined' && coop.state === CoopState.IN_GAME) {

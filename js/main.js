@@ -55,6 +55,11 @@ function init() {
   renderer.setPixelRatio(window.devicePixelRatio);
   rendererContainer.appendChild(renderer.domElement);
   renderer.shadowMap.enabled = true;
+  // Re-apply quality-tier renderer settings now that renderer exists.
+  // initSettings() ran earlier and set graphicsQualityTier but renderer was null.
+  if (typeof _applyRendererSettings === 'function') {
+    _applyRendererSettings(graphicsQualityTier);
+  }
 
   initSky();
 

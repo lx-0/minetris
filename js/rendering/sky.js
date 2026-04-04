@@ -215,8 +215,54 @@ function initSky() {
   updateSky(0);
 }
 
+/**
+ * Static noon sky for Low graphics quality.
+ * Applies a fixed sky gradient, simple lighting, and fog — no animation.
+ * Called in place of the full updateSky() when quality === 'low'.
+ */
+function _updateSkyStatic() {
+  // Fixed noon colors
+  const zenArr = _SKY_KEYS[2].zen; // noon zenith
+  const horArr = _SKY_KEYS[2].hor; // noon horizon
+  _applySkyColors(zenArr, horArr);
+  if (scene && !scene.background) scene.background = new THREE.Color();
+  if (scene && scene.background) {
+    scene.background.setRGB(horArr[0] / 255, horArr[1] / 255, horArr[2] / 255);
+  }
+
+  // Fixed noon lighting
+  if (sunLight) {
+    sunLight.color.setRGB(1.0, 1.0, 0.94);
+    sunLight.intensity = 1.0;
+    sunLight.position.set(50, 100, 75);
+  }
+  if (hemisphereLight) {
+    hemisphereLight.color.setRGB(0.53, 0.80, 0.92);
+    hemisphereLight.intensity = 0.6;
+  }
+
+  // Hide animated sky objects
+  if (sunMesh)   sunMesh.visible   = false;
+  if (sunCorona) sunCorona.visible = false;
+  if (moonMesh)  moonMesh.visible  = false;
+  if (moonCrescent) moonCrescent.visible = false;
+  if (skyStars)  skyStars.visible  = false;
+
+  // Simple fog
+  if (scene && scene.fog) {
+    scene.fog.color.setRGB(horArr[0] / 255, horArr[1] / 255, horArr[2] / 255);
+    scene.fog.density = 0.002;
+  }
+}
+
 /** Called every frame from animate(). elapsedSeconds = clock.getElapsedTime(), delta = frame delta in seconds. */
 function updateSky(elapsedSeconds, delta = 0.016) {
+  // Low quality: static noon sky — skip animated day/night cycle entirely.
+  if (typeof graphicsQualityTier !== 'undefined' && graphicsQualityTier === 'low') {
+    _updateSkyStatic();
+    return;
+  }
+
   const phase = (elapsedSeconds % SKY_CYCLE_DURATION) / SKY_CYCLE_DURATION;
 
   // ── Sky dome colors ───────────────────────────────────────────────────────

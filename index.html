@@ -942,6 +942,27 @@
             </button>
           </div>
           <div class="settings-section-divider"></div>
+          <div class="settings-label settings-label-section">Graphics Quality</div>
+          <div id="gfx-quality-selector">
+            <button id="gfx-quality-btn-low" class="gfx-quality-btn" title="Low — mobile profile: no bloom, Lambert materials, static sky">
+              <span class="gfx-quality-btn-label">Low</span>
+              <span class="gfx-quality-btn-sub">Mobile / battery saver</span>
+            </button>
+            <button id="gfx-quality-btn-medium" class="gfx-quality-btn" title="Medium — no bloom, no shadows">
+              <span class="gfx-quality-btn-label">Medium</span>
+              <span class="gfx-quality-btn-sub">Balanced</span>
+            </button>
+            <button id="gfx-quality-btn-high" class="gfx-quality-btn gfx-quality-btn-selected" title="High — bloom, shadows, PBR materials">
+              <span class="gfx-quality-btn-label">High</span>
+              <span class="gfx-quality-btn-sub">Desktop default</span>
+            </button>
+            <button id="gfx-quality-btn-ultra" class="gfx-quality-btn" title="Ultra — maximum quality">
+              <span class="gfx-quality-btn-label">Ultra</span>
+              <span class="gfx-quality-btn-sub">Max everything</span>
+            </button>
+          </div>
+          <div class="settings-hint">Auto-selected: Low on touch/mobile, High on desktop</div>
+          <div class="settings-section-divider"></div>
           <button id="settings-metrics-btn" class="settings-link-btn">&#128202; Player Metrics</button>
           <button id="settings-replay-tutorial-btn" class="settings-link-btn">&#127891; Replay Tutorial</button>
           </div><!-- end #settings-pane-general -->
@@ -969,6 +990,17 @@
           </div><!-- end #settings-pane-controls -->
 
           <button id="settings-close-btn">Close</button>
+        </div>
+      </div>
+
+      <!-- FPS performance suggestion toast -->
+      <div id="fps-suggestion-toast">
+        <div id="fps-suggestion-content">
+          <span id="fps-suggestion-text">&#128513; Looks like performance is low. Switch to Low graphics for a smoother experience?</span>
+          <div id="fps-suggestion-actions">
+            <button id="fps-suggestion-lower">Switch to Low</button>
+            <button id="fps-suggestion-dismiss">Dismiss</button>
+          </div>
         </div>
       </div>
 
@@ -1908,6 +1940,7 @@
     <script src="js/ui/tutorial.js"></script>
     <script src="js/ui/game-tooltips.js"></script>
     <script src="js/ui/coach-marks.js"></script>
+    <script src="js/rendering/graphics-quality.js"></script>
     <script src="js/ui/settings.js"></script>
     <script src="js/data/metrics.js"></script>
     <script src="js/progression/season.js"></script>
