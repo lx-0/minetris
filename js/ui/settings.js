@@ -123,8 +123,13 @@ const _ALL_THEMES = ["classic", "nether", "ocean", "candy", "fossil", "storm", "
 function _loadTheme() {
   try {
     const raw = localStorage.getItem(THEME_STORAGE_KEY);
-    if (_ALL_THEMES.includes(raw)) activeTheme = raw;
-    else activeTheme = "classic";
+    if (_ALL_THEMES.includes(raw)) {
+      activeTheme = raw;
+    } else if (raw && /^custom_\d+$/.test(raw) && typeof getCustomTheme === 'function' && getCustomTheme(raw)) {
+      activeTheme = raw;
+    } else {
+      activeTheme = "classic";
+    }
   } catch (_) {}
 }
 
@@ -148,6 +153,12 @@ function isThemeUnlocked(themeKey) {
     if (themeKey === "ocean")  return !!achs["architect"];
     if (themeKey === "candy")  return !!achs["sprinter"];
   } catch (_) {}
+  // Custom themes: require level 10 + the theme slot must exist
+  if (themeKey.startsWith('custom_')) {
+    if (typeof isThemeEditorUnlocked === 'function' && !isThemeEditorUnlocked()) return false;
+    if (typeof getCustomTheme === 'function') return getCustomTheme(themeKey) !== null;
+    return false;
+  }
   return false;
 }
 
@@ -188,7 +199,23 @@ function applyTheme(themeKey) {
     cosmetic_frozen_tundra_board:  (typeof COSMETIC_FROZEN_TUNDRA_COLORS  !== 'undefined' ? COSMETIC_FROZEN_TUNDRA_COLORS  : null),
     cosmetic_crystal_theme:        (typeof COSMETIC_CRYSTAL_COLORS        !== 'undefined' ? COSMETIC_CRYSTAL_COLORS        : null),
   };
-  const themePalette = THEME_PALETTE[themeKey] || null;
+  let themePalette = THEME_PALETTE[themeKey] || null;
+  // Custom theme: build palette from saved player data.
+  if (!themePalette && themeKey.startsWith('custom_') && typeof getCustomThemePalette === 'function') {
+    themePalette = getCustomThemePalette(themeKey);
+  }
+
+  // Apply custom theme background and grid overlay.
+  if (themeKey.startsWith('custom_') && typeof getCustomTheme === 'function') {
+    const customTheme = getCustomTheme(themeKey);
+    if (customTheme) {
+      _applyCustomThemeBg(customTheme.bgColor || null);
+      _applyCustomThemeGrid(customTheme.gridEnabled, customTheme.gridColor, customTheme.gridOpacity);
+    }
+  } else {
+    _applyCustomThemeBg(null);
+    _applyCustomThemeGrid(false, null, null);
+  }
 
   // Swap materials on all existing block meshes (unless colorblind mode or block skin overrides).
   // When a block skin is active, the skin owns all material colors — skip theme swaps.
@@ -254,6 +281,8 @@ function _syncThemeButtons() {
     btn.classList.toggle("theme-btn-locked", !unlocked);
     btn.disabled = !unlocked;
   });
+  // Also refresh custom theme list.
+  if (typeof _syncCustomThemeButtons === 'function') _syncCustomThemeButtons();
 }
 
 // ── Controls / keybindings tab ────────────────────────────────────────────────
@@ -848,6 +877,7 @@ function initSettings() {
 
   _initControlsTab();
   _initTransferProgressSection();
+  if (typeof initThemeEditor === 'function') initThemeEditor();
 
   // Escape closes the settings overlay
   document.addEventListener('keydown', function (e) {
@@ -907,6 +937,68 @@ function openSettings(onClose) {
   if (tabControls)  tabControls.classList.remove("settings-tab-active");
   const overlay = document.getElementById("settings-overlay");
   if (overlay) overlay.style.display = "flex";
+}
+
+// ── Custom theme background / grid helpers ────────────────────────────────────
+
+/**
+ * Apply (or remove) a background colour for an active custom theme.
+ * Attempts to update the Three.js scene background first; falls back to a CSS div.
+ */
+function _applyCustomThemeBg(bgColor) {
+  const elId = 'custom-theme-bg-overlay';
+  // Try Three.js scene background.
+  if (typeof scene !== 'undefined' && scene && typeof THREE !== 'undefined') {
+    if (bgColor) {
+      scene.background = new THREE.Color(bgColor);
+    } else {
+      // Restore default sky colour.
+      scene.background = new THREE.Color(0x87ceeb);
+    }
+    return;
+  }
+  // Fallback: CSS overlay element.
+  let el = document.getElementById(elId);
+  if (!bgColor) { if (el) el.style.display = 'none'; return; }
+  if (!el) {
+    el = document.createElement('div');
+    el.id = elId;
+    el.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:0;';
+    document.body.insertBefore(el, document.body.firstChild);
+  }
+  el.style.backgroundColor = bgColor;
+  el.style.display = '';
+}
+
+/**
+ * Draw (or clear) a grid overlay on top of the game canvas for custom themes.
+ */
+function _applyCustomThemeGrid(enabled, color, opacity) {
+  const elId = 'custom-theme-grid-overlay';
+  let el = document.getElementById(elId);
+  if (!enabled) { if (el) el.style.display = 'none'; return; }
+  if (!el) {
+    el = document.createElement('canvas');
+    el.id = elId;
+    el.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2;width:100%;height:100%;';
+    document.body.appendChild(el);
+  }
+  el.style.display = '';
+  el.width  = window.innerWidth;
+  el.height = window.innerHeight;
+  const ctx      = el.getContext('2d');
+  const cellSize = 32;
+  ctx.clearRect(0, 0, el.width, el.height);
+  ctx.strokeStyle  = color || '#333333';
+  ctx.globalAlpha  = (opacity !== undefined && opacity !== null) ? opacity : 0.4;
+  ctx.lineWidth    = 1;
+  for (let x = 0; x < el.width; x += cellSize) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, el.height); ctx.stroke();
+  }
+  for (let y = 0; y < el.height; y += cellSize) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(el.width, y); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 }
 
 /** Hide the settings overlay and invoke the close callback if any. */

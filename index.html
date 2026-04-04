@@ -896,6 +896,89 @@
         </div>
       </div>
 
+      <!-- Theme editor overlay -->
+      <div id="theme-editor-overlay" role="dialog" aria-modal="true" aria-label="Theme Editor" style="display:none;">
+        <div id="theme-editor-panel">
+          <div id="theme-editor-header">
+            <span id="te-heading">Create Theme</span>
+            <button id="te-close-btn" class="te-close-btn" title="Close">&#x2715;</button>
+          </div>
+
+          <div id="theme-editor-body">
+            <!-- Left: controls -->
+            <div id="te-controls">
+
+              <!-- Name -->
+              <div class="te-section-label">Theme Name</div>
+              <input id="te-name-input" type="text" class="te-name-input" maxlength="20" placeholder="My Theme" />
+
+              <!-- Block colours -->
+              <div class="te-section-label">Block Colours</div>
+              <div id="te-color-rows">
+                <div class="te-color-row"><div id="te-swatch-0" class="te-swatch" style="background:#8b4513"></div><label class="te-color-label">Dirt</label><input id="te-color-0" type="color" value="#8b4513" /></div>
+                <div class="te-color-row"><div id="te-swatch-1" class="te-swatch" style="background:#808080"></div><label class="te-color-label">Stone</label><input id="te-color-1" type="color" value="#808080" /></div>
+                <div class="te-color-row"><div id="te-swatch-2" class="te-swatch" style="background:#ffff00"></div><label class="te-color-label">Gold</label><input id="te-color-2" type="color" value="#ffff00" /></div>
+                <div class="te-color-row"><div id="te-swatch-3" class="te-swatch" style="background:#00ffff"></div><label class="te-color-label">Ice</label><input id="te-color-3" type="color" value="#00ffff" /></div>
+                <div class="te-color-row"><div id="te-swatch-4" class="te-swatch" style="background:#008000"></div><label class="te-color-label">Moss</label><input id="te-color-4" type="color" value="#008000" /></div>
+                <div class="te-color-row"><div id="te-swatch-5" class="te-swatch" style="background:#ff0000"></div><label class="te-color-label">Lava</label><input id="te-color-5" type="color" value="#ff0000" /></div>
+                <div class="te-color-row"><div id="te-swatch-6" class="te-swatch" style="background:#800080"></div><label class="te-color-label">Crystal</label><input id="te-color-6" type="color" value="#800080" /></div>
+                <div class="te-color-row"><div id="te-swatch-7" class="te-swatch" style="background:#1a237e"></div><label class="te-color-label">Diamond</label><input id="te-color-7" type="color" value="#1a237e" /></div>
+              </div>
+
+              <!-- Background -->
+              <div class="te-section-label">Background Colour</div>
+              <div class="te-color-row">
+                <label class="te-color-label" style="flex:1">Board BG</label>
+                <input id="te-bg-color" type="color" value="#111111" />
+              </div>
+
+              <!-- Grid -->
+              <div class="te-section-label">Grid Lines</div>
+              <div class="te-color-row">
+                <label class="te-color-label" style="flex:1">Show grid</label>
+                <input id="te-grid-toggle" type="checkbox" class="te-checkbox" />
+              </div>
+              <div id="te-grid-controls" style="display:none;">
+                <div class="te-color-row">
+                  <label class="te-color-label" style="flex:1">Grid colour</label>
+                  <input id="te-grid-color" type="color" value="#333333" />
+                </div>
+                <div class="te-slider-row">
+                  <label class="te-color-label">Opacity</label>
+                  <input id="te-grid-opacity" type="range" min="10" max="100" value="40" class="te-slider" />
+                  <span id="te-grid-opacity-val" class="te-slider-val">40%</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right: preview -->
+            <div id="te-preview-col">
+              <div class="te-section-label">Preview</div>
+              <canvas id="te-preview-canvas" width="256" height="120"></canvas>
+
+              <!-- Share -->
+              <div class="te-section-label" style="margin-top:10px">Share</div>
+              <div class="te-share-row">
+                <button id="te-export-btn" class="te-action-btn">Export</button>
+                <span id="te-export-feedback" class="te-feedback" style="display:none"></span>
+              </div>
+              <textarea id="te-share-output" class="te-share-output" rows="2" readonly style="display:none" placeholder="Theme code"></textarea>
+
+              <div class="te-share-row" style="margin-top:6px">
+                <input id="te-import-input" type="text" class="te-import-input" placeholder="Paste theme code…" />
+                <button id="te-import-btn" class="te-action-btn">Import</button>
+              </div>
+              <span id="te-import-feedback" class="te-feedback" style="display:none"></span>
+            </div>
+          </div>
+
+          <div id="theme-editor-footer">
+            <button id="te-save-btn" class="te-save-btn">Save Theme</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Audio settings overlay -->
       <div id="settings-overlay" role="dialog" aria-modal="true" aria-label="Settings">
         <div id="settings-panel">
@@ -1009,6 +1092,12 @@
               <span class="theme-btn-sub theme-btn-hint" id="theme-hint-legendary">&#x1F512; Reach Level 50</span>
             </button>
           </div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-label settings-label-section">Custom Themes</div>
+          <div id="custom-theme-selector">
+            <!-- populated by theme-editor.js -->
+          </div>
+          <button id="theme-editor-open-btn" class="settings-link-btn" title="Reach Level 10 to unlock" disabled>&#127912; Create Custom Theme</button>
           <div class="settings-section-divider"></div>
           <div class="settings-label settings-label-section">Graphics Quality</div>
           <div id="gfx-quality-selector">
@@ -2166,6 +2255,7 @@
         <script src="js/main.js"></script>
     <script src="js/social/community-goals.js"></script>
     <script src="js/events/seasonal-events.js"></script>
+    <script src="js/ui/theme-editor.js"></script>
     <script>
       // Initialize community goals ticker after all modules have loaded
       document.addEventListener('DOMContentLoaded', function() {

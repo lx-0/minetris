@@ -16834,3 +16834,318 @@ button:focus-visible {
 @media (max-width: 420px) {
   #notif-panel { width: calc(100vw - 20px); right: -8px; }
 }
+
+/* ── Theme Editor ─────────────────────────────────────────────────────────── */
+
+#theme-editor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+#theme-editor-panel {
+  background: #1a1a1a;
+  border: 2px solid #444;
+  border-radius: 6px;
+  width: min(700px, 96vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  font-family: "Press Start 2P", cursive;
+  color: #ccc;
+  overflow: hidden;
+}
+
+#theme-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #333;
+  font-size: 11px;
+  color: #0f0;
+}
+
+.te-close-btn {
+  background: none;
+  border: 1px solid #555;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.te-close-btn:hover { border-color: #f55; color: #f55; }
+
+#theme-editor-body {
+  display: flex;
+  gap: 16px;
+  padding: 14px 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+#te-controls {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#te-preview-col {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.te-section-label {
+  font-size: 7px;
+  color: #0f0;
+  text-transform: uppercase;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.te-name-input {
+  width: 100%;
+  background: #111;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #fff;
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  padding: 6px 8px;
+  box-sizing: border-box;
+}
+.te-name-input:focus { outline: none; border-color: #0f0; }
+
+#te-color-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.te-color-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.te-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  border: 1px solid #555;
+  flex-shrink: 0;
+}
+
+.te-color-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  color: #aaa;
+  flex: 1;
+}
+
+.te-color-row input[type="color"] {
+  width: 32px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #555;
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.te-color-row input[type="color"]:hover { border-color: #aaa; }
+
+.te-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #0f0;
+}
+
+.te-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+}
+
+.te-slider {
+  flex: 1;
+  accent-color: #0f0;
+  cursor: pointer;
+}
+
+.te-slider-val {
+  font-size: 6px;
+  color: #aaa;
+  width: 28px;
+  text-align: right;
+}
+
+#te-preview-canvas {
+  border: 1px solid #444;
+  border-radius: 3px;
+  width: 100%;
+  image-rendering: pixelated;
+}
+
+.te-share-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.te-action-btn {
+  background: #222;
+  border: 1px solid #555;
+  color: #ccc;
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.te-action-btn:hover { border-color: #0f0; color: #0f0; }
+
+.te-share-output {
+  width: 100%;
+  background: #111;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #0f0;
+  font-family: monospace;
+  font-size: 9px;
+  padding: 4px 6px;
+  box-sizing: border-box;
+  resize: none;
+  margin-top: 4px;
+}
+
+.te-import-input {
+  flex: 1;
+  background: #111;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #ccc;
+  font-family: monospace;
+  font-size: 9px;
+  padding: 5px 6px;
+  min-width: 0;
+}
+.te-import-input:focus { outline: none; border-color: #0f0; }
+
+.te-feedback {
+  font-size: 6px;
+  margin-top: 3px;
+}
+
+#theme-editor-footer {
+  padding: 10px 16px;
+  border-top: 1px solid #333;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.te-save-btn {
+  background: #0a2e0a;
+  border: 1px solid #0f0;
+  color: #0f0;
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+.te-save-btn:hover:not(:disabled) { background: #144e14; }
+.te-save-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Custom theme items in settings ──────────────────────────────────────── */
+
+#custom-theme-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.custom-theme-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+.custom-theme-item-selected {
+  border-color: #0f0;
+}
+
+.custom-theme-swatches {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.custom-theme-swatch {
+  width: 12px;
+  height: 20px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.custom-theme-name {
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  color: #ccc;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-theme-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.custom-theme-apply-btn,
+.custom-theme-edit-btn,
+.custom-theme-del-btn {
+  background: #222;
+  border: 1px solid #555;
+  color: #ccc;
+  font-family: "Press Start 2P", cursive;
+  font-size: 5px;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.custom-theme-apply-btn:hover:not(:disabled) { border-color: #0f0; color: #0f0; }
+.custom-theme-edit-btn:hover  { border-color: #88f; color: #88f; }
+.custom-theme-del-btn:hover   { border-color: #f55; color: #f55; }
+.custom-theme-apply-btn:disabled { opacity: 0.5; cursor: default; }
+
+@media (max-width: 520px) {
+  #theme-editor-body { flex-direction: column; }
+  #te-preview-col { width: 100%; }
+}
