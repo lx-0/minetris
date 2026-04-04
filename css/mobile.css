@@ -1,0 +1,399 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE LAYOUT
+   Breakpoints:
+     < 480px   — phone portrait        (.vp-xs via JS)
+     480–768px — phone landscape / small tablet
+     768–1024px — tablet
+     > 1024px  — desktop (style.css base, unchanged)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Orientation suggestion overlay ──────────────────────────────────────── */
+#orientation-suggest {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.92);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+  font-family: 'Press Start 2P', cursive;
+  color: #00ff88;
+  padding: 32px;
+  box-sizing: border-box;
+}
+#orientation-suggest.os-visible {
+  display: flex;
+}
+#orientation-suggest-icon {
+  font-size: 64px;
+  animation: os-spin 1.8s ease-in-out infinite;
+}
+@keyframes os-spin {
+  0%   { transform: rotate(0deg); }
+  40%  { transform: rotate(-90deg); }
+  60%  { transform: rotate(-90deg); }
+  100% { transform: rotate(0deg); }
+}
+#orientation-suggest-msg {
+  font-size: 0.55em;
+  color: #aaffcc;
+  line-height: 1.8;
+  max-width: 280px;
+}
+#orientation-suggest-dismiss {
+  font-family: 'Press Start 2P', cursive;
+  background: rgba(0, 255, 136, 0.12);
+  border: 2px solid rgba(0, 255, 136, 0.6);
+  border-radius: 6px;
+  color: #00ff88;
+  font-size: 0.5em;
+  padding: 10px 20px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background 0.15s;
+}
+#orientation-suggest-dismiss:hover {
+  background: rgba(0, 255, 136, 0.25);
+}
+
+/* ── Canvas layout — touch control zones ─────────────────────────────────── */
+
+/* Landscape: 3-column grid — dpad | canvas | actions */
+@media (max-width: 1024px) and (orientation: landscape) and (hover: none) {
+  #game-container {
+    display: grid;
+    grid-template-columns: 160px 1fr 160px;
+    grid-template-rows: 100%;
+    align-items: stretch;
+  }
+  #renderer-container {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  /* Reposition touch control sub-elements into grid lanes */
+  #tc-dpad {
+    position: relative;
+    bottom: unset;
+    left: unset;
+    align-self: flex-end;
+    margin: 0 auto 36px;
+  }
+  #tc-actions {
+    position: relative;
+    bottom: unset;
+    right: unset;
+    align-self: flex-end;
+    margin: 0 auto 36px;
+  }
+}
+
+/* Portrait: canvas takes ~60% height, controls zone below */
+@media (max-width: 768px) and (orientation: portrait) and (hover: none) {
+  #game-container {
+    display: flex;
+    flex-direction: column;
+  }
+  #renderer-container {
+    flex: 0 0 60vh;
+    height: 60vh;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TABLET  768–1024px
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) and (min-width: 769px) {
+  /* HUD — tighten spacing */
+  #top-right-hud    { top: 12px; right: 12px; }
+  #score-display    { padding: 8px 12px; }
+  .hud-score        { font-size: 18px; }
+  .hud-stat         { font-size: 7px; }
+
+  /* Next-piece — slightly smaller cells */
+  .np-cell          { width: 7px; height: 7px; }
+
+  /* Mode-select — allow cards to wrap more tightly */
+  #mode-select-inner { gap: 24px; }
+  .mode-card         { width: 180px; padding: 22px 18px 18px; }
+  .mode-card-name    { font-size: 0.7em; }
+  .mode-card-desc    { font-size: 0.42em; }
+
+  /* Season banner — allow text to wrap */
+  #season-banner {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Overlays — full-width panels on tablet */
+  #stats-panel,
+  #achievements-panel,
+  #settings-panel,
+  #profile-panel {
+    width: calc(100vw - 40px);
+    max-width: unset;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  /* Ensure all interactive buttons are at least 44px */
+  button,
+  .mode-card,
+  .tc-btn,
+  .season-banner-btn,
+  #mode-select-back,
+  .craft-btn,
+  .go-btn,
+  .settings-tab {
+    min-height: 44px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHONE LANDSCAPE / SMALL TABLET  480–768px
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) and (min-width: 481px) {
+  /* HUD — top-center repositioning */
+  #top-right-hud {
+    top: 6px;
+    left: 50%;
+    right: unset;
+    transform: translateX(-50%);
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  #score-display    { padding: 5px 10px; }
+  .hud-score        { font-size: 16px; margin-bottom: 2px; }
+  .hud-stat         { font-size: 6px; }
+
+  /* Next-piece — shrink and move alongside score */
+  #next-pieces-panel { padding: 5px 8px; }
+  .np-cell           { width: 6px; height: 6px; }
+
+  /* Inventory — horizontal scroll */
+  #inventory-hud   { bottom: 8px; }
+  #inventory-slots {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding: 4px 6px;
+    max-width: calc(100vw - 24px);
+    gap: 4px;
+  }
+  .inv-slot        { width: 36px; height: 36px; min-width: 36px; }
+  .inv-slot-color  { width: 22px; height: 22px; }
+  .inv-slot-count  { font-size: 6px; }
+  .inv-slot-num    { font-size: 5px; }
+
+  /* Mode-select — single-column cards, vertical scroll */
+  #mode-select        { padding: 16px 0; }
+  #mode-select-inner  { gap: 18px; width: 95%; }
+  #mode-select-title  { font-size: 1.1em; letter-spacing: 2px; }
+  .mode-section-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+  .mode-card {
+    width: min(340px, 90vw);
+    flex-direction: row;
+    align-items: center;
+    padding: 14px 16px;
+    gap: 14px;
+    text-align: left;
+  }
+  .mode-card-icon   { font-size: 1.6em; flex-shrink: 0; }
+  .mode-card-name   { font-size: 0.65em; }
+  .mode-card-desc   { font-size: 0.4em; }
+  .mode-card-pb     { font-size: 0.38em; }
+
+  /* Season banner — stack vertically */
+  #season-banner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+  #season-banner-text { align-items: center; }
+  #season-banner-actions { justify-content: center; }
+
+  /* Overlays — full-screen */
+  #stats-overlay,
+  #achievements-overlay,
+  #settings-overlay,
+  #profile-overlay {
+    padding: 8px 6px;
+    align-items: stretch;
+  }
+  #stats-panel,
+  #achievements-panel,
+  #settings-panel,
+  #profile-panel {
+    width: 100%;
+    max-width: unset;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 12px 12px;
+    border-radius: 4px;
+  }
+
+  /* Leaderboard panel */
+  #lb-panel {
+    width: 100%;
+    max-width: unset;
+    border-radius: 4px;
+  }
+
+  /* Profile grids */
+  .profile-equipped-grid { grid-template-columns: repeat(2, 1fr); }
+  .profile-wardrobe-grid { grid-template-columns: repeat(2, 1fr); }
+  .profile-stats-row     { flex-wrap: wrap; }
+
+  /* Game-over — tighter */
+  #go-lifetime-stats        { gap: 10px; font-size: 7px; }
+  #go-lifetime-stats .go-label { font-size: 6px; }
+
+  /* Crafting panel */
+  #crafting-panel {
+    min-width: unset;
+    max-width: calc(100vw - 20px);
+    max-height: 82vh;
+    overflow-y: auto;
+    padding: 12px 12px;
+  }
+  #crafting-title { font-size: 10px; }
+  .craft-name     { font-size: 8px; }
+  .craft-desc     { font-size: 6px; }
+
+  /* 44px minimum touch targets */
+  button,
+  .tc-btn,
+  .mode-card,
+  .season-banner-btn,
+  #mode-select-back,
+  .craft-btn,
+  .go-btn,
+  .settings-tab,
+  #mode-select-lb-btn {
+    min-height: 44px;
+  }
+
+  /* Material tooltip */
+  #material-tooltip { bottom: 80px; font-size: 6px; padding: 4px 10px; }
+
+  /* Banners */
+  #line-clear-banner { font-size: 16px; }
+  #combo-banner      { font-size: 14px; }
+  #speed-up-banner   { font-size: 14px; }
+  #danger-text       { font-size: 10px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHONE PORTRAIT  < 480px
+   Supplements existing .vp-xs / @media(max-width:479px) rules in style.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  /* HUD top-center */
+  #top-right-hud {
+    top: 6px;
+    left: 50%;
+    right: unset;
+    transform: translateX(-50%);
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  /* Mode-select — single column, row-layout cards */
+  #mode-select        { padding: 12px 0; }
+  #mode-select-inner  { gap: 14px; width: 96%; }
+  #mode-select-title  { font-size: 0.9em; letter-spacing: 1px; }
+  .mode-section-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+  .mode-card {
+    width: min(320px, 94vw);
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 12px;
+    gap: 10px;
+    text-align: left;
+  }
+  .mode-card-icon   { font-size: 1.4em; flex-shrink: 0; }
+  .mode-card-name   { font-size: 0.6em; }
+  .mode-card-desc   { font-size: 0.38em; }
+
+  /* Season banner — stack */
+  #season-banner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+  #season-banner-actions { flex-wrap: wrap; justify-content: center; }
+
+  /* Full-screen overlays */
+  #stats-overlay,
+  #achievements-overlay,
+  #settings-overlay,
+  #profile-overlay {
+    padding: 4px;
+    align-items: stretch;
+  }
+  #stats-panel,
+  #achievements-panel,
+  #settings-panel,
+  #profile-panel {
+    width: 100%;
+    max-width: unset;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 10px 10px;
+    border-radius: 4px;
+  }
+  #lb-panel {
+    width: 100%;
+    max-width: unset;
+  }
+
+  /* Inventory horizontal scroll */
+  #inventory-slots {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    max-width: calc(100vw - 16px);
+  }
+
+  /* 44px touch targets */
+  button,
+  .tc-btn,
+  .mode-card,
+  .season-banner-btn,
+  #mode-select-back,
+  .craft-btn,
+  .go-btn,
+  .settings-tab {
+    min-height: 44px;
+  }
+
+  /* Crafting panel */
+  #crafting-panel {
+    min-width: unset;
+    max-width: calc(100vw - 16px);
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 10px 10px;
+  }
+}
+
+/* ── Orientation suggestion — only on narrow portrait ─────────────────────── */
+@media (max-width: 767px) and (orientation: portrait) {
+  #orientation-suggest.os-visible {
+    display: flex;
+  }
+}

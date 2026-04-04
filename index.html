@@ -13,6 +13,7 @@
     />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/touch-controls.css" />
+    <link rel="stylesheet" href="css/mobile.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
     <!-- Post-processing: SSAO -->
@@ -112,6 +113,13 @@
         }
       }, 5000);
     </script>
+    <!-- Orientation suggestion overlay — shown in portrait on narrow phones -->
+    <div id="orientation-suggest" role="dialog" aria-label="Rotate device suggestion">
+      <div id="orientation-suggest-icon">&#8635;</div>
+      <div id="orientation-suggest-msg">Rotate your device for the best Minetris experience!</div>
+      <button id="orientation-suggest-dismiss">Got it</button>
+    </div>
+
     <div id="game-container">
       <div id="blocker">
         <div id="instructions">
