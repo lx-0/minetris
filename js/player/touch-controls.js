@@ -10,9 +10,12 @@
 
 const TOUCH_CONTROLS_STORAGE_KEY = 'mineCtris_touchControls';
 
-// DAS timing (standard Tetris values — no DAS config in config.js)
-const TC_DAS_DELAY_MS = 167;
-const TC_ARR_MS       = 33;
+// DAS timing — use mobile-tuned values from MOBILE_OVERRIDES when available.
+const TC_DAS_DELAY_MS = (typeof MOBILE_OVERRIDES !== 'undefined') ? MOBILE_OVERRIDES.dasDelayMs : 137;
+const TC_ARR_MS       = (typeof MOBILE_OVERRIDES !== 'undefined') ? MOBILE_OVERRIDES.arrMs      : 33;
+
+// Global flag read by pieces.js, shadows.js, etc. to apply mobile feel overrides.
+let mobileOverridesActive = false;
 
 // null = auto-detect from device; true/false = manual override via settings
 let _tcEnabledOverride = null;
@@ -266,6 +269,11 @@ function _tcObserveGameState() {
  */
 function initTouchControls() {
   _tcLoadSettings();
+
+  // Activate mobile feel overrides whenever a touch device is present.
+  if (_tcIsTouchDevice()) {
+    mobileOverridesActive = true;
+  }
 
   // Bind all buttons
   document.querySelectorAll('.tc-btn').forEach(_tcBindButton);

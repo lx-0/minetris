@@ -6,6 +6,10 @@
 const AUDIO_SETTINGS_KEY = "mineCtris_audioSettings";
 const COLORBLIND_KEY = "mineCtris_colorblindMode";
 const THEME_STORAGE_KEY = "mineCtris_theme";
+const MOBILE_DIFFICULTY_KEY = "mineCtris_mobileDifficulty";
+
+// Global: true = apply 20% speed reduction on mobile. Default ON for touch devices.
+let mobileDifficultyEnabled = false;
 
 let _audioSettings = { master: 80, sfx: 100, music: 60 };
 let _settingsCloseCallback = null;
@@ -420,6 +424,33 @@ function _initControlsTab() {
   document.addEventListener("keydown", _onKeybindCapture, true);
 }
 
+// ── Mobile difficulty ──────────────────────────────────────────────────────────
+
+function _loadMobileDifficulty() {
+  try {
+    const raw = localStorage.getItem(MOBILE_DIFFICULTY_KEY);
+    if (raw !== null) {
+      mobileDifficultyEnabled = (raw === 'true');
+    } else {
+      // Default ON for touch devices, OFF for desktop.
+      mobileDifficultyEnabled = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    }
+  } catch (_) {}
+}
+
+function _saveMobileDifficulty() {
+  try { localStorage.setItem(MOBILE_DIFFICULTY_KEY, String(mobileDifficultyEnabled)); } catch (_) {}
+}
+
+function isMobileDifficultyEnabled() {
+  return mobileDifficultyEnabled;
+}
+
+function setMobileDifficultyEnabled(val) {
+  mobileDifficultyEnabled = !!val;
+  _saveMobileDifficulty();
+}
+
 /** Called once during init() — loads persisted settings and wires sliders. */
 function initSettings() {
   _loadAudioSettings();
@@ -526,6 +557,16 @@ function initSettings() {
     tcToggle.checked = (typeof isTouchControlsEnabled === "function") && isTouchControlsEnabled();
     tcToggle.addEventListener("change", function() {
       if (typeof setTouchControlsEnabled === "function") setTouchControlsEnabled(this.checked);
+    });
+  }
+
+  // Wire up mobile difficulty toggle.
+  _loadMobileDifficulty();
+  const mdToggle = document.getElementById("mobile-difficulty-toggle");
+  if (mdToggle) {
+    mdToggle.checked = mobileDifficultyEnabled;
+    mdToggle.addEventListener("change", function() {
+      setMobileDifficultyEnabled(this.checked);
     });
   }
 

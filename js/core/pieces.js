@@ -221,7 +221,11 @@ function spawnFallingPiece() {
   const _coopMult = isCoopMode ? coopFallMultiplier : 1.0;
   // Biome fall speed multiplier (Nether biome = 1.5x; others = 1.0).
   const _biomeFallMult = typeof getBiomeFallSpeedMult === 'function' ? getBiomeFallSpeedMult() : 1.0;
-  const _fallMult = _wmodFallMult * _coopMult * _biomeFallMult;
+  // Mobile difficulty: 20% speed reduction when toggle is ON and touch is active.
+  const _mobileMult = (typeof mobileOverridesActive !== 'undefined' && mobileOverridesActive
+    && typeof mobileDifficultyEnabled !== 'undefined' && mobileDifficultyEnabled)
+    ? MOBILE_OVERRIDES.speedMult : 1.0;
+  const _fallMult = _wmodFallMult * _coopMult * _biomeFallMult * _mobileMult;
 
   // Co-op mode: use server-authoritative piece from the shared queue.
   if (isCoopMode) {
@@ -514,8 +518,11 @@ function updateFallingPieces(delta) {
   const _tutSlow = typeof isTutorialSlowActive === 'function' && isTutorialSlowActive();
   const effectiveDelta = _tutSlow ? delta * 0.5 : slowDownActive ? delta * 0.5 : iceBridgeSlowActive ? delta * 0.8 : delta;
 
-  // Ice biome: lock delay in seconds (0 = no delay).
-  const _lockDelaySecs = typeof getBiomeLockDelaySecs === 'function' ? getBiomeLockDelaySecs() : 0;
+  // Ice biome: lock delay in seconds (0 = no delay). Mobile adds extra grace time.
+  const _mobileLockAdd = (typeof mobileOverridesActive !== 'undefined' && mobileOverridesActive)
+    ? MOBILE_OVERRIDES.lockDelayAddSecs : 0;
+  const _lockDelaySecs = (typeof getBiomeLockDelaySecs === 'function' ? getBiomeLockDelaySecs() : 0)
+    + _mobileLockAdd;
   const _lockDrift     = typeof getBiomeLockDrift === 'function' ? getBiomeLockDrift() : false;
 
   const landedPieces = [];
@@ -645,6 +652,10 @@ function updateFallingPieces(delta) {
 
     checkAndApplyPlayerPush(pieceToLand);
     playPlaceSound();
+    // Haptic feedback on piece lock for touch devices.
+    if (typeof mobileOverridesActive !== 'undefined' && mobileOverridesActive) {
+      try { if (navigator.vibrate) navigator.vibrate(20); } catch (_) {}
+    }
     disposePieceTrail(pieceToLand);
 
     // ── Shockwave ring + chromatic aberration on landing ─────────────────────

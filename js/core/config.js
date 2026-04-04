@@ -843,3 +843,17 @@ const BLOCK_SKIN_PALETTES = {
     },
   },
 };
+
+// ── Mobile game-feel overrides ────────────────────────────────────────────────
+// Applied when touch input is active (mobileOverridesActive === true).
+// DAS/ARR: snappier lateral movement on touch (no tactile feedback to guide timing).
+// lockDelayAddSecs: extra landing grace time for imprecise touch placement.
+// speedMult: 20% speed reduction — toggled via "Mobile Difficulty" setting.
+// ghostOpacityMax: ghost piece more visible on small screens.
+const MOBILE_OVERRIDES = {
+  dasDelayMs:      137,   // −30 ms vs desktop default 167 ms
+  arrMs:            33,   // same ARR (33 ms)
+  lockDelayAddSecs: 0.15, // +150 ms lock delay on all modes
+  speedMult:        0.80, // 20% speed reduction (Mobile Difficulty toggle)
+  ghostOpacityMax:  0.65, // was 0.40 — more visible on small screens
+};

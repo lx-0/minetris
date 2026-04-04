@@ -75,9 +75,12 @@ function updatePieceShadow(piece) {
 
   shadowGroup.visible = true;
 
-  // Fade in as the piece approaches: opacity ranges 0.08 → 0.40.
+  // Fade in as the piece approaches: opacity ranges 0.08 → 0.40 (0.65 on mobile).
   const t = 1 - distToLanding / SHADOW_APPEAR_DIST;
-  const opacity = 0.08 + t * 0.32;
+  const _opMax = (typeof mobileOverridesActive !== 'undefined' && mobileOverridesActive
+    && typeof MOBILE_OVERRIDES !== 'undefined')
+    ? MOBILE_OVERRIDES.ghostOpacityMax : 0.40;
+  const opacity = 0.08 + t * (_opMax - 0.08);
 
   blockData.forEach(({ wp, surfaceY }, i) => {
     if (i >= shadowGroup.children.length) return;
