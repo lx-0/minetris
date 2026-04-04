@@ -250,6 +250,12 @@
                   <div class="mode-card-pb" id="mode-pb-blitz"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="today" title="Leaderboard">&#127942;</button>
                 </div>
+                <div class="mode-card mode-card-practice" id="mode-card-practice" data-mode="practice" tabindex="0" role="button" aria-label="Practice mode — Configurable sandbox for skill building">
+                  <div class="mode-card-icon">&#127979;</div>
+                  <div class="mode-card-name">Practice</div>
+                  <div class="mode-card-desc">Skill builder. Undo placements, set speed, no scoring.</div>
+                  <div class="mode-card-pb" id="mode-pb-practice"></div>
+                </div>
               </div>
             </div>
             <!-- ── CHALLENGE ── -->
@@ -451,6 +457,9 @@
 
       <!-- Survival mode badge (shown during survival runs) -->
       <div id="survival-badge" style="display:none;">&#129430; Survival</div>
+
+      <!-- Practice mode badge (shown during practice runs) -->
+      <div id="practice-badge" style="display:none;">&#127979; Practice — not scored</div>
 
       <!-- Tutorial prompt: shown on first-ever Survival session (hidden by default) -->
       <div id="survival-tutorial-prompt" style="display:none;position:fixed;top:30%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);color:#fff;font-size:18px;padding:14px 28px;border-radius:8px;pointer-events:none;z-index:900;opacity:0;transition:opacity 0.5s ease;white-space:nowrap;">Mine blocks to survive and build your world</div>
@@ -761,6 +770,15 @@
         <div id="sprint-xp-earned" class="xp-earned-display"></div>
         <button id="sprint-play-again-btn">Play Again</button>
         <button id="sprint-main-menu-btn">Main Menu</button>
+      </div>
+
+      <!-- Practice complete screen -->
+      <div id="practice-complete-screen" style="display:none;">
+        <div id="practice-complete-title">PRACTICE OVER</div>
+        <div id="practice-complete-subtitle">No stats recorded.</div>
+        <div id="practice-stats"></div>
+        <button id="practice-play-again-btn">Practice Again</button>
+        <button id="practice-main-menu-btn">Main Menu</button>
       </div>
 
       <!-- Share card landing modal -->
@@ -2044,6 +2062,7 @@
     <script src="js/progression/mode-unlock.js"></script>
     <script src="js/modes/sprint.js"></script>
     <script src="js/modes/blitz.js"></script>
+    <script src="js/modes/practice.js"></script>
     <script src="js/modes/puzzle.js"></script>
     <script src="js/modes/puzzle-completion.js"></script>
     <script src="js/progression/achievements.js"></script>

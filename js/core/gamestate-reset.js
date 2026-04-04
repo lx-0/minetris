@@ -263,6 +263,15 @@ function resetGame() {
   const puzzleBadgeEl2 = document.getElementById("puzzle-badge");
   if (puzzleBadgeEl2) puzzleBadgeEl2.style.display = "none";
 
+  // Reset practice mode state
+  isPracticeMode = false;
+  practiceUndoEnabled = true;
+  practiceUndoHistory.length = 0;
+  const practiceCompleteEl = document.getElementById("practice-complete-screen");
+  if (practiceCompleteEl) practiceCompleteEl.style.display = "none";
+  const practiceBadgeEl = document.getElementById("practice-badge");
+  if (practiceBadgeEl) practiceBadgeEl.style.display = "none";
+
   // Resolve equipped block skin for this session (skin changes take effect on game start).
   if (typeof getEquipped === 'function') {
     const skinCosmetic = getEquipped('block_skin');

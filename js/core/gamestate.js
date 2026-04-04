@@ -192,6 +192,12 @@ function triggerGameOver() {
   if (typeof gameTooltipDismiss === 'function') gameTooltipDismiss();
   if (typeof gameTooltip === 'function') gameTooltip('gameOver', { score: score });
 
+  // Practice mode: show simple practice-over overlay — no stats, no XP, no high scores
+  if (isPracticeMode) {
+    if (typeof triggerPracticeGameOver === "function") triggerPracticeGameOver();
+    return;
+  }
+
   // Co-op game over: show co-op summary and bail out
   if (isCoopMode) {
     const dangerEl = document.getElementById("danger-overlay");

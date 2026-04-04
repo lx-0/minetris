@@ -189,6 +189,10 @@ function onKeyDown(event) {
         coopEmote.sendEmote('wave');
         break;
       }
+      if (isPracticeMode) {
+        if (typeof undoPracticePlacement === "function") undoPracticePlacement();
+        break;
+      }
       applyNudge(0, -1);
       break;
     case "KeyX":
@@ -201,6 +205,12 @@ function onKeyDown(event) {
     case "KeyV":
       if (isCoopMode && typeof coopEmote !== 'undefined') {
         coopEmote.sendEmote('alert');
+      }
+      break;
+    case "KeyR":
+      // Practice mode: instant restart with same configuration
+      if (isPracticeMode && typeof resetGame === "function") {
+        resetGame();
       }
       break;
     case "KeyF":

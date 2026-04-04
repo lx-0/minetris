@@ -86,7 +86,7 @@
       // Render World Card stats panel
       if (typeof renderWorldCard === "function") renderWorldCard();
       // Apply highlight to the specified mode card
-      ["classic", "sprint", "blitz", "daily", "weekly", "puzzle", "survival", "depths", "expedition", "coop", "battle", "tournament"].forEach(function (mode) {
+      ["classic", "sprint", "blitz", "practice", "daily", "weekly", "puzzle", "survival", "depths", "expedition", "coop", "battle", "tournament"].forEach(function (mode) {
         const cardEl = document.getElementById("mode-card-" + mode);
         if (cardEl) {
           if (mode === highlightMode) {
@@ -725,6 +725,43 @@
     document.addEventListener('DOMContentLoaded', _init);
   } else {
     _init();
+  }
+})();
+
+// ── Practice mode card ────────────────────────────────────────────────────────
+(function _initPracticeCard() {
+  var practiceCardEl = document.getElementById("mode-card-practice");
+  if (!practiceCardEl) return;
+
+  practiceCardEl.addEventListener("click", function () {
+    isPracticeMode       = true;
+    isDailyChallenge     = false;
+    gameRng              = null;
+    // Start at Level 1 (tier 0) for a clean practice start
+    difficultyMultiplier = 1.0;
+    lastDifficultyTier   = 0;
+    // Show practice badge in HUD
+    var practiceBadgeEl = document.getElementById("practice-badge");
+    if (practiceBadgeEl) practiceBadgeEl.style.display = "block";
+    try { localStorage.setItem("mineCtris_lastMode", "practice"); } catch (_) {}
+    if (typeof metricsModePlayed === 'function') metricsModePlayed('practice');
+    hideModeSelect();
+    requestPointerLock();
+  });
+
+  // Wire up practice-complete overlay buttons
+  var playAgainBtn = document.getElementById("practice-play-again-btn");
+  if (playAgainBtn) {
+    playAgainBtn.addEventListener("click", function () {
+      if (typeof resetGame === "function") resetGame();
+    });
+  }
+
+  var mainMenuBtn = document.getElementById("practice-main-menu-btn");
+  if (mainMenuBtn) {
+    mainMenuBtn.addEventListener("click", function () {
+      if (typeof resetGame === "function") resetGame();
+    });
   }
 })();
 

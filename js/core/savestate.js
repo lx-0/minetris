@@ -27,6 +27,11 @@ function saveGameState() {
   if (isGameOver || lineClearInProgress) return;
   // Survival mode uses its own persistence key — skip mid-session savestate
   if (isSurvivalMode) return;
+  // Practice mode: capture undo snapshot instead of persisting to localStorage
+  if (isPracticeMode) {
+    if (typeof capturePracticeSnapshot === "function") capturePracticeSnapshot();
+    return;
+  }
 
   // Collect all landed blocks (position + color)
   const landedBlocks = [];

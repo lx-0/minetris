@@ -442,3 +442,11 @@ let customPieceSequence      = { mode: "random", pieces: [] };
 // true when the current custom puzzle session was launched from the editor Play button.
 // Used to show "Edit Puzzle" on the completion overlay.
 let customPlayFromEditor     = false;
+
+// ── Practice mode state ───────────────────────────────────────────────────────
+// isPracticeMode: true while a Practice session is active.
+// practiceUndoEnabled: whether undo (Z key) is on for this session.
+// practiceUndoHistory: stack of world snapshots for undo (max 20 entries).
+let isPracticeMode      = false;
+let practiceUndoEnabled = true;
+let practiceUndoHistory = [];

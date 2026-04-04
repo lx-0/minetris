@@ -16522,3 +16522,107 @@ button:focus-visible {
   transition: background 0.15s;
 }
 #fit-dismiss-btn:hover { background: rgba(255,255,255,0.1); }
+
+/* ── Practice mode ── */
+
+/* Practice card — soft green/lime accent */
+.mode-card-practice {
+  border-color: rgba(100, 220, 80, 0.5);
+  box-shadow: 0 0 14px rgba(100, 220, 80, 0.1);
+}
+.mode-card-practice .mode-card-name {
+  color: #7be857;
+  text-shadow: 0 0 6px #7be857;
+}
+.mode-card-practice .mode-card-desc {
+  color: #c6f5b0;
+}
+.mode-card-practice:hover {
+  border-color: #7be857 !important;
+  box-shadow: 0 0 22px rgba(100, 220, 80, 0.4) !important;
+}
+.mode-card-practice.mode-card-highlighted {
+  border-color: #7be857;
+  box-shadow: 0 0 28px rgba(100, 220, 80, 0.55);
+}
+
+/* Practice mode HUD badge */
+#practice-badge {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: #7be857;
+  text-shadow: 0 0 8px #7be857;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4px 10px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 150;
+  white-space: nowrap;
+}
+
+/* Practice complete screen */
+#practice-complete-screen {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 200;
+}
+#practice-complete-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 2em;
+  color: #7be857;
+  text-shadow: 3px 3px #2a6010;
+  margin-bottom: 10px;
+}
+#practice-complete-subtitle {
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: rgba(123, 232, 87, 0.55);
+  letter-spacing: 2px;
+  margin-bottom: 28px;
+}
+#practice-stats {
+  display: flex;
+  gap: 28px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 11px;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 36px;
+}
+#practice-stats > div {
+  line-height: 1.8;
+}
+#practice-play-again-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 12px;
+  color: #000;
+  background: #7be857;
+  border: none;
+  padding: 14px 28px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  transition: background 0.15s;
+}
+#practice-play-again-btn:hover { background: #ff0; }
+#practice-main-menu-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 12px;
+  color: #000;
+  background: #0f0;
+  border: none;
+  padding: 14px 28px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+#practice-main-menu-btn:hover { background: #c0f; color: #fff; }
