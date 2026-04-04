@@ -4746,6 +4746,206 @@ body {
   padding: 16px;
   grid-column: 1 / -1;
 }
+
+/* ── Animated block skin wardrobe additions ────────────────────────────────── */
+
+.profile-wardrobe-animated {
+  border-color: rgba(150, 100, 255, 0.35);
+}
+.profile-wardrobe-animated:hover {
+  border-color: rgba(180, 120, 255, 0.7);
+  background: rgba(150, 80, 255, 0.08);
+}
+
+.skin-preview-canvas {
+  display: block;
+  margin: 0 auto 5px;
+  border-radius: 3px;
+  image-rendering: pixelated;
+}
+
+.skin-animated-badge {
+  display: inline-block;
+  font-size: 4px;
+  padding: 1px 3px;
+  background: rgba(150, 80, 255, 0.3);
+  border: 1px solid rgba(180, 120, 255, 0.5);
+  border-radius: 2px;
+  color: #cc88ff;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+
+/* ── Per-piece-type toggle row ─────────────────────────────────────────────── */
+
+.per-piece-toggle-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.per-piece-toggle-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  background: rgba(0, 255, 0, 0.07);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  color: rgba(0, 255, 0, 0.7);
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.per-piece-toggle-btn:hover { background: rgba(0, 255, 0, 0.14); }
+.per-piece-toggle-active {
+  border-color: #0f0;
+  color: #0f0;
+  background: rgba(0, 255, 0, 0.12);
+}
+
+.per-piece-clear-all-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 5px;
+  background: rgba(255, 60, 60, 0.1);
+  border: 1px solid rgba(255, 60, 60, 0.4);
+  color: rgba(255, 100, 100, 0.8);
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.per-piece-clear-all-btn:hover { background: rgba(255, 60, 60, 0.2); }
+
+/* ── Per-piece-type panel ──────────────────────────────────────────────────── */
+
+.per-piece-panel {
+  margin-bottom: 12px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(0, 255, 0, 0.1);
+  border-radius: 4px;
+}
+.per-piece-header {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: #0f0;
+  margin-bottom: 4px;
+}
+.per-piece-hint {
+  font-family: "Press Start 2P", cursive;
+  font-size: 5px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 8px;
+}
+.per-piece-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.per-piece-item {
+  background: rgba(0, 255, 0, 0.04);
+  border: 1px solid rgba(0, 255, 0, 0.12);
+  border-radius: 3px;
+  padding: 5px 4px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.12s;
+}
+.per-piece-item:hover { border-color: rgba(0, 255, 0, 0.4); }
+.per-piece-item-selected {
+  border-color: #4fc3f7;
+  background: rgba(79, 195, 247, 0.1);
+}
+.per-piece-swatch {
+  width: 18px;
+  height: 18px;
+  margin: 0 auto 3px;
+  border-radius: 2px;
+}
+.per-piece-name {
+  font-family: "Press Start 2P", cursive;
+  font-size: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2px;
+}
+.per-piece-assigned {
+  font-family: "Press Start 2P", cursive;
+  font-size: 4px;
+  color: rgba(150, 200, 255, 0.7);
+}
+.per-piece-clear-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: none;
+  border: none;
+  color: rgba(255, 100, 100, 0.6);
+  font-size: 8px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+.per-piece-clear-btn:hover { color: #ff6060; }
+
+.per-piece-pick-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 5px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 6px;
+}
+
+/* ── Animated skin picker (in per-piece panel) ─────────────────────────────── */
+
+.animated-skin-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.anim-pick-option {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  padding: 5px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.12s;
+}
+.anim-pick-option:hover { border-color: rgba(255, 255, 255, 0.4); }
+.anim-pick-selected {
+  border-color: #ffd740;
+  background: rgba(255, 215, 64, 0.08);
+}
+.anim-pick-name {
+  font-family: "Press Start 2P", cursive;
+  font-size: 4px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 3px;
+}
+
+/* ── Animated skin strip in settings ──────────────────────────────────────── */
+
+#animated-skin-preview-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+.anim-strip-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(150, 100, 255, 0.3);
+  border-radius: 4px;
+  padding: 5px;
+  text-align: center;
+  min-width: 72px;
+}
+.anim-strip-card-name {
+  font-family: "Press Start 2P", cursive;
+  font-size: 4px;
+  color: rgba(200, 160, 255, 0.8);
+  margin-top: 3px;
+}
+.anim-strip-locked { opacity: 0.4; }
 /* ── Profile main tabs (Wardrobe / History) ─────────────────────────────── */
 .profile-main-tabs {
   display: flex;

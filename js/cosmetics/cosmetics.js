@@ -42,6 +42,71 @@ const COSMETIC_REGISTRY = [
     assets:          { themeKey: 'lava' },
   },
 
+  // ── Animated Block Skins (6) ─────────────────────────────────────────────
+  // Frame-animated skins driven by block-skin-anim.js.
+  // Unlock: mix of level milestones, achievements, and boss defeats.
+
+  {
+    id:              'animated_block_skin_lava',
+    category:        'block_skin',
+    name:            'Flowing Lava',
+    rarity:          'epic',
+    unlockCondition: { type: 'level', value: 20 },
+    assets:          { themeKey: 'animated_lava', animated: true },
+    description:     'Lava flows and pulses through every block face — scorching.',
+    icon:            '🌋',
+  },
+  {
+    id:              'animated_block_skin_enchanted',
+    category:        'block_skin',
+    name:            'Enchanted Shimmer',
+    rarity:          'epic',
+    unlockCondition: { type: 'achievement', value: 'tetramino' },
+    assets:          { themeKey: 'animated_enchanted', animated: true },
+    description:     'Purple enchantment light cycles through the blocks.',
+    icon:            '✨',
+  },
+  {
+    id:              'animated_block_skin_redstone',
+    category:        'block_skin',
+    name:            'Redstone Pulse',
+    rarity:          'epic',
+    unlockCondition: { type: 'boss_defeat', value: 'wither' },
+    assets:          { themeKey: 'animated_redstone', animated: true },
+    description:     'Redstone signal pulses with each tick — defeat the Wither to unlock.',
+    icon:            '⚡',
+  },
+  {
+    id:              'animated_block_skin_diamond',
+    category:        'block_skin',
+    name:            'Diamond Sparkle',
+    rarity:          'legendary',
+    unlockCondition: { type: 'level', value: 30 },
+    assets:          { themeKey: 'animated_diamond', animated: true },
+    description:     'Prismatic diamond facets sparkle and catch the light.',
+    icon:            '💎',
+  },
+  {
+    id:              'animated_block_skin_prismarine',
+    category:        'block_skin',
+    name:            'Prismarine Shift',
+    rarity:          'epic',
+    unlockCondition: { type: 'achievement', value: 'architect' },
+    assets:          { themeKey: 'animated_prismarine', animated: true },
+    description:     'Deep ocean teal and green shift like living prismarine.',
+    icon:            '🌊',
+  },
+  {
+    id:              'animated_block_skin_nether_star',
+    category:        'block_skin',
+    name:            'Nether Star',
+    rarity:          'legendary',
+    unlockCondition: { type: 'boss_defeat', value: 'ender_dragon' },
+    assets:          { themeKey: 'animated_nether_star', animated: true },
+    description:     'Blinding white radiance of a Nether Star — defeat the Ender Dragon.',
+    icon:            '⭐',
+  },
+
   // ── Pickaxe Skins ─────────────────────────────────────────────────────────
   {
     id:              'pickaxe_skin_default',

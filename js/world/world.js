@@ -56,6 +56,8 @@ function unregisterBlock(block) {
  */
 function disposeBlock(block) {
   if (!block) return;
+  // Remove from animated block registry before disposing GPU resources.
+  if (typeof unregisterAnimatedBlock === 'function') unregisterAnimatedBlock(block);
   block.children.forEach(child => {
     if (child.geometry) child.geometry.dispose();
     if (child.material) child.material.dispose();
@@ -80,6 +82,14 @@ function createBlockMesh(color) {
   // Resolve the canonical game color (always the standard palette hex).
   const canonicalHex = (color instanceof THREE.Color) ? color.getHex() : new THREE.Color(color).getHex();
 
+  // Resolve effective skin for this block: per-piece-type overrides global.
+  const _sIdx = COLOR_TO_INDEX[canonicalHex];
+  let _effectiveSkin = activeBlockSkin;
+  if (typeof activePerPieceTypeSkins !== 'undefined' && activePerPieceTypeSkins &&
+      _sIdx !== undefined && activePerPieceTypeSkins[_sIdx]) {
+    _effectiveSkin = activePerPieceTypeSkins[_sIdx];
+  }
+
   // Choose material: colorblind-safe takes priority, then block skin, then theme, then standard.
   let material;
   let _skinOverrides = null; // block skin material overrides (if any)
@@ -90,9 +100,9 @@ function createBlockMesh(color) {
     } else {
       material = createBlockMaterial(color);
     }
-  } else if (activeBlockSkin && BLOCK_SKIN_PALETTES[activeBlockSkin]) {
+  } else if (_effectiveSkin && BLOCK_SKIN_PALETTES[_effectiveSkin]) {
     // Block skin overrides both theme and default colors.
-    const skinDef = BLOCK_SKIN_PALETTES[activeBlockSkin];
+    const skinDef = BLOCK_SKIN_PALETTES[_effectiveSkin];
     const sIdx = COLOR_TO_INDEX[canonicalHex];
     if (sIdx !== undefined && skinDef.colors[sIdx] !== null) {
       material = createBlockMaterial(skinDef.colors[sIdx]);
@@ -183,7 +193,7 @@ function createBlockMesh(color) {
     if (_skinOverrides.metalness !== undefined) cube.material.metalness = _skinOverrides.metalness;
     if (_skinOverrides.emissive !== undefined) {
       // For neon skin, use the block's own color as emissive for per-block glow.
-      const useOwnColor = (activeBlockSkin === 'neon');
+      const useOwnColor = (_effectiveSkin === 'neon');
       const skinEmissive = useOwnColor
         ? cube.material.color.clone().multiplyScalar(0.4)
         : new THREE.Color(_skinOverrides.emissive);
@@ -193,6 +203,14 @@ function createBlockMesh(color) {
       cube.material.needsUpdate = true;
       cube.userData.defaultEmissive = skinEmissive.clone();
     }
+  }
+
+  // Register this block for per-frame animation if the effective skin is animated.
+  if (!colorblindMode && _effectiveSkin &&
+      typeof ANIMATED_BLOCK_SKIN_DEFS !== 'undefined' &&
+      ANIMATED_BLOCK_SKIN_DEFS[_effectiveSkin]) {
+    cube.userData.activeSkinKey = _effectiveSkin;
+    if (typeof registerAnimatedBlock === 'function') registerAnimatedBlock(cube);
   }
 
   return cube;

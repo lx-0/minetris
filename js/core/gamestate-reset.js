@@ -287,6 +287,17 @@ function resetGame() {
     activeBlockSkin = null;
   }
 
+  // Load per-piece-type skin assignments (may override activeBlockSkin per colorIndex).
+  if (typeof loadPerPieceTypeSkins === 'function') {
+    const map = loadPerPieceTypeSkins();
+    activePerPieceTypeSkins = (map && Object.keys(map).length > 0) ? map : null;
+  } else {
+    activePerPieceTypeSkins = null;
+  }
+
+  // Clear animated block registry so stale references don't carry into the new game.
+  if (typeof clearAnimatedBlocks === 'function') clearAnimatedBlocks();
+
   // Reset next-piece queue
   initPieceQueue();
   if (nextPiecesEl) nextPiecesEl.style.display = "none";

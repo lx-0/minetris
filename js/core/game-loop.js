@@ -394,6 +394,9 @@ function animate() {
   // Animate lava/ice: update shared time uniforms (every frame for smooth shader animation)
   lavaUniforms.uTime.value = elapsedTime;
   iceUniforms.uTime.value  = elapsedTime;
+
+  // Advance animated block skin frame colors (6 animated skins).
+  if (typeof updateAnimatedBlockSkins === 'function') updateAnimatedBlockSkins(elapsedTime);
   {
     // Rebuild nearest-lava cache at 10fps — block positions change rarely.
     _lavaLightAcc += delta;

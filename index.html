@@ -1245,6 +1245,12 @@
           </div>
           <button id="theme-editor-open-btn" class="settings-link-btn" title="Reach Level 10 to unlock" disabled>&#127912; Create Custom Theme</button>
           <div class="settings-section-divider"></div>
+          <div class="settings-label settings-label-section">Animated Block Skins</div>
+          <div class="settings-hint" style="margin-bottom:6px">Frame-animated skins — unlock and equip in the <a href="#" id="settings-wardrobe-link" style="color:var(--accent,#4fc3f7)">Cosmetic Wardrobe</a>.</div>
+          <div id="animated-skin-preview-strip">
+            <!-- populated by initAnimatedSkinStrip() in block-skin-anim.js after DOM ready -->
+          </div>
+          <div class="settings-section-divider"></div>
           <div class="settings-label settings-label-section">Graphics Quality</div>
           <div id="gfx-quality-selector">
             <button id="gfx-quality-btn-low" class="gfx-quality-btn" title="Low — mobile profile: no bloom, Lambert materials, static sky">
@@ -2452,6 +2458,7 @@
     <script src="js/world/biome-themes.js"></script>
     <script src="js/world/biome-particles.js"></script>
     <script src="js/expedition/expedition-reward-tracks.js"></script>
+    <script src="js/rendering/block-skin-anim.js"></script>
     <script src="js/cosmetics/cosmetics.js"></script>
     <script src="js/ui/profile-page.js"></script>
     <script src="js/world/biome-cosmetics.js"></script>

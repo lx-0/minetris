@@ -895,6 +895,74 @@ const BLOCK_SKIN_PALETTES = {
       metalness: 0.0,
     },
   },
+
+  // ── Animated skins (frame 0 used as initial color; block-skin-anim.js drives animation) ──
+
+  animated_lava: {
+    animated: true,
+    colors: [
+      null,
+      0xcc3300, 0xff4400, 0xdd2200, 0xff5500,
+      0xbb2200, 0xff2200, 0xff6600, 0xffaa00,
+    ],
+    edgeColor: 0x1a0000,
+    material: { emissive: 0x220500, emissiveIntensity: 0.45, roughness: 0.75, metalness: 0.0 },
+  },
+
+  animated_enchanted: {
+    animated: true,
+    colors: [
+      null,
+      0x330066, 0x5500aa, 0x7722cc, 0x4400bb,
+      0x220055, 0x9933ff, 0x6611aa, 0xaa44ff,
+    ],
+    edgeColor: 0x110022,
+    material: { emissive: 0x110022, emissiveIntensity: 0.55, roughness: 0.3, metalness: 0.25 },
+  },
+
+  animated_redstone: {
+    animated: true,
+    colors: [
+      null,
+      0x880000, 0xaa1100, 0xcc2200, 0x990000,
+      0x770000, 0xff1100, 0xbb1100, 0xdd3300,
+    ],
+    edgeColor: 0x110000,
+    material: { emissive: 0x110000, emissiveIntensity: 0.5, roughness: 0.5, metalness: 0.05 },
+  },
+
+  animated_diamond: {
+    animated: true,
+    colors: [
+      null,
+      0x4488bb, 0x55aadd, 0x66bbee, 0x77ccff,
+      0x3377aa, 0x88ddff, 0x5599cc, 0xaaeeff,
+    ],
+    edgeColor: 0x003344,
+    material: { emissive: 0x002233, emissiveIntensity: 0.3, roughness: 0.1, metalness: 0.6 },
+  },
+
+  animated_prismarine: {
+    animated: true,
+    colors: [
+      null,
+      0x00aa88, 0x22bbaa, 0x33ccbb, 0x44ddcc,
+      0x009977, 0x55eedd, 0x2299aa, 0x77ffee,
+    ],
+    edgeColor: 0x002222,
+    material: { emissive: 0x001a15, emissiveIntensity: 0.25, roughness: 0.4, metalness: 0.2 },
+  },
+
+  animated_nether_star: {
+    animated: true,
+    colors: [
+      null,
+      0xaaaaaa, 0xcccccc, 0xeeeeee, 0xffffff,
+      0x999999, 0xffffff, 0xdddddd, 0xffffff,
+    ],
+    edgeColor: 0x222222,
+    material: { emissive: 0x333333, emissiveIntensity: 0.85, roughness: 0.05, metalness: 0.9 },
+  },
 };
 
 // ── Mobile game-feel overrides ────────────────────────────────────────────────

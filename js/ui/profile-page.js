@@ -258,14 +258,139 @@ function _renderWardrobeTabs() {
   return html;
 }
 
+// ── Animated skin preview loop ─────────────────────────────────────────────────
+
+var _animPreviewRafId = null;
+var _animPreviewStartMs = performance.now();
+
+function _stopAnimPreviewLoop() {
+  if (_animPreviewRafId !== null) {
+    cancelAnimationFrame(_animPreviewRafId);
+    _animPreviewRafId = null;
+  }
+}
+
+function _startAnimPreviewLoop() {
+  _stopAnimPreviewLoop();
+  function tick() {
+    var elapsed = performance.now() - _animPreviewStartMs;
+    var canvases = document.querySelectorAll('.skin-preview-canvas[data-animated-skin]');
+    if (canvases.length === 0) { _animPreviewRafId = null; return; }
+    canvases.forEach(function(canvas) {
+      var skinKey = canvas.getAttribute('data-animated-skin');
+      if (typeof drawSkinPreviewFrame === 'function') {
+        drawSkinPreviewFrame(canvas, skinKey, elapsed);
+      }
+    });
+    _animPreviewRafId = requestAnimationFrame(tick);
+  }
+  _animPreviewStartMs = performance.now();
+  _animPreviewRafId = requestAnimationFrame(tick);
+}
+
+// ── Per-piece-type skin state ─────────────────────────────────────────────────
+
+var _perPieceModeActive = false;
+var _perPieceSelectedColorIdx = null; // which piece type is being re-skinned
+
+var _PIECE_TYPE_LABELS = [
+  null,                            // 0 unused
+  { name: 'I-Piece', color: '#55aadd', shape: [[1,1,1,1]] },
+  { name: 'O-Piece', color: '#ffcc00', shape: [[1,1],[1,1]] },
+  { name: 'T-Piece', color: '#aa44ff', shape: [[0,1,0],[1,1,1]] },
+  { name: 'S-Piece', color: '#55ee55', shape: [[0,1,1],[1,1,0]] },
+  { name: 'Z-Piece', color: '#ff4444', shape: [[1,1,0],[0,1,1]] },
+  { name: 'J-Piece', color: '#3366ff', shape: [[1,0,0],[1,1,1]] },
+  { name: 'L-Piece', color: '#ff8800', shape: [[0,0,1],[1,1,1]] },
+  { name: 'Spare',   color: '#88dddd', shape: [[1]] },
+];
+
+function _renderPerPieceTypePanel() {
+  var perPieceMap = (typeof loadPerPieceTypeSkins === 'function') ? loadPerPieceTypeSkins() : {};
+  var html = '<div class="per-piece-panel">';
+  html += '<div class="per-piece-header">Per-Piece Skin Assignments</div>';
+  html += '<div class="per-piece-hint">Click a piece to assign or clear its skin.</div>';
+  html += '<div class="per-piece-grid">';
+  for (var idx = 1; idx <= 8; idx++) {
+    var meta = _PIECE_TYPE_LABELS[idx];
+    if (!meta) continue;
+    var assignedSkin = perPieceMap[idx] || null;
+    var skinLabel = assignedSkin
+      ? (typeof getAnimatedSkinName === 'function' ? getAnimatedSkinName(assignedSkin) : assignedSkin)
+      : 'Default';
+    var isSelected = (_perPieceSelectedColorIdx === idx);
+    var cls = 'per-piece-item' + (isSelected ? ' per-piece-item-selected' : '');
+    html += '<div class="' + cls + '" data-piece-idx="' + idx + '">';
+    html += '<div class="per-piece-swatch" style="background:' + meta.color + '"></div>';
+    html += '<div class="per-piece-name">' + _escProfileHtml(meta.name) + '</div>';
+    html += '<div class="per-piece-assigned">' + _escProfileHtml(skinLabel) + '</div>';
+    if (assignedSkin) {
+      html += '<button class="per-piece-clear-btn" data-piece-idx="' + idx + '" title="Clear assignment">\u2715</button>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  if (_perPieceSelectedColorIdx !== null) {
+    html += '<div class="per-piece-pick-label">Choose a skin for ' +
+      _escProfileHtml((_PIECE_TYPE_LABELS[_perPieceSelectedColorIdx] || {}).name || '') + ':</div>';
+    html += _renderAnimatedSkinPicker(_perPieceSelectedColorIdx);
+  }
+  html += '</div>';
+  return html;
+}
+
+function _renderAnimatedSkinPicker(colorIdx) {
+  var perPieceMap = (typeof loadPerPieceTypeSkins === 'function') ? loadPerPieceTypeSkins() : {};
+  var html = '<div class="animated-skin-picker">';
+  // "Default" option
+  var isDefault = !perPieceMap[colorIdx];
+  html += '<div class="anim-pick-option' + (isDefault ? ' anim-pick-selected' : '') +
+    '" data-pick-skin="" data-pick-idx="' + colorIdx + '">' +
+    '<div class="anim-pick-name">Default</div></div>';
+  if (typeof ANIMATED_BLOCK_SKIN_DEFS !== 'undefined') {
+    Object.keys(ANIMATED_BLOCK_SKIN_DEFS).forEach(function(skinKey) {
+      var def = ANIMATED_BLOCK_SKIN_DEFS[skinKey];
+      var name = typeof getAnimatedSkinName === 'function' ? getAnimatedSkinName(skinKey) : skinKey;
+      var isSel = perPieceMap[colorIdx] === skinKey;
+      html += '<div class="anim-pick-option' + (isSel ? ' anim-pick-selected' : '') +
+        '" data-pick-skin="' + skinKey + '" data-pick-idx="' + colorIdx + '">';
+      html += '<canvas class="skin-preview-canvas" data-animated-skin="' + skinKey +
+        '" width="64" height="32"></canvas>';
+      html += '<div class="anim-pick-name">' + _escProfileHtml(name) + '</div>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+
 function _renderWardrobeContent(categoryKey) {
   var el = document.getElementById('profile-wardrobe-content');
   if (!el) return;
+
+  _stopAnimPreviewLoop();
 
   var allInCat = typeof getCosmeticsByCategory === 'function'
     ? getCosmeticsByCategory(categoryKey) : [];
   var equipped = typeof getEquipped === 'function' ? getEquipped(categoryKey) : null;
   var equippedId = equipped ? equipped.id : null;
+
+  // For block_skin: show per-piece-type toggle + per-piece panel when active.
+  var extraHtml = '';
+  if (categoryKey === 'block_skin') {
+    extraHtml += '<div class="per-piece-toggle-row">';
+    extraHtml += '<button class="per-piece-toggle-btn' + (_perPieceModeActive ? ' per-piece-toggle-active' : '') +
+      '" id="per-piece-toggle-btn">' +
+      (_perPieceModeActive ? '\u2714 Per-Piece Mode' : '\u2261 Per-Piece Mode') +
+      '</button>';
+    if (_perPieceModeActive && typeof hasPerPieceTypeSkins === 'function' && hasPerPieceTypeSkins()) {
+      extraHtml += '<button class="per-piece-clear-all-btn" id="per-piece-clear-all-btn">Clear All</button>';
+    }
+    extraHtml += '</div>';
+    if (_perPieceModeActive) {
+      extraHtml += _renderPerPieceTypePanel();
+    }
+  }
 
   var html = '<div class="profile-wardrobe-grid">';
   for (var i = 0; i < allInCat.length; i++) {
@@ -273,13 +398,24 @@ function _renderWardrobeContent(categoryKey) {
     var unlocked = typeof isCosmeticUnlocked === 'function' ? isCosmeticUnlocked(cos.id) : false;
     var isEquipped = cos.id === equippedId;
     var color = RARITY_COLORS[cos.rarity] || '#aaa';
+    var isAnimated = !!(cos.assets && cos.assets.animated);
 
     var cls = 'profile-wardrobe-card';
     if (!unlocked) cls += ' profile-wardrobe-locked';
     if (isEquipped) cls += ' profile-wardrobe-equipped';
+    if (isAnimated) cls += ' profile-wardrobe-animated';
 
     html += '<div class="' + cls + '" data-cosmetic-id="' + cos.id + '" data-cosmetic-cat="' + categoryKey + '">';
-    html += '<div class="profile-wardrobe-card-name" style="color:' + color + '">' + _escProfileHtml(cos.name) + '</div>';
+
+    // Animated skin preview canvas
+    if (isAnimated && cos.assets && cos.assets.themeKey) {
+      html += '<canvas class="skin-preview-canvas" data-animated-skin="' + cos.assets.themeKey +
+        '" width="96" height="48"></canvas>';
+    }
+
+    html += '<div class="profile-wardrobe-card-name" style="color:' + color + '">';
+    if (isAnimated) html += '<span class="skin-animated-badge">ANIMATED</span> ';
+    html += _escProfileHtml(cos.name) + '</div>';
     html += '<div class="profile-wardrobe-card-rarity">' + cos.rarity.toUpperCase() + '</div>';
 
     if (!unlocked) {
@@ -299,12 +435,77 @@ function _renderWardrobeContent(categoryKey) {
   }
 
   html += '</div>';
-  el.innerHTML = html;
+  el.innerHTML = extraHtml + html;
 
-  // Wire click handlers for equip/unequip
+  // Wire per-piece-type toggle
+  var toggleBtn = el.querySelector('#per-piece-toggle-btn');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', function() {
+      _perPieceModeActive = !_perPieceModeActive;
+      _perPieceSelectedColorIdx = null;
+      _renderWardrobeContent(categoryKey);
+    });
+  }
+  var clearAllBtn = el.querySelector('#per-piece-clear-all-btn');
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener('click', function() {
+      if (typeof clearPerPieceTypeSkins === 'function') clearPerPieceTypeSkins();
+      if (typeof savePerPieceTypeSkins === 'function') savePerPieceTypeSkins({});
+      _perPieceSelectedColorIdx = null;
+      _renderWardrobeContent(categoryKey);
+    });
+  }
+
+  // Wire per-piece item clicks
+  var pieceItems = el.querySelectorAll('.per-piece-item');
+  for (var pi = 0; pi < pieceItems.length; pi++) {
+    pieceItems[pi].addEventListener('click', function(e) {
+      var idx = parseInt(e.currentTarget.getAttribute('data-piece-idx'), 10);
+      _perPieceSelectedColorIdx = (_perPieceSelectedColorIdx === idx) ? null : idx;
+      _renderWardrobeContent(categoryKey);
+    });
+  }
+
+  // Wire per-piece clear buttons
+  var pieceClearBtns = el.querySelectorAll('.per-piece-clear-btn');
+  for (var pc = 0; pc < pieceClearBtns.length; pc++) {
+    pieceClearBtns[pc].addEventListener('click', function(e) {
+      e.stopPropagation();
+      var idx = parseInt(e.currentTarget.getAttribute('data-piece-idx'), 10);
+      var map = (typeof loadPerPieceTypeSkins === 'function') ? loadPerPieceTypeSkins() : {};
+      delete map[idx];
+      if (typeof savePerPieceTypeSkins === 'function') savePerPieceTypeSkins(map);
+      _renderWardrobeContent(categoryKey);
+    });
+  }
+
+  // Wire animated skin picker clicks
+  var pickOptions = el.querySelectorAll('.anim-pick-option');
+  for (var pq = 0; pq < pickOptions.length; pq++) {
+    pickOptions[pq].addEventListener('click', function(e) {
+      var skinKey = e.currentTarget.getAttribute('data-pick-skin');
+      var idx = parseInt(e.currentTarget.getAttribute('data-pick-idx'), 10);
+      var map = (typeof loadPerPieceTypeSkins === 'function') ? loadPerPieceTypeSkins() : {};
+      if (skinKey) {
+        map[idx] = skinKey;
+      } else {
+        delete map[idx];
+      }
+      if (typeof savePerPieceTypeSkins === 'function') savePerPieceTypeSkins(map);
+      _renderWardrobeContent(categoryKey);
+    });
+  }
+
+  // Wire click handlers for equip/unequip (only in global mode)
   var cards = el.querySelectorAll('.profile-wardrobe-card:not(.profile-wardrobe-locked)');
   for (var j = 0; j < cards.length; j++) {
     cards[j].addEventListener('click', _onWardrobeCardClick);
+  }
+
+  // Start animated preview loop if there are any animated skins visible.
+  var animCanvases = el.querySelectorAll('.skin-preview-canvas[data-animated-skin]');
+  if (animCanvases.length > 0) {
+    _startAnimPreviewLoop();
   }
 }
 
@@ -320,8 +521,11 @@ function _getUnlockHint(cosmetic) {
       var modeLabel = cond.mode ? cond.mode.charAt(0).toUpperCase() + cond.mode.slice(1) : '';
       return modeLabel + ' ' + tierLabel + ' Mastery';
     }
-    case 'season':      return 'Season reward';
-    default:            return 'Locked';
+    case 'season':              return 'Season reward';
+    case 'boss_defeat':         return 'Defeat the ' + cond.value.replace(/_/g, ' ');
+    case 'infinite_depths_floor': return 'Reach Depths Floor ' + cond.value;
+    case 'seasonal':            return 'Limited-time event';
+    default:                    return 'Locked';
   }
 }
 

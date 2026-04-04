@@ -256,7 +256,9 @@ function applyTheme(themeKey) {
 
   // Swap materials on all existing block meshes (unless colorblind mode or block skin overrides).
   // When a block skin is active, the skin owns all material colors — skip theme swaps.
-  if (!colorblindMode && !(activeBlockSkin && typeof BLOCK_SKIN_PALETTES !== 'undefined' && BLOCK_SKIN_PALETTES[activeBlockSkin])) {
+  const _anySkinActive = (activeBlockSkin && typeof BLOCK_SKIN_PALETTES !== 'undefined' && BLOCK_SKIN_PALETTES[activeBlockSkin]) ||
+    (typeof activePerPieceTypeSkins !== 'undefined' && activePerPieceTypeSkins && Object.keys(activePerPieceTypeSkins).length > 0);
+  if (!colorblindMode && !_anySkinActive) {
     [worldGroup, fallingPiecesGroup].forEach(function(group) {
       if (!group) return;
       group.traverse(function(obj) {
@@ -1000,6 +1002,9 @@ function openSettings(onClose) {
   if (tabControls)  tabControls.classList.remove("settings-tab-active");
   const overlay = document.getElementById("settings-overlay");
   if (overlay) overlay.style.display = "flex";
+
+  // Refresh animated skin preview strip.
+  if (typeof initAnimatedSkinStrip === 'function') initAnimatedSkinStrip();
 }
 
 // ── Custom theme background / grid helpers ────────────────────────────────────

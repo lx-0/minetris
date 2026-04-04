@@ -285,6 +285,12 @@ let activeTheme = "classic";
 // null or 'default' means no skin override; otherwise holds the themeKey string.
 let activeBlockSkin = null;
 
+// ── Per-piece-type skin overrides ─────────────────────────────────────────────
+// Loaded once at game start from localStorage (SKIN_PER_PIECE_KEY in block-skin-anim.js).
+// Format: { colorIndex: skinKey } e.g. { 1: 'animated_lava', 3: 'animated_redstone' }
+// null means no per-piece overrides are active; global activeBlockSkin is used.
+let activePerPieceTypeSkins = null;
+
 // ── Power-up bank (persistent across runs via localStorage) ──────────────────
 const POWERUP_BANK_KEY     = "mineCtris_powerups";
 const POWERUP_PER_TYPE_CAP = 10;  // max per power-up type in bank

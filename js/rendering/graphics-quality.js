@@ -69,6 +69,8 @@ function _rematerialBlocks() {
   if (typeof colorblindMode !== 'undefined' && colorblindMode) return;
   if (typeof activeBlockSkin !== 'undefined' && activeBlockSkin &&
       typeof BLOCK_SKIN_PALETTES !== 'undefined' && BLOCK_SKIN_PALETTES[activeBlockSkin]) return;
+  if (typeof activePerPieceTypeSkins !== 'undefined' && activePerPieceTypeSkins &&
+      Object.keys(activePerPieceTypeSkins).length > 0) return;
 
   const groups = [];
   if (typeof worldGroup        !== 'undefined' && worldGroup)        groups.push(worldGroup);
