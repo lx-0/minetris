@@ -411,6 +411,13 @@ function triggerGameOver() {
     if (iwEl) iwEl.style.display = 'none';
   }
 
+  // Infinite Depths: check milestone cosmetic awards on run end
+  if (typeof activeDungeonId !== 'undefined' && activeDungeonId === 'infinite' &&
+      typeof checkInfiniteDepthsMilestones === 'function') {
+    const _idFloor = (typeof dungeonDescentLevel !== 'undefined') ? dungeonDescentLevel : 1;
+    checkInfiniteDepthsMilestones(_idFloor);
+  }
+
   // Hide survival section when not in survival mode
   if (!isSurvivalMode) {
     const survGoEl = document.getElementById('survival-go-section');

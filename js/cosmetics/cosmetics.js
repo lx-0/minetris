@@ -9,8 +9,9 @@
 
 // ── Storage keys ────────────────────────────────────────────────────────────────
 
-const COSMETICS_UNLOCKED_KEY = 'mineCtris_cosmetics_unlocked';
-const COSMETICS_EQUIPPED_KEY = 'mineCtris_cosmetics_equipped';
+const COSMETICS_UNLOCKED_KEY             = 'mineCtris_cosmetics_unlocked';
+const COSMETICS_EQUIPPED_KEY             = 'mineCtris_cosmetics_equipped';
+const INFINITE_DEPTHS_HIGHEST_FLOOR_KEY  = 'mineCtris_infiniteDepths_highestFloor';
 
 // ── Registry ────────────────────────────────────────────────────────────────────
 
@@ -188,6 +189,100 @@ const COSMETIC_REGISTRY = [
   { id: 'mastery_expedition_diamond',  category: 'landing_effect', name: 'Expedition Burst',    rarity: 'epic',      unlockCondition: { type: 'mastery', mode: 'expedition', tier: 'diamond'  }, assets: { effectKey: 'expedition_burst' } },
   { id: 'mastery_expedition_obsidian', category: 'border',         name: 'Explorer Wreath',     rarity: 'legendary', unlockCondition: { type: 'mastery', mode: 'expedition', tier: 'obsidian' }, assets: { borderKey: 'explorer_wreath', animated: true } },
 
+  // ── Seasonal Event Cosmetics — "The Corruption Spreads" (S1) ─────────────
+  // These are time-limited (never return) and unlocked by participating in the event.
+  {
+    id:              'seasonal_corruption_block_skin',
+    category:        'block_skin',
+    name:            'Corruption',
+    rarity:          'seasonal',
+    unlockCondition: { type: 'seasonal', eventId: 'corruption_spreads_s1' },
+    assets:          { themeKey: 'corruption_void' },
+    icon:            '☠',
+    timeLimited:     true,
+  },
+  {
+    id:              'seasonal_void_cleansing_trail',
+    category:        'trail',
+    name:            'Void Cleansing',
+    rarity:          'seasonal',
+    unlockCondition: { type: 'seasonal', eventId: 'corruption_spreads_s1' },
+    assets:          { trailKey: 'void_cleansing', nameColor: '#88ffcc' },
+    icon:            '✨',
+    timeLimited:     true,
+  },
+  {
+    id:              'seasonal_purifier_title',
+    category:        'title',
+    name:            'Purifier',
+    rarity:          'seasonal',
+    unlockCondition: { type: 'seasonal', eventId: 'corruption_spreads_s1' },
+    assets:          { displayText: 'Purifier', nameColor: '#88ffcc' },
+    icon:            '🌟',
+    timeLimited:     true,
+  },
+
+  // ── Infinite Depths — Free Progression Milestone Cosmetics ───────────────
+  //
+  // FREE / PREMIUM COSMETIC BOUNDARY (design rule):
+  //   Free progression cosmetics — earned exclusively through gameplay skill
+  //   (floor milestones, achievements, mastery). Themed around depth, skill,
+  //   and accomplishment.
+  //
+  //   Premium cosmetics (future) — purchased only. Themed around aesthetic
+  //   variety (seasonal themes, pop culture, abstract art). Never obtainable
+  //   through gameplay.
+  //
+  //   RULE: No free progression cosmetic may share a visual theme or rarity
+  //   tier with premium cosmetics. Premium cosmetics are never gameplay-gated.
+  //
+  // Thresholds: Floor 14 (Descent 2), 28 (Descent 4), 49 (Descent 7),
+  //             70 (Descent 10), 100 (Descent ~14).
+  {
+    id:              'depths_title_depth_diver',
+    category:        'title',
+    name:            'Depth Diver',
+    rarity:          'rare',
+    unlockCondition: { type: 'infinite_depths_floor', value: 14 },
+    assets:          { displayText: 'Depth Diver' },
+  },
+  {
+    id:              'depths_block_skin_abyssal',
+    category:        'block_skin',
+    name:            'Abyssal',
+    rarity:          'epic',
+    unlockCondition: { type: 'infinite_depths_floor', value: 28 },
+    assets:          { themeKey: 'abyssal' },
+    description:     'Dark blue with depth-pressure cracks',
+  },
+  {
+    id:              'depths_trail_entropy',
+    category:        'trail',
+    name:            'Entropy Trail',
+    rarity:          'epic',
+    unlockCondition: { type: 'infinite_depths_floor', value: 49 },
+    assets:          { trailKey: 'entropy_dissolve' },
+    description:     'Blocks dissolve behind you as you descend',
+  },
+  {
+    id:              'depths_landing_void_walker',
+    category:        'landing_effect',
+    name:            'Void Walker',
+    rarity:          'legendary',
+    unlockCondition: { type: 'infinite_depths_floor', value: 70 },
+    assets:          { effectKey: 'void_ripple' },
+    description:     'Void ripple on piece land',
+  },
+  {
+    id:              'depths_border_infinite',
+    category:        'border',
+    name:            'Infinite',
+    rarity:          'legendary',
+    unlockCondition: { type: 'infinite_depths_floor', value: 100 },
+    assets:          { borderKey: 'infinite_depths', animated: true },
+    description:     'Shifting depth colors — animated border',
+  },
+
 ];
 
 // ── Persistence helpers ─────────────────────────────────────────────────────────
@@ -206,6 +301,10 @@ function _saveUnlockedCosmetics(ids) {
     localStorage.setItem(COSMETICS_UNLOCKED_KEY, JSON.stringify(ids));
   } catch (_) {}
 }
+
+// Public wrappers used by seasonal-events.js to grant time-limited cosmetics.
+function loadUnlockedCosmetics()      { return _loadUnlockedCosmetics(); }
+function saveUnlockedCosmetics(ids)   { return _saveUnlockedCosmetics(ids); }
 
 function _loadEquippedCosmetics() {
   try {
@@ -350,6 +449,9 @@ function checkUnlockCondition(cosmetic) {
       var currentTier = getMasteryTier(cond.mode); // returns 0-5
       return currentTier >= requiredIdx + 1;
     }
+    case 'infinite_depths_floor': {
+      return _loadHighestInfiniteDepthsFloor() >= cond.value;
+    }
     case 'season': {
       // Season unlock — not yet wired
       return false;
@@ -394,4 +496,77 @@ function processUnlocks() {
  */
 function getCosmeticsByCategory(category) {
   return COSMETIC_REGISTRY.filter(c => c.category === category);
+}
+
+// ── Infinite Depths — floor tracking & milestone awards ─────────────────────
+
+function _loadHighestInfiniteDepthsFloor() {
+  try {
+    var v = parseInt(localStorage.getItem(INFINITE_DEPTHS_HIGHEST_FLOOR_KEY), 10);
+    return isNaN(v) ? 0 : v;
+  } catch (_) { return 0; }
+}
+
+function _saveHighestInfiniteDepthsFloor(floor) {
+  try { localStorage.setItem(INFINITE_DEPTHS_HIGHEST_FLOOR_KEY, String(floor)); } catch (_) {}
+}
+
+/**
+ * Get the player's all-time highest Infinite Depths floor.
+ * @returns {number}
+ */
+function getHighestInfiniteDepthsFloor() {
+  return _loadHighestInfiniteDepthsFloor();
+}
+
+/**
+ * Called when an Infinite Depths run ends (game over or extraction).
+ * Updates the persistent highest-floor record and awards any newly reached
+ * milestone cosmetics, queuing an unlock notification for each.
+ *
+ * @param {number} floor  Descent level reached this run (dungeonDescentLevel).
+ * @returns {object[]} Newly unlocked cosmetic objects (may be empty).
+ */
+function checkInfiniteDepthsMilestones(floor) {
+  var prev    = _loadHighestInfiniteDepthsFloor();
+  var highest = Math.max(prev, floor);
+  if (highest > prev) {
+    _saveHighestInfiniteDepthsFloor(highest);
+  }
+
+  // Scan registry for milestone cosmetics not yet unlocked
+  var unlockedIds = _loadUnlockedCosmetics();
+  var unlockedSet = new Set(unlockedIds);
+  var newlyUnlocked = [];
+
+  for (var i = 0; i < COSMETIC_REGISTRY.length; i++) {
+    var cosmetic = COSMETIC_REGISTRY[i];
+    if (!cosmetic.unlockCondition) continue;
+    if (cosmetic.unlockCondition.type !== 'infinite_depths_floor') continue;
+    if (unlockedSet.has(cosmetic.id)) continue;
+    if (highest >= cosmetic.unlockCondition.value) {
+      unlockedIds.push(cosmetic.id);
+      unlockedSet.add(cosmetic.id);
+      newlyUnlocked.push(cosmetic);
+    }
+  }
+
+  if (newlyUnlocked.length > 0) {
+    _saveUnlockedCosmetics(unlockedIds);
+    for (var j = 0; j < newlyUnlocked.length; j++) {
+      _queueCosmeticUnlockToast(newlyUnlocked[j]);
+    }
+  }
+
+  return newlyUnlocked;
+}
+
+/** Queue a cosmetic unlock notification via the shared level-up toast system. */
+function _queueCosmeticUnlockToast(cosmetic) {
+  if (typeof _levelUpToastQueue !== 'undefined') {
+    _levelUpToastQueue.push({ type: 'cosmetic_unlock', cosmetic: cosmetic });
+    if (!_levelUpToastRunning && typeof _drainLevelUpQueue === 'function') {
+      _drainLevelUpQueue();
+    }
+  }
 }

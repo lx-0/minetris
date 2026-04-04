@@ -385,6 +385,13 @@ function _displayLevelUpToast(item, done) {
     if (bodyEl) bodyEl.textContent = currentReward
       ? '+' + Math.round(currentReward.xpBonus * 100) + '% XP bonus unlocked!'
       : 'Prestige ' + item.prestigeLevel + ' achieved!';
+  } else if (item.type === 'cosmetic_unlock') {
+    el.classList.remove('streak-toast', 'lu-toast-mode-unlock');
+    const c = item.cosmetic;
+    const rarityIcons = { rare: '\u{1F4A0}', epic: '\u2736', legendary: '\u2728' };
+    if (iconEl)  iconEl.textContent  = rarityIcons[c.rarity] || '\u2736';
+    if (titleEl) titleEl.textContent = 'COSMETIC UNLOCKED!';
+    if (bodyEl)  bodyEl.textContent  = c.name + ' — check the Cosmetics panel!';
   } else {
     // skin unlock
     el.classList.remove('streak-toast', 'lu-toast-mode-unlock');
