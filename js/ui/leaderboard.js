@@ -496,7 +496,7 @@ function _renderSeasonRatingLeaderboard(container, data) {
 // Mastery tier icons — must match mastery.js MASTERY_TIER_ICONS
 const _MASTERY_TIER_ICONS = { bronze: '🥉', silver: '🥈', gold: '🥇', diamond: '💎', obsidian: '⬛' };
 const _MASTERY_TIER_COLORS = { bronze: '#cd7f32', silver: '#c0c0c0', gold: '#ffd700', diamond: '#b9f2ff', obsidian: '#7c3aed' };
-const _MASTERY_MODE_LABELS = ['classic', 'sprint', 'blitz', 'daily', 'survival', 'battle', 'expedition'];
+const _MASTERY_MODE_LABELS = ['classic', 'sprint', 'blitz', 'daily', 'survival', 'battle', 'expedition', 'depths'];
 
 function _masteryTierIcon(tierNum) {
   var names = ['bronze', 'silver', 'gold', 'diamond', 'obsidian'];

@@ -277,7 +277,14 @@ function triggerGameOver() {
   }
 
   // Mastery tracking
-  if (typeof masteryOnClassicEnd === 'function') {
+  if (typeof activeDungeonId !== 'undefined' && activeDungeonId) {
+    if (typeof masteryOnDepthsEnd === 'function') {
+      masteryOnDepthsEnd({
+        floor:     typeof dungeonDescentLevel !== 'undefined' ? dungeonDescentLevel : 1,
+        dungeonId: activeDungeonId,
+      });
+    }
+  } else if (typeof masteryOnClassicEnd === 'function') {
     masteryOnClassicEnd({
       score:           state.score,
       linesCleared:    state.linesCleared,

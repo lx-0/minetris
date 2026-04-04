@@ -15,8 +15,8 @@ const MASTERY_TIER_NAMES  = ['bronze', 'silver', 'gold', 'diamond', 'obsidian'];
 const MASTERY_TIER_POINTS = { bronze: 1, silver: 2, gold: 3, diamond: 4, obsidian: 5 };
 const MASTERY_TIER_ICONS  = { bronze: '🥉', silver: '🥈', gold: '🥇', diamond: '💎', obsidian: '⬛' };
 
-// All 7 mode keys
-const MASTERY_MODES = ['classic', 'sprint', 'blitz', 'daily', 'survival', 'battle', 'expedition'];
+// All 8 mode keys
+const MASTERY_MODES = ['classic', 'sprint', 'blitz', 'daily', 'survival', 'battle', 'expedition', 'depths'];
 
 // ── Challenge definitions ─────────────────────────────────────────────────────
 // Each challenge: { mode, tier (1-5), tierName, desc, check(progress) → bool }
@@ -224,6 +224,34 @@ var MASTERY_CHALLENGES = {
     },
   ],
 
+  depths: [
+    {
+      tier: 1, tierName: 'bronze',
+      desc: 'Complete 3 Depths runs (any variant)',
+      check: function (p) { return p.completions >= 3; },
+    },
+    {
+      tier: 2, tierName: 'silver',
+      desc: 'Descend to floor 5 in any Depths run',
+      check: function (p) { return p.bestFloor >= 5; },
+    },
+    {
+      tier: 3, tierName: 'gold',
+      desc: 'Descend to floor 10 in any Depths run',
+      check: function (p) { return p.bestFloor >= 10; },
+    },
+    {
+      tier: 4, tierName: 'diamond',
+      desc: 'Reach floor 8 in Infinite Depths',
+      check: function (p) { return p.bestInfiniteFloor >= 8; },
+    },
+    {
+      tier: 5, tierName: 'obsidian',
+      desc: 'Reach floor 15 in Infinite Depths',
+      check: function (p) { return p.bestInfiniteFloor >= 15; },
+    },
+  ],
+
 };
 
 // ── Persistence ───────────────────────────────────────────────────────────────
@@ -327,6 +355,7 @@ var MASTERY_MODE_ICONS = {
   survival:   '\uD83C\uDF32',
   battle:     '\u2694\uFE0F',
   expedition: '\uD83D\uDDFA\uFE0F',
+  depths:     '\u2620\uFE0F',
 };
 
 // Tier accent colors
@@ -540,6 +569,14 @@ function _mergeProgress(mode, progress, stats) {
     if (stats.biomesAtTier10 > (progress.biomesAtTier10 || 0))  progress.biomesAtTier10 = stats.biomesAtTier10;
   }
 
+  if (mode === 'depths') {
+    progress.completions = (progress.completions || 0) + 1;
+    if (stats.floor > (progress.bestFloor || 0))               progress.bestFloor = stats.floor;
+    if (stats.dungeonId === 'infinite' && stats.floor > (progress.bestInfiniteFloor || 0)) {
+      progress.bestInfiniteFloor = stats.floor;
+    }
+  }
+
 }
 
 // ── Mode-specific hooks ───────────────────────────────────────────────────────
@@ -679,6 +716,16 @@ function masteryOnSurvivalEnd(opts) {
     blocksPlaced:  opts.blocksPlaced || 0,
     diamondPickaxe: (pickaxeTier === 'diamond' || pickaxeTier === 'obsidian'),
   });
+}
+
+/**
+ * Call when a Depths dungeon run ends (from gamestate.js triggerGameOver).
+ * @param {object} opts  { floor, dungeonId }
+ */
+function masteryOnDepthsEnd(opts) {
+  var floor     = opts.floor     || 1;
+  var dungeonId = opts.dungeonId || '';
+  checkMasteryProgress('depths', { floor: floor, dungeonId: dungeonId });
 }
 
 // ── Leaderboard submission ─────────────────────────────────────────────────────
