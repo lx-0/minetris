@@ -15402,3 +15402,49 @@ body.biome-ice #inventory-hud { border-color: #4499dd; }
     transform: scale(1.35);
   }
 }
+
+/* ── Keyboard navigation focus indicators ───────────────────────────────────── */
+
+/* Global focus-visible: 2px accent outline on all interactive elements */
+:focus-visible {
+  outline: 2px solid #00ff88;
+  outline-offset: 2px;
+}
+
+/* Mode cards are divs — need explicit focus ring */
+.mode-card:focus-visible {
+  outline: 2px solid #00ff88;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.12);
+}
+
+/* Leaderboard tabs */
+.lb-tab:focus-visible {
+  outline: 2px solid #00ff88;
+  outline-offset: 1px;
+}
+
+/* Settings tabs */
+.settings-tab:focus-visible {
+  outline: 2px solid #00ff88;
+  outline-offset: 1px;
+}
+
+/* Volume sliders */
+.vol-slider:focus-visible {
+  outline: 2px solid #00ff88;
+  outline-offset: 2px;
+}
+
+/* Theme and GFX quality buttons */
+.theme-btn:focus-visible,
+.gfx-quality-btn:focus-visible {
+  outline: 2px solid #00ff88;
+  outline-offset: 2px;
+}
+
+/* Generic button focus-visible (overrides any outline:none on :focus) */
+button:focus-visible {
+  outline: 2px solid #00ff88;
+  outline-offset: 2px;
+}

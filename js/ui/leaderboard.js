@@ -840,6 +840,32 @@ function initLeaderboard() {
   if (hofCloseBtn) {
     hofCloseBtn.addEventListener('click', closeHallOfFamePanel);
   }
+
+  // Escape closes the leaderboard panel
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const lbOverlay = document.getElementById('lb-panel-overlay');
+    if (!lbOverlay || lbOverlay.style.display === 'none') return;
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeLeaderboardPanel();
+      return;
+    }
+
+    // Left/right arrow keys move between tabs
+    const lbTabsEl = document.getElementById('lb-tabs');
+    if (!lbTabsEl) return;
+    const tabs = Array.from(lbTabsEl.querySelectorAll('.lb-tab'));
+    const activeIdx = tabs.findIndex(function (t) { return t.classList.contains('lb-tab-active'); });
+    if (activeIdx === -1) return;
+    e.preventDefault();
+    const next = e.key === 'ArrowRight'
+      ? (activeIdx + 1) % tabs.length
+      : (activeIdx - 1 + tabs.length) % tabs.length;
+    tabs[next].click();
+    tabs[next].focus();
+  });
 }
 
 // ── Hall of Fame ──────────────────────────────────────────────────────────────

@@ -727,3 +727,60 @@
     _init();
   }
 })();
+
+// ── Keyboard navigation for mode-select screen ───────────────────────────────
+(function _initModeSelectKeyboard() {
+  function _getNavigableCards() {
+    var modeCards = document.getElementById('mode-cards');
+    if (!modeCards) return [];
+    // All visible, non-locked cards with tabindex
+    return Array.from(modeCards.querySelectorAll('.mode-card[tabindex]'))
+      .filter(function (c) { return c.offsetParent !== null && !c.classList.contains('mode-card-locked'); });
+  }
+
+  document.addEventListener('keydown', function (e) {
+    var modeSelectEl = document.getElementById('mode-select');
+    if (!modeSelectEl || modeSelectEl.style.display === 'none') return;
+
+    var key = e.key;
+
+    // Escape → click the Back button
+    if (key === 'Escape') {
+      var backBtn = document.getElementById('mode-select-back');
+      if (backBtn) { e.preventDefault(); backBtn.click(); }
+      return;
+    }
+
+    // Arrow key navigation between mode cards
+    if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown') {
+      var cards = _getNavigableCards();
+      if (!cards.length) return;
+      var focused = document.activeElement;
+      var idx = cards.indexOf(focused);
+      if (idx === -1) {
+        // No card focused — focus first
+        e.preventDefault();
+        cards[0].focus();
+        return;
+      }
+      e.preventDefault();
+      var next;
+      if (key === 'ArrowRight' || key === 'ArrowDown') {
+        next = (idx + 1) % cards.length;
+      } else {
+        next = (idx - 1 + cards.length) % cards.length;
+      }
+      cards[next].focus();
+      return;
+    }
+
+    // Enter or Space → activate the currently focused mode card
+    if (key === 'Enter' || key === ' ') {
+      var focused = document.activeElement;
+      if (focused && focused.classList.contains('mode-card')) {
+        e.preventDefault();
+        focused.click();
+      }
+    }
+  });
+})();

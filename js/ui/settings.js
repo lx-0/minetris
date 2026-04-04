@@ -610,6 +610,31 @@ function initSettings() {
   });
 
   _initControlsTab();
+
+  // Escape closes the settings overlay
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var overlay = document.getElementById('settings-overlay');
+    if (overlay && overlay.style.display !== 'none') {
+      e.preventDefault();
+      closeSettings();
+    }
+  });
+
+  // Arrow keys navigate between settings tabs
+  var settingsTabs = document.getElementById('settings-tabs');
+  if (settingsTabs) {
+    settingsTabs.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      var tabs = Array.from(settingsTabs.querySelectorAll('.settings-tab'));
+      var idx = tabs.indexOf(document.activeElement);
+      if (idx === -1) return;
+      e.preventDefault();
+      var next = e.key === 'ArrowRight' ? (idx + 1) % tabs.length : (idx - 1 + tabs.length) % tabs.length;
+      tabs[next].focus();
+      tabs[next].click();
+    });
+  }
 }
 
 function _syncDisplayNameField() {

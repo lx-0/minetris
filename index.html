@@ -228,21 +228,21 @@
             <div class="mode-section">
               <div class="mode-section-header">CORE</div>
               <div class="mode-section-cards">
-                <div class="mode-card" id="mode-card-classic" data-mode="classic">
+                <div class="mode-card" id="mode-card-classic" data-mode="classic" tabindex="0" role="button" aria-label="Classic mode — Endless mode with progressive difficulty">
                   <div class="mode-card-icon">&#8734;</div>
                   <div class="mode-card-name">Classic</div>
                   <div class="mode-card-desc">Endless mode. Speed increases every level.</div>
                   <div class="mode-card-pb" id="mode-pb-classic"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="today" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card" id="mode-card-sprint" data-mode="sprint">
+                <div class="mode-card" id="mode-card-sprint" data-mode="sprint" tabindex="0" role="button" aria-label="Sprint mode — Clear 40 lines as fast as possible">
                   <div class="mode-card-icon">&#9201;</div>
                   <div class="mode-card-name">Sprint</div>
                   <div class="mode-card-desc">Clear 40 lines. Beat the clock.</div>
                   <div class="mode-card-pb" id="mode-pb-sprint"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="today" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card" id="mode-card-blitz" data-mode="blitz">
+                <div class="mode-card" id="mode-card-blitz" data-mode="blitz" tabindex="0" role="button" aria-label="Blitz mode — 2 minutes, maximum score">
                   <div class="mode-card-icon">&#9889;</div>
                   <div class="mode-card-name">Blitz</div>
                   <div class="mode-card-desc">2 minutes. Maximum score.</div>
@@ -255,21 +255,21 @@
             <div class="mode-section">
               <div class="mode-section-header">CHALLENGE</div>
               <div class="mode-section-cards">
-                <div class="mode-card mode-card-daily" id="mode-card-daily" data-mode="daily">
+                <div class="mode-card mode-card-daily" id="mode-card-daily" data-mode="daily" tabindex="0" role="button" aria-label="Daily mode — Today's seed, everyone gets the same pieces">
                   <div class="mode-card-icon">&#128197;</div>
                   <div class="mode-card-name">Daily</div>
                   <div class="mode-card-desc">Today's seed. Everyone gets the same pieces.</div>
                   <div class="mode-card-pb" id="mode-pb-daily"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="today" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card mode-card-weekly" id="mode-card-weekly" data-mode="weekly">
+                <div class="mode-card mode-card-weekly" id="mode-card-weekly" data-mode="weekly" tabindex="0" role="button" aria-label="Weekly mode — This week's challenge with a special modifier">
                   <div class="mode-card-icon">&#127381;</div>
                   <div class="mode-card-name">Weekly</div>
                   <div class="mode-card-desc" id="mode-weekly-modifier-desc">This week's challenge.</div>
                   <div class="mode-card-pb" id="mode-pb-weekly"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="thisweek" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card mode-card-puzzle" id="mode-card-puzzle" data-mode="puzzle">
+                <div class="mode-card mode-card-puzzle" id="mode-card-puzzle" data-mode="puzzle" tabindex="0" role="button" aria-label="Puzzle mode — Curated mining puzzles, solve them all">
                   <div class="mode-card-icon">&#129513;</div>
                   <div class="mode-card-name">Puzzle</div>
                   <div class="mode-card-desc">10 curated mining puzzles. Solve them all.</div>
@@ -281,7 +281,7 @@
             <div class="mode-section">
               <div class="mode-section-header">ADVENTURE</div>
               <div class="mode-section-cards">
-                <div class="mode-card mode-card-survival" id="mode-card-survival" data-mode="survival">
+                <div class="mode-card mode-card-survival" id="mode-card-survival" data-mode="survival" tabindex="0" role="button" aria-label="Survival mode — Persistent world, mine, build, and survive">
                   <div class="mode-card-icon survival-creeper-face" aria-label="Creeper">
                     <svg viewBox="0 0 8 8" width="36" height="36" shape-rendering="crispEdges">
                       <rect width="8" height="8" fill="#4a8c2c"/>
@@ -299,13 +299,13 @@
                   <div id="survival-world-card" class="survival-world-card"></div>
                   <button id="survival-reset-btn" class="survival-reset-btn" style="display:none;">&#128465; Reset World</button>
                 </div>
-                <div class="mode-card mode-card-depths" id="mode-card-depths" data-mode="depths">
+                <div class="mode-card mode-card-depths" id="mode-card-depths" data-mode="depths" tabindex="0" role="button" aria-label="The Depths mode — Roguelike dungeon runs with tiered challenges">
                   <div class="mode-card-icon">&#9935;</div>
                   <div class="mode-card-name">The Depths</div>
                   <div class="mode-card-desc">Descend into danger. Roguelike runs, tiered dungeons, and endless depths.</div>
                   <button class="mode-card-lb-btn" data-lb-tab="depths" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card mode-card-expedition" id="mode-card-expedition" data-mode="expedition">
+                <div class="mode-card mode-card-expedition" id="mode-card-expedition" data-mode="expedition" tabindex="0" role="button" aria-label="Expeditions mode — Explore biomes, gather resources, build your world">
                   <div class="mode-card-icon">&#127758;</div>
                   <div class="mode-card-name">Expeditions</div>
                   <div class="mode-card-desc">Explore biomes. Gather resources. Build your world.</div>
@@ -316,14 +316,14 @@
             <div class="mode-section">
               <div class="mode-section-header">MULTIPLAYER</div>
               <div class="mode-section-cards">
-                <div class="mode-card mode-card-coop" id="mode-card-coop" data-mode="coop">
+                <div class="mode-card mode-card-coop" id="mode-card-coop" data-mode="coop" tabindex="0" role="button" aria-label="Co-op mode — Play together, one world, two miners">
                   <div class="mode-card-icon">&#128101;</div>
                   <div class="mode-card-name">Co-op</div>
                   <div class="mode-card-desc">Play together. One world, two miners.</div>
                   <div class="mode-coop-ach-count" id="mode-coop-ach-count"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="coop" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card mode-card-battle" id="mode-card-battle" data-mode="battle">
+                <div class="mode-card mode-card-battle" id="mode-card-battle" data-mode="battle" tabindex="0" role="button" aria-label="Battle mode — Fight your opponent, last miner standing wins">
                   <div class="mode-card-icon">&#9876;</div>
                   <div class="mode-card-name">Battle</div>
                   <div class="mode-card-desc">Fight your opponent. Last miner standing wins.</div>
@@ -838,7 +838,7 @@
       </div>
 
       <!-- Audio settings overlay -->
-      <div id="settings-overlay">
+      <div id="settings-overlay" role="dialog" aria-modal="true" aria-label="Settings">
         <div id="settings-panel">
           <div id="settings-title">SETTINGS</div>
           <!-- Tab navigation -->
@@ -1179,7 +1179,7 @@
       </div>
 
       <!-- Leaderboard panel overlay -->
-      <div id="lb-panel-overlay" style="display:none;">
+      <div id="lb-panel-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Leaderboard">
         <div id="lb-panel">
           <div id="lb-panel-header">
             <div id="lb-panel-title">LEADERBOARD</div>
