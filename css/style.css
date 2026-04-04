@@ -15256,3 +15256,149 @@ body.biome-ice #inventory-hud { border-color: #4499dd; }
 .mode-card-highlight {
   animation: depthsCardGlow 2s ease-in-out forwards;
 }
+
+/* ── Mobile swipe carousel for mode select (<768px) ─────────────────────── */
+@media (max-width: 767px) {
+  #mode-select {
+    padding: 16px 0;
+    align-items: flex-start;
+  }
+  #mode-select-inner {
+    width: 100%;
+    max-width: 100%;
+    gap: 16px;
+  }
+  #mode-select-title {
+    font-size: 0.85em;
+  }
+  #mode-cards {
+    gap: 0;
+  }
+
+  /* Category tab bar */
+  .msm-tab-bar {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(0, 5, 2, 0.97);
+    padding: 8px 8px;
+    box-sizing: border-box;
+  }
+  .msm-tab {
+    font-family: "Press Start 2P", cursive;
+    font-size: 0.42em;
+    background: rgba(0, 255, 136, 0.07);
+    color: rgba(0, 255, 136, 0.5);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .msm-tab.msm-tab-active {
+    background: rgba(0, 255, 136, 0.18);
+    color: #00ff88;
+    border-color: rgba(0, 255, 136, 0.7);
+  }
+
+  /* Hide all sections; JS shows active one */
+  #mode-cards .mode-section {
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+  #mode-cards .mode-section.msm-active {
+    display: flex;
+  }
+  /* Category headers replaced by tab bar */
+  .mode-section-header {
+    display: none;
+  }
+
+  /* Carousel track */
+  .mode-section-cards {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: scroll;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 10px;
+    padding: 4px 10% 8px;
+    scroll-padding-left: 10%;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: flex-start;
+  }
+  .mode-section-cards::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Cards in carousel */
+  .mode-section-cards .mode-card {
+    flex: 0 0 78% !important;
+    width: auto !important;
+    min-width: 0;
+    scroll-snap-align: start;
+    min-height: 130px;
+    transition: border-color 0.15s, box-shadow 0.15s, min-height 0.2s ease;
+  }
+  .mode-section-cards .mode-card:not(.mode-card-locked):hover {
+    transform: none;
+  }
+
+  /* Expanded card on first tap */
+  .mode-section-cards .mode-card.msm-expanded {
+    border-color: #00ff88;
+    box-shadow: 0 0 22px rgba(0, 255, 136, 0.35);
+  }
+
+  /* Play button inside expanded card */
+  .msm-play-btn {
+    margin-top: 8px;
+    font-family: "Press Start 2P", cursive;
+    font-size: 0.55em;
+    background: #00ff88;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 20px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    align-self: center;
+    transition: background 0.12s;
+    touch-action: manipulation;
+  }
+  .msm-play-btn:active {
+    background: #00cc66;
+  }
+
+  /* Dot indicators */
+  .msm-dots {
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    padding: 2px 0 4px;
+  }
+  .msm-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(0, 255, 136, 0.22);
+    transition: background 0.15s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .msm-dot.msm-dot-active {
+    background: #00ff88;
+    transform: scale(1.35);
+  }
+}

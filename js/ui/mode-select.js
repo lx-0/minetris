@@ -590,3 +590,140 @@
       });
     }
 
+// ── Mobile swipe carousel ──────────────────────────────────────────────────
+(function _setupMobileCarousel() {
+  var _msmBypass = false;
+  var _initialized = false;
+
+  function _init() {
+    if (_initialized) return;
+    if (window.innerWidth > 767) return;
+    _initialized = true;
+
+    var modeCards = document.getElementById('mode-cards');
+    if (!modeCards) return;
+
+    var sections = Array.from(modeCards.querySelectorAll('.mode-section'));
+    if (!sections.length) return;
+
+    // Build category tab bar
+    var tabBar = document.createElement('div');
+    tabBar.className = 'msm-tab-bar';
+
+    sections.forEach(function (section, i) {
+      var headerEl = section.querySelector('.mode-section-header');
+      var label = headerEl ? headerEl.textContent.trim() : ('CAT ' + (i + 1));
+
+      var tab = document.createElement('button');
+      tab.className = 'msm-tab' + (i === 0 ? ' msm-tab-active' : '');
+      tab.textContent = label;
+      tab.addEventListener('click', function () {
+        _showSection(sections, tabBar, i);
+      });
+      tabBar.appendChild(tab);
+
+      // Dot indicators below each section's carousel
+      var dotsEl = document.createElement('div');
+      dotsEl.className = 'msm-dots';
+      section.appendChild(dotsEl);
+      _buildDots(section, dotsEl);
+    });
+
+    modeCards.insertAdjacentElement('beforebegin', tabBar);
+
+    // Show first section
+    _showSection(sections, tabBar, 0);
+
+    // Capture-phase intercept: first tap expands card; second tap launches
+    modeCards.addEventListener('click', function (e) {
+      if (window.innerWidth > 767) return;
+      if (_msmBypass) return;
+      if (e.target.closest('.msm-play-btn')) return;
+      if (e.target.closest('.mode-card-lb-btn')) return;
+
+      var card = e.target.closest('.mode-card');
+      if (!card || card.classList.contains('mode-card-locked')) return;
+
+      // Already expanded — second tap falls through to existing card handler
+      if (card.classList.contains('msm-expanded')) return;
+
+      // First tap: expand this card
+      e.stopPropagation();
+
+      // Collapse other expanded cards in the same section
+      var section = card.closest('.mode-section');
+      if (section) {
+        section.querySelectorAll('.mode-card.msm-expanded').forEach(function (c) {
+          c.classList.remove('msm-expanded');
+        });
+      }
+      card.classList.add('msm-expanded');
+
+      // Add play button if not already present
+      if (!card.querySelector('.msm-play-btn')) {
+        var btn = document.createElement('button');
+        btn.className = 'msm-play-btn';
+        btn.textContent = '\u25b6 Play';
+        btn.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          _msmBypass = true;
+          card.click();
+          _msmBypass = false;
+        });
+        card.appendChild(btn);
+      }
+    }, true); // capture phase
+  }
+
+  function _showSection(sections, tabBar, activeIdx) {
+    sections.forEach(function (s, i) {
+      s.classList.toggle('msm-active', i === activeIdx);
+    });
+    Array.from(tabBar.querySelectorAll('.msm-tab')).forEach(function (t, i) {
+      t.classList.toggle('msm-tab-active', i === activeIdx);
+    });
+  }
+
+  function _buildDots(section, dotsEl) {
+    var cards = Array.from(section.querySelectorAll('.mode-card'));
+    if (cards.length <= 1) { dotsEl.style.display = 'none'; return; }
+
+    cards.forEach(function (_, i) {
+      var dot = document.createElement('span');
+      dot.className = 'msm-dot' + (i === 0 ? ' msm-dot-active' : '');
+      dotsEl.appendChild(dot);
+    });
+
+    var track = section.querySelector('.mode-section-cards');
+    if (!track) return;
+
+    // Collapse expanded card on swipe
+    track.addEventListener('scroll', function () {
+      section.querySelectorAll('.mode-card.msm-expanded').forEach(function (c) {
+        c.classList.remove('msm-expanded');
+      });
+    }, { passive: true });
+
+    // Update active dot via IntersectionObserver
+    var dotEls = Array.from(dotsEl.querySelectorAll('.msm-dot'));
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          var idx = cards.indexOf(entry.target);
+          if (idx >= 0) {
+            dotEls.forEach(function (d, i) {
+              d.classList.toggle('msm-dot-active', i === idx);
+            });
+          }
+        }
+      });
+    }, { root: track, threshold: 0.5 });
+    cards.forEach(function (c) { io.observe(c); });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _init);
+  } else {
+    _init();
+  }
+})();
