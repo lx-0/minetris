@@ -33,6 +33,12 @@ const _BIOME_SKY_THEMES = {
     fog: new THREE.Color(0xb8d8f0),
     tint: 0.82,
   },
+  desert: {
+    zen: [ 82, 148, 226], // bright harsh blue zenith
+    hor: [200, 160,  80], // sandy haze at horizon
+    fog: new THREE.Color(0xb08040),
+    tint: 0.75,
+  },
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -123,12 +129,13 @@ function _getBiomePalette(biomeId) {
     case 'forest': return BIOME_FOREST_COLORS;
     case 'nether': return NETHER_COLORS;
     case 'ice':    return BIOME_ICE_COLORS;
+    case 'desert': return (typeof BIOME_DESERT_COLORS !== 'undefined' ? BIOME_DESERT_COLORS : null);
     default:       return null;
   }
 }
 
 function _applyBiomeBodyClass(biomeId) {
-  ['stone', 'forest', 'nether', 'ice'].forEach(function (b) {
+  ['stone', 'forest', 'nether', 'ice', 'desert'].forEach(function (b) {
     document.body.classList.toggle('biome-' + b, b === biomeId);
   });
 }
@@ -173,6 +180,7 @@ const _BIOME_BANNER_ICONS = {
   forest: '&#127795;', // 🌳
   nether: '&#128293;', // 🔥
   ice:    '&#10052;',  // ❄
+  desert: '&#127956;', // 🏜
 };
 
 function _showBiomeBanner(biomeName, biomeId) {
@@ -199,7 +207,7 @@ function _showBiomeBanner(biomeName, biomeId) {
 }
 
 function _getBiomeBorderHex(biomeId) {
-  const map = { stone: '#666', forest: '#2d6b22', nether: '#cc2200', ice: '#4499dd' };
+  const map = { stone: '#666', forest: '#2d6b22', nether: '#cc2200', ice: '#4499dd', desert: '#c8873a' };
   return map[biomeId] || '#fff';
 }
 

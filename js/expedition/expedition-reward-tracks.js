@@ -92,6 +92,24 @@ const BIOME_REWARD_TRACKS = {
     { tier: 14, xpRequired: 21500, label: 'Glacier Throne', rewardType: 'cosmetic_exclusive', rewardLabel: 'Frozen Tundra Board Skin', rewardValue: 'cosmetic_frozen_tundra_board' },
     { tier: 15, xpRequired: 25500, label: 'Eternal Winter', rewardType: 'cosmetic_exclusive', rewardLabel: 'Crystal Piece Theme',       rewardValue: 'cosmetic_crystal_theme'      },
   ],
+
+  desert: [
+    { tier:  1, xpRequired:     0, label: 'Sand Touched',   rewardType: null,               rewardLabel: null },
+    { tier:  2, xpRequired:   300, label: 'Drifter',        rewardType: 'xp_boost',         rewardLabel: '+5% Expedition XP',         rewardValue: 5   },
+    { tier:  3, xpRequired:   700, label: 'Dust Walker',    rewardType: 'xp_boost',         rewardLabel: '+5% Expedition XP',         rewardValue: 5   },
+    { tier:  4, xpRequired:  1300, label: 'Dune Hopper',    rewardType: 'xp_boost',         rewardLabel: '+10% Expedition XP',        rewardValue: 10  },
+    { tier:  5, xpRequired:  2100, label: 'Sand Rider',     rewardType: 'xp_boost',         rewardLabel: '+10% Expedition XP',        rewardValue: 10  },
+    { tier:  6, xpRequired:  3200, label: 'Oasis Seeker',   rewardType: 'cosmetic_common',  rewardLabel: 'Sand Cell Style',                           rewardValue: 'desert_sand_cell'      },
+    { tier:  7, xpRequired:  4500, label: 'Caravan Guard',  rewardType: 'cosmetic_common',  rewardLabel: 'Terracotta Piece Skin + 5 Sand Blocks',      rewardValue: 'desert_terracotta_skin', materialBonus: { color: '#c8a86a', count: 5, label: '5 Sand Blocks'  } },
+    { tier:  8, xpRequired:  6000, label: 'Mirage Chaser',  rewardType: 'cosmetic_common',  rewardLabel: 'Red Sand Cell Style + 5 Sand Blocks',        rewardValue: 'desert_red_sand_cell',   materialBonus: { color: '#c8a86a', count: 5, label: '5 Sand Blocks'  } },
+    { tier:  9, xpRequired:  7800, label: 'Dust Shroud',    rewardType: 'cosmetic_common',  rewardLabel: 'Sun Trail Effect',                           rewardValue: 'desert_sun_trail'      },
+    { tier: 10, xpRequired:  9900, label: 'Storm Dancer',   rewardType: 'xp_boost_badge',   rewardLabel: '+15% Expedition XP + "Storm Dancer" Badge',  rewardValue: { boost: 15, badge: 'Storm Dancer' }  },
+    { tier: 11, xpRequired: 12300, label: 'Dune Sovereign', rewardType: 'xp_boost_badge',   rewardLabel: '+15% Expedition XP + "Dune Sovereign" Badge', rewardValue: { boost: 15, badge: 'Dune Sovereign' } },
+    { tier: 12, xpRequired: 15000, label: 'Sand Warden',    rewardType: 'xp_boost_badge',   rewardLabel: '+20% Expedition XP + "Sand Warden" Badge',   rewardValue: { boost: 20, badge: 'Sand Warden' }   },
+    { tier: 13, xpRequired: 18000, label: 'Desert Nomad',   rewardType: 'xp_boost_badge',   rewardLabel: '+20% Expedition XP + "Desert Nomad" Title',  rewardValue: { boost: 20, badge: 'Desert Nomad' }  },
+    { tier: 14, xpRequired: 21500, label: 'Sandstone Throne', rewardType: 'cosmetic_exclusive', rewardLabel: 'Ancient Sandstone Board Skin', rewardValue: 'cosmetic_sandstone_board'    },
+    { tier: 15, xpRequired: 25500, label: 'Dune Emperor',     rewardType: 'cosmetic_exclusive', rewardLabel: 'Desert Gem Piece Theme',       rewardValue: 'cosmetic_desert_gem_theme'   },
+  ],
 };
 
 // ── Storage ───────────────────────────────────────────────────────────────────

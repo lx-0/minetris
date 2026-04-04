@@ -378,6 +378,11 @@ function spawnFallingPiece() {
       }
     });
   }
+  // Desert biome: mark as sand piece with configured probability
+  var _sandChance = typeof getDesertSandBlockChance === 'function' ? getDesertSandBlockChance() : 0;
+  if (_sandChance > 0 && Math.random() < _sandChance) {
+    piece3D.userData.isSandPiece = true;
+  }
   createPieceShadow(piece3D);
   createPieceTrail(piece3D);
 }
@@ -741,6 +746,21 @@ function updateFallingPieces(delta) {
     fallingPiecesGroup.remove(pieceToLand);
     fallingPieces.splice(index, 1);
     checkLineClear(newBlocks);
+    // Desert biome: schedule sand block crumble for sand pieces
+    var _sandCrumbleSecs = typeof getDesertSandCrumbleSecs === 'function' ? getDesertSandCrumbleSecs() : 0;
+    if (pieceToLand.userData.isSandPiece && _sandCrumbleSecs > 0) {
+      newBlocks.forEach(function (sandBlock) {
+        sandBlock.userData.isSandBlock = true;
+        setTimeout(function () {
+          // Only crumble if still in the world (not cleared by a line clear)
+          if (sandBlock.parent === worldGroup) {
+            if (typeof unregisterBlock === 'function') unregisterBlock(sandBlock);
+            if (typeof disposeBlock === 'function') disposeBlock(sandBlock);
+            worldGroup.remove(sandBlock);
+          }
+        }, _sandCrumbleSecs * 1000);
+      });
+    }
     // Co-op: broadcast landed blocks for reconciliation on partner's client
     if (isCoopMode && typeof coop !== 'undefined' && coop.state === CoopState.IN_GAME) {
       var _landData = newBlocks.map(function (b) {

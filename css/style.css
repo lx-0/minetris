@@ -6369,6 +6369,58 @@ body.theme-legendary #score-display {
   50%       { opacity: 1.00; }
 }
 
+/* ── Sandstorm World Event (Desert biome) ───────────────────────────────── */
+
+/* Sand particle overlay — animated diagonal streaks */
+#sandstorm-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 183;
+  background:
+    repeating-linear-gradient(
+      -60deg,
+      transparent,
+      transparent 6px,
+      rgba(200, 160, 60, 0.04) 6px,
+      rgba(200, 160, 60, 0.04) 7px
+    ),
+    radial-gradient(ellipse at center, transparent 20%, rgba(180, 120, 30, 0.28) 100%);
+  box-shadow: inset 0 0 120px rgba(200, 140, 20, 0.30);
+  animation: sandstorm-drift 1.4s linear infinite;
+}
+@keyframes sandstorm-drift {
+  0%   { background-position: 0 0, 0 0; opacity: 0.80; }
+  50%  { opacity: 1.00; }
+  100% { background-position: 80px 80px, 0 0; opacity: 0.80; }
+}
+
+/* Clear-skies 2× bonus banner after sandstorm */
+#sandstorm-clear-skies-banner {
+  position: absolute;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Press Start 2P", cursive;
+  font-size: 11px;
+  color: #fbbf24;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.9), 1px 1px 2px #000;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 184;
+  animation: sandstorm-banner-pulse 1.0s ease-in-out infinite;
+}
+@keyframes sandstorm-banner-pulse {
+  0%, 100% { opacity: 0.85; }
+  50%       { opacity: 1.00; }
+}
+
+/* Ghost piece suppression during sandstorm */
+body.sandstorm-active .ghost-piece,
+body.sandstorm-active [data-ghost-piece] {
+  visibility: hidden;
+}
+
 /* ── Creeper World Event ────────────────────────────────────────────────── */
 
 /* Green atmospheric tint — full-screen vignette while Creeper is active */

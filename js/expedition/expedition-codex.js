@@ -16,6 +16,7 @@ var _CODEX_BIOMES = [
   { id: 'forest', name: 'Forest', icon: '&#127795;' },
   { id: 'nether', name: 'Nether', icon: '&#128293;' },
   { id: 'ice',    name: 'Ice',    icon: '&#10052;'  },
+  { id: 'desert', name: 'Desert', icon: '&#127956;' },
 ];
 
 var _CODEX_RARITY_LABEL = { common: 'Common', rare: 'Rare', legendary: 'Legendary' };

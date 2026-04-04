@@ -706,7 +706,7 @@ function updateEventEngine(delta) {
     _schedulerAccumMs += delta * 1000;
 
     if (_schedulerAccumMs >= _nextThresholdMs) {
-      // Pick a random event type (excluding NONE)
+      // Pick a random event type (excluding NONE and SANDSTORM — fired by desert scheduler)
       const candidates = [
         EVENT_TYPES.PIECE_STORM,
         EVENT_TYPES.GOLDEN_HOUR,
@@ -717,6 +717,12 @@ function updateEventEngine(delta) {
       startEvent(chosen);
       _schedulerAccumMs = 0;
     }
+  }
+
+  // Desert biome: dedicated sandstorm scheduler (fires independently of main event timer)
+  if (typeof activeBiomeId !== 'undefined' && activeBiomeId === 'desert' &&
+      typeof _tickDesertSandstormScheduler === 'function') {
+    _tickDesertSandstormScheduler(delta);
   }
 }
 
@@ -769,6 +775,22 @@ function resetEventEngine() {
     }
     if (typeof stopCreeperHiss === "function") stopCreeperHiss();
   }
+
+  // Clean up any active Sandstorm visuals before clearing state
+  if (activeEvent === EVENT_TYPES.SANDSTORM || sandstormActive) {
+    const overlay = document.getElementById('sandstorm-overlay');
+    if (overlay) overlay.style.display = 'none';
+    const nextPanel = document.getElementById('next-pieces-panel');
+    if (nextPanel) nextPanel.style.visibility = '';
+    document.body.classList.remove('sandstorm-active');
+    sandstormActive = false;
+  }
+  clearSkiesActive = false;
+  _clearSkiesRemainingMs = 0;
+  const csBanner = document.getElementById('sandstorm-clear-skies-banner');
+  if (csBanner) csBanner.style.display = 'none';
+  _sandstormSchedulerAccumMs = 0;
+  _sandstormNextThresholdMs  = _pickSandstormInterval();
 
   // Clean up any lingering creeper particles (fuse + explosion)
   for (let i = _creeperFuseParticles.length - 1; i >= 0; i--) {

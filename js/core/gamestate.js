@@ -6,6 +6,8 @@ function addScore(pts) {
   const _wmod = typeof getWorldModifier === 'function' ? getWorldModifier() : null;
   let _mult = _wmod ? _wmod.scoreMultiplier : 1.0;
   if (isCoopMode) _mult *= coopScoreMultiplier;
+  // Desert biome: 2× clear skies bonus after sandstorm
+  if (typeof clearSkiesActive !== 'undefined' && clearSkiesActive) _mult *= 2.0;
   const _actual = (_mult !== 1.0) ? Math.round(pts * _mult) : pts;
   score += _actual;
   if (isCoopMode) {

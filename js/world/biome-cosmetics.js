@@ -89,14 +89,33 @@ const BIOME_COSMETICS = [
     icon:     '&#128167;',
     desc:     'Amethyst, sapphire, topaz, aquamarine, emerald, ruby, lavender, ice crystal. Exclusive to Ice tier 15.',
   },
+  {
+    id:       'cosmetic_sandstone_board',
+    name:     'Ancient Sandstone Board Skin',
+    type:     'board_skin',
+    biome:    'desert',
+    tier:     14,
+    icon:     '&#127956;',
+    desc:     'Weathered sandstone, carved terracotta, and sun-bleached limestone. Exclusive to Desert tier 14.',
+  },
+  {
+    id:       'cosmetic_desert_gem_theme',
+    name:     'Desert Gem Piece Theme',
+    type:     'piece_theme',
+    biome:    'desert',
+    tier:     15,
+    icon:     '&#128142;',
+    desc:     'Turquoise, topaz, carnelian, agate, amethyst — gemstones born from desert heat. Exclusive to Desert tier 15.',
+  },
 ];
 
 // Human-readable biome labels and icons.
 const _BIOME_META = {
-  stone:  { label: 'Stone',  icon: '&#9935;'  },
-  forest: { label: 'Forest', icon: '&#127795;' },
-  nether: { label: 'Nether', icon: '&#128293;' },
-  ice:    { label: 'Ice',    icon: '&#10052;'  },
+  stone:  { label: 'Stone',  icon: '&#9935;'   },
+  forest: { label: 'Forest', icon: '&#127795;'  },
+  nether: { label: 'Nether', icon: '&#128293;'  },
+  ice:    { label: 'Ice',    icon: '&#10052;'   },
+  desert: { label: 'Desert', icon: '&#127956;'  },
 };
 
 // ── Storage ───────────────────────────────────────────────────────────────────
@@ -188,6 +207,8 @@ function _applyBiomeCosmeticTheme(cosmeticId) {
     cosmetic_magma_theme:          (typeof COSMETIC_MAGMA_COLORS          !== 'undefined' ? COSMETIC_MAGMA_COLORS          : null),
     cosmetic_frozen_tundra_board:  (typeof COSMETIC_FROZEN_TUNDRA_COLORS  !== 'undefined' ? COSMETIC_FROZEN_TUNDRA_COLORS  : null),
     cosmetic_crystal_theme:        (typeof COSMETIC_CRYSTAL_COLORS        !== 'undefined' ? COSMETIC_CRYSTAL_COLORS        : null),
+    cosmetic_sandstone_board:      (typeof COSMETIC_SANDSTONE_BOARD_COLORS !== 'undefined' ? COSMETIC_SANDSTONE_BOARD_COLORS : null),
+    cosmetic_desert_gem_theme:     (typeof COSMETIC_DESERT_GEM_COLORS     !== 'undefined' ? COSMETIC_DESERT_GEM_COLORS     : null),
   };
 
   var palette = PALETTE_MAP[cosmeticId];
@@ -249,7 +270,7 @@ function _renderBiomeCosmeticsPanel() {
   var html = '';
 
   // Group by biome.
-  var biomes = ['stone', 'forest', 'nether', 'ice'];
+  var biomes = ['stone', 'forest', 'nether', 'ice', 'desert'];
   biomes.forEach(function(biomeId) {
     var meta  = _BIOME_META[biomeId] || { label: biomeId, icon: '' };
     var items = BIOME_COSMETICS.filter(function(c) { return c.biome === biomeId; });

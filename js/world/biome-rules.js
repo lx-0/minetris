@@ -47,6 +47,19 @@ const BIOME_RULES = {
     lineClearCellsNeeded: null,
     scoreMultiplier:      1.1,
   },
+
+  // Desert — 0.9× gravity (heat slows you down).
+  // Sand blocks (40% spawn chance) crumble 5 s after landing if not line-cleared.
+  // Sandstorm event fires periodically via desert-biome.js.
+  desert: {
+    fallSpeedMult:        0.9,
+    lockDelayMs:          0,
+    lockDrift:            false,
+    lineClearCellsNeeded: null,
+    scoreMultiplier:      1.0,
+    sandBlockChance:      0.4,  // 40% of spawned pieces are sand
+    sandCrumbleSecs:      5,    // sand blocks crumble after 5 s if not cleared
+  },
 };
 
 // ── Active rule state ──────────────────────────────────────────────────────────
@@ -111,4 +124,30 @@ function getBiomeLockDelaySecs() {
  */
 function getBiomeLockDrift() {
   return _activeBiomeRules ? !!_activeBiomeRules.lockDrift : false;
+}
+
+/**
+ * Returns the biome score multiplier (1.0 if none active).
+ * Combined with world-modifier and co-op multipliers in addScore().
+ */
+function getBiomeScoreMultiplier() {
+  return _activeBiomeRules ? (_activeBiomeRules.scoreMultiplier || 1.0) : 1.0;
+}
+
+/**
+ * Returns the probability (0–1) that a newly spawned piece is a "sand piece"
+ * in the Desert biome. Returns 0 when not in desert biome.
+ */
+function getDesertSandBlockChance() {
+  return (_activeBiomeRules && _activeBiomeRules.sandBlockChance != null)
+    ? _activeBiomeRules.sandBlockChance : 0;
+}
+
+/**
+ * Returns the crumble delay in seconds for sand blocks (5 s).
+ * Returns 0 when not applicable.
+ */
+function getDesertSandCrumbleSecs() {
+  return (_activeBiomeRules && _activeBiomeRules.sandCrumbleSecs != null)
+    ? _activeBiomeRules.sandCrumbleSecs : 0;
 }

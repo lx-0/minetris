@@ -381,6 +381,13 @@ let earthquakeActive = false;
 let _eqShakeOffX = 0;
 let _eqShakeOffY = 0;
 
+// ── Sandstorm event state ─────────────────────────────────────────────────────
+// true while the SANDSTORM biome event is active (Desert biome only).
+let sandstormActive = false;
+// true during the 10-second "clear skies" 2× bonus window after sandstorm ends.
+let clearSkiesActive = false;
+let _clearSkiesRemainingMs = 0;
+
 // ── Creeper event state ──────────────────────────────────────────────────────
 // true while the CREEPER world event is active.
 let creeperActive = false;

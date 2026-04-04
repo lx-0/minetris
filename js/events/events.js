@@ -12,6 +12,7 @@ const EVENT_TYPES = {
   GOLDEN_HOUR: "GOLDEN_HOUR",
   EARTHQUAKE:  "EARTHQUAKE",
   CREEPER:     "CREEPER",
+  SANDSTORM:   "SANDSTORM",
 };
 
 // ── Event metadata: icon, display name, description, color scheme ─────────────
@@ -48,6 +49,14 @@ const EVENT_META = {
     accent:      "#00ff00",
     glow:        "rgba(50,255,50,0.7)",
   },
+  [EVENT_TYPES.SANDSTORM]: {
+    icon:        "🌪",
+    name:        "SANDSTORM",
+    description: "Visibility dropping! Next piece hidden for 15s.",
+    bg:          "rgba(120,80,10,0.93)",
+    accent:      "#f59e0b",
+    glow:        "rgba(245,158,11,0.7)",
+  },
 };
 
 // ── Event durations (ms) ──────────────────────────────────────────────────────
@@ -56,6 +65,7 @@ const EVENT_DURATIONS_MS = {
   [EVENT_TYPES.GOLDEN_HOUR]: 20000,
   [EVENT_TYPES.EARTHQUAKE]:  10000,
   [EVENT_TYPES.CREEPER]:     25000,
+  [EVENT_TYPES.SANDSTORM]:   15000,
 };
 
 // ── Scheduler config ──────────────────────────────────────────────────────────
@@ -292,6 +302,7 @@ function _fireOnStart(type) {
   if (type === EVENT_TYPES.GOLDEN_HOUR) _onGoldenHourStart();
   if (type === EVENT_TYPES.EARTHQUAKE)  _onEarthquakeStart();
   if (type === EVENT_TYPES.CREEPER)     _onCreeperStart();
+  if (type === EVENT_TYPES.SANDSTORM)   _onSandstormStart();
   _showEventAnnouncement(type);
   _showEventCountdownHud(type);
 }
@@ -301,6 +312,7 @@ function _fireOnTick(delta, type) {
   if (type === EVENT_TYPES.GOLDEN_HOUR) _onGoldenHourTick();
   if (type === EVENT_TYPES.EARTHQUAKE)  _onEarthquakeTick();
   if (type === EVENT_TYPES.CREEPER)     _onCreeperTick(delta);
+  if (type === EVENT_TYPES.SANDSTORM)   _onSandstormTick();
   _updateEventCountdownHud();
 }
 
@@ -310,6 +322,7 @@ function _fireOnEnd(type) {
   if (type === EVENT_TYPES.GOLDEN_HOUR) _onGoldenHourEnd();
   if (type === EVENT_TYPES.EARTHQUAKE)  _onEarthquakeEnd();
   if (type === EVENT_TYPES.CREEPER)     _onCreeperEnd();
+  if (type === EVENT_TYPES.SANDSTORM)   _onSandstormEnd();
   // Survival: record survived event for stats tracking and journal
   if (!isGameOver && typeof isSurvivalMode !== "undefined" && isSurvivalMode &&
       typeof recordSurvivedEvent === "function") {
@@ -536,6 +549,86 @@ function _spawnEarthquakeCracks() {
       startTime: clock.getElapsedTime(),
       lifetime:  0.45 + Math.random() * 0.35,
     });
+  }
+}
+
+// ── Sandstorm implementation (Desert biome only) ─────────────────────────────
+
+// Desert-specific sandstorm scheduler — separate from the main event scheduler.
+const _SANDSTORM_INTERVAL_MIN_MS = 90000;
+const _SANDSTORM_INTERVAL_MAX_MS = 120000;
+let _sandstormSchedulerAccumMs = 0;
+let _sandstormNextThresholdMs  = _pickSandstormInterval();
+
+function _pickSandstormInterval() {
+  return _SANDSTORM_INTERVAL_MIN_MS +
+    Math.random() * (_SANDSTORM_INTERVAL_MAX_MS - _SANDSTORM_INTERVAL_MIN_MS);
+}
+
+/** Tick the desert sandstorm scheduler. Only called when in the Desert biome. */
+function _tickDesertSandstormScheduler(delta) {
+  if (activeEvent !== EVENT_TYPES.NONE) return; // don't interrupt another event
+  _sandstormSchedulerAccumMs += delta * 1000;
+  if (_sandstormSchedulerAccumMs >= _sandstormNextThresholdMs) {
+    _sandstormSchedulerAccumMs = 0;
+    _sandstormNextThresholdMs  = _pickSandstormInterval();
+    startEvent(EVENT_TYPES.SANDSTORM);
+  }
+}
+
+function _onSandstormStart() {
+  sandstormActive = true;
+
+  // Show sandstorm particle overlay
+  var overlay = document.getElementById('sandstorm-overlay');
+  if (overlay) overlay.style.display = 'block';
+
+  // Hide next-piece preview — visibility reduced during sandstorm
+  var nextPanel = document.getElementById('next-pieces-panel');
+  if (nextPanel) nextPanel.style.visibility = 'hidden';
+
+  // Body class for CSS-driven ghost piece suppression
+  document.body.classList.add('sandstorm-active');
+}
+
+function _onSandstormTick() {
+  // Tick the clear-skies bonus if it's running
+  if (clearSkiesActive) {
+    _clearSkiesRemainingMs -= 16; // approximate per-frame delta
+    if (_clearSkiesRemainingMs <= 0) {
+      clearSkiesActive = false;
+      _clearSkiesRemainingMs = 0;
+      var csBanner = document.getElementById('sandstorm-clear-skies-banner');
+      if (csBanner) csBanner.style.display = 'none';
+    }
+  }
+}
+
+function _onSandstormEnd() {
+  sandstormActive = false;
+
+  // Hide sandstorm overlay
+  var overlay = document.getElementById('sandstorm-overlay');
+  if (overlay) overlay.style.display = 'none';
+
+  // Restore next-piece preview
+  var nextPanel = document.getElementById('next-pieces-panel');
+  if (nextPanel) nextPanel.style.visibility = '';
+
+  document.body.classList.remove('sandstorm-active');
+
+  // Activate 10-second clear-skies 2× score bonus
+  if (!isGameOver) {
+    clearSkiesActive = true;
+    _clearSkiesRemainingMs = 10000;
+    var csBanner = document.getElementById('sandstorm-clear-skies-banner');
+    if (csBanner) {
+      csBanner.style.display = 'block';
+      setTimeout(function () { csBanner.style.display = 'none'; }, 10000);
+    }
+    if (typeof showCraftedBanner === 'function') {
+      showCraftedBanner('\u2600 Clear Skies! 2\u00d7 score for 10s');
+    }
   }
 }
 

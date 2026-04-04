@@ -119,6 +119,7 @@ const _BIOME_ICONS = {
   forest: '&#127795;', // 🌳
   nether: '&#128293;', // 🔥
   ice:    '&#10052;',  // ❄
+  desert: '&#127956;', // 🏜
 };
 
 const _BIOME_COLORS = {
@@ -126,6 +127,7 @@ const _BIOME_COLORS = {
   forest: { bg: '#065f46', border: '#34d399', glow: '#34d39933' },
   nether: { bg: '#7f1d1d', border: '#f97316', glow: '#f9731633' },
   ice:    { bg: '#0c4a6e', border: '#60a5fa', glow: '#60a5fa33' },
+  desert: { bg: '#78350f', border: '#f59e0b', glow: '#f59e0b33' },
 };
 
 function _escHtml(s) {

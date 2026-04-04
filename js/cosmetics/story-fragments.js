@@ -257,6 +257,32 @@ const STORY_FRAGMENTS = [
     lore: 'At the ice biome\'s center, buried under four hundred meters of accumulated frost, there is a structure that does not appear in any survey. It is too regular to be natural — a series of interlocking chambers, each maintained at a precise temperature different from its neighbors. Something lives in the thermal gradient between the chambers. It has adapted so completely to ice and cold and pressure that warmth itself is lethal to it. It has been waiting there since the last great freeze. Patiently. At peace with the slow passage of millennia.',
     artRef: 'art/fragments/ice_l2.png',
   },
+
+  // ── Desert biome (3 fragments: 2 common, 1 rare) ─────────────────────────────
+  {
+    id: 'desert_c1',
+    biomeId: 'desert',
+    rarity: 'common',
+    title: 'The Buried Road',
+    lore: 'Under the drift line — the place where the wind\'s force equals the sand\'s weight — there is a road. It is paved in flat stone too large for any cart to have carried. The stones are worn smooth, not by weather, but by feet. Millions of crossings over centuries compressed them into the desert floor until the dunes swallowed everything above knee height. The road continues past the edge of any map we have made. We do not know where it leads. We are not certain it leads anywhere anymore.',
+    artRef: 'art/fragments/desert_c1.png',
+  },
+  {
+    id: 'desert_c2',
+    biomeId: 'desert',
+    rarity: 'common',
+    title: 'Heat Record',
+    lore: 'The sandstone here records temperature the way wood records rain — in layers. Each band is one summer. The dark bands are the years the heat broke records. Count them from the surface down: there are more dark bands near the top than near the bottom. The desert is getting hotter. The stone remembers every degree. It does not editorialize. It simply holds the evidence in its body and waits for someone to read it.',
+    artRef: 'art/fragments/desert_c2.png',
+  },
+  {
+    id: 'desert_r1',
+    biomeId: 'desert',
+    rarity: 'rare',
+    title: 'The Glass Sea',
+    lore: 'At the desert\'s heart, beneath eighteen meters of compacted sand, there is a layer of glass. Not volcanic glass — the composition is wrong, the color is wrong, the depth is wrong. Something struck this place with enough heat to melt the entire surface simultaneously. The glass layer extends for forty kilometers in every direction before it thins to nothing at the edges. Whatever happened here happened once, completely, and left no other record. The nomads call this place the Quiet Wound. They do not camp within sight of it. They will not explain why.',
+    artRef: 'art/fragments/desert_r1.png',
+  },
 ];
 
 // ── Persistence ───────────────────────────────────────────────────────────────
