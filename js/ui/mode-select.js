@@ -199,6 +199,8 @@
 
       blocker.style.display = "none";
       modeSelectEl.style.display = "flex";
+      const notifBellWrap = document.getElementById('notif-bell-wrap');
+      if (notifBellWrap) notifBellWrap.style.display = 'block';
 
       // Seasonal event: refresh banner each time mode-select opens
       if (typeof renderSeasonalEventBanner === 'function') renderSeasonalEventBanner();
@@ -278,6 +280,9 @@
     function hideModeSelect() {
       const modeSelectEl = document.getElementById("mode-select");
       if (modeSelectEl) modeSelectEl.style.display = "none";
+      const notifBellWrap = document.getElementById('notif-bell-wrap');
+      if (notifBellWrap) notifBellWrap.style.display = 'none';
+      if (typeof notifClose === 'function') notifClose();
     }
 
     function _showCustomPuzzleLoadScreen() {

@@ -22,6 +22,7 @@ function init() {
 
   initAudio();
   initSettings();
+  if (typeof initNotifications === 'function') initNotifications();
   if (typeof detectReturningPlayer === "function") detectReturningPlayer();
   if (typeof initLeaderboard === "function") initLeaderboard();
   if (typeof initGuild === "function") initGuild();

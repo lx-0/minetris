@@ -116,6 +116,10 @@ function unlockAchievement(id) {
 }
 
 function _showAchievementToast(ach) {
+  if (typeof notifPush === 'function') {
+    notifPush('achievement', ach.icon, 'Achievement unlocked: ' + ach.name + ' — ' + ach.desc);
+  }
+
   const toastEl = document.getElementById("achievement-toast");
   if (!toastEl) return;
 

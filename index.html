@@ -205,6 +205,28 @@
           <div id="hs-start-panel"></div>
         </div>
       </div>
+      <!-- Notification center bell + panel (visible on mode-select screen) -->
+      <div id="notif-bell-wrap" style="display:none;">
+        <button id="notif-bell-btn" title="Notifications" aria-label="Notifications">&#128276;<span id="notif-bell-badge" style="display:none;"></span></button>
+        <div id="notif-panel" style="display:none;" role="dialog" aria-label="Notification center">
+          <div id="notif-panel-header">
+            <span id="notif-panel-title">&#128276; Notifications</span>
+            <button id="notif-panel-close" title="Close">&#10005;</button>
+          </div>
+          <div id="notif-tabs">
+            <button id="notif-tab-list" class="notif-tab notif-tab-active">Feed</button>
+            <button id="notif-tab-settings" class="notif-tab">Settings</button>
+            <button id="notif-clear-all" title="Clear all">Clear all</button>
+          </div>
+          <div id="notif-list-view">
+            <div id="notif-list"></div>
+          </div>
+          <div id="notif-settings-view" style="display:none;">
+            <div id="notif-settings-rows"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Mode select screen — shown after clicking Play, before pointer lock -->
       <div id="mode-select" style="display:none;">
         <div id="mode-select-inner">
@@ -2127,6 +2149,7 @@
     <script src="js/world/world-spawn.js"></script>
     <script src="js/modes/dungeon-modifier.js"></script>
     <script src="js/modes/infinite-weekly.js"></script>
+    <script src="js/ui/notifications.js"></script>
     <script src="js/ui/mode-select.js"></script>
     <script src="js/social/friends.js"></script>
     <script src="js/social/coop-init.js"></script>

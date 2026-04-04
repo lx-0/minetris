@@ -339,6 +339,10 @@ function _showChatStatus(msg, isError) {
 }
 
 function _showMentionToast(fromUserId, text) {
+  if (typeof notifPush === 'function') {
+    notifPush('guild_mention', '💬', '@mention from ' + fromUserId + ': ' + (text || '').slice(0, 80));
+  }
+
   const el = document.getElementById('guild-mention-toast');
   if (!el) return;
   el.innerHTML = `<strong>@mention from ${_esc(fromUserId)}</strong><br>${_esc((text || '').slice(0, 80))}`;

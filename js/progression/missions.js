@@ -260,6 +260,11 @@ function _awardMissionXP(amount, missionText, difficulty) {
 // ── Mission complete toast ────────────────────────────────────────────────────
 
 function _showMissionCompleteToast(missionText, xp, difficulty) {
+  if (typeof notifPush === 'function') {
+    const diffLabel = { easy: 'Easy', medium: 'Medium', hard: 'Hard' }[difficulty] || difficulty;
+    notifPush('mission', '🎯', 'Mission complete [' + diffLabel + ']: ' + missionText + ' (+' + xp + ' XP)');
+  }
+
   const el = document.getElementById('mission-complete-toast');
   if (!el) return;
   const diffLabel = { easy: 'EASY', medium: 'MEDIUM', hard: 'HARD' }[difficulty] || difficulty.toUpperCase();

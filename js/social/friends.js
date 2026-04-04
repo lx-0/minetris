@@ -81,8 +81,17 @@ function _friendsRecordSeen(data) {
   const friendList = friendsGetList();
   const isFriend   = friendList.some(function (f) { return f.code === data.code; });
   if (!isFriend && data.code !== myCode) return; // ignore strangers
+
+  // Detect friend coming online: was offline, now online
+  const prevEntry = _friendsSeenCache[data.code];
+  const wasOffline = !prevEntry || (Date.now() - prevEntry.ts) >= 300000; // 5-min threshold
   _friendsSeenCache[data.code] = { ts: Date.now(), mode: data.mode || 'menu', name: data.name };
   _friendsSaveSeen();
+
+  if (isFriend && wasOffline && typeof notifPush === 'function') {
+    const displayName = data.name || data.code;
+    notifPush('friend_online', '🟢', displayName + ' is now online');
+  }
   // Keep cached display name in sync
   if (data.name && data.name !== data.code && isFriend) {
     const list = friendsGetList();
@@ -207,6 +216,11 @@ function _friendsHandleIncomingInvite(msg) {
 }
 
 function _friendsShowInviteToast(fromName, roomCode, mode) {
+  if (typeof notifPush === 'function') {
+    const modeLabel = mode === 'battle' ? 'Battle' : 'Co-op';
+    notifPush('friend_invite', '📨', fromName + ' invited you to a ' + modeLabel + ' game');
+  }
+
   const toast = document.getElementById('friend-invite-toast');
   if (!toast) return;
   const senderEl = document.getElementById('fit-sender');
