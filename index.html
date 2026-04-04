@@ -351,6 +351,38 @@
       <div id="renderer-container"></div>
       <div id="crosshair"></div>
 
+      <!-- Cave mouth interaction prompt -->
+      <div id="cave-mouth-prompt" style="display:none;">
+        Press <span class="cave-prompt-key">[E]</span> to enter The Depths
+      </div>
+
+      <!-- Cave mouth dungeon tier selection overlay -->
+      <div id="cave-mouth-tier-select" style="display:none;" role="dialog" aria-label="Enter The Depths">
+        <div id="cave-mouth-tier-panel">
+          <div id="cave-mouth-tier-title">&#x2620; THE DEPTHS</div>
+          <div id="cave-mouth-tier-subtitle">Choose your descent...</div>
+          <div id="cave-mouth-tier-buttons">
+            <button class="cave-tier-btn" data-tier="shallow_mines">
+              <span class="cave-tier-name">Shallow Mines</span>
+              <span class="cave-tier-desc">A beginner&#x27;s descent</span>
+            </button>
+            <button class="cave-tier-btn" data-tier="deep_caverns">
+              <span class="cave-tier-name">Deep Caverns</span>
+              <span class="cave-tier-desc">Darkness deepens</span>
+            </button>
+            <button class="cave-tier-btn" data-tier="abyssal_rift">
+              <span class="cave-tier-name">Abyssal Rift</span>
+              <span class="cave-tier-desc">The void awaits</span>
+            </button>
+            <button class="cave-tier-btn" data-tier="infinite">
+              <span class="cave-tier-name">Infinite</span>
+              <span class="cave-tier-desc">No escape</span>
+            </button>
+          </div>
+          <button id="cave-mouth-tier-cancel">&#x2190; Cancel</button>
+        </div>
+      </div>
+
       <!-- Material HUD tooltip -->
       <div id="material-tooltip">
         <span id="material-tooltip-pickaxe"></span>
@@ -616,6 +648,7 @@
           <div class="first-game-teaser-text">You just played Classic mode. There are more ways to play!</div>
           <button id="first-game-explore-btn">Explore Modes</button>
         </div>
+        <button id="go-return-survival-btn" style="display:none;">&#x1F5FB; Return to Survival</button>
         <button id="play-again-btn">Play Again <span class="key-hint">[P]</span></button>
         <button id="go-main-menu-btn">Main Menu</button>
       </div>
@@ -1876,6 +1909,7 @@
     <script src="js/expedition/expedition-session.js"></script>
     <script src="js/expedition/expedition-leaderboard.js"></script>
     <script src="js/progression/loot-tables.js"></script>
+    <script src="js/world/cave-mouth.js"></script>
     <script src="js/world/world-spawn.js"></script>
     <script src="js/ui/mode-select.js"></script>
     <script src="js/social/coop-init.js"></script>

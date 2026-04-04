@@ -142,6 +142,117 @@ body {
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* ── Cave mouth interaction prompt ── */
+#cave-mouth-prompt {
+  position: absolute;
+  bottom: 145px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(153, 51, 255, 0.5);
+  border-radius: 20px;
+  padding: 7px 18px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: #ddd;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: cave-prompt-pulse 2s ease-in-out infinite;
+}
+.cave-prompt-key {
+  color: #ffdd88;
+}
+@keyframes cave-prompt-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+/* ── Cave mouth tier selection overlay ── */
+#cave-mouth-tier-select {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  z-index: 120;
+}
+#cave-mouth-tier-panel {
+  background: linear-gradient(180deg, #0d0d1a 0%, #1a0d2e 100%);
+  border: 2px solid rgba(153, 51, 255, 0.6);
+  border-radius: 12px;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 340px;
+  width: 90%;
+}
+#cave-mouth-tier-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 14px;
+  color: #bb88ff;
+  letter-spacing: 2px;
+}
+#cave-mouth-tier-subtitle {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: rgba(200, 180, 220, 0.7);
+}
+#cave-mouth-tier-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.cave-tier-btn {
+  width: 100%;
+  background: rgba(80, 20, 120, 0.45);
+  border: 1px solid rgba(153, 51, 255, 0.45);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.cave-tier-btn:hover {
+  background: rgba(120, 40, 180, 0.65);
+  border-color: rgba(153, 51, 255, 0.9);
+}
+.cave-tier-name {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #ddbbff;
+}
+.cave-tier-desc {
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  color: rgba(180, 160, 200, 0.65);
+}
+#cave-mouth-tier-cancel {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: rgba(200, 180, 220, 0.7);
+  background: transparent;
+  border: 1px solid rgba(153, 51, 255, 0.3);
+  border-radius: 6px;
+  padding: 7px 16px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: color 120ms, border-color 120ms;
+}
+#cave-mouth-tier-cancel:hover {
+  color: #fff;
+  border-color: rgba(153, 51, 255, 0.7);
+}
+
 /* ── Inventory HUD ── */
 #inventory-hud {
   position: absolute;

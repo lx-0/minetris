@@ -264,6 +264,11 @@ function animate() {
       }
     }
 
+    // Cave mouth proximity: show interaction prompt when player is nearby.
+    if (isSurvivalMode && typeof updateCaveMouthProximity === 'function') {
+      updateCaveMouthProximity();
+    }
+
     updateTargeting();
     if (isEditorMode && typeof updateEditorGhost === "function") updateEditorGhost();
     if (isEditorMode && typeof tickEditorAutosave === "function") tickEditorAutosave(delta);

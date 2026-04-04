@@ -159,6 +159,11 @@ function onKeyDown(event) {
       applyNudge(-1, 0);
       break;
     case "KeyE":
+      // Cave mouth interaction: open tier select when standing near the cave entrance
+      if (isSurvivalMode && typeof isCaveMouthNearby === 'function' && isCaveMouthNearby()) {
+        if (typeof openCaveMouthTierSelect === 'function') openCaveMouthTierSelect();
+        break;
+      }
       // Accept incoming trade offer if one is pending
       if (isCoopMode && typeof coopTrade !== 'undefined' && coopTrade.hasPendingIncomingOffer()) {
         coopTrade.acceptIncomingOffer();

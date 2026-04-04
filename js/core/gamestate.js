@@ -468,6 +468,15 @@ function triggerGameOver() {
     });
   }
 
+  // Seasonal event: submit void-adjacent mining contribution and unlock cosmetics
+  if (typeof submitSeasonalEventProgress === 'function') {
+    submitSeasonalEventProgress().then(function(result) {
+      if (result && result.ok && typeof unlockSeasonalEventCosmetics === 'function') {
+        unlockSeasonalEventCosmetics();
+      }
+    });
+  }
+
   // Fade out background music, then play game-over jingle
   if (typeof stopBgMusic === "function") stopBgMusic();
   if (typeof playGameOverJingle === "function") playGameOverJingle();
@@ -490,6 +499,9 @@ function triggerGameOver() {
   // Show Game Over overlay
   const gameOverEl = document.getElementById("game-over-screen");
   if (gameOverEl) gameOverEl.style.display = "flex";
+
+  // Show "Return to Survival" button when the run was launched from the cave mouth.
+  if (typeof showReturnToSurvivalBtn === 'function') showReturnToSurvivalBtn();
 
   // Release pointer lock so the Play Again button is clickable
   if (controls && controls.isLocked) controls.unlock();

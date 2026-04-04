@@ -14,6 +14,10 @@ function resetGame() {
 
   if (typeof resetBgMusic === "function") resetBgMusic();
   if (typeof clearSaveState === "function") clearSaveState();
+  // Remove cave mouth structure (it will be recreated if/when survival mode starts).
+  if (typeof clearCaveMouth === 'function') clearCaveMouth();
+  // Clear the cave-mouth dungeon-launch flag and return button.
+  if (typeof clearDungeonFromSurvival === 'function') clearDungeonFromSurvival();
   // Remove landed blocks (keep ground and trees)
   const toRemove = worldGroup.children.filter(
     (c) => c.name === "landed_block"
@@ -224,6 +228,9 @@ function resetGame() {
 
   // Reset event engine
   if (typeof resetEventEngine === "function") resetEventEngine();
+
+  // Seasonal event: reset session counter
+  if (typeof resetSeasonalSessionStats === 'function') resetSeasonalSessionStats();
 
   // Reset world modifier
   if (typeof resetWorldModifier === 'function') resetWorldModifier();

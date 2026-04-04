@@ -37,6 +37,7 @@ function init() {
   if (typeof initExpeditionMap === "function") initExpeditionMap();
   if (typeof initExpeditionCodex === "function") initExpeditionCodex();
   if (typeof initExpeditionSession === "function") initExpeditionSession();
+  if (typeof initCaveMouthUI === "function") initCaveMouthUI();
   if (typeof initRecapFromUrl === "function") initRecapFromUrl();
   if (typeof updateLevelBadgeHUD === "function") updateLevelBadgeHUD();
   if (typeof updateStreakHUD === "function") updateStreakHUD();
@@ -571,6 +572,15 @@ function init() {
 
   const goMainMenuBtn = document.getElementById("go-main-menu-btn");
   if (goMainMenuBtn) goMainMenuBtn.addEventListener("click", resetGame);
+
+  // Return to Survival from dungeon game-over (cave mouth launch path)
+  const goReturnSurvivalBtn = document.getElementById("go-return-survival-btn");
+  if (goReturnSurvivalBtn) {
+    goReturnSurvivalBtn.addEventListener("click", function () {
+      if (typeof clearDungeonFromSurvival === 'function') clearDungeonFromSurvival();
+      if (typeof returnToSurvival === 'function') returnToSurvival();
+    });
+  }
 
   // First-game teaser: "Explore Modes" button on game-over screen
   var firstGameExploreBtn = document.getElementById("first-game-explore-btn");

@@ -91,6 +91,9 @@ function restoreSurvivalWorld() {
     }
   }
 
+  // Re-place cave mouth structure (not stored in block array — always reconstructed).
+  if (typeof spawnCaveMouth === 'function') spawnCaveMouth();
+
   updateScoreHUD();
   return true;
 }
@@ -297,6 +300,9 @@ function spawnMineableSurfaceGrid() {
       registerBlock(block);
     }
   }
+
+  // Place cave mouth dungeon entry point.
+  if (typeof spawnCaveMouth === 'function') spawnCaveMouth();
 }
 
 /**
