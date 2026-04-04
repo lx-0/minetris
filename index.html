@@ -619,6 +619,24 @@
       <!-- Time Freeze: ice-blue shimmer overlay while freeze is active -->
       <div id="time-freeze-overlay" style="display:none;"></div>
 
+      <!-- Ore crafting: active power-up HUD (top-center) -->
+      <div id="ore-powerup-hud" style="display:none;">
+        <div id="ore-powerup-icon"></div>
+        <div id="ore-powerup-name"></div>
+        <div id="ore-powerup-timer-wrap" style="display:none;">
+          <div id="ore-powerup-timer-bg"><div id="ore-powerup-bar"></div></div>
+        </div>
+      </div>
+      <!-- Ore crafting: recipe-triggered banner -->
+      <div id="ore-craft-banner" style="display:none;"></div>
+      <!-- Ore crafting: Wild Card piece picker -->
+      <div id="ore-wildcard-ui" style="display:none;">
+        <div id="ore-wildcard-inner">
+          <div id="ore-wildcard-title">&#x1F3B4; Wild Card — Choose Next Piece</div>
+          <div id="ore-wildcard-grid"></div>
+        </div>
+      </div>
+
       <!-- Piece Storm: atmospheric red tint overlay -->
       <div id="storm-overlay" style="display:none;"></div>
       <!-- Piece Storm: red lightning-strike flash (fires on each piece spawn) -->
@@ -2496,6 +2514,7 @@
     <script src="js/player/touch-controls.js"></script>
     <script src="js/player/input.js"></script>
     <script src="js/player/powerups.js"></script>
+    <script src="js/player/ore-crafting.js"></script>
     <script src="js/core/replay.js"></script>
     <script src="js/core/game-loop.js"></script>
     <script src="js/rendering/resize.js"></script>

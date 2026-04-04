@@ -363,6 +363,7 @@ function animate() {
 
     updateDustParticles(delta);
     updateCraftingBanner(delta);
+    if (typeof updateOreCrafting === 'function') updateOreCrafting(delta);
     // Tick co-op bonus banner fade-out
     if (coopBonusBannerTimer > 0) {
       coopBonusBannerTimer -= delta;

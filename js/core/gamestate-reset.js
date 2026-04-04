@@ -99,6 +99,7 @@ function resetGame() {
   const powerupHudEl = document.getElementById("powerup-hud");
   if (powerupHudEl) powerupHudEl.style.display = "none";
   closeCraftingPanel();
+  if (typeof resetOreCrafting === 'function') resetOreCrafting();
 
   // Clear tree respawn queue
   treeRespawnQueue.length = 0;

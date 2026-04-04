@@ -136,6 +136,11 @@ function checkLineClear(newBlocks) {
     lineClearFlashBlocks.push(obj);
   });
 
+  // Ore crafting: check for ore patterns in the blocks being cleared
+  if (typeof checkOreCraftingPatterns === 'function') {
+    checkOreCraftingPatterns(lineClearFlashBlocks);
+  }
+
   lineClearPendingYs  = completeLevels;
   lineClearFlashStart = clock.getElapsedTime();
   lineClearInProgress = true;
@@ -237,7 +242,9 @@ function checkLineClear(newBlocks) {
   // Underground depth multiplier: lineScore × (1 + |Y| × 0.1) for Y < 0 clears.
   const _minClearY = completeLevels.length > 0 ? Math.min.apply(null, completeLevels) : 0;
   const _depthMult = _minClearY < 0 ? (1 + Math.abs(_minClearY) * 0.1) : 1.0;
-  const _lcComputedScore = Math.round(baseScore * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult);
+  // Ore Speed Boost: 1.5× multiplier while active
+  const _oreBoostMult = (typeof getOreSpeedBoostMult === 'function') ? getOreSpeedBoostMult() : 1.0;
+  const _lcComputedScore = Math.round(baseScore * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult);
   addScore(_lcComputedScore);
   // Co-op: broadcast line-clear event so partner can score if local detection didn't fire
   if (isCoopMode && typeof coop !== 'undefined' && coop.state === CoopState.IN_GAME) {
