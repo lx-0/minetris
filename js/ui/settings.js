@@ -10,6 +10,7 @@ const AUDIO_SETTINGS_KEY = "mineCtris_audioSettings";
 const COLORBLIND_KEY = "mineCtris_colorblindMode";
 const THEME_STORAGE_KEY = "mineCtris_theme";
 const MOBILE_DIFFICULTY_KEY = "mineCtris_mobileDifficulty";
+const DYNAMIC_MUSIC_KEY = "mineCtris_dynamicMusic";
 
 // Global: true = apply 20% speed reduction on mobile. Default ON for touch devices.
 let mobileDifficultyEnabled = false;
@@ -49,6 +50,25 @@ function _syncSliders() {
     if (slider) slider.value = _audioSettings[key];
     if (label)  label.textContent = _audioSettings[key];
   }
+}
+
+// ── Dynamic music toggle ──────────────────────────────────────────────────────
+
+function _loadDynamicMusic() {
+  try {
+    const raw = localStorage.getItem(DYNAMIC_MUSIC_KEY);
+    // Default ON; only false if explicitly saved as "false"
+    const enabled = raw !== "false";
+    if (typeof setDynamicMusicEnabled === 'function') setDynamicMusicEnabled(enabled);
+    const toggle = document.getElementById("dynamic-music-toggle");
+    if (toggle) toggle.checked = enabled;
+  } catch (_) {}
+}
+
+function _saveDynamicMusic(enabled) {
+  try {
+    localStorage.setItem(DYNAMIC_MUSIC_KEY, String(enabled));
+  } catch (_) {}
 }
 
 // ── Colorblind mode ───────────────────────────────────────────────────────────
@@ -726,6 +746,7 @@ function _initTransferProgressSection() {
 function initSettings() {
   _loadAudioSettings();
   applyAudioSettings(_audioSettings.master, _audioSettings.sfx, _audioSettings.music);
+  _loadDynamicMusic();
   _loadColorblindMode();
   _loadTheme();
   if (typeof initGraphicsQuality === 'function') initGraphicsQuality();
@@ -756,6 +777,15 @@ function initSettings() {
   if (masterSlider) masterSlider.addEventListener("input", makeHandler("master", "vol-master-val"));
   if (sfxSlider)    sfxSlider.addEventListener("input",    makeHandler("sfx",    "vol-sfx-val"));
   if (musicSlider)  musicSlider.addEventListener("input",  makeHandler("music",  "vol-music-val"));
+
+  const dynamicMusicToggle = document.getElementById("dynamic-music-toggle");
+  if (dynamicMusicToggle) {
+    dynamicMusicToggle.addEventListener("change", function () {
+      const enabled = this.checked;
+      _saveDynamicMusic(enabled);
+      if (typeof setDynamicMusicEnabled === 'function') setDynamicMusicEnabled(enabled);
+    });
+  }
 
   const closeBtn = document.getElementById("settings-close-btn");
   if (closeBtn) closeBtn.addEventListener("click", closeSettings);

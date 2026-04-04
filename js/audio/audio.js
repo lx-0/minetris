@@ -81,6 +81,9 @@ const _amb = {
   keyIndex:   0,      // rotate through keys
   phraseCount: 0,     // phrases played since last silence
   _lastMoodChange: 0, // debounce: timestamp of last mood change
+  // Dynamic music tempo
+  dynamicEnabled: true, // tempo scaling enabled by default
+  _lastTempoUpdate: 0,  // throttle tempo updates
 };
 
 function initAudio() {
@@ -320,6 +323,59 @@ function _initBgMusic() {
   Tone.Transport.bpm.value = 72; // slow, contemplative tempo
 }
 
+// ── Dynamic music tempo tiers ────────────────────────────────────────────────
+// BPM increases with stack danger and game speed.
+// Uses Tone.Transport.bpm.rampTo() — a Transport-level tempo change that
+// affects all scheduled events without altering note pitch (equivalent to
+// Web Audio playbackRate with detune compensation, but native to Tone.js synths).
+const _AMB_TEMPO_BPM = {
+  calm:    72,   // sparse, contemplative
+  tense:   90,   // slightly faster, more urgent
+  intense: 112,  // high stakes, driven
+  menu:    60,   // very slow, ambient
+};
+
+/**
+ * Update Tone.Transport BPM based on current danger tier and game speed.
+ * Called from the game loop (throttled to every 0.5s to avoid over-scheduling).
+ * @param {number} stackRatio   getMaxBlockHeight() / GAME_OVER_HEIGHT (0–1)
+ * @param {number} speedMult    difficultyMultiplier (1.0 = normal, up to 3.0)
+ */
+function updateMusicTempo(stackRatio, speedMult) {
+  if (!bgMusicPlaying || !_amb.gain || typeof Tone === 'undefined') return;
+
+  // Throttle: update at most every 500ms
+  var now = performance.now();
+  if (now - _amb._lastTempoUpdate < 500) return;
+  _amb._lastTempoUpdate = now;
+
+  var baseBpm = _AMB_TEMPO_BPM[_amb.mood] || 72;
+
+  if (_amb.dynamicEnabled) {
+    // Speed multiplier adds up to 20% more tempo at max speed (3x)
+    var speedBoost = 1.0 + Math.min(2.0, speedMult - 1.0) * 0.10;
+    var targetBpm  = Math.round(baseBpm * speedBoost);
+  } else {
+    var targetBpm = _AMB_TEMPO_BPM.calm; // static baseline when disabled
+  }
+
+  if (Math.abs(Tone.Transport.bpm.value - targetBpm) > 1) {
+    Tone.Transport.bpm.rampTo(targetBpm, 2.0); // 2-second smooth crossfade
+  }
+}
+
+/**
+ * Enable or disable dynamic music tempo scaling.
+ * When disabled, tempo resets to the calm baseline (72 BPM).
+ * @param {boolean} enabled
+ */
+function setDynamicMusicEnabled(enabled) {
+  _amb.dynamicEnabled = !!enabled;
+  if (!enabled && typeof Tone !== 'undefined') {
+    Tone.Transport.bpm.rampTo(_AMB_TEMPO_BPM.calm, 2.0);
+  }
+}
+
 /**
  * Generate and schedule a piano phrase — sparse, C418-style motif.
  * Returns the duration of the phrase in seconds.
@@ -462,7 +518,7 @@ function setAmbientMood(mood) {
   _amb._lastMoodChange = now;
   _amb.mood = mood;
 
-  var fadeTime = 3.0; // 3 second crossfade
+  var fadeTime = 2.0; // 2 second crossfade
   if (mood === 'menu') {
     // Ultra-sparse: very quiet piano, no pad, no bass — mostly silence
     _amb.piano.volume.rampTo(-16, fadeTime);

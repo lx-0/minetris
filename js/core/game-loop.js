@@ -79,6 +79,7 @@ function animate() {
     }
 
     // ── Ambient mood decision — maps game state to audio mood ──────────────
+    // Intensity tiers: Calm (<40%), Tension (40–70%), Danger (>70%)
     if (typeof setAmbientMood === 'function' && typeof getMaxBlockHeight === 'function') {
       var _heightRatio = getMaxBlockHeight() / GAME_OVER_HEIGHT;
       var _bossActive = (typeof getBossState === 'function') &&
@@ -86,14 +87,19 @@ function animate() {
       var _stormActive = (typeof pieceStormActive !== 'undefined') && pieceStormActive;
       var _creeperFuseActive = (typeof _creeperFusing !== 'undefined') && _creeperFusing;
 
-      if (_bossActive) {
-        setAmbientMood('intense');
-      } else if (_stormActive || _creeperFuseActive || _heightRatio >= 0.75) {
-        setAmbientMood('tense');
-      } else if (_heightRatio < 0.50) {
-        setAmbientMood('calm');
+      if (_bossActive || _stormActive || _creeperFuseActive || _heightRatio >= 0.70) {
+        setAmbientMood('intense'); // Danger tier
+      } else if (_heightRatio >= 0.40) {
+        setAmbientMood('tense');   // Tension tier
+      } else {
+        setAmbientMood('calm');    // Calm tier
       }
-      // Between 0.50–0.75: hold current mood (hysteresis to prevent flickering)
+
+      // Update music tempo based on stack height and game speed
+      if (typeof updateMusicTempo === 'function') {
+        var _speedMult = (typeof difficultyMultiplier !== 'undefined') ? difficultyMultiplier : 1.0;
+        updateMusicTempo(_heightRatio, _speedMult);
+      }
     }
 
     // Tick ice bridge slow timer
