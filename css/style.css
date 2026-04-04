@@ -16151,3 +16151,374 @@ button:focus-visible {
   font-family: "Press Start 2P", cursive;
   font-size: 8px;
 }
+
+/* ── Friends panel ─────────────────────────────────────────────────────────── */
+
+#friends-panel {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  padding: 16px 8px 32px;
+  box-sizing: border-box;
+}
+
+#friends-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 520px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+#friends-panel-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.85em;
+  color: #4ade80;
+  text-shadow: 0 0 10px #22c55e, 0 0 24px #16a34a;
+  letter-spacing: 2px;
+}
+
+#friends-panel-close {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+#friends-panel-close:hover { background: rgba(255,255,255,0.1); }
+
+#friends-panel-body {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#friends-my-code-row,
+#friends-count-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 8px 12px;
+  flex-wrap: wrap;
+}
+
+.friends-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.friends-code-display {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.9em;
+  color: #4ade80;
+  letter-spacing: 4px;
+  flex: 1;
+}
+
+.friends-copy-btn,
+.friends-add-tab-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.friends-copy-btn {
+  background: rgba(74,222,128,0.12);
+  border: 1px solid rgba(74,222,128,0.4);
+  color: #4ade80;
+}
+.friends-copy-btn:hover { background: rgba(74,222,128,0.22); }
+
+.friends-add-tab-btn {
+  background: rgba(96,165,250,0.12);
+  border: 1px solid rgba(96,165,250,0.4);
+  color: #60a5fa;
+  margin-left: auto;
+}
+.friends-add-tab-btn:hover { background: rgba(96,165,250,0.22); }
+
+/* ── Friend rows ── */
+
+#friends-list-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.friends-empty {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: rgba(255,255,255,0.35);
+  text-align: center;
+  line-height: 2;
+  padding: 20px 0;
+}
+
+.friends-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 8px 10px;
+  transition: background 0.15s;
+}
+.friends-row:hover { background: rgba(255,255,255,0.07); }
+
+.friends-row-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.friends-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.friends-dot.online  { background: #4ade80; box-shadow: 0 0 6px #22c55e; }
+.friends-dot.offline { background: rgba(255,255,255,0.2); }
+
+.friends-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.friends-name {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.friends-status-mode {
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  color: #4ade80;
+}
+
+.friends-status-seen {
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  color: rgba(255,255,255,0.35);
+}
+
+.friends-row-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.friends-invite-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.friends-invite-battle {
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.4);
+  color: #f87171;
+}
+.friends-invite-battle:hover { background: rgba(239,68,68,0.22); }
+
+.friends-invite-coop {
+  background: rgba(0,180,255,0.1);
+  border: 1px solid rgba(0,180,255,0.4);
+  color: #60d8ff;
+}
+.friends-invite-coop:hover { background: rgba(0,180,255,0.2); }
+
+.friends-remove-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.4);
+  font-size: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.friends-remove-btn:hover { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.4); }
+
+/* ── Add-friend form ── */
+
+.friends-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.friends-add-form input {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.7em;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  color: #fff;
+  padding: 8px 10px;
+  outline: none;
+  letter-spacing: 2px;
+}
+.friends-add-form input:focus { border-color: rgba(96,165,250,0.6); }
+
+.friends-add-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.friends-add-confirm-btn,
+.friends-add-back-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex: 1;
+}
+
+.friends-add-confirm-btn {
+  background: rgba(74,222,128,0.15);
+  border: 1px solid rgba(74,222,128,0.5);
+  color: #4ade80;
+}
+.friends-add-confirm-btn:hover { background: rgba(74,222,128,0.28); }
+
+.friends-add-back-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.6);
+}
+.friends-add-back-btn:hover { background: rgba(255,255,255,0.12); }
+
+.friends-status-msg {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  min-height: 14px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+#friends-invite-status {
+  text-align: center;
+  color: rgba(255,255,255,0.5);
+}
+
+/* ── Friend invite toast ── */
+
+#friend-invite-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 15, 30, 0.97);
+  border: 2px solid rgba(74,222,128,0.5);
+  border-radius: 8px;
+  padding: 12px 18px;
+  z-index: 9100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 260px;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(74,222,128,0.2);
+}
+
+#fit-header {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: #4ade80;
+  letter-spacing: 2px;
+}
+
+#fit-body {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.8;
+}
+
+#fit-body strong {
+  color: #60a5fa;
+}
+
+#fit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+#fit-join-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  padding: 7px 16px;
+  background: rgba(74,222,128,0.15);
+  border: 1px solid rgba(74,222,128,0.5);
+  color: #4ade80;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#fit-join-btn:hover { background: rgba(74,222,128,0.28); }
+
+#fit-dismiss-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 10px;
+  padding: 7px 10px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.4);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#fit-dismiss-btn:hover { background: rgba(255,255,255,0.1); }

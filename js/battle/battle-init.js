@@ -663,5 +663,23 @@ function _initBattleHandlers() {
 
       _initBattleSpectator();
 
+      // ── Friends integration — expose overlay entry points ──────────────────
+      // Called by friends.js when the local player sends an invite and needs to
+      // sit in the waiting-host view with a room already created.
+      window._friendsOpenBattleCreate = function (roomCode) {
+        openBattleOverlay('create');
+        var roomCodeEl = document.getElementById('battle-room-code');
+        if (roomCodeEl) roomCodeEl.textContent = roomCode;
+      };
+
+      // Called by friends.js when the local player accepts a battle invite.
+      window._friendsOpenBattleWithCode = function (roomCode) {
+        openBattleOverlay('join');
+        var ci = document.getElementById('battle-code-input');
+        if (ci) { ci.value = roomCode.toUpperCase(); ci.focus(); }
+        var joinStatusEl = document.getElementById('battle-join-status-msg');
+        if (joinStatusEl) joinStatusEl.textContent = 'Friend invite — press Join!';
+      };
+
     })();
 }

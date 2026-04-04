@@ -174,6 +174,7 @@
                 <div class="menu-group-label">SOCIAL</div>
                 <div class="menu-group-row">
                   <button id="start-guild-btn">&#9876; Guild <span id="guild-btn-badge" style="display:none;background:#ef4444;color:#fff;border-radius:999px;font-size:9px;padding:1px 5px;vertical-align:middle;margin-left:2px;"></span></button>
+                  <button id="start-friends-btn">&#128101; Friends</button>
                   <button id="start-community-btn">&#127760; Community</button>
                   <button id="start-tournament-btn">&#127942; Tournaments</button>
                 </div>
@@ -1090,6 +1091,58 @@
           <button id="guild-panel-close" aria-label="Close guild panel">&#10005;</button>
         </div>
         <div id="guild-panel-content"></div>
+      </div>
+
+      <!-- Friends panel -->
+      <div id="friends-panel" style="display:none;">
+        <div id="friends-panel-header">
+          <span id="friends-panel-title">&#128101; FRIENDS</span>
+          <button id="friends-panel-close" aria-label="Close friends panel">&#10005;</button>
+        </div>
+        <div id="friends-panel-body">
+          <!-- My code row -->
+          <div id="friends-my-code-row">
+            <span class="friends-label">Your code:</span>
+            <span id="friends-my-code" class="friends-code-display">&#8230;</span>
+            <button id="friends-copy-code-btn" class="friends-copy-btn">Copy</button>
+          </div>
+          <div id="friends-count-row">
+            <span class="friends-label">Friends:</span>
+            <span id="friends-count">0 / 50</span>
+            <button id="friends-add-tab-btn" class="friends-add-tab-btn">+ Add Friend</button>
+          </div>
+
+          <!-- List view -->
+          <div id="friends-list-view">
+            <div id="friends-list-body"></div>
+            <div id="friends-invite-status" class="friends-status-msg"></div>
+          </div>
+
+          <!-- Add view -->
+          <div id="friends-add-view" style="display:none;">
+            <div class="friends-add-form">
+              <label class="friends-label">Friend Code</label>
+              <input id="friends-add-input" type="text" maxlength="6" placeholder="ABC123" autocomplete="off" spellcheck="false" />
+              <label class="friends-label">Nickname (optional)</label>
+              <input id="friends-add-name-input" type="text" maxlength="24" placeholder="Display name" autocomplete="off" />
+              <div class="friends-add-actions">
+                <button id="friends-add-confirm-btn" class="friends-add-confirm-btn">Add</button>
+                <button id="friends-add-back-btn" class="friends-add-back-btn">Back</button>
+              </div>
+              <div id="friends-add-status" class="friends-status-msg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Friend invite toast — shown when a friend invites you -->
+      <div id="friend-invite-toast" style="display:none;">
+        <div id="fit-header">FRIEND INVITE</div>
+        <div id="fit-body"><span id="fit-sender"></span> invited you to <strong id="fit-mode"></strong>!</div>
+        <div id="fit-actions">
+          <button id="fit-join-btn">&#9654; Join</button>
+          <button id="fit-dismiss-btn">&#10005;</button>
+        </div>
       </div>
 
       <!-- Guild invite toast — shown when a pending invite arrives -->
@@ -2056,6 +2109,7 @@
     <script src="js/modes/dungeon-modifier.js"></script>
     <script src="js/modes/infinite-weekly.js"></script>
     <script src="js/ui/mode-select.js"></script>
+    <script src="js/social/friends.js"></script>
     <script src="js/social/coop-init.js"></script>
     <script src="js/battle/battle-init.js"></script>
     <script src="js/battle/battle-spectator-init.js"></script>

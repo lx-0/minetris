@@ -744,6 +744,25 @@ function _initCoopHandlers() {
           });
         }
       })();
+
+      // ── Friends integration — expose overlay entry points ──────────────────
+      // Called by friends.js when the local player sends an invite and needs to
+      // sit in the waiting-host view with a room already created.
+      window._friendsOpenCoopCreate = function (roomCode) {
+        openCoopOverlay('create');
+        var roomCodeEl = document.getElementById('coop-room-code');
+        if (roomCodeEl) roomCodeEl.textContent = roomCode;
+        coop._friendsPreloadedRoom = roomCode; // signal that room is already open
+      };
+
+      // Called by friends.js when the local player accepts a co-op invite.
+      window._friendsOpenCoopWithCode = function (roomCode) {
+        openCoopOverlay('join');
+        var ci = document.getElementById('coop-code-input');
+        if (ci) { ci.value = roomCode.toUpperCase(); ci.focus(); }
+        var joinStatusEl = document.getElementById('coop-join-status-msg');
+        if (joinStatusEl) joinStatusEl.textContent = 'Friend invite — press Join!';
+      };
     })();
 
 }
