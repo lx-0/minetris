@@ -38,6 +38,13 @@ const _LC_SHAKE_STR = 0.10;
 let _lcPhase    = 0;  // 0=idle, 1=anticipation, 2=aftermath
 let _lcPhaseAge = 0;
 let _lcNumLines = 0;
+let _lcIsTSpin      = false;  // current clear was triggered by a T-piece
+let _lcPerfectClear = false;  // board will be empty after this clear
+
+// ─── Firework particles for T-spin / Perfect Clear ────────────────────────────
+// Simple pool-less burst using existing fragment pool; fired from _lcDetonate.
+// Colors cycle through festive palette; fragments get extra upward velocity.
+const _FIREWORK_COLORS = [0xff4081, 0xffea00, 0x00e5ff, 0x69f0ae, 0xff6d00, 0xea80fc];
 
 // ─── Co-op line-clear guard ───────────────────────────────────────────────────
 // Prevents double-processing when both clients detect the same rows independently
@@ -136,12 +143,27 @@ function checkLineClear(newBlocks) {
   _lcPhaseAge         = 0;
   _lcNumLines         = completeLevels.length;
 
+  // Consume T-spin flag from pieces.js
+  _lcIsTSpin = (typeof lastPieceTSpin !== 'undefined' && lastPieceTSpin);
+  if (typeof lastPieceTSpin !== 'undefined') lastPieceTSpin = false;
+
+  // Perfect Clear: will the board be empty after removing these rows?
+  // Count occupied cells outside the soon-to-be-cleared levels.
+  {
+    let _remainingCells = 0;
+    gridOccupancy.forEach(function (cells, gy) {
+      if (!completeLevels.includes(gy)) _remainingCells += cells.size;
+    });
+    _lcPerfectClear = (_remainingCells === 0);
+  }
+
   // Audio: rumble + arpeggio
   playLineClearRumble();
   playLineClearSound(completeLevels.length);
 
   // Tetris clear (4 lines): strong chromatic aberration burst
-  if (completeLevels.length >= 4 && typeof triggerChromaticAberration === 'function') {
+  if (completeLevels.length >= 4 && typeof triggerChromaticAberration === 'function' &&
+      !(typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled)) {
     triggerChromaticAberration(0.012, 0.4);
   }
 
@@ -321,8 +343,10 @@ function updateLineClear(delta) {
   if (_lcJoltAge >= 0) {
     _lcJoltAge += delta;
     if (_lcJoltAge < _LC_JOLT) {
-      const t = _lcJoltAge / _LC_JOLT;
-      camera.position.y += _LC_JOLT_STR * Math.sin(t * Math.PI) * delta * 6;
+      if (!(typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled)) {
+        const t = _lcJoltAge / _LC_JOLT;
+        camera.position.y += _LC_JOLT_STR * Math.sin(t * Math.PI) * delta * 6;
+      }
     } else {
       _lcJoltAge = -1;
     }
@@ -332,9 +356,11 @@ function updateLineClear(delta) {
   if (_lcShakeAge >= 0) {
     _lcShakeAge += delta;
     if (_lcShakeAge < _lcShakeDur) {
-      const strength = _LC_SHAKE_STR * (1 - _lcShakeAge / _lcShakeDur);
-      camera.position.x += (Math.random() - 0.5) * strength;
-      camera.position.y += (Math.random() - 0.5) * strength;
+      if (!(typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled)) {
+        const strength = _LC_SHAKE_STR * (1 - _lcShakeAge / _lcShakeDur);
+        camera.position.x += (Math.random() - 0.5) * strength;
+        camera.position.y += (Math.random() - 0.5) * strength;
+      }
     } else {
       _lcShakeAge = -1;
     }
@@ -450,9 +476,17 @@ function _lcDetonate() {
   else if (numLines === 3) { fragMult = 2.0; numRings = 2; doFlash = true; flashAmt = 0.45; }
   else if (numLines >= 4)  { fragMult = 3.0; numRings = 3; doFlash = true; flashAmt = 1.0; doShake = true; }
 
+  // Combo intensity multiplier: each consecutive clear adds 25% more fragments (cap at 3×).
+  const _comboIntensityMult = Math.min(1.0 + ((comboCount > 1 ? comboCount - 1 : 0) * 0.25), 3.0);
+
+  // Biome particle theme overrides fragment and ring colors.
+  const _biomeTheme = (typeof getBiomeParticleTheme === 'function') ? getBiomeParticleTheme() : null;
+  const _biomeIntensity = (_biomeTheme && _biomeTheme.intensity) ? _biomeTheme.intensity : 1.0;
+  fragMult *= _comboIntensityMult * _biomeIntensity;
+
   const fragsPerBlock = Math.round(8 * fragMult);
 
-  // Dominant block color
+  // Dominant block color (used as fallback when no biome theme overrides)
   const colorCounts = new Map();
   lineClearFlashBlocks.forEach((b) => {
     if (!b.userData._savedColor) return;
@@ -461,6 +495,10 @@ function _lcDetonate() {
   });
   let dominantColor = 0xffffff, maxCount = 0;
   colorCounts.forEach((cnt, hex) => { if (cnt > maxCount) { maxCount = cnt; dominantColor = hex; } });
+
+  // Resolve ring and light colors from biome theme or fall back to block color.
+  const _ringColor  = (_biomeTheme && _biomeTheme.ringColor  != null) ? _biomeTheme.ringColor  : dominantColor;
+  const _lightColor = (_biomeTheme && _biomeTheme.lightColor != null) ? _biomeTheme.lightColor : dominantColor;
 
   // Cleared Y levels in world space
   const clearedYs = lineClearPendingYs;
@@ -478,14 +516,20 @@ function _lcDetonate() {
       const sz = 0.3 + Math.random() * 0.2;
       m.scale.setScalar(sz);
       m.position.copy(bPos);
-      m.material.color.copy(bColor);
-      m.material.emissive.copy(bColor);
+      // Biome color override or block color
+      const fragColor = (typeof getBiomeFragColor === 'function')
+        ? getBiomeFragColor(_biomeTheme, bColor)
+        : bColor.clone();
+      m.material.color.copy(fragColor);
+      m.material.emissive.copy(fragColor);
       m.material.emissiveIntensity = 0.8;
       m.material.opacity = 1.0;
       m.visible = true;
       const speed = 3 + Math.random() * 5;
       const ang   = Math.random() * Math.PI * 2;
-      const elev  = (Math.random() * 0.7 - 0.2) * Math.PI;  // slightly upward bias
+      // Nether sparks: strong upward bias (ember behavior); others: slight upward bias
+      const _sparkBias = (_biomeTheme && _biomeTheme.fragSpark) ? 0.6 : -0.2;
+      const elev  = (Math.random() * 0.7 + _sparkBias) * Math.PI;
       _lcFragments.push({
         entry, mesh: m,
         vel: {
@@ -551,9 +595,9 @@ function _lcDetonate() {
 
   // 4. Shockwave rings ──────────────────────────────────────────────────────
   for (let r = 0; r < numRings; r++) {
-    const ringY     = midWorldY + (r - (numRings - 1) / 2) * BLOCK_SIZE;
-    // First ring uses dominant block color; additional rings are white
-    const ringColor = (r === 0) ? dominantColor : 0xffffff;
+    const ringY = midWorldY + (r - (numRings - 1) / 2) * BLOCK_SIZE;
+    // First ring: biome ring color (or block color); additional rings are white
+    const ringColor = (r === 0) ? _ringColor : 0xffffff;
     const ringGeo   = new THREE.TorusGeometry(_LC_RING_RADIUS, 0.25, 8, 64);
     const ringMat   = new THREE.MeshBasicMaterial({
       color: ringColor, transparent: true, opacity: 1.0, side: THREE.DoubleSide,
@@ -567,16 +611,18 @@ function _lcDetonate() {
   }
 
   // 5. Point light flash at cleared level ───────────────────────────────────
-  const ptLight = new THREE.PointLight(new THREE.Color(dominantColor), 5.0, 25);
+  const ptLight = new THREE.PointLight(new THREE.Color(_lightColor), 5.0, 25);
   ptLight.position.set(0, midWorldY, 0);
   scene.add(ptLight);
   _lcLights.push({ light: ptLight, age: 0, initialIntensity: 5.0 });
 
+  const _reducedMotion = (typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled);
+
   // 6. Camera upward jolt ───────────────────────────────────────────────────
-  _lcJoltAge = 0;
+  _lcJoltAge = 0;  // update loop skips actual movement when reducedMotion is on
 
   // 7. Screen flash for triple / Tetris ─────────────────────────────────────
-  if (doFlash) {
+  if (doFlash && !_reducedMotion) {
     const el = document.getElementById("lc-flash-overlay");
     if (el) {
       el.style.backgroundColor = "#fff";  // restore white in case combo pulse changed it
@@ -596,9 +642,62 @@ function _lcDetonate() {
   }
 
   // 9. Extended screen shake for Tetris ─────────────────────────────────────
-  if (doShake) {
+  if (doShake && !_reducedMotion) {
     _lcShakeAge = 0;
     _lcShakeDur = 0.30;
+  }
+
+  // 10. T-spin / Perfect Clear — firework burst ─────────────────────────────
+  // Spawn a radial burst of festive fragments around the board center.
+  if (_lcIsTSpin || _lcPerfectClear) {
+    const _fwCount  = _lcPerfectClear ? 48 : 24;
+    const _fwRadius = _lcPerfectClear ? 8  : 5;
+    for (let fw = 0; fw < _fwCount; fw++) {
+      const entry = _lcAcquire();
+      if (!entry) break;
+      const m   = entry.mesh;
+      const sz  = 0.25 + Math.random() * 0.2;
+      m.scale.setScalar(sz);
+      // Spread burst around mid-clear height, random radial offset
+      const fwAng = (fw / _fwCount) * Math.PI * 2 + Math.random() * 0.3;
+      m.position.set(
+        Math.cos(fwAng) * _fwRadius * Math.random(),
+        midWorldY + (Math.random() - 0.5) * 2,
+        Math.sin(fwAng) * _fwRadius * Math.random()
+      );
+      const fwColor = new THREE.Color(
+        _FIREWORK_COLORS[fw % _FIREWORK_COLORS.length]
+      );
+      m.material.color.copy(fwColor);
+      m.material.emissive.copy(fwColor);
+      m.material.emissiveIntensity = 1.2;
+      m.material.opacity = 1.0;
+      m.visible = true;
+      const fwSpeed = 5 + Math.random() * 6;
+      const fwElev  = (Math.random() * 0.8 + 0.2) * Math.PI;  // mostly upward
+      _lcFragments.push({
+        entry, mesh: m,
+        vel: {
+          x: Math.cos(fwAng) * Math.cos(fwElev) * fwSpeed,
+          y: Math.sin(fwElev) * fwSpeed + 4,
+          z: Math.sin(fwAng) * Math.cos(fwElev) * fwSpeed,
+        },
+        angVel: {
+          x: (Math.random() - 0.5) * 15,
+          y: (Math.random() - 0.5) * 15,
+          z: (Math.random() - 0.5) * 15,
+        },
+        age: 0,
+        maxAge: 0.9 + Math.random() * 0.4,
+      });
+    }
+    // Banner for special clear
+    if (lineClearBannerEl) {
+      const _specialLabel = _lcPerfectClear ? 'PERFECT CLEAR!' : 'T-SPIN!';
+      lineClearBannerEl.textContent = _specialLabel;
+      lineClearBannerEl.style.display = 'block';
+      bannerTimer = 2.0;
+    }
   }
 
   // Clear pending Ys (gravity already applied above)

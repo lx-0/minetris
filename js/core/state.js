@@ -176,6 +176,9 @@ let battleOpponentStats = null;
 let battleOpponentRating = 1000;
 // Back-to-back Tetris detection: true after a 4-line clear; reset on any sub-Tetris clear.
 let lastClearWasTetris = false;
+// T-spin detection: set by pieces.js when a T-piece (index 1) lands after a rotation.
+// Consumed once by checkLineClear() to tag the current clear event.
+let lastPieceTSpin = false;
 
 // ── Co-op mode state ──────────────────────────────────────────────────────────
 // true while a co-op session is active; suppresses local random piece generation.
@@ -269,6 +272,8 @@ const BLITZ_FIXED_MULTIPLIER   = Math.pow(1.1, 4); // ≈ 1.4641 (same as Sprint
 // ── Accessibility ─────────────────────────────────────────────────────────────
 // true = deuteranopia-safe palette + surface patterns are used for block rendering.
 let colorblindMode = false;
+// true = suppresses camera shake, screen flash, and chromatic aberration.
+let reducedMotionEnabled = false;
 
 // ── Visual theme ──────────────────────────────────────────────────────────────
 // "classic" = default Minecraft-inspired palette (always unlocked).

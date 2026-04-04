@@ -6,11 +6,12 @@
 const GAME_VERSION = "2.5";
 const TRANSFER_LAST_EXPORT_KEY = "mineCtris_lastExportTime";
 
-const AUDIO_SETTINGS_KEY = "mineCtris_audioSettings";
-const COLORBLIND_KEY = "mineCtris_colorblindMode";
-const THEME_STORAGE_KEY = "mineCtris_theme";
+const AUDIO_SETTINGS_KEY    = "mineCtris_audioSettings";
+const COLORBLIND_KEY        = "mineCtris_colorblindMode";
+const REDUCED_MOTION_KEY    = "mineCtris_reducedMotion";
+const THEME_STORAGE_KEY     = "mineCtris_theme";
 const MOBILE_DIFFICULTY_KEY = "mineCtris_mobileDifficulty";
-const DYNAMIC_MUSIC_KEY = "mineCtris_dynamicMusic";
+const DYNAMIC_MUSIC_KEY     = "mineCtris_dynamicMusic";
 
 // Global: true = apply 20% speed reduction on mobile. Default ON for touch devices.
 let mobileDifficultyEnabled = false;
@@ -68,6 +69,22 @@ function _loadDynamicMusic() {
 function _saveDynamicMusic(enabled) {
   try {
     localStorage.setItem(DYNAMIC_MUSIC_KEY, String(enabled));
+  } catch (_) {}
+}
+
+// ── Reduced motion ────────────────────────────────────────────────────────────
+
+function _loadReducedMotion() {
+  try {
+    const raw = localStorage.getItem(REDUCED_MOTION_KEY);
+    if (raw !== null) reducedMotionEnabled = (raw === 'true');
+  } catch (_) {}
+}
+
+function applyReducedMotion(enabled) {
+  reducedMotionEnabled = enabled;
+  try {
+    localStorage.setItem(REDUCED_MOTION_KEY, String(enabled));
   } catch (_) {}
 }
 
@@ -747,6 +764,7 @@ function initSettings() {
   _loadAudioSettings();
   applyAudioSettings(_audioSettings.master, _audioSettings.sfx, _audioSettings.music);
   _loadDynamicMusic();
+  _loadReducedMotion();
   _loadColorblindMode();
   _loadTheme();
   if (typeof initGraphicsQuality === 'function') initGraphicsQuality();
@@ -840,6 +858,14 @@ function initSettings() {
     cbToggle.checked = colorblindMode;
     cbToggle.addEventListener("change", function() {
       applyColorblindMode(this.checked);
+    });
+  }
+
+  const rmToggle = document.getElementById("reduced-motion-toggle");
+  if (rmToggle) {
+    rmToggle.checked = reducedMotionEnabled;
+    rmToggle.addEventListener("change", function() {
+      applyReducedMotion(this.checked);
     });
   }
 
@@ -951,6 +977,8 @@ function openSettings(onClose) {
   _syncSliders();
   const cbToggle = document.getElementById("cb-toggle");
   if (cbToggle) cbToggle.checked = colorblindMode;
+  const rmToggleSync = document.getElementById("reduced-motion-toggle");
+  if (rmToggleSync) rmToggleSync.checked = reducedMotionEnabled;
   const samToggleSync = document.getElementById("show-all-modes-toggle");
   if (samToggleSync) samToggleSync.checked = (typeof isShowAllModesEnabled === "function") && isShowAllModesEnabled();
   const tcToggleSync = document.getElementById("touch-controls-toggle");

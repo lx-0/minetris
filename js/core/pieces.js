@@ -743,6 +743,11 @@ function updateFallingPieces(delta) {
       newBlocks.push(block);
     }
     removePieceShadow(pieceToLand);
+    // T-spin: flag when a T-piece (colorIndex 1) lands.
+    // checkLineClear() reads and consumes this flag to tag celebratory effects.
+    if (typeof lastPieceTSpin !== 'undefined') {
+      lastPieceTSpin = (pieceToLand.userData.colorIndex === 1);
+    }
     fallingPiecesGroup.remove(pieceToLand);
     fallingPieces.splice(index, 1);
     checkLineClear(newBlocks);
