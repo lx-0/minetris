@@ -638,6 +638,7 @@
         <div id="hs-go-table"></div>
         <div id="daily-go-section" style="display:none;"></div>
         <div id="weekly-go-section" style="display:none;"></div>
+        <div id="infinite-weekly-go-section" style="display:none;"></div>
         <div id="survival-go-section" style="display:none;"></div>
         <button id="go-share-btn">Share Score</button>
         <div id="go-share-feedback"></div>
@@ -1243,6 +1244,14 @@
               <span class="dvb-name">Infinite Depths</span>
               <span class="dvb-desc">Endless. Defeat the Wither Storm to unlock.</span>
               <span class="dvb-lock" id="depths-infinite-lock">&#128274; Defeat the Wither Storm</span>
+            </button>
+            <button class="depths-variant-btn depths-variant-btn-locked" id="depths-variant-weekly-infinite" data-variant="weekly_infinite">
+              <span class="dvb-icon">&#128197;</span>
+              <span class="dvb-name">Weekly Depths</span>
+              <span class="dvb-desc">Same seed for everyone. One run per week.</span>
+              <span class="dvb-meta" id="dvb-iw-seed"></span>
+              <span class="dvb-meta" id="dvb-iw-pb"></span>
+              <span class="dvb-lock" id="depths-weekly-infinite-lock">&#128274; Defeat the Wither Storm</span>
             </button>
           </div>
           <button id="depths-variant-close">&#8592; Back</button>
@@ -1912,6 +1921,7 @@
     <script src="js/world/cave-mouth.js"></script>
     <script src="js/world/world-spawn.js"></script>
     <script src="js/modes/dungeon-modifier.js"></script>
+    <script src="js/modes/infinite-weekly.js"></script>
     <script src="js/ui/mode-select.js"></script>
     <script src="js/social/coop-init.js"></script>
     <script src="js/battle/battle-init.js"></script>

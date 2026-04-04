@@ -968,11 +968,21 @@ function init() {
 
   // dungeonLaunch: tiered dungeon run (shallow_mines / deep_caverns / abyssal_rift / infinite)
   document.addEventListener('dungeonLaunch', function (e) {
-    var dungeonId = e.detail && e.detail.dungeonId;
-    isDailyChallenge = false;
-    gameRng = null;
-    try { localStorage.setItem('mineCtris_lastMode', 'dungeon_' + (dungeonId || 'shallow_mines')); } catch (_) {}
-    if (typeof metricsModePlayed === 'function') metricsModePlayed('dungeon_' + (dungeonId || 'shallow_mines'));
+    var dungeonId     = e.detail && e.detail.dungeonId;
+    var weeklyMode    = !!(e.detail && e.detail.infiniteWeekly);
+    isDailyChallenge  = false;
+    gameRng           = null;
+    if (typeof isInfiniteWeekly !== 'undefined') isInfiniteWeekly = false;
+    if (weeklyMode && dungeonId === 'infinite') {
+      // Weekly seeded run: seed PRNG from ISO week
+      if (typeof getInfiniteWeeklyPrng === 'function') gameRng = getInfiniteWeeklyPrng();
+      if (typeof isInfiniteWeekly !== 'undefined') isInfiniteWeekly = true;
+      try { localStorage.setItem('mineCtris_lastMode', 'dungeon_infinite_weekly'); } catch (_) {}
+      if (typeof metricsModePlayed === 'function') metricsModePlayed('dungeon_infinite_weekly');
+    } else {
+      try { localStorage.setItem('mineCtris_lastMode', 'dungeon_' + (dungeonId || 'shallow_mines')); } catch (_) {}
+      if (typeof metricsModePlayed === 'function') metricsModePlayed('dungeon_' + (dungeonId || 'shallow_mines'));
+    }
     if (typeof markDungeonTierSeen === 'function') markDungeonTierSeen(dungeonId || 'shallow_mines');
     if (typeof startDungeonSession === 'function') startDungeonSession(dungeonId || 'shallow_mines');
     requestPointerLock();

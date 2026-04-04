@@ -176,6 +176,9 @@ function resetGame() {
   const dailyBadgeEl = document.getElementById('daily-challenge-badge');
   if (dailyBadgeEl) dailyBadgeEl.style.display = 'none';
 
+  // Reset infinite weekly depths state
+  if (typeof isInfiniteWeekly !== 'undefined') isInfiniteWeekly = false;
+
   // Reset weekly challenge state
   isWeeklyChallenge = false;
   weeklyModifier = null;

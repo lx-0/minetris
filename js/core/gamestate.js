@@ -397,6 +397,20 @@ function triggerGameOver() {
     }
   }
 
+  // Infinite Weekly Depths: record attempt and show leaderboard section
+  if (typeof isInfiniteWeekly !== 'undefined' && isInfiniteWeekly) {
+    const _iwFloor = (typeof dungeonDescentLevel !== 'undefined') ? dungeonDescentLevel : 1;
+    if (typeof saveInfiniteWeeklyAttempt === 'function') {
+      saveInfiniteWeeklyAttempt(_iwFloor, state.score, state.elapsedSeconds);
+    }
+    if (typeof renderInfiniteWeeklyGameOver === 'function') {
+      renderInfiniteWeeklyGameOver(_iwFloor, state.score, state.elapsedSeconds);
+    }
+  } else {
+    const iwEl = document.getElementById('infinite-weekly-go-section');
+    if (iwEl) iwEl.style.display = 'none';
+  }
+
   // Hide survival section when not in survival mode
   if (!isSurvivalMode) {
     const survGoEl = document.getElementById('survival-go-section');

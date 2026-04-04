@@ -513,6 +513,15 @@
         var unlocked = _isInfiniteDepthsUnlocked();
         btn.classList.toggle('depths-variant-btn-locked', !unlocked);
         if (lock) lock.style.display = unlocked ? 'none' : '';
+
+        // Weekly Depths shares the same unlock gate as Infinite Depths
+        var wBtn  = document.getElementById('depths-variant-weekly-infinite');
+        var wLock = document.getElementById('depths-weekly-infinite-lock');
+        if (wBtn) wBtn.classList.toggle('depths-variant-btn-locked', !unlocked);
+        if (wLock) wLock.style.display = unlocked ? 'none' : '';
+        if (unlocked && typeof refreshInfiniteWeeklyVariantBtn === 'function') {
+          refreshInfiniteWeeklyVariantBtn();
+        }
       }
 
       function openDepthsVariantSelector() {
@@ -541,6 +550,8 @@
           document.dispatchEvent(new CustomEvent('depthsLaunch', { detail: {} }));
         } else if (variant === 'daily_depths') {
           document.dispatchEvent(new CustomEvent('dailyDepthsLaunch', { detail: {} }));
+        } else if (variant === 'weekly_infinite') {
+          document.dispatchEvent(new CustomEvent('dungeonLaunch', { detail: { dungeonId: 'infinite', infiniteWeekly: true } }));
         } else {
           document.dispatchEvent(new CustomEvent('dungeonLaunch', { detail: { dungeonId: variant } }));
         }

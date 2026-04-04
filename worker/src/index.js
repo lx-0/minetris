@@ -6431,6 +6431,104 @@ async function handleGetExpeditionWeeklyLeaderboard(biomeId, weekStr, request, e
   });
 }
 
+// ── Infinite Depths Weekly Leaderboard ──────────────────────────────────────
+//
+//   POST /api/infinite-weekly/submit
+//     body: { displayName, floor, score, time, week (YYYY-Www), seed, clientTimestamp }
+//     returns: { ok, rank, total }
+//
+//   GET /api/infinite-weekly/leaderboard?week=YYYY-Www
+//     returns: { week, entries: [{ rank, displayName, floor, score, time }], total }
+//
+//   KV key: infinite-weekly:{YYYY-Www}  → JSON array sorted by floor desc, score desc, time asc
+//   Player rate-limit key: player:infinite-weekly:{name}:{weekStr}
+
+const _IW_MAX          = 200;
+const _IW_RETURN_MAX   = 100;
+const _IW_TTL          = 60 * 60 * 24 * 7 * 5;   // 5 weeks
+const _IW_MAX_FLOOR    = 1000;                     // sanity cap
+
+async function handlePostInfiniteWeeklyScore(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON' }, 400); }
+
+  const { displayName, floor, score, time, week } = body;
+
+  if (!displayName || !DISPLAY_NAME_REGEX.test(displayName)) {
+    return jsonResponse({ error: 'Invalid display name' }, 400);
+  }
+  if (!week || !isValidWeek(week) || week !== currentISOWeek()) {
+    return jsonResponse({ error: 'Invalid or stale week' }, 400);
+  }
+
+  const floorNum = parseInt(floor, 10);
+  const scoreNum = parseInt(score, 10);
+  const timeNum  = parseInt(time,  10);
+  if (!Number.isInteger(floorNum) || floorNum < 1 || floorNum > _IW_MAX_FLOOR) {
+    return jsonResponse({ error: 'Invalid floor' }, 400);
+  }
+  if (!Number.isInteger(scoreNum) || scoreNum < 0) {
+    return jsonResponse({ error: 'Invalid score' }, 400);
+  }
+  if (!Number.isInteger(timeNum) || timeNum < 0) {
+    return jsonResponse({ error: 'Invalid time' }, 400);
+  }
+
+  // One attempt per player per week
+  const nameLower = displayName.toLowerCase();
+  const playerKey = `player:infinite-weekly:${nameLower}:${week}`;
+  const existing  = await env.LEADERBOARD_KV.get(playerKey, { type: 'json' });
+  if (existing) {
+    return jsonResponse({ error: 'Already submitted this week' }, 429);
+  }
+
+  const lbKey = `infinite-weekly:${week}`;
+  let leaderboard = (await env.LEADERBOARD_KV.get(lbKey, { type: 'json' })) || [];
+
+  const submittedAt = new Date().toISOString();
+  const entry = { displayName, floor: floorNum, score: scoreNum, time: timeNum, week, submittedAt };
+  leaderboard.push(entry);
+
+  // Sort: floor desc → score desc → time asc
+  leaderboard.sort((a, b) => {
+    if (b.floor !== a.floor) return b.floor - a.floor;
+    if (b.score !== a.score) return b.score - a.score;
+    return a.time - b.time;
+  });
+  if (leaderboard.length > _IW_MAX) leaderboard = leaderboard.slice(0, _IW_MAX);
+
+  const rank = leaderboard.findIndex(e => e.displayName.toLowerCase() === nameLower) + 1;
+
+  await Promise.all([
+    env.LEADERBOARD_KV.put(lbKey, JSON.stringify(leaderboard), { expirationTtl: _IW_TTL }),
+    env.LEADERBOARD_KV.put(playerKey, JSON.stringify({ submittedAt, floor: floorNum, score: scoreNum }), { expirationTtl: _IW_TTL }),
+  ]);
+
+  return jsonResponse({ ok: true, rank, total: leaderboard.length });
+}
+
+async function handleGetInfiniteWeeklyLeaderboard(request, env) {
+  const url     = new URL(request.url);
+  const weekStr = url.searchParams.get('week') || currentISOWeek();
+
+  if (!isValidWeek(weekStr)) {
+    return jsonResponse({ error: 'Invalid week format. Use YYYY-Www.' }, 400);
+  }
+
+  const lbKey      = `infinite-weekly:${weekStr}`;
+  const leaderboard = (await env.LEADERBOARD_KV.get(lbKey, { type: 'json' })) || [];
+
+  const entries = leaderboard.slice(0, _IW_RETURN_MAX).map((e, i) => ({
+    rank:        i + 1,
+    displayName: e.displayName,
+    floor:       e.floor,
+    score:       e.score,
+    time:        e.time,
+  }));
+
+  return jsonResponse({ week: weekStr, entries, total: leaderboard.length });
+}
+
 // ── Community Goals ──────────────────────────────────────────────────────────
 
 const COMMUNITY_GOAL_TEMPLATES = [
@@ -6565,6 +6663,121 @@ async function handleGetCommunityGoalPastWeek(weekStr, env) {
   return jsonResponse({ week: weekStr, goal: { id: template.id, name: template.name, icon: template.icon, unit: template.unit }, progress: data.progress, tierReached: tier, activePlayerCount: data.activePlayerCount || 0 });
 }
 
+// ── Seasonal Events ───────────────────────────────────────────────────────────
+//
+// KV keys:
+//   seasonal-event:current        → JSON { eventId, name, theme, narrativeBlurb,
+//                                          startDate, endDate,
+//                                          modifiers: { voidBlockMult },
+//                                          communityGoal: { target, metric },
+//                                          cosmetics: [{ id, category, name, rarity }] }
+//   seasonal-event:progress:{id}  → JSON { progress, activePlayerCount, contributors }
+//   seasonal-event:archive        → JSON array of past event summaries
+
+const SEASONAL_EVENT_TTL = 90 * 24 * 60 * 60; // 90 days
+
+async function handleGetSeasonalEventCurrent(env) {
+  const raw = await env.LEADERBOARD_KV.get('seasonal-event:current', { type: 'json' });
+  if (!raw) return jsonResponse({ active: false });
+
+  const now = new Date().toISOString().slice(0, 10);
+  if (raw.startDate > now || raw.endDate < now) {
+    return jsonResponse({ active: false });
+  }
+
+  // Load progress
+  const progressKey = `seasonal-event:progress:${raw.eventId}`;
+  const prog = (await env.LEADERBOARD_KV.get(progressKey, { type: 'json' })) ||
+    { progress: 0, activePlayerCount: 0 };
+
+  const target = raw.communityGoal ? raw.communityGoal.target : 1000000;
+  const pct    = Math.min(100, Math.round((prog.progress / target) * 100));
+
+  return jsonResponse({
+    active:           true,
+    eventId:          raw.eventId,
+    name:             raw.name,
+    theme:            raw.theme,
+    narrativeBlurb:   raw.narrativeBlurb || '',
+    startDate:        raw.startDate,
+    endDate:          raw.endDate,
+    modifiers:        raw.modifiers || {},
+    communityGoal:    raw.communityGoal || null,
+    cosmetics:        raw.cosmetics || [],
+    progress:         prog.progress,
+    activePlayerCount: prog.activePlayerCount || 0,
+    pct,
+  });
+}
+
+async function handlePostSeasonalEventProgress(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const { voidAdjacentMined = 0, displayName = '' } = body;
+
+  const raw = await env.LEADERBOARD_KV.get('seasonal-event:current', { type: 'json' });
+  if (!raw) return jsonResponse({ ok: false, error: 'No active event' }, 404);
+
+  const now = new Date().toISOString().slice(0, 10);
+  if (raw.startDate > now || raw.endDate < now) {
+    return jsonResponse({ ok: false, error: 'Event not active' }, 400);
+  }
+
+  const amount = Math.max(0, Math.floor(voidAdjacentMined));
+  if (amount === 0) return jsonResponse({ ok: true, progress: 0, contribution: 0 });
+
+  const progressKey = `seasonal-event:progress:${raw.eventId}`;
+  const prog = (await env.LEADERBOARD_KV.get(progressKey, { type: 'json' })) ||
+    { progress: 0, activePlayerCount: 0 };
+
+  prog.progress          += amount;
+  prog.activePlayerCount  = (prog.activePlayerCount || 0) + 1;
+
+  await env.LEADERBOARD_KV.put(progressKey, JSON.stringify(prog),
+    { expirationTtl: SEASONAL_EVENT_TTL });
+
+  const target = raw.communityGoal ? raw.communityGoal.target : 1000000;
+  return jsonResponse({
+    ok:           true,
+    contribution: amount,
+    progress:     prog.progress,
+    pct:          Math.min(100, Math.round((prog.progress / target) * 100)),
+  });
+}
+
+async function handleGetSeasonalEventArchive(env) {
+  const archive = (await env.LEADERBOARD_KV.get('seasonal-event:archive', { type: 'json' })) || [];
+  return jsonResponse({ archive });
+}
+
+async function handleAdminSetSeasonalEvent(request, env) {
+  const adminSecret = env.ADMIN_SECRET;
+  const authHeader = request.headers.get('Authorization') || '';
+  if (!adminSecret || authHeader !== `Bearer ${adminSecret}`) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const { eventId, name, theme, narrativeBlurb, startDate, endDate,
+          modifiers, communityGoal, cosmetics } = body;
+
+  if (!eventId || !name || !startDate || !endDate) {
+    return jsonResponse({ error: 'Missing required fields: eventId, name, startDate, endDate' }, 400);
+  }
+
+  const eventData = {
+    eventId, name, theme: theme || '', narrativeBlurb: narrativeBlurb || '',
+    startDate, endDate,
+    modifiers:     modifiers     || { voidBlockMult: 2 },
+    communityGoal: communityGoal || { target: 1000000, metric: 'voidAdjacentMined' },
+    cosmetics:     cosmetics     || [],
+  };
+
+  await env.LEADERBOARD_KV.put('seasonal-event:current', JSON.stringify(eventData),
+    { expirationTtl: SEASONAL_EVENT_TTL });
+
+  return jsonResponse({ ok: true, event: eventData });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -6639,6 +6852,10 @@ export default {
       response = await handlePostExpeditionMap(request, env);
     } else if (method === 'POST' && url.pathname === '/api/expedition/score') {
       response = await handlePostExpeditionScore(request, env);
+    } else if (method === 'POST' && url.pathname === '/api/infinite-weekly/submit') {
+      response = await handlePostInfiniteWeeklyScore(request, env);
+    } else if (method === 'GET' && url.pathname === '/api/infinite-weekly/leaderboard') {
+      response = await handleGetInfiniteWeeklyLeaderboard(request, env);
     } else if (method === 'POST' && url.pathname === '/api/scores/expedition/weekly') {
       response = await handlePostExpeditionWeeklyScore(request, env);
     } else if (method === 'GET' && /^\/api\/leaderboard\/expedition\/weekly\/[^/]+\/[^/]+$/.test(url.pathname)) {
@@ -6655,6 +6872,15 @@ export default {
     } else if (method === 'GET' && url.pathname.startsWith('/api/community-goals/week/')) {
       const weekStr = url.pathname.replace('/api/community-goals/week/', '');
       response = await handleGetCommunityGoalPastWeek(weekStr, env);
+    // ── Seasonal Events ───────────────────────────────────────────────────────
+    } else if (method === 'GET' && url.pathname === '/api/seasonal-events/current') {
+      response = await handleGetSeasonalEventCurrent(env);
+    } else if (method === 'POST' && url.pathname === '/api/seasonal-events/progress') {
+      response = await handlePostSeasonalEventProgress(request, env);
+    } else if (method === 'GET' && url.pathname === '/api/seasonal-events/archive') {
+      response = await handleGetSeasonalEventArchive(env);
+    } else if (method === 'POST' && url.pathname === '/api/admin/seasonal-events') {
+      response = await handleAdminSetSeasonalEvent(request, env);
     } else if (method === 'GET' && url.pathname === '/api/missions') {
       response = handleGetMissions(todayUTC());
     } else if (method === 'GET' && url.pathname.startsWith('/api/missions/')) {
