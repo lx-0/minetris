@@ -3,7 +3,12 @@
 // Touch gate: initialises virtual touch controls on touch-capable devices.
 
 function onWheel(event) {
+  if (typeof isReplayMode !== 'undefined' && isReplayMode) return;
   if (!controls || !controls.isLocked || isGameOver) return;
+  if (typeof replayRecordInput === 'function') {
+    replayRecordInput('wheel', event.deltaY > 0 ? 1 : -1,
+      typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);
+  }
   cycleSelectedBlock(event.deltaY > 0 ? 1 : -1);
 }
 
@@ -85,7 +90,12 @@ function placeBlock() {
 }
 
 function onMouseDown(event) {
+  if (typeof isReplayMode !== 'undefined' && isReplayMode) return;
   if (!controls || !controls.isLocked || isGameOver) return;
+  if (typeof replayRecordInput === 'function') {
+    replayRecordInput('mousedown', event.button,
+      typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);
+  }
   // ── Editor mode: left-click places, right-click erases ───────────────────
   if (isEditorMode) {
     if (event.button === 0) {

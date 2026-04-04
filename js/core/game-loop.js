@@ -7,7 +7,12 @@ function animate() {
   const time = performance.now();
   const rawDelta = clock.getDelta();
   // Cap delta to prevent timer skips after pause/tab-away (THREE.Clock accumulates real time)
-  const delta = Math.min(rawDelta, 0.1);
+  let delta = Math.min(rawDelta, 0.1);
+  // Scale simulation time for replay speed control (2x / 4x fast-forward)
+  if (typeof isReplayMode !== 'undefined' && isReplayMode &&
+      typeof replaySpeedMultiplier !== 'undefined' && replaySpeedMultiplier > 1) {
+    delta = Math.min(delta * replaySpeedMultiplier, 0.3);
+  }
   const elapsedTime = clock.getElapsedTime();
 
   updateSky(elapsedTime, delta);
@@ -17,6 +22,11 @@ function animate() {
   }
 
   if (!isGameOver && !isPaused) {
+    // Fire recorded inputs during replay playback
+    if (typeof replayTick === 'function' && typeof isReplayMode !== 'undefined' && isReplayMode) {
+      replayTick(typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);
+    }
+
     // Tick the sprint timer (starts only once the first piece begins falling)
     if (isSprintMode && sprintTimerActive && !sprintComplete) {
       sprintElapsedMs += delta * 1000;

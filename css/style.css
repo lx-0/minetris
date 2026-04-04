@@ -15555,3 +15555,209 @@ button:focus-visible {
 .transfer-feedback {
   color: #0f0;
 }
+
+
+/* ── Replay system ──────────────────────────────────────────────────────────── */
+
+/* Replay controls overlay (shown during playback) */
+#replay-controls {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid #0f0;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #0f0;
+  pointer-events: all;
+}
+
+#replay-controls-label {
+  color: #0f0;
+  letter-spacing: 0.05em;
+}
+
+#replay-speed-display {
+  color: #fff;
+  min-width: 20px;
+  text-align: center;
+}
+
+.replay-hint {
+  color: #666;
+  font-size: 7px;
+}
+
+/* Game-over replay section */
+#go-replay-section {
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px 0;
+  border-top: 1px solid #333;
+}
+
+#go-replay-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.replay-list-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid #2a2a2a;
+  border-radius: 3px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  flex-wrap: wrap;
+}
+
+.replay-pb-badge {
+  background: #ffd700;
+  color: #000;
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-size: 6px;
+  font-weight: bold;
+}
+
+.replay-item-mode {
+  color: #4ade80;
+  text-transform: uppercase;
+  min-width: 48px;
+}
+
+.replay-item-score {
+  color: #fff;
+  min-width: 50px;
+  text-align: right;
+}
+
+.replay-item-time {
+  color: #888;
+  min-width: 38px;
+}
+
+.replay-item-date {
+  color: #555;
+  flex: 1;
+  text-align: right;
+  font-size: 6px;
+}
+
+.replay-watch-btn,
+.replay-share-btn {
+  background: transparent;
+  border: 1px solid #4ade80;
+  color: #4ade80;
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.replay-share-btn {
+  border-color: #888;
+  color: #888;
+}
+
+.replay-watch-btn:hover {
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.replay-share-btn:hover {
+  border-color: #aaa;
+  color: #aaa;
+}
+
+.replay-share-flyout {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.replay-share-input {
+  width: 100%;
+  background: #111;
+  border: 1px solid #444;
+  color: #4ade80;
+  font-family: monospace;
+  font-size: 9px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+#go-replay-import-btn {
+  width: 100%;
+  margin-top: 4px;
+  font-size: 8px;
+  border-color: #555;
+  color: #aaa;
+}
+
+/* Replay import modal */
+.replay-import-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.replay-import-inner {
+  background: #1a1a1a;
+  border: 1px solid #0f0;
+  border-radius: 8px;
+  padding: 20px;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.replay-import-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 10px;
+  color: #0f0;
+  text-align: center;
+}
+
+.replay-import-input {
+  width: 100%;
+  background: #111;
+  border: 1px solid #444;
+  color: #4ade80;
+  font-family: monospace;
+  font-size: 10px;
+  padding: 8px;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.replay-import-row {
+  display: flex;
+  gap: 8px;
+}
+
+.replay-import-row button {
+  flex: 1;
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+}

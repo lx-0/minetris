@@ -2,6 +2,9 @@
 // Requires: core/gamestate.js loaded first.
 
 function resetGame() {
+  // Stop any active replay recording or playback
+  if (typeof replayOnReset === 'function') replayOnReset();
+
   // Survival: if exiting without game over, record this as a survived session.
   if (isSurvivalMode && !isGameOver && typeof recordSurvivedSession === 'function') {
     recordSurvivedSession({

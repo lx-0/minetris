@@ -91,7 +91,20 @@ function onKeyDown(event) {
     if (typeof resetGame === "function") resetGame();
     return;
   }
+  // Replay: handle speed keys and Escape; all other input is blocked.
+  if (typeof isReplayMode !== 'undefined' && isReplayMode) {
+    if (event.code === 'Digit1' && typeof replaySetSpeed === 'function') replaySetSpeed(1);
+    else if (event.code === 'Digit2' && typeof replaySetSpeed === 'function') replaySetSpeed(2);
+    else if (event.code === 'Digit4' && typeof replaySetSpeed === 'function') replaySetSpeed(4);
+    // Escape auto-unlocks pointer; cleanup is done via the pointerlockchange handler
+    return;
+  }
   if (!controls || !controls.isLocked || isGameOver) return;
+  // Record input for replay
+  if (typeof replayRecordInput === 'function') {
+    replayRecordInput('keydown', event.code,
+      typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);
+  }
   // Translate the physical key code to its canonical default so existing
   // switch/case logic works unchanged after a rebind.
   const _keyCode = _resolveKeyCode(event.code);
@@ -210,6 +223,13 @@ function onKeyDown(event) {
 }
 
 function onKeyUp(event) {
+  if (typeof isReplayMode !== 'undefined' && isReplayMode) return;
+  // Record key-up for replay
+  if (typeof replayRecordInput === 'function' && typeof controls !== 'undefined'
+      && controls && controls.isLocked && !isGameOver) {
+    replayRecordInput('keyup', event.code,
+      typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);
+  }
   const _keyCode = _resolveKeyCode(event.code);
   switch (_keyCode) {
     case "KeyC":

@@ -263,6 +263,26 @@ function spawnFallingPiece() {
     return;
   }
 
+  // Replay playback: inject recorded piece data instead of generating random pieces.
+  if (typeof isReplayMode !== 'undefined' && isReplayMode) {
+    const rp = typeof replayGetNextPiece === 'function' ? replayGetNextPiece() : null;
+    if (!rp) return; // no more recorded pieces — replay is winding down
+    const piece3D = createPiece3D(rp.shape, rp.index);
+    piece3D.position.set(rp.spawnX, WORLD_SIZE * 0.6, rp.spawnZ);
+    piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * _fallMult, 0);
+    piece3D.userData.colorIndex = rp.index;
+    piece3D.userData.timeSinceRotation = 0;
+    piece3D.userData.rotationInterval = rp.rotationInterval;
+    piece3D.userData.nudgeOffsetX = 0;
+    piece3D.userData.nudgeOffsetZ = 0;
+    piece3D.userData.nudgePulseEnd = -1;
+    fallingPiecesGroup.add(piece3D);
+    fallingPieces.push(piece3D);
+    createPieceShadow(piece3D);
+    createPieceTrail(piece3D);
+    return;
+  }
+
   // In Puzzle mode, draw from the fixed queue; stop spawning when exhausted.
   if (isPuzzleMode) {
     const next = typeof drawPuzzlePiece === "function" ? drawPuzzlePiece() : null;
@@ -318,6 +338,9 @@ function spawnFallingPiece() {
     }
   }
 
+  // Auto-start replay recording on first piece spawn (detects game mode from global flags).
+  if (typeof replayAutoStart === 'function') replayAutoStart();
+
   // Draw the next piece from the pre-generated queue; refill to keep it at NEXT_QUEUE_SIZE.
   if (pieceQueue.length === 0) initPieceQueue();
   const { index, shape } = pieceQueue.shift();
@@ -339,6 +362,11 @@ function spawnFallingPiece() {
   piece3D.userData.nudgeOffsetX = 0;
   piece3D.userData.nudgeOffsetZ = 0;
   piece3D.userData.nudgePulseEnd = -1;
+  // Record this piece spawn for replay
+  if (typeof replayRecordPiece === 'function') {
+    replayRecordPiece(index, spawnX, spawnZ, piece3D.userData.rotationInterval,
+      typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);
+  }
   fallingPiecesGroup.add(piece3D);
   fallingPieces.push(piece3D);
   // Apply freeze glow immediately if Time Freeze is active when this piece spawns

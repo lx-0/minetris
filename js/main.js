@@ -431,7 +431,8 @@ function init() {
         // Transition from menu mood → calm when gameplay begins
         if (typeof forceAmbientMood === "function") forceAmbientMood("calm");
         // First-run tutorial (v2.0 — starts immediately with falling piece)
-        if (typeof initTutorial === "function") {
+        if (typeof initTutorial === "function" &&
+            !(typeof isReplayMode !== 'undefined' && isReplayMode)) {
           initTutorial();
           // Wire skip / dismiss buttons
           const skipBtn = document.getElementById("tutorial-skip-btn");
@@ -495,6 +496,12 @@ function init() {
     controls.addEventListener("unlock", function () {
       console.log("Pointer lock released ('unlock' event fired).");
       gameTimerRunning = false;
+
+      // Replay: Escape pressed during playback — stop replay and reset
+      if (typeof isReplayMode !== 'undefined' && isReplayMode) {
+        if (typeof replayStopPlayback === 'function') replayStopPlayback();
+        return;
+      }
 
       // ── Editor mode: hide editor HUD and return to main menu (or test puzzle) ─
       if (isEditorMode) {
@@ -577,6 +584,14 @@ function init() {
 
   const goMainMenuBtn = document.getElementById("go-main-menu-btn");
   if (goMainMenuBtn) goMainMenuBtn.addEventListener("click", resetGame);
+
+  // Replay: import button on game-over screen
+  const goReplayImportBtn = document.getElementById("go-replay-import-btn");
+  if (goReplayImportBtn) {
+    goReplayImportBtn.addEventListener("click", function() {
+      if (typeof replayShowImportDialog === 'function') replayShowImportDialog();
+    });
+  }
 
   // Return to Survival from dungeon game-over (cave mouth launch path)
   const goReturnSurvivalBtn = document.getElementById("go-return-survival-btn");

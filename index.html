@@ -682,8 +682,21 @@
           <button id="first-game-explore-btn">Explore Modes</button>
         </div>
         <button id="go-return-survival-btn" style="display:none;">&#x1F5FB; Return to Survival</button>
+        <!-- Replay section -->
+        <div id="go-replay-section" style="display:none;">
+          <div class="go-label" style="margin-bottom:6px;">REPLAYS</div>
+          <div id="go-replay-list"></div>
+          <button id="go-replay-import-btn">&#x1F4E5; Import Replay</button>
+        </div>
         <button id="play-again-btn">Play Again <span class="key-hint">[P]</span></button>
         <button id="go-main-menu-btn">Main Menu</button>
+      </div>
+
+      <!-- Replay controls overlay (visible during playback) -->
+      <div id="replay-controls" style="display:none;">
+        <span id="replay-controls-label">&#9654; REPLAY</span>
+        <span id="replay-speed-display">1x</span>
+        <span class="replay-hint">1/2/4 = speed &nbsp; ESC = stop</span>
       </div>
 
       <!-- Blitz complete screen -->
@@ -2033,6 +2046,7 @@
     <script src="js/player/touch-controls.js"></script>
     <script src="js/player/input.js"></script>
     <script src="js/player/powerups.js"></script>
+    <script src="js/core/replay.js"></script>
     <script src="js/core/game-loop.js"></script>
     <script src="js/rendering/resize.js"></script>
         <script src="js/main.js"></script>

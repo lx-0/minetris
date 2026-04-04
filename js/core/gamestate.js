@@ -178,6 +178,14 @@ function triggerGameOver() {
   isGameOver = true;
   gameTimerRunning = false;
   if (typeof clearSaveState === "function") clearSaveState();
+  // Finish replay recording (save to localStorage, detect personal best)
+  if (typeof replayFinishRecording === 'function') {
+    replayFinishRecording(score, linesCleared, blocksMined, gameElapsedSeconds);
+  }
+  // Stop playback overlay if we were watching a replay
+  if (typeof isReplayMode !== 'undefined' && isReplayMode && typeof replayStopPlayback === 'function') {
+    replayStopPlayback();
+  }
   // Contextual game tooltip: first game over (dismiss any active tooltip first)
   if (typeof gameTooltipDismiss === 'function') gameTooltipDismiss();
   if (typeof gameTooltip === 'function') gameTooltip('gameOver', { score: score });
@@ -523,6 +531,9 @@ function triggerGameOver() {
 
   // First-game teaser: show "more ways to play" after first game
   if (typeof onFirstGameOver === 'function') onFirstGameOver();
+
+  // Populate replay list on game-over screen
+  if (typeof replayInitGameOverUI === 'function') replayInitGameOverUI();
 
   // Show Game Over overlay
   const gameOverEl = document.getElementById("game-over-screen");
