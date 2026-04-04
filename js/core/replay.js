@@ -14,6 +14,7 @@ let _replayData      = null;  // { version, mode, date, score, duration, pieces[
 // ── Playback state ─────────────────────────────────────────────────────────────
 let isReplayMode          = false;  // blocks live input when true
 let _replayPlaying        = false;
+let _replayPaused         = false;  // true while paused mid-playback
 let _replayPlayData       = null;
 let _replayPieceIdx       = 0;
 let _replayInputIdx       = 0;
@@ -110,6 +111,7 @@ function replayOnReset() {
   if (_replayPlaying) {
     isReplayMode          = false;
     _replayPlaying        = false;
+    _replayPaused         = false;
     _replayPlayData       = null;
     _replayPieceIdx       = 0;
     _replayInputIdx       = 0;
@@ -146,6 +148,7 @@ function replayStartPlayback(data, speed) {
 function replayStopPlayback() {
   isReplayMode          = false;
   _replayPlaying        = false;
+  _replayPaused         = false;
   _replayPlayData       = null;
   _replayPieceIdx       = 0;
   _replayInputIdx       = 0;
@@ -175,7 +178,7 @@ function replayGetNextPiece() {
 
 /** Called from game loop each frame with current gameElapsedSeconds. */
 function replayTick(t) {
-  if (!_replayPlaying || !_replayPlayData) return;
+  if (!_replayPlaying || !_replayPlayData || _replayPaused) return;
   // Fire all pending inputs whose game-time has been reached
   while (_replayInputIdx < _replayPlayData.inputs.length) {
     const inp = _replayPlayData.inputs[_replayInputIdx];
@@ -183,6 +186,14 @@ function replayTick(t) {
     _replayFireInput(inp);
     _replayInputIdx++;
   }
+}
+
+/** Toggle pause / resume during replay playback. */
+function replayTogglePause() {
+  if (!_replayPlaying) return;
+  _replayPaused = !_replayPaused;
+  const label = document.getElementById('replay-controls-label');
+  if (label) label.textContent = _replayPaused ? '\u23F8 PAUSED' : '\u25B6 REPLAY';
 }
 
 function _replayFireInput(inp) {
@@ -233,6 +244,8 @@ function _showReplayControls(speed) {
   if (!el) return;
   el.style.display = 'flex';
   replaySetSpeed(speed || 1);
+  const label = document.getElementById('replay-controls-label');
+  if (label) label.textContent = '\u25B6 REPLAY';
 }
 
 function _hideReplayControls() {

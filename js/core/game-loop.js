@@ -17,10 +17,13 @@ function animate() {
   const rawDelta = clock.getDelta();
   // Cap delta to prevent timer skips after pause/tab-away (THREE.Clock accumulates real time)
   let delta = Math.min(rawDelta, 0.1);
-  // Scale simulation time for replay speed control (2x / 4x fast-forward)
-  if (typeof isReplayMode !== 'undefined' && isReplayMode &&
-      typeof replaySpeedMultiplier !== 'undefined' && replaySpeedMultiplier > 1) {
-    delta = Math.min(delta * replaySpeedMultiplier, 0.3);
+  // Scale simulation time for replay speed control (2x / 4x fast-forward); freeze when paused.
+  if (typeof isReplayMode !== 'undefined' && isReplayMode) {
+    if (typeof _replayPaused !== 'undefined' && _replayPaused) {
+      delta = 0;
+    } else if (typeof replaySpeedMultiplier !== 'undefined' && replaySpeedMultiplier > 1) {
+      delta = Math.min(delta * replaySpeedMultiplier, 0.3);
+    }
   }
   const elapsedTime = clock.getElapsedTime();
 
