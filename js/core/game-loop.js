@@ -206,6 +206,7 @@ function animate() {
         if ((isPuzzleMode || isCustomPuzzleMode) && typeof updatePuzzleHUD === "function") updatePuzzleHUD();
       }
       updateLineClear(delta);
+      if (typeof updateWeather === 'function') updateWeather(delta);
       if (typeof updateSeasonalParticles === 'function') updateSeasonalParticles(delta);
       if (typeof updateHazardBlocks === 'function') updateHazardBlocks(delta);
       if (typeof tickDungeonModifiers === 'function') tickDungeonModifiers(delta);

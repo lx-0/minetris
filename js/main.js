@@ -63,6 +63,7 @@ function init() {
   }
 
   initSky();
+  if (typeof initWeather === 'function') initWeather();
 
   worldGroup = new THREE.Group();
   scene.add(worldGroup);

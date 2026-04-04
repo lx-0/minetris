@@ -1192,6 +1192,15 @@
           <div class="settings-hint">Disables camera shake, screen flash, and chromatic aberration</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="weather-effects-toggle">Weather Effects</label>
+            <label class="cb-toggle-switch">
+              <input type="checkbox" id="weather-effects-toggle" checked>
+              <span class="cb-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-hint">Rain, snow, and storm particles during gameplay</div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-row settings-row-toggle">
             <label class="settings-label settings-label-toggle" for="show-all-modes-toggle">Show All Modes</label>
             <label class="cb-toggle-switch">
               <input type="checkbox" id="show-all-modes-toggle">
@@ -2425,6 +2434,7 @@
     <script src="js/player/gamepad.js"></script>
     <script src="js/player/player.js"></script>
     <script src="js/rendering/sky.js"></script>
+    <script src="js/rendering/weather.js"></script>
     <script src="js/rendering/postprocessing.js"></script>
     <script src="js/player/crafting.js"></script>
     <script src="js/modes/daily.js"></script>

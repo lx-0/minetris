@@ -871,6 +871,14 @@ function initSettings() {
     });
   }
 
+  const weatherToggle = document.getElementById("weather-effects-toggle");
+  if (weatherToggle) {
+    weatherToggle.checked = (typeof isWeatherEnabled === 'function') ? isWeatherEnabled() : true;
+    weatherToggle.addEventListener("change", function() {
+      if (typeof setWeatherEnabled === 'function') setWeatherEnabled(this.checked);
+    });
+  }
+
   // Wire up "Show all modes" toggle.
   const samToggle = document.getElementById("show-all-modes-toggle");
   if (samToggle) {
@@ -981,6 +989,8 @@ function openSettings(onClose) {
   if (cbToggle) cbToggle.checked = colorblindMode;
   const rmToggleSync = document.getElementById("reduced-motion-toggle");
   if (rmToggleSync) rmToggleSync.checked = reducedMotionEnabled;
+  const weatherToggleSync = document.getElementById("weather-effects-toggle");
+  if (weatherToggleSync) weatherToggleSync.checked = (typeof isWeatherEnabled === 'function') ? isWeatherEnabled() : true;
   const samToggleSync = document.getElementById("show-all-modes-toggle");
   if (samToggleSync) samToggleSync.checked = (typeof isShowAllModesEnabled === "function") && isShowAllModesEnabled();
   const tcToggleSync = document.getElementById("touch-controls-toggle");
