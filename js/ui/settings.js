@@ -407,6 +407,9 @@ function _onKeybindCapture(e) {
 }
 
 function _initControlsTab() {
+  // Initialise gamepad support (safe no-op if API absent).
+  if (typeof initGamepad === 'function') initGamepad();
+
   // Tab switching.
   const tabGeneral  = document.getElementById("settings-tab-general");
   const tabControls = document.getElementById("settings-tab-controls");
@@ -419,6 +422,8 @@ function _initControlsTab() {
     if (tabControls) tabControls.classList.toggle("settings-tab-active", isControls);
     if (paneGeneral)  paneGeneral.style.display  = isControls ? "none" : "";
     if (paneControls) paneControls.style.display = isControls ? ""     : "none";
+    // Refresh gamepad status whenever the Controls tab is shown.
+    if (isControls && typeof _gpUpdateStatusUI === 'function') _gpUpdateStatusUI();
   }
 
   if (tabGeneral)  tabGeneral.addEventListener("click",  function() { _showTab("general"); });

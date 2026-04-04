@@ -35,6 +35,9 @@ function animate() {
     _bgThrottleAcc = 0;
   }
 
+  // Poll gamepad each frame so movement flags and one-shot actions stay in sync.
+  if (typeof pollGamepad === 'function') pollGamepad();
+
   if (!isGameOver && !isPaused) {
     // Fire recorded inputs during replay playback
     if (typeof replayTick === 'function' && typeof isReplayMode !== 'undefined' && isReplayMode) {
@@ -248,10 +251,14 @@ function animate() {
     const _modSpeedMult = _movWmod ? _movWmod.playerSpeedMult : 1.0;
     const _iceEffect = playerStandingOnIce || (_movWmod && _movWmod.iceAllBlocks);
     const speedDelta = MOVEMENT_SPEED * _modSpeedMult * (_iceEffect ? 1.2 : 1.0) * delta;
-    if (moveForward) controls.moveForward(speedDelta);
-    if (moveBackward) controls.moveForward(-speedDelta);
-    if (moveLeft) controls.moveRight(-speedDelta);
-    if (moveRight) controls.moveRight(speedDelta);
+    const _gpFwd  = typeof gpMoveForward  !== 'undefined' && gpMoveForward;
+    const _gpBack = typeof gpMoveBackward !== 'undefined' && gpMoveBackward;
+    const _gpLeft = typeof gpMoveLeft     !== 'undefined' && gpMoveLeft;
+    const _gpRgt  = typeof gpMoveRight    !== 'undefined' && gpMoveRight;
+    if (moveForward  || _gpFwd)  controls.moveForward(speedDelta);
+    if (moveBackward || _gpBack) controls.moveForward(-speedDelta);
+    if (moveLeft     || _gpLeft) controls.moveRight(-speedDelta);
+    if (moveRight    || _gpRgt)  controls.moveRight(speedDelta);
     playerPosition.y += playerVelocity.y * delta;
     // Prevent flying below ground in editor mode
     if (isEditorMode && playerPosition.y < PLAYER_HEIGHT) {
