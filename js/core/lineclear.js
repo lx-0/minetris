@@ -191,6 +191,11 @@ function checkLineClear(newBlocks) {
   if (typeof tutorialNotify === "function") tutorialNotify("lineClear");
   // Contextual game tooltip: first line clear
   if (typeof gameTooltip === 'function') gameTooltip('lineClear');
+  // In-game tips
+  if (typeof tutorialTip === 'function') {
+    if (_lcIsTSpin) tutorialTip('firstTSpin');
+    if (completeLevels.length === 4) tutorialTip('firstTetris');
+  }
 
   // Achievement: first line clear, Tetramino
   if (typeof achOnLineClear === "function") achOnLineClear(completeLevels.length);
@@ -231,6 +236,9 @@ function checkLineClear(newBlocks) {
   }
   lastClearTime = now;
   if (comboCount > sessionHighestComboCount) sessionHighestComboCount = comboCount;
+
+  // In-game tip: first combo (fires when combo reaches 2)
+  if (comboCount === 2 && typeof tutorialTip === 'function') tutorialTip('firstCombo');
 
   // Achievement: Combo Starter, Combo King
   if (typeof achOnComboUpdate === "function") achOnComboUpdate(comboCount);

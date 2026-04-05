@@ -541,6 +541,8 @@ function applyNudge(dx, dz) {
 
   // Rotate/nudge click sound
   if (typeof playRotateSound === 'function') playRotateSound();
+  if (typeof tutorialNotify === "function") tutorialNotify("nudge");
+  if (typeof tutorialTip === "function") tutorialTip("firstNudge");
   // Start cooldown and emissive pulse
   nudgeCooldown = NUDGE_COOLDOWN_SECS;
   piece.userData.nudgePulseEnd = clock.getElapsedTime() + NUDGE_EMISSIVE_PULSE_SECS;

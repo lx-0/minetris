@@ -878,8 +878,9 @@ function initSettings() {
   const replayTutBtn = document.getElementById("settings-replay-tutorial-btn");
   if (replayTutBtn) {
     replayTutBtn.addEventListener("click", function () {
-      try { localStorage.setItem('mineCtris_tutorialDone', ''); } catch (_e) {}
-      try { localStorage.setItem('mineCtris_craftHintShown', ''); } catch (_e) {}
+      try { localStorage.removeItem('mineCtris_tutorialDone'); } catch (_e) {}
+      try { localStorage.removeItem('mineCtris_tutorialProgress'); } catch (_e) {}
+      try { localStorage.removeItem('mineCtris_craftHintShown'); } catch (_e) {}
       // Show confirmation via event-end-toast (reusable toast element)
       var toast = document.getElementById("event-end-toast");
       if (toast) {

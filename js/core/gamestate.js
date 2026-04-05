@@ -146,6 +146,8 @@ function updateDangerWarning() {
   dangerTextEl.style.display = inDanger ? "block" : "none";
   // Contextual game tooltip: first danger warning
   if (inDanger && typeof gameTooltip === 'function') gameTooltip('dangerWarning');
+  // In-game tip: first danger
+  if (inDanger && typeof tutorialTip === 'function') tutorialTip('firstDanger');
 }
 
 /** Check if any landed block has reached the game-over height. */

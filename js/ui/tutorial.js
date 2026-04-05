@@ -1,72 +1,124 @@
-// tutorial.js — First-run interactive tutorial (v3.0).
-// 5-step guided overlay shown at the start of the player's very first Classic game.
-// Each step pauses gameplay, highlights the relevant control, and shows a "Got it!" button.
-// A Skip button is always visible so experienced players can bail immediately.
+// tutorial.js — First-run interactive tutorial (v4.0).
+// 7-step guided overlay shown at the start of the player's very first Classic game.
+// Interactive steps auto-advance when the player performs the required action.
+// Explanation steps pause gameplay and require "Got it!" to proceed.
+// Progress is saved so returning players can resume where they left off.
+// A "Skip Tutorial" button is always visible.
 // Requires: state.js loaded first (for global flags).
 
-const TUTORIAL_DONE_KEY = 'mineCtris_tutorialDone';
-const CRAFT_HINT_KEY    = 'mineCtris_craftHintShown';
+const TUTORIAL_DONE_KEY     = 'mineCtris_tutorialDone';
+const TUTORIAL_PROGRESS_KEY = 'mineCtris_tutorialProgress';
+const CRAFT_HINT_KEY        = 'mineCtris_craftHintShown';
 
-// ── Step definitions ──────────────────────────────────────────────────────────
-// trigger: not used for pause-based flow (all steps advance via "Got it!" button).
-// highlight: id of the icon variant shown in #tutorial-highlight-icon.
-// pauseGame: true on all real steps; false only on the final "You're ready!" wrap-up.
+// ── Tips system keys ────────────────────────────────────────────────────────
+const TIP_KEYS = {
+  firstNudge:   'mineCtris_tip_firstNudge',
+  firstCombo:   'mineCtris_tip_firstCombo',
+  firstTSpin:   'mineCtris_tip_firstTSpin',
+  firstDanger:  'mineCtris_tip_firstDanger',
+  firstTetris:  'mineCtris_tip_firstTetris',
+};
+
+// ── Step definitions ─────────────────────────────────────────────────────────
+// waitFor: event name from tutorialNotify() that auto-advances this step.
+//          null means the step requires "Got it!" (explain-only).
+// canDismiss: true means "Got it!" is also shown as a manual skip for interactive steps.
+// pauseGame: true halts falling pieces while this step is showing.
 const TUTORIAL_STEPS = [
   {
     id: 'move',
-    text: 'Move & Rotate',
-    subtext: 'Use WASD or Arrow Keys to steer the falling piece. Press Q / E (or Z / X) to rotate it.',
+    text: 'Move & Look Around',
+    subtext: 'Use WASD to walk around the world. Move your mouse to look. Press W to start!',
     highlight: 'move',
-    pauseGame: true,
+    pauseGame: false,
+    waitFor: 'move',
+    actionLabel: 'Walk forward to continue\u2026',
   },
   {
-    id: 'drop',
-    text: 'Hard Drop',
-    subtext: 'Press Space to instantly slam the piece to the bottom. On mobile, swipe down fast.',
-    highlight: 'drop',
-    pauseGame: true,
+    id: 'mine',
+    text: 'Mine a Block',
+    subtext: 'Look at any block and left-click to mine it. Mined blocks go straight to your inventory!',
+    highlight: 'mine',
+    pauseGame: false,
+    waitFor: 'blockMine',
+    actionLabel: 'Mine a block to continue\u2026',
   },
   {
-    id: 'hold',
-    text: 'Hold Piece',
-    subtext: 'Press Shift (or C) to save the current piece. Tap again later to swap it back in.',
-    highlight: 'hold',
+    id: 'nudge',
+    text: 'Steer the Falling Piece',
+    subtext: 'Use Q and E to nudge the falling piece left or right. Z and X move it toward or away from you. The ghost shadow below shows where it will land!',
+    highlight: 'nudge',
+    pauseGame: false,
+    waitFor: 'nudge',
+    actionLabel: 'Nudge the falling piece to continue\u2026',
+  },
+  {
+    id: 'lineclear',
+    text: 'Clear Lines',
+    subtext: 'Fill a complete row of the grid to clear it and score! Clearing 4 rows at once is a TETRIS \u2014 the ultimate move!',
+    highlight: 'score',
+    pauseGame: false,
+    waitFor: 'lineClear',
+    actionLabel: 'Clear a line to continue\u2026 (or click Got it!)',
+    canDismiss: true,
+  },
+  {
+    id: 'combos',
+    text: 'Combos & T-Spins',
+    subtext: 'Clear lines back-to-back for COMBO bonuses! Rotate a T-piece into a tight gap for a T-SPIN, which awards massive bonus XP. Back-to-back TETRIS clears multiply your score further!',
+    highlight: 'combo',
     pauseGame: true,
+    waitFor: null,
+    canDismiss: true,
   },
   {
     id: 'craft',
-    text: 'Ore Blocks & Crafting',
-    subtext: 'Mine gold, diamond and lava blocks as they fall — collect materials, then press C to craft tools and power-ups.',
+    text: 'Craft & Upgrade',
+    subtext: 'Rare ore blocks fall too \u2014 mine GOLD, DIAMOND, and LAVA blocks! Press C to open the Crafting Bench and upgrade your pickaxe or craft powerful power-ups.',
     highlight: 'craft',
-    pauseGame: true,
+    pauseGame: false,
+    waitFor: 'craftingOpen',
+    actionLabel: 'Press C to open crafting\u2026 (or click Got it!)',
+    canDismiss: true,
   },
   {
-    id: 'score',
-    text: 'Line Clears & Scoring',
-    subtext: 'Fill a complete row to clear it. Clear multiple rows at once for big bonuses. Dungeon entries award bonus XP!',
-    highlight: 'score',
+    id: 'modes',
+    text: 'Explore All Modes',
+    subtext: null,
+    highlight: 'modes',
     pauseGame: true,
+    waitFor: null,
+    canDismiss: true,
   },
 ];
 
 let _tutorialActive  = false;
-let _tutorialPaused  = false; // true while any pauseGame step is showing
+let _tutorialPaused  = false;
 let _tutorialStep    = 0;
+let _waitingForEvent = null; // event name we're waiting for, or null
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /** Call when the game starts (pointer lock acquired for the first time). */
 function initTutorial() {
   if (_isTutorialDone()) return;
-  _tutorialActive = true;
-  _tutorialStep   = 0;
+  _tutorialActive  = true;
+  // Resume from saved progress if available
+  _tutorialStep = _loadProgress();
+  _waitingForEvent = null;
+  _showStep(_tutorialStep);
+}
+
+/** Replay the tutorial from the beginning (called from menu / settings). */
+function replayTutorial() {
+  _clearProgress();
+  _tutorialActive  = true;
+  _tutorialStep    = 0;
+  _waitingForEvent = null;
   _showStep(0);
 }
 
-/**
- * Advance to the next step (called by the "Got it!" button).
- * On the last step this ends the tutorial instead.
- */
+/** Advance to the next step (called by the "Got it!" button). */
 function dismissTutorialStep() {
   if (!_tutorialActive) return;
   _advanceStep();
@@ -74,20 +126,26 @@ function dismissTutorialStep() {
 
 /** Skip the tutorial immediately. */
 function skipTutorial() {
-  _endTutorial();
+  _endTutorial(/* skipped */ true);
 }
 
 /**
  * Notify the tutorial that a player action occurred.
- * Kept for compatibility — no steps currently advance on events,
- * but callers in lineclear.js / input.js etc. still fire this.
+ * Auto-advances interactive steps when the awaited event fires.
+ * @param {string} event  e.g. 'move', 'nudge', 'blockMine', 'lineClear', 'craftingOpen', 'pieceLand'
  */
-function tutorialNotify(/* event */) {
-  // no-op in v3.0 — all advancement is via Got it! / Skip
+function tutorialNotify(event) {
+  if (!_tutorialActive) return;
+  if (_waitingForEvent && event === _waitingForEvent) {
+    // Mark received so we don't re-trigger
+    _waitingForEvent = null;
+    // Brief delay so the player sees the action feedback before the step changes
+    setTimeout(_advanceStep, 600);
+  }
 }
 
 /**
- * Tick the tutorial — no auto-advance timers in v3.0.
+ * Tick the tutorial — no per-frame logic in v4.0.
  * Kept so game-loop.js call continues to work.
  */
 function updateTutorial(/* delta */) {}
@@ -97,12 +155,12 @@ function isTutorialPaused() {
   return _tutorialPaused;
 }
 
-/** Returns true when tutorial wants pieces to fall at 50% speed (unused in v3, kept for compat). */
+/** Returns true when tutorial wants pieces to fall at 50% speed (unused in v4). */
 function isTutorialSlowActive() {
   return false;
 }
 
-/** Returns true when tutorial wants to suppress new piece spawns (unused in v3, kept for compat). */
+/** Returns true when tutorial wants to suppress new piece spawns (unused in v4). */
 function isTutorialSpawnSuppressed() {
   return false;
 }
@@ -112,7 +170,31 @@ function isTutorialActive() {
   return _tutorialActive;
 }
 
-// ── Public API (context-sensitive crafting hint) ───────────────────────────────
+// ── Tips system ───────────────────────────────────────────────────────────────
+
+/**
+ * Fire a contextual in-game tip (shown once per lifetime).
+ * Call from relevant game events after the tutorial is done.
+ * @param {string} key   One of: 'firstNudge', 'firstCombo', 'firstTSpin', 'firstDanger', 'firstTetris'
+ */
+function tutorialTip(key) {
+  if (_tutorialActive) return;  // don't overlap with tutorial
+  if (!TIP_KEYS[key]) return;
+  try {
+    if (localStorage.getItem(TIP_KEYS[key]) === '1') return;
+    localStorage.setItem(TIP_KEYS[key], '1');
+  } catch (_e) { return; }
+  const messages = {
+    firstNudge:  '\u25B6 Tip: Use Q/E and Z/X to precisely position falling pieces!',
+    firstCombo:  '\u26A1 Combo! Keep clearing lines to grow your multiplier!',
+    firstTSpin:  '\u2728 T-Spin! Incredible technique \u2014 keep it up!',
+    firstDanger: '\u26A0 Stack is getting high! Mine faster to clear room!',
+    firstTetris: '\uD83D\uDC8E TETRIS! 4 lines at once \u2014 that\'s elite play!',
+  };
+  const text = messages[key];
+  if (!text) return;
+  _showTip(text);
+}
 
 /**
  * Check if the context-sensitive crafting hint should fire.
@@ -121,7 +203,6 @@ function isTutorialActive() {
  */
 function craftHintCheck(inv) {
   if (_isCraftHintShown()) return;
-  // '#8b4513' is the CSS color for Wood blocks
   if ((inv['#8b4513'] || 0) < 1) return;
   _markCraftHintShown();
   _showCraftHintToast();
@@ -133,13 +214,33 @@ function _isTutorialDone() {
   try {
     return localStorage.getItem(TUTORIAL_DONE_KEY) === '1';
   } catch (_e) {
-    return true; // localStorage unavailable — skip tutorial
+    return true;
   }
 }
 
 function _markTutorialDone() {
   try {
     localStorage.setItem(TUTORIAL_DONE_KEY, '1');
+  } catch (_e) {}
+}
+
+function _loadProgress() {
+  try {
+    const v = parseInt(localStorage.getItem(TUTORIAL_PROGRESS_KEY), 10);
+    if (!isNaN(v) && v >= 0 && v < TUTORIAL_STEPS.length) return v;
+  } catch (_e) {}
+  return 0;
+}
+
+function _saveProgress(step) {
+  try {
+    localStorage.setItem(TUTORIAL_PROGRESS_KEY, String(step));
+  } catch (_e) {}
+}
+
+function _clearProgress() {
+  try {
+    localStorage.removeItem(TUTORIAL_PROGRESS_KEY);
   } catch (_e) {}
 }
 
@@ -161,11 +262,26 @@ function _showCraftHintToast() {
   const toast = document.getElementById('craft-hint-toast');
   if (!toast) return;
   toast.style.display = 'block';
-  setTimeout(() => { toast.style.display = 'none'; }, 4000);
+  setTimeout(function () { toast.style.display = 'none'; }, 4000);
+}
+
+function _showTip(text) {
+  const tipEl = document.getElementById('tutorial-tip-banner');
+  if (!tipEl) return;
+  tipEl.textContent = text;
+  tipEl.classList.remove('tut-tip-hide');
+  tipEl.style.display = 'block';
+  clearTimeout(tipEl._hideTimer);
+  tipEl._hideTimer = setTimeout(function () {
+    tipEl.classList.add('tut-tip-hide');
+    setTimeout(function () { tipEl.style.display = 'none'; tipEl.classList.remove('tut-tip-hide'); }, 400);
+  }, 4000);
 }
 
 function _showStep(idx) {
-  if (idx >= TUTORIAL_STEPS.length) { _endTutorial(); return; }
+  if (idx >= TUTORIAL_STEPS.length) { _endTutorial(false); return; }
+
+  _saveProgress(idx);
 
   const overlayEl   = document.getElementById('tutorial-overlay');
   const textEl      = document.getElementById('tutorial-text');
@@ -173,7 +289,8 @@ function _showStep(idx) {
   const dismissBtn  = document.getElementById('tutorial-dismiss-btn');
   const stepCountEl = document.getElementById('tutorial-step-count');
   const hlIconEl    = document.getElementById('tutorial-highlight-icon');
-  // Legacy arrow indicators — hide them in v3
+  const actionEl    = document.getElementById('tutorial-action-label');
+  // Legacy arrow indicators — hide in v4
   const arrowDown   = document.getElementById('tutorial-arrow-down');
   const arrowCross  = document.getElementById('tutorial-arrow-crosshair');
 
@@ -184,84 +301,179 @@ function _showStep(idx) {
   textEl.textContent = step.text;
 
   if (subtextEl) {
-    subtextEl.textContent = step.subtext || '';
-    subtextEl.style.display = step.subtext ? 'block' : 'none';
+    if (step.subtext) {
+      subtextEl.textContent = step.subtext;
+      subtextEl.style.display = 'block';
+    } else {
+      subtextEl.style.display = 'none';
+    }
   }
 
-  // "Got it!" shown on every step
+  // "Got it!" button: always show on dismiss-capable steps or explain-only steps
   if (dismissBtn) {
-    dismissBtn.style.display = 'inline-block';
+    const showDismiss = step.canDismiss || !step.waitFor;
+    dismissBtn.style.display = showDismiss ? 'inline-block' : 'none';
+    dismissBtn.textContent   = step.waitFor ? 'Got it!' : 'Got it!';
   }
 
-  // Step counter e.g. "2 / 5"
+  // Action waiting label
+  if (actionEl) {
+    if (step.waitFor && step.actionLabel) {
+      actionEl.textContent = step.actionLabel;
+      actionEl.style.display = 'block';
+    } else {
+      actionEl.style.display = 'none';
+    }
+  }
+
+  // Step counter
   if (stepCountEl) {
     stepCountEl.textContent = (idx + 1) + ' / ' + TUTORIAL_STEPS.length;
   }
 
-  // Highlight icon — swap CSS class on the icon container
+  // Highlight icon area
   if (hlIconEl) {
     hlIconEl.className = 'tutorial-hl-' + (step.highlight || '');
-    hlIconEl.style.display = step.highlight ? 'flex' : 'none';
-    hlIconEl.innerHTML = _buildHighlightHTML(step.highlight);
+    const html = _buildHighlightHTML(step.highlight, step);
+    if (html) {
+      hlIconEl.innerHTML = html;
+      hlIconEl.style.display = 'flex';
+    } else {
+      hlIconEl.style.display = 'none';
+    }
   }
 
   // Hide legacy arrows
   if (arrowDown)  arrowDown.style.display  = 'none';
   if (arrowCross) arrowCross.style.display = 'none';
 
-  // Pause gameplay while this step is showing
+  // Pause logic
   _tutorialPaused = !!step.pauseGame;
+
+  // Set up event wait
+  _waitingForEvent = step.waitFor || null;
 
   overlayEl.style.display = 'flex';
 }
 
-/** Returns the inner HTML for a highlight icon given a highlight key. */
-function _buildHighlightHTML(key) {
+/** HTML for the highlight icon area, keyed by highlight type. */
+function _buildHighlightHTML(key, step) {
   switch (key) {
     case 'move':
       return (
         '<div class="thl-grid">' +
-          '<span></span><span class="thl-key">&#x2191;</span><span></span>' +
-          '<span class="thl-key">&#x2190;</span><span class="thl-key">&#x2193;</span><span class="thl-key">&#x2192;</span>' +
-          '<span class="thl-sep">+</span>' +
-          '<span class="thl-key thl-wide">Q</span><span class="thl-sep">/</span><span class="thl-key thl-wide">E</span>' +
+          '<span></span><span class="thl-key">W</span><span></span>' +
+          '<span class="thl-key">A</span><span class="thl-key">S</span><span class="thl-key">D</span>' +
         '</div>'
       );
-    case 'drop':
-      return '<span class="thl-key thl-spacebar">SPACE</span>';
-    case 'hold':
-      return '<span class="thl-key thl-widekey">SHIFT</span>';
+    case 'mine':
+      return '<span class="thl-key thl-widekey">Left Click</span>';
+    case 'nudge':
+      return (
+        '<div class="thl-grid">' +
+          '<span class="thl-key thl-wide">Q</span><span class="thl-sep">/</span><span class="thl-key thl-wide">E</span>' +
+          '<span class="thl-sep" style="grid-column:span 3">+</span>' +
+          '<span class="thl-key thl-wide">Z</span><span class="thl-sep">/</span><span class="thl-key thl-wide">X</span>' +
+        '</div>'
+      );
+    case 'score':
+      return '<span class="thl-score-icon">\uD83D\uDCCA</span>';
+    case 'combo':
+      return (
+        '<div class="thl-combo-row">' +
+          '<span class="thl-combo-chip">COMBO</span>' +
+          '<span class="thl-combo-chip thl-combo-tspin">T-SPIN</span>' +
+        '</div>'
+      );
     case 'craft':
       return '<span class="thl-key thl-ckey">C</span>';
-    case 'score':
-      return '<span class="thl-score-icon">&#x1F4CA;</span>';
+    case 'modes':
+      return _buildModesHTML();
     default:
       return '';
   }
 }
 
-function _advanceStep() {
-  _tutorialStep++;
-  _tutorialPaused = false;
-  _showStep(_tutorialStep);
+function _buildModesHTML() {
+  var modes = [
+    { icon: '\u221E', name: 'Classic', desc: 'Endless play, rising speed' },
+    { icon: '\u23F1', name: 'Sprint', desc: 'Clear 40 lines fastest' },
+    { icon: '\u26A1', name: 'Blitz', desc: '2 min, max score' },
+    { icon: '\uD83D\uDCC5', name: 'Daily', desc: 'Same seed as everyone' },
+    { icon: '\uD83D\uDC80', name: 'Survival', desc: 'Permadeath world' },
+    { icon: '\uD83D\uDC65', name: 'Co-op', desc: 'Mine with a partner' },
+  ];
+  var html = '<div class="thl-modes-grid">';
+  modes.forEach(function (m) {
+    html += '<div class="thl-mode-card">' +
+      '<span class="thl-mode-icon">' + m.icon + '</span>' +
+      '<span class="thl-mode-name">' + m.name + '</span>' +
+      '<span class="thl-mode-desc">' + m.desc + '</span>' +
+    '</div>';
+  });
+  html += '</div>';
+  return html;
 }
 
-function _endTutorial() {
-  // Metrics: distinguish complete vs skip
-  var reachedFinalStep = _tutorialStep >= TUTORIAL_STEPS.length - 1;
-  if (reachedFinalStep) {
-    if (typeof metricsTutorialComplete === 'function') metricsTutorialComplete();
+function _advanceStep() {
+  if (!_tutorialActive) return;
+  _tutorialPaused    = false;
+  _waitingForEvent   = null;
+  _tutorialStep++;
+  if (_tutorialStep >= TUTORIAL_STEPS.length) {
+    _showCompletionScreen();
   } else {
-    if (typeof metricsTutorialSkip === 'function') metricsTutorialSkip();
+    _showStep(_tutorialStep);
   }
-  _tutorialActive = false;
-  _tutorialPaused = false;
+}
+
+function _showCompletionScreen() {
+  // Hide the regular step overlay
+  const overlayEl = document.getElementById('tutorial-overlay');
+  if (overlayEl) overlayEl.style.display = 'none';
+
+  // Show the completion screen
+  const completionEl = document.getElementById('tutorial-completion');
+  if (completionEl) {
+    completionEl.style.display = 'flex';
+  }
+
+  // Award XP
+  if (typeof awardTutorialXP === 'function') awardTutorialXP();
+
+  // Mark done + clear progress
+  _tutorialActive  = false;
+  _tutorialPaused  = false;
   _markTutorialDone();
-  // Transition from minimal to full menu for next visit
+  _clearProgress();
+
+  // Remove first-launch class from menu
   var instrEl = document.getElementById('instructions');
   if (instrEl) instrEl.classList.remove('first-launch');
-  // Award one-time tutorial completion XP
+
+  // Metrics
+  if (typeof metricsTutorialComplete === 'function') metricsTutorialComplete();
+}
+
+function _endTutorial(skipped) {
+  _tutorialActive  = false;
+  _tutorialPaused  = false;
+  _waitingForEvent = null;
+
+  _markTutorialDone();
+  _clearProgress();
+
+  var instrEl = document.getElementById('instructions');
+  if (instrEl) instrEl.classList.remove('first-launch');
+
   if (typeof awardTutorialXP === 'function') awardTutorialXP();
+
+  if (skipped) {
+    if (typeof metricsTutorialSkip === 'function') metricsTutorialSkip();
+  } else {
+    if (typeof metricsTutorialComplete === 'function') metricsTutorialComplete();
+  }
+
   const overlayEl = document.getElementById('tutorial-overlay');
   if (overlayEl) overlayEl.style.display = 'none';
 }

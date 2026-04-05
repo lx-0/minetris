@@ -175,6 +175,38 @@ function init() {
       if (instrEl) instrEl.classList.add("first-launch");
     }
 
+    // First-launch Tutorial button — start Classic then begin tutorial
+    var flTutorialBtn = document.getElementById("first-launch-tutorial-btn");
+    if (flTutorialBtn) {
+      flTutorialBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        _firstLaunchGameActive = true;
+        isDailyChallenge = false;
+        gameRng = null;
+        try { localStorage.setItem("mineCtris_lastMode", "classic"); } catch (_) {}
+        if (typeof metricsModePlayed === 'function') metricsModePlayed('classic');
+        requestPointerLock();
+      });
+    }
+
+    // Secondary menu Tutorial button — replay tutorial (resets progress)
+    var menuTutorialBtn = document.getElementById("start-tutorial-btn");
+    if (menuTutorialBtn) {
+      menuTutorialBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        // Reset tutorial progress so it replays from step 1
+        try { localStorage.removeItem('mineCtris_tutorialDone'); } catch (_) {}
+        try { localStorage.removeItem('mineCtris_tutorialProgress'); } catch (_) {}
+        _isFirstLaunch = true;
+        _firstLaunchGameActive = true;
+        isDailyChallenge = false;
+        gameRng = null;
+        try { localStorage.setItem("mineCtris_lastMode", "classic"); } catch (_) {}
+        if (typeof metricsModePlayed === 'function') metricsModePlayed('classic');
+        requestPointerLock();
+      });
+    }
+
     // First-launch Settings button opens settings panel
     var flSettingsBtn = document.getElementById("first-launch-settings-btn");
     if (flSettingsBtn) {
@@ -453,7 +485,7 @@ function init() {
         if (typeof startBgMusic === "function") startBgMusic();
         // Transition from menu mood → calm when gameplay begins
         if (typeof forceAmbientMood === "function") forceAmbientMood("calm");
-        // First-run tutorial (v3.0 — 5-step pause-based overlay)
+        // First-run tutorial (v4.0 — 7-step interactive overlay)
         if (typeof initTutorial === "function" &&
             !(typeof isReplayMode !== 'undefined' && isReplayMode)) {
           initTutorial();
@@ -468,9 +500,17 @@ function init() {
           const dismissBtn = document.getElementById("tutorial-dismiss-btn");
           if (dismissBtn && !dismissBtn._tutorialBound) {
             dismissBtn._tutorialBound = true;
-            // "Got it!" advances to the next step; skipTutorial ends on the last step
             dismissBtn.addEventListener("click", function () {
               if (typeof dismissTutorialStep === "function") dismissTutorialStep();
+            });
+          }
+          // Wire completion screen close button
+          const completionBtn = document.getElementById("tutorial-completion-btn");
+          if (completionBtn && !completionBtn._tutorialBound) {
+            completionBtn._tutorialBound = true;
+            completionBtn.addEventListener("click", function () {
+              const completionEl = document.getElementById("tutorial-completion");
+              if (completionEl) completionEl.style.display = "none";
             });
           }
         }

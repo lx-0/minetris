@@ -112,15 +112,19 @@ function onKeyDown(event) {
   switch (_keyCode) {
     case "KeyW":
       moveForward = true;
+      if (typeof tutorialNotify === "function") tutorialNotify("move");
       break;
     case "KeyA":
       moveLeft = true;
+      if (typeof tutorialNotify === "function") tutorialNotify("move");
       break;
     case "KeyS":
       moveBackward = true;
+      if (typeof tutorialNotify === "function") tutorialNotify("move");
       break;
     case "KeyD":
       moveRight = true;
+      if (typeof tutorialNotify === "function") tutorialNotify("move");
       break;
     case "Space":
       if (isEditorMode) { moveUp = true; break; }

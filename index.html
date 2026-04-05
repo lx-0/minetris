@@ -260,6 +260,8 @@
               <button id="start-resume-btn" style="display:none;">&#9654; Resume Game</button>
 
             </div>
+            <!-- First-launch Tutorial button — visible only for new players -->
+            <button class="first-launch-tutorial" id="first-launch-tutorial-btn">&#127891; Start Tutorial</button>
             <!-- First-launch Settings (visible only for new players) -->
             <button class="first-launch-settings" id="first-launch-settings-btn">Settings</button>
             <!-- Toggle for secondary menu -->
@@ -295,6 +297,7 @@
                 <div class="menu-group-row">
                   <button id="start-settings-btn">&#9881; Settings</button>
                   <button id="start-create-btn">&#128736; Create</button>
+                  <button id="start-tutorial-btn">&#127891; Tutorial</button>
                 </div>
               </div>
             </div>
@@ -1635,6 +1638,8 @@
           <div id="tutorial-ckey-icon" style="display:none">
             <span id="tutorial-ckey-label">C</span>
           </div>
+          <!-- Interactive action prompt — shown while waiting for player input -->
+          <p id="tutorial-action-label" style="display:none;"></p>
           <button id="tutorial-dismiss-btn">Got it!</button>
         </div>
         <div id="tutorial-footer">
@@ -1642,6 +1647,23 @@
           <button id="tutorial-skip-btn">Skip Tutorial</button>
         </div>
       </div>
+
+      <!-- Tutorial completion / reward screen -->
+      <div id="tutorial-completion" style="display:none;" role="dialog" aria-label="Tutorial complete">
+        <div id="tutorial-completion-box">
+          <div id="tutorial-completion-icon">&#127891;</div>
+          <h2 id="tutorial-completion-title">Tutorial Complete!</h2>
+          <p id="tutorial-completion-msg">You know the basics. Now go mine, build, and survive!</p>
+          <div id="tutorial-completion-reward">
+            <span id="tutorial-completion-xp">+250 XP</span>
+            <span id="tutorial-completion-badge">&#11088; Miner Initiate badge unlocked</span>
+          </div>
+          <button id="tutorial-completion-btn">Start Playing!</button>
+        </div>
+      </div>
+
+      <!-- Contextual in-game tips banner (fires after tutorial completes) -->
+      <div id="tutorial-tip-banner" style="display:none;"></div>
 
       <!-- Tutorial arrow indicators (positioned absolutely over game view) -->
       <div id="tutorial-arrow-down" style="display:none">&#x25BC;</div>
