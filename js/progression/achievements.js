@@ -54,6 +54,8 @@ const ACHIEVEMENTS = [
   { id: "champion",        name: "Champion",        icon: "\u{1F947}",       desc: "Win a full tournament",                                             category: "tournament" },
   { id: "hat_trick",       name: "Hat Trick",       icon: "\u{1F3A9}",       desc: "Win 3 matches in a single tournament without losing",               category: "tournament" },
   { id: "crowd_favorite",  name: "Crowd Favorite",  icon: "\u{1F31F}",       desc: "Have 10 or more spectators watch a match you play in a tournament", category: "tournament" },
+  // T-spin achievements
+  { id: "spin_doctor",     name: "Spin Doctor",     icon: "\u{1F300}",       desc: "Perform 50 T-spins across all games" },
 ];
 
 // Session counters — reset at the start of each game
@@ -279,6 +281,13 @@ function updateCoopModeCardAch() {
 function achOnLineClear(count) {
   if (linesCleared >= 1) unlockAchievement("first_responder");
   if (count >= 4)        unlockAchievement("tetramino");
+}
+
+/** Call after a T-spin is detected (with or without line clears). */
+function achOnTSpin() {
+  const stats = loadLifetimeStats();
+  const total = ((stats && stats.totalTSpins) || 0) + (typeof sessionTSpins !== 'undefined' ? sessionTSpins : 0);
+  if (total >= 50) unlockAchievement("spin_doctor");
 }
 
 /** Call after combo count is updated with the new comboCount value. */

@@ -198,9 +198,13 @@ let battleOpponentStats = null;
 let battleOpponentRating = 1000;
 // Back-to-back Tetris detection: true after a 4-line clear; reset on any sub-Tetris clear.
 let lastClearWasTetris = false;
-// T-spin detection: set by pieces.js when a T-piece (index 1) lands after a rotation.
+// Back-to-back difficult clear: true after a T-spin (with lines) or Tetris.
+// Used for the B2B 1.5× scoring bonus.
+let lastClearWasDifficult = false;
+// T-spin detection: set by pieces.js when a T-piece (index 1) lands.
+// Value: 'full' (3+ corners) | 'mini' (2 corners) | '' (no T-spin).
 // Consumed once by checkLineClear() to tag the current clear event.
-let lastPieceTSpin = false;
+let lastPieceTSpin = '';
 
 // ── Co-op mode state ──────────────────────────────────────────────────────────
 // true while a co-op session is active; suppresses local random piece generation.
@@ -487,8 +491,10 @@ let sessionCrafts = 0;
 let sessionConsumableCrafts = 0;
 let sessionHighestComboCount = 0;
 let sessionTSpins = 0;
+let sessionMiniTSpins = 0;
 let sessionPerfectClears = 0;
 let sessionTetrises = 0;
+let sessionB2BCount = 0;
 
 // ── Editor mode state ─────────────────────────────────────────────────────────
 // Free-fly no-gravity mode accessible via main menu "Create" or ?editor=1 URL param.

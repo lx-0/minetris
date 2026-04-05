@@ -39,12 +39,14 @@ let _lcPhase    = 0;  // 0=idle, 1=anticipation, 2=aftermath
 let _lcPhaseAge = 0;
 let _lcNumLines = 0;
 let _lcIsTSpin      = false;  // current clear was triggered by a T-piece
+let _lcIsMiniTSpin  = false;  // current T-spin is a mini T-spin (2 corners)
 let _lcPerfectClear = false;  // board will be empty after this clear
 
 // ─── Firework particles for T-spin / Perfect Clear ────────────────────────────
 // Simple pool-less burst using existing fragment pool; fired from _lcDetonate.
 // Colors cycle through festive palette; fragments get extra upward velocity.
-const _FIREWORK_COLORS = [0xff4081, 0xffea00, 0x00e5ff, 0x69f0ae, 0xff6d00, 0xea80fc];
+const _FIREWORK_COLORS        = [0xff4081, 0xffea00, 0x00e5ff, 0x69f0ae, 0xff6d00, 0xea80fc];
+const _TSPIN_FIREWORK_COLORS  = [0xaa00ff, 0xcc44ff, 0xee88ff, 0x9c27b0, 0xce93d8, 0xffffff];
 
 // ─── Co-op line-clear guard ───────────────────────────────────────────────────
 // Prevents double-processing when both clients detect the same rows independently
@@ -256,6 +258,11 @@ function _lcUpdateBoardGlow(combo) {
  */
 function checkLineClear(newBlocks) {
   if (lineClearInProgress) return;
+
+  // Consume T-spin flag immediately — applies whether or not lines are cleared.
+  const _tSpinType = (typeof lastPieceTSpin !== 'undefined') ? lastPieceTSpin : '';
+  if (typeof lastPieceTSpin !== 'undefined') lastPieceTSpin = '';
+
   const ySet = new Set();
   newBlocks.forEach((b) => { if (b.userData.gridPos) ySet.add(b.userData.gridPos.y); });
 
@@ -267,7 +274,26 @@ function checkLineClear(newBlocks) {
       : LINE_CLEAR_CELLS_NEEDED;
     if (layer && layer.size >= _cellsNeeded) completeLevels.push(gy);
   });
-  if (!completeLevels.length) return;
+
+  if (!completeLevels.length) {
+    // T-spin zero: award score even with no lines cleared.
+    if (_tSpinType) {
+      const _level = (typeof lastDifficultyTier !== 'undefined') ? (lastDifficultyTier + 1) : 1;
+      const _tsZeroBase = _tSpinType === 'full' ? 400 : 100;
+      addScore(_tsZeroBase * _level);
+      if (typeof sessionTSpins !== 'undefined') sessionTSpins++;
+      if (_tSpinType === 'mini' && typeof sessionMiniTSpins !== 'undefined') sessionMiniTSpins++;
+      if (typeof playTSpinSound === 'function') playTSpinSound();
+      if (lineClearBannerEl) {
+        lineClearBannerEl.textContent = _tSpinType === 'mini' ? 'MINI T-SPIN!' : 'T-SPIN!';
+        lineClearBannerEl.style.color = '#cc44ff';
+        lineClearBannerEl.style.display = 'block';
+        bannerTimer = 1.5;
+      }
+      if (typeof achOnTSpin === 'function') achOnTSpin();
+    }
+    return;
+  }
 
   completeLevels.sort((a, b) => a - b);
 
@@ -297,10 +323,14 @@ function checkLineClear(newBlocks) {
   _lcPhaseAge         = 0;
   _lcNumLines         = completeLevels.length;
 
-  // Consume T-spin flag from pieces.js
-  _lcIsTSpin = (typeof lastPieceTSpin !== 'undefined' && lastPieceTSpin);
-  if (typeof lastPieceTSpin !== 'undefined') lastPieceTSpin = false;
-  if (_lcIsTSpin) sessionTSpins++;
+  // Apply T-spin type from pieces.js (already consumed at top of function).
+  _lcIsTSpin     = (_tSpinType !== '');
+  _lcIsMiniTSpin = (_tSpinType === 'mini');
+  if (_lcIsTSpin) {
+    sessionTSpins++;
+    if (_lcIsMiniTSpin && typeof sessionMiniTSpins !== 'undefined') sessionMiniTSpins++;
+    if (typeof achOnTSpin === 'function') achOnTSpin();
+  }
 
   // Boss Battle: deal damage from this line clear
   if (typeof isBossBattleMode !== 'undefined' && isBossBattleMode) {
@@ -415,13 +445,29 @@ function checkLineClear(newBlocks) {
   const goldMult = weeklyGoldRush ? 2.0 : 1.0;
   // Golden Hour event: 3× score multiplier on all line clears.
   const goldenHourMult = (typeof goldenHourActive !== "undefined" && goldenHourActive) ? 3.0 : 1.0;
-  const baseScore = LINE_SCORES[Math.min(completeLevels.length, 4)];
   // Underground depth multiplier: lineScore × (1 + |Y| × 0.1) for Y < 0 clears.
   const _minClearY = completeLevels.length > 0 ? Math.min.apply(null, completeLevels) : 0;
   const _depthMult = _minClearY < 0 ? (1 + Math.abs(_minClearY) * 0.1) : 1.0;
   // Ore Speed Boost: 1.5× multiplier while active
   const _oreBoostMult = (typeof getOreSpeedBoostMult === 'function') ? getOreSpeedBoostMult() : 1.0;
-  const _lcComputedScore = Math.round(baseScore * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult);
+  // T-spin scoring: replaces standard LINE_SCORES when a T-spin occurred.
+  // Full: 0/800/1200/1600 × level; Mini: 0/200 × level (single only).
+  // Back-to-back bonus: 1.5× when previous clear was also difficult (T-spin or Tetris).
+  const _level = (typeof lastDifficultyTier !== 'undefined') ? (lastDifficultyTier + 1) : 1;
+  const _isB2B = (typeof lastClearWasDifficult !== 'undefined') && lastClearWasDifficult
+    && (_lcIsTSpin || completeLevels.length >= 4);
+  const _b2bMult = _isB2B ? 1.5 : 1.0;
+  if (_isB2B && typeof sessionB2BCount !== 'undefined') sessionB2BCount++;
+  let baseScore;
+  if (_lcIsTSpin) {
+    const _fullTSpinScores = [400, 800, 1200, 1600];
+    const _miniTSpinScores = [100, 200, 400, 600];
+    const _tsIdx = Math.min(completeLevels.length, 3);
+    baseScore = (_lcIsMiniTSpin ? _miniTSpinScores : _fullTSpinScores)[_tsIdx] * _level;
+  } else {
+    baseScore = LINE_SCORES[Math.min(completeLevels.length, 4)];
+  }
+  const _lcComputedScore = Math.round(baseScore * _b2bMult * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult);
   addScore(_lcComputedScore);
   // Co-op: broadcast line-clear event so partner can score if local detection didn't fire
   if (isCoopMode && typeof coop !== 'undefined' && coop.state === CoopState.IN_GAME) {
@@ -445,8 +491,11 @@ function checkLineClear(newBlocks) {
     // Combo feed toast (show when combo bonus is active, i.e. comboCount >= 2)
     if (comboCount >= 2 && typeof battleFx !== 'undefined') battleFx.showComboFeed(comboCount);
   }
-  // Update back-to-back Tetris flag (reset on any non-Tetris clear)
+  // Update back-to-back flags (reset on any non-difficult clear)
   lastClearWasTetris = completeLevels.length >= 4;
+  if (typeof lastClearWasDifficult !== 'undefined') {
+    lastClearWasDifficult = (_lcIsTSpin && completeLevels.length >= 1) || completeLevels.length >= 4;
+  }
 
   // Golden Hour: trigger shimmer flash and show 3× label
   if (typeof goldenHourActive !== "undefined" && goldenHourActive) {
@@ -467,12 +516,21 @@ function checkLineClear(newBlocks) {
 
   // Line-clear banner
   if (lineClearBannerEl) {
-    const labels = ["", "LINE CLEAR!", "DOUBLE!", "TRIPLE!", "TETRIS!"];
-    const baseLabel = labels[Math.min(completeLevels.length, 4)];
+    let baseLabel;
+    if (_lcIsTSpin) {
+      const _tLabels = ['T-SPIN!', 'T-SPIN SINGLE!', 'T-SPIN DOUBLE!', 'T-SPIN TRIPLE!'];
+      const _mLabels = ['MINI T-SPIN!', 'MINI T-SPIN!', 'MINI T-SPIN DOUBLE!', 'MINI T-SPIN TRIPLE!'];
+      baseLabel = (_lcIsMiniTSpin ? _mLabels : _tLabels)[Math.min(completeLevels.length, 3)];
+    } else {
+      const labels = ["", "LINE CLEAR!", "DOUBLE!", "TRIPLE!", "TETRIS!"];
+      baseLabel = labels[Math.min(completeLevels.length, 4)];
+    }
+    const _b2bPrefix = _isB2B ? 'B2B ' : '';
     const goldenLabel = (typeof goldenHourActive !== "undefined" && goldenHourActive)
-      ? baseLabel + "  3\xd7"
-      : baseLabel;
+      ? _b2bPrefix + baseLabel + "  3\xd7"
+      : _b2bPrefix + baseLabel;
     lineClearBannerEl.textContent = goldenLabel;
+    lineClearBannerEl.style.color = _lcIsTSpin ? '#cc44ff' : (_isB2B ? '#ffaa00' : '');
     lineClearBannerEl.style.display = "block";
     bannerTimer = 1.5;
   }
@@ -928,8 +986,9 @@ function _lcDetonate() {
         midWorldY + (Math.random() - 0.5) * 2,
         Math.sin(fwAng) * _fwRadius * Math.random()
       );
+      const _fwPalette = _lcIsTSpin ? _TSPIN_FIREWORK_COLORS : _FIREWORK_COLORS;
       const fwColor = new THREE.Color(
-        _FIREWORK_COLORS[fw % _FIREWORK_COLORS.length]
+        _fwPalette[fw % _fwPalette.length]
       );
       m.material.color.copy(fwColor);
       m.material.emissive.copy(fwColor);
@@ -954,10 +1013,10 @@ function _lcDetonate() {
         maxAge: 0.9 + Math.random() * 0.4,
       });
     }
-    // Banner for special clear
-    if (lineClearBannerEl) {
-      const _specialLabel = _lcPerfectClear ? 'PERFECT CLEAR!' : 'T-SPIN!';
-      lineClearBannerEl.textContent = _specialLabel;
+    // Banner for Perfect Clear (T-SPIN banner is set in checkLineClear; only update here for Perfect Clear)
+    if (_lcPerfectClear && lineClearBannerEl) {
+      lineClearBannerEl.textContent = 'PERFECT CLEAR!';
+      lineClearBannerEl.style.color = '';
       lineClearBannerEl.style.display = 'block';
       bannerTimer = 2.0;
     }

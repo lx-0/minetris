@@ -497,6 +497,56 @@ function applyRandomRotation(piece) {
   else piece.rotateZ(angle);
 }
 
+/**
+ * Detect T-spin type for a landed T-piece.
+ * Checks the 4 diagonal corners around the T-piece hub block.
+ * @param {THREE.Object3D[]} pieceBlocks - the 4 blocks of the T-piece after landing
+ * @returns {'full'|'mini'|''} T-spin type
+ */
+function _detectTPieceTSpinType(pieceBlocks) {
+  // Find hub block: the block orthogonally adjacent to 3 other T-piece blocks.
+  let hubBlock = null;
+  for (let i = 0; i < pieceBlocks.length; i++) {
+    const gp = pieceBlocks[i].userData.gridPos;
+    if (!gp) continue;
+    let n = 0;
+    for (let j = 0; j < pieceBlocks.length; j++) {
+      if (i === j) continue;
+      const op = pieceBlocks[j].userData.gridPos;
+      if (!op) continue;
+      const dx = Math.abs(gp.x - op.x);
+      const dz = Math.abs(gp.z - op.z);
+      const dy = Math.abs(gp.y - op.y);
+      if ((dx === 1 && dz === 0 && dy < 0.6) || (dx === 0 && dz === 1 && dy < 0.6)) n++;
+    }
+    if (n >= 3) { hubBlock = pieceBlocks[i]; break; }
+  }
+  if (!hubBlock || !hubBlock.userData.gridPos) return '';
+
+  const cx = hubBlock.userData.gridPos.x;
+  const cy = hubBlock.userData.gridPos.y;
+  const cz = hubBlock.userData.gridPos.z;
+  const halfWorld = (typeof WORLD_SIZE !== 'undefined' ? WORLD_SIZE : 50) / 2;
+
+  // Check the 4 diagonal corners in the XZ plane.
+  let occupied = 0;
+  const corners = [[cx-1,cz-1],[cx-1,cz+1],[cx+1,cz-1],[cx+1,cz+1]];
+  for (let k = 0; k < corners.length; k++) {
+    const nx = corners[k][0], nz = corners[k][1];
+    if (Math.abs(nx) >= halfWorld || Math.abs(nz) >= halfWorld) {
+      // Wall counts as occupied.
+      occupied++;
+    } else {
+      const layer = (typeof gridOccupancy !== 'undefined') ? gridOccupancy.get(cy) : null;
+      if (layer && layer.has(nx + ',' + nz)) occupied++;
+    }
+  }
+
+  if (occupied >= 3) return 'full';
+  if (occupied === 2) return 'mini';
+  return '';
+}
+
 // Check if the player is close to a landing piece and apply a lateral push.
 function checkAndApplyPlayerPush(piece) {
   if (!controls) return;
@@ -865,10 +915,13 @@ function updateFallingPieces(delta) {
       newBlocks.push(block);
     }
     removePieceShadow(pieceToLand);
-    // T-spin: flag when a T-piece (colorIndex 1) lands.
-    // checkLineClear() reads and consumes this flag to tag celebratory effects.
+    // T-spin: detect and flag when a T-piece (colorIndex 1) lands.
+    // Uses corner-occupancy check: 3+ corners = full, 2 corners = mini.
+    // checkLineClear() reads and consumes this flag for scoring and effects.
     if (typeof lastPieceTSpin !== 'undefined') {
-      lastPieceTSpin = (pieceToLand.userData.colorIndex === 1);
+      lastPieceTSpin = (pieceToLand.userData.colorIndex === 1)
+        ? _detectTPieceTSpinType(newBlocks)
+        : '';
     }
     fallingPiecesGroup.remove(pieceToLand);
     fallingPieces.splice(index, 1);

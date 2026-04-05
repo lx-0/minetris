@@ -57,8 +57,10 @@ function resetGame() {
   sessionConsumableCrafts = 0;
   sessionHighestComboCount = 0;
   sessionTSpins = 0;
+  sessionMiniTSpins = 0;
   sessionPerfectClears = 0;
   sessionTetrises = 0;
+  sessionB2BCount = 0;
   if (typeof achResetSession === "function") achResetSession();
   if (typeof resetMissionSession === "function") resetMissionSession();
 
@@ -386,6 +388,7 @@ function resetGame() {
   comboBannerTimer = 0;
   if (comboBannerEl) comboBannerEl.style.display = "none";
   lastClearWasTetris = false;
+  if (typeof lastClearWasDifficult !== 'undefined') lastClearWasDifficult = false;
 
   // Reset player
   if (controls) {
