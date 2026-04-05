@@ -1068,6 +1068,51 @@ body {
   line-height: 1.5;
 }
 
+/* ── General notification toast container (top-right, stacked) ── */
+#notif-toast-container {
+  position: fixed;
+  top: 60px;
+  right: 16px;
+  z-index: 9990;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.notif-toast {
+  width: 280px;
+  background: rgba(10, 16, 26, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  pointer-events: all;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+  transform: translateX(320px);
+  opacity: 0;
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s;
+}
+.notif-toast.notif-toast-in {
+  transform: translateX(0);
+  opacity: 1;
+}
+.notif-toast-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.notif-toast-msg {
+  font-family: "Press Start 2P", cursive;
+  font-size: 6.5px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  flex: 1;
+  word-break: break-word;
+}
+
 /* ── Nudge hint ── */
 #nudge-hint {
   position: absolute;

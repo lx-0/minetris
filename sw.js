@@ -179,6 +179,38 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// ── Push notifications ──────────────────────────────────────────────────────
+self.addEventListener('push', (event) => {
+  let data = { title: 'MineCtris', body: 'You have a new notification.', icon: './icons/icon-192.png' };
+  if (event.data) {
+    try { Object.assign(data, event.data.json()); } catch (_) {
+      data.body = event.data.text();
+    }
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body:  data.body,
+      icon:  data.icon || './icons/icon-192.png',
+      badge: './icons/icon-192.png',
+      tag:   data.tag || 'minetris-notif',
+      data:  { url: data.url || './' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || './';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client) { client.focus(); return; }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
+    })
+  );
+});
+
 // ── Install: pre-cache all static assets ────────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(

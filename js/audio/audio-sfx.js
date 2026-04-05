@@ -449,6 +449,19 @@ function playMenuClickSound() {
   try { menuClickSynth.triggerAttackRelease('G5', '64n', Tone.now()); } catch (_e) {}
 }
 
+/**
+ * Notification chime — soft two-note ascending sparkle played when a toast appears.
+ * Volume is controlled by the SFX slider and respects the mute setting.
+ */
+function playNotificationChime() {
+  if (!audioReady || !notifChimeSynth) return;
+  const now = Tone.now();
+  try {
+    notifChimeSynth.triggerAttackRelease('E6', '16n', now, 0.55);
+    notifChimeSynth.triggerAttackRelease('A6', '16n', now + 0.07, 0.45);
+  } catch (_e) {}
+}
+
 // ── Volume settings ───────────────────────────────────────────────────────────
 
 /**

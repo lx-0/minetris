@@ -642,6 +642,8 @@ function init() {
           isPaused = true;
           const pauseScreenEl = document.getElementById("pause-screen");
           if (pauseScreenEl) pauseScreenEl.style.display = "flex";
+          // Flush notifications buffered during gameplay
+          if (typeof notifFlushQueued === 'function') notifFlushQueued();
         }
       }
       crosshair.style.display = "none";

@@ -196,6 +196,8 @@ function triggerGameOver() {
   if (isGameOver) return;
   isGameOver = true;
   gameTimerRunning = false;
+  // Flush any notifications that were buffered during gameplay
+  if (typeof notifFlushQueued === 'function') notifFlushQueued();
   // Screen reader: announce game over with final score
   if (typeof announceToScreenReader === 'function') {
     announceToScreenReader(

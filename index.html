@@ -1693,6 +1693,9 @@
         </div>
       </div>
 
+      <!-- General notification toasts (top-right, stacked, auto-dismiss) -->
+      <div id="notif-toast-container"></div>
+
       <!-- Achievement unlock toast (bottom-right) -->
       <div id="achievement-toast">
         <div class="ach-toast-header">ACHIEVEMENT UNLOCKED</div>
@@ -2851,6 +2854,40 @@
             });
           });
         }
+
+        // ── PWA push notification subscription ──────────────────────────
+        // Requested on first interaction; subscribes for daily challenge
+        // and seasonal event push notifications.
+        window._pwaRequestPushPermission = function() {
+          if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+          navigator.serviceWorker.ready.then(function(reg) {
+            if (Notification.permission === 'denied') return;
+            Notification.requestPermission().then(function(perm) {
+              if (perm !== 'granted') return;
+              // Subscribe using applicationServerKey if provided via meta tag
+              var keyEl = document.querySelector('meta[name="vapid-public-key"]');
+              if (!keyEl) return;
+              var rawKey = keyEl.content;
+              // Convert base64url to Uint8Array
+              var padding = '='.repeat((4 - rawKey.length % 4) % 4);
+              var base64 = (rawKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+              var raw = window.atob(base64);
+              var key = new Uint8Array(raw.length);
+              for (var i = 0; i < raw.length; i++) key[i] = raw.charCodeAt(i);
+              reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
+                .then(function(sub) {
+                  console.log('[PWA] Push subscription active:', sub.endpoint);
+                }).catch(function(err) {
+                  console.warn('[PWA] Push subscription failed:', err);
+                });
+          });
+          });
+        };
+        // Auto-request after user first gameplay interaction (deferred)
+        document.addEventListener('click', function _onFirstClick() {
+          document.removeEventListener('click', _onFirstClick);
+          setTimeout(window._pwaRequestPushPermission, 3000);
+        }, { once: true });
 
         // ── Offline badge ────────────────────────────────────────────────
         var offlineBadge = document.getElementById('pwa-offline-badge');

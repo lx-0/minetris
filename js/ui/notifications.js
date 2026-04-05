@@ -14,23 +14,40 @@ const NOTIF_TYPES = {
   GUILD_MENTION:    'guild_mention',
   FRIEND_ONLINE:    'friend_online',
   FRIEND_INVITE:    'friend_invite',
+  FRIEND_SCORE:     'friend_score',
   PERSONAL_BEST:    'personal_best',
   COMMUNITY_GOAL:   'community_goal',
+  DAILY_CHALLENGE:  'daily_challenge',
+  EVENT_STARTED:    'event_started',
+  EVENT_ENDING:     'event_ending',
 };
 
 // Default settings — all types on
 const NOTIF_DEFAULTS = {
-  [NOTIF_TYPES.ACHIEVEMENT]:    true,
-  [NOTIF_TYPES.MISSION]:        true,
-  [NOTIF_TYPES.GUILD_MENTION]:  true,
-  [NOTIF_TYPES.FRIEND_ONLINE]:  true,
-  [NOTIF_TYPES.FRIEND_INVITE]:  true,
-  [NOTIF_TYPES.PERSONAL_BEST]:  true,
-  [NOTIF_TYPES.COMMUNITY_GOAL]: true,
+  [NOTIF_TYPES.ACHIEVEMENT]:     true,
+  [NOTIF_TYPES.MISSION]:         true,
+  [NOTIF_TYPES.GUILD_MENTION]:   true,
+  [NOTIF_TYPES.FRIEND_ONLINE]:   true,
+  [NOTIF_TYPES.FRIEND_INVITE]:   true,
+  [NOTIF_TYPES.FRIEND_SCORE]:    true,
+  [NOTIF_TYPES.PERSONAL_BEST]:   true,
+  [NOTIF_TYPES.COMMUNITY_GOAL]:  true,
+  [NOTIF_TYPES.DAILY_CHALLENGE]: true,
+  [NOTIF_TYPES.EVENT_STARTED]:   true,
+  [NOTIF_TYPES.EVENT_ENDING]:    true,
 };
 
 let _notifSettings = Object.assign({}, NOTIF_DEFAULTS);
 let _notifPanelOpen = false;
+
+// ── Toast queue state ─────────────────────────────────────────────────────────
+
+// Toasts buffered during active gameplay; flushed on game over or menu return.
+let _notifToastBuffer = [];
+// Currently visible toast elements (max 3 at once).
+let _notifActiveToasts = [];
+// Pending toasts waiting for an active slot to free up.
+let _notifToastQueue = [];
 
 // ── Persistence ───────────────────────────────────────────────────────────────
 
@@ -64,10 +81,24 @@ function _notifSave(list) {
   try { localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(list)); } catch (_) {}
 }
 
+// ── Gameplay suppression ──────────────────────────────────────────────────────
+
+/**
+ * Returns true when the player is in an active, unpaused game session.
+ * Toasts are buffered (not shown) during this state.
+ */
+function _notifIsGameplayActive() {
+  return (
+    typeof gameTimerRunning !== 'undefined' && gameTimerRunning &&
+    typeof isGameOver !== 'undefined' && !isGameOver &&
+    typeof isPaused !== 'undefined' && !isPaused
+  );
+}
+
 // ── Core push ─────────────────────────────────────────────────────────────────
 
 /**
- * Push a notification into the center.
+ * Push a notification into the center and show a toast.
  * @param {string} type      One of NOTIF_TYPES values.
  * @param {string} icon      Emoji or short string.
  * @param {string} message   Main notification text.
@@ -91,6 +122,89 @@ function notifPush(type, icon, message) {
 
   _notifUpdateBadge();
   if (_notifPanelOpen) _notifRenderList();
+
+  // Play chime (respects SFX/mute settings via audio system)
+  if (typeof playNotificationChime === 'function') {
+    playNotificationChime();
+  }
+
+  // Show toast — buffer during active gameplay, show immediately otherwise
+  if (_notifIsGameplayActive()) {
+    _notifToastBuffer.push({ icon: icon, message: message });
+  } else {
+    _notifEnqueueToast(icon, message);
+  }
+}
+
+/**
+ * Flush buffered toasts — call when the game ends or the player returns to menu.
+ * Clears the gameplay buffer and shows up to 3 toasts immediately.
+ */
+function notifFlushQueued() {
+  const pending = _notifToastBuffer.splice(0);
+  pending.forEach(function (item) {
+    _notifEnqueueToast(item.icon, item.message);
+  });
+}
+
+// ── Toast system ──────────────────────────────────────────────────────────────
+
+/** Add a toast to the visible queue (shows immediately if slot available). */
+function _notifEnqueueToast(icon, message) {
+  if (_notifActiveToasts.length < 3) {
+    _notifShowToast(icon, message);
+  } else {
+    _notifToastQueue.push({ icon: icon, message: message });
+  }
+}
+
+/** Create and display a single toast element. */
+function _notifShowToast(icon, message) {
+  const container = document.getElementById('notif-toast-container');
+  if (!container) return;
+
+  const el = document.createElement('div');
+  el.className = 'notif-toast';
+  el.innerHTML =
+    '<div class="notif-toast-icon">' + _esc(icon) + '</div>' +
+    '<div class="notif-toast-msg">' + _esc(message) + '</div>';
+
+  el.addEventListener('click', function () {
+    notifOpen();
+    _notifRemoveToast(el);
+  });
+
+  container.appendChild(el);
+  _notifActiveToasts.push(el);
+
+  // Slide in on next frame
+  requestAnimationFrame(function () {
+    el.classList.add('notif-toast-in');
+  });
+
+  // Auto-dismiss after 5 seconds
+  var _dismissTimer = setTimeout(function () {
+    _notifRemoveToast(el);
+  }, 5000);
+  el._dismissTimer = _dismissTimer;
+}
+
+/** Slide a toast out and remove it; show next queued if any. */
+function _notifRemoveToast(el) {
+  if (el._dismissTimer) { clearTimeout(el._dismissTimer); el._dismissTimer = null; }
+  el.classList.remove('notif-toast-in');
+  el.style.opacity = '0';
+  el.style.transform = 'translateX(320px)';
+  setTimeout(function () {
+    if (el.parentNode) el.parentNode.removeChild(el);
+    var idx = _notifActiveToasts.indexOf(el);
+    if (idx !== -1) _notifActiveToasts.splice(idx, 1);
+    // Show next waiting toast
+    if (_notifToastQueue.length > 0) {
+      var next = _notifToastQueue.shift();
+      _notifShowToast(next.icon, next.message);
+    }
+  }, 320);
 }
 
 // ── Badge ─────────────────────────────────────────────────────────────────────
@@ -196,13 +310,17 @@ function _notifClearAll() {
 // ── Settings panel rendering ──────────────────────────────────────────────────
 
 const _NOTIF_TYPE_LABELS = {
-  [NOTIF_TYPES.ACHIEVEMENT]:    'Achievement unlocked',
-  [NOTIF_TYPES.MISSION]:        'Mission completed',
-  [NOTIF_TYPES.GUILD_MENTION]:  'Guild @mention',
-  [NOTIF_TYPES.FRIEND_ONLINE]:  'Friend came online',
-  [NOTIF_TYPES.FRIEND_INVITE]:  'Friend invite received',
-  [NOTIF_TYPES.PERSONAL_BEST]:  'New personal best',
-  [NOTIF_TYPES.COMMUNITY_GOAL]: 'Community goal milestone',
+  [NOTIF_TYPES.ACHIEVEMENT]:     'Achievement unlocked',
+  [NOTIF_TYPES.MISSION]:         'Mission completed',
+  [NOTIF_TYPES.GUILD_MENTION]:   'Guild @mention',
+  [NOTIF_TYPES.FRIEND_ONLINE]:   'Friend came online',
+  [NOTIF_TYPES.FRIEND_INVITE]:   'Friend invite received',
+  [NOTIF_TYPES.FRIEND_SCORE]:    'Friend beat your score',
+  [NOTIF_TYPES.PERSONAL_BEST]:   'New personal best',
+  [NOTIF_TYPES.COMMUNITY_GOAL]:  'Community goal milestone',
+  [NOTIF_TYPES.DAILY_CHALLENGE]: 'Daily challenge available',
+  [NOTIF_TYPES.EVENT_STARTED]:   'Seasonal event started',
+  [NOTIF_TYPES.EVENT_ENDING]:    'Seasonal event ending soon',
 };
 
 function _notifRenderSettings() {
@@ -224,6 +342,24 @@ function _notifRenderSettings() {
       _notifSaveSettings();
     });
   });
+}
+
+// ── Startup notifications ─────────────────────────────────────────────────────
+
+/** Push a daily challenge available notification if today's hasn't been played. */
+function _notifCheckDailyChallenge() {
+  if (typeof hasDailyAttemptedToday !== 'function') return;
+  if (typeof getDailyDateString !== 'function') return;
+  if (hasDailyAttemptedToday()) return;
+
+  const today = getDailyDateString();
+  const key = 'mineCtris_dailyNotif_' + today;
+  try {
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, '1');
+  } catch (_) {}
+
+  notifPush(NOTIF_TYPES.DAILY_CHALLENGE, '📅', "Today's daily challenge is ready to play!");
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -278,4 +414,7 @@ function initNotifications() {
       notifClose();
     }
   });
+
+  // Check startup conditions slightly deferred so other modules finish loading
+  setTimeout(_notifCheckDailyChallenge, 1500);
 }

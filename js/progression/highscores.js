@@ -33,11 +33,16 @@ function submitHighScore(score, timeSurvived, blocksMined, linesCleared) {
     date: new Date().toISOString().slice(0, 10),
   };
   const scores = loadHighScores();
+  const prevBest = scores.length > 0 ? scores[0].score : 0;
   scores.push(entry);
   scores.sort((a, b) => b.score - a.score);
   const rank = scores.indexOf(entry) + 1; // 1-based
   if (rank <= HS_MAX) {
     saveHighScores(scores.slice(0, HS_MAX));
+    // Notify on new personal best (score beats previous #1)
+    if (rank === 1 && score > prevBest && typeof notifPush === 'function') {
+      notifPush('personal_best', '🏆', 'New personal best! Score: ' + score.toLocaleString());
+    }
     return rank;
   }
   return null;

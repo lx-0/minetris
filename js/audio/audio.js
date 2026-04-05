@@ -42,6 +42,7 @@ let holdChestSynth      = null;   // chest creak on hold/power-up
 let menuClickSynth      = null;   // UI button click sound
 let anvilSynth          = null;   // metallic clang for line clear
 let glassBreakSynth     = null;   // glass shatter noise for line clear
+let notifChimeSynth     = null;   // soft two-note sparkle for notification toasts
 let masterCompressor = null;
 let masterReverb = null;
 let masterLimiter = null;
@@ -328,6 +329,16 @@ function initAudio() {
       envelope: { attack: 0.001, decay: 0.15, sustain: 0.0, release: 0.1 },
     }).connect(sfxGain);
     glassBreakSynth.volume.value = -14;
+
+    // Notification chime — soft two-note sparkle (triangle, warm and unobtrusive)
+    notifChimeSynth = new Tone.PolySynth(Tone.Synth, {
+      maxPolyphony: 3,
+      options: {
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.01, decay: 0.28, sustain: 0.04, release: 0.55 },
+      },
+    }).connect(sfxGain);
+    notifChimeSynth.volume.value = -14;
 
     _initBgMusic();
     _initEnvironmentalAudio();

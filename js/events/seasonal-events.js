@@ -756,6 +756,12 @@ async function initSeasonalEvents() {
   _seRefreshTicker();
   _seUpdateProgressHUD();
 
+  // Push event notifications (once per event per browser session via localStorage)
+  if (_seActiveEvent) {
+    _seNotifyEventStart(_seActiveEvent);
+    _seNotifyEventEnding(_seActiveEvent);
+  }
+
   // Refresh ticker every 5 minutes (also re-checks event expiry)
   if (_seTickerInterval) clearInterval(_seTickerInterval);
   if (_seActiveEvent) {
@@ -768,6 +774,33 @@ async function initSeasonalEvents() {
       _seRefreshTicker();
       _seUpdateProgressHUD();
       renderSeasonalEventBanner();
+      if (_seActiveEvent) _seNotifyEventEnding(_seActiveEvent);
     }, 5 * 60 * 1000);
   }
+}
+
+/** Push an event-started notification the first time this event is seen. */
+function _seNotifyEventStart(ev) {
+  if (typeof notifPush !== 'function') return;
+  const key = 'mineCtris_seStartNotif_' + ev.id;
+  try {
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, '1');
+  } catch (_) {}
+  const daysLeft = _seDaysLeft(ev);
+  notifPush('event_started', ev.icon || '🎉',
+    (ev.name || 'Seasonal event') + ' is now active! ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' left.');
+}
+
+/** Push an ending-soon notification when ≤ 1 day remains (once per event). */
+function _seNotifyEventEnding(ev) {
+  if (typeof notifPush !== 'function') return;
+  if (_seDaysLeft(ev) > 1) return;
+  const key = 'mineCtris_seEndingNotif_' + ev.id;
+  try {
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, '1');
+  } catch (_) {}
+  notifPush('event_ending', ev.icon || '⏰',
+    (ev.name || 'Seasonal event') + ' ends in less than 24 hours — play now!');
 }
