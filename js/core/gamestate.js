@@ -57,7 +57,18 @@ function updateScoreHUD() {
   scoreEl.querySelector(".hud-score").textContent = score;
   scoreEl.querySelector(".hud-stat:nth-child(2)").textContent =
     "Blocks: " + blocksMined;
-  if (isBlitzMode) {
+  if (isDailyChallenge) {
+    // Daily: show lines and 3-minute countdown
+    scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
+      "Lines: " + linesCleared;
+    const dailySecs = Math.max(0, Math.ceil(dailyRemainingMs / 1000));
+    const dm = Math.floor(dailySecs / 60).toString().padStart(2, "0");
+    const ds = (dailySecs % 60).toString().padStart(2, "0");
+    const dailyTimerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
+    dailyTimerEl.textContent = "Time: " + dm + ":" + ds;
+    dailyTimerEl.style.color = dailyRemainingMs <= 30000 ? "#ff4444" : "";
+    scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Daily";
+  } else if (isBlitzMode) {
     // Blitz: show lines and countdown timer (gold when bonus active)
     scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
       "Lines: " + linesCleared;

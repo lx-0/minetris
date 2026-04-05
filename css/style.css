@@ -2082,6 +2082,52 @@ body {
   background: rgba(255,180,0,0.15);
 }
 
+/* Daily challenge star tiers in calendar */
+.dcal-bronze { border-color: rgba(205,127,50,0.5); background: rgba(205,127,50,0.06); }
+.dcal-silver { border-color: rgba(192,192,192,0.5); background: rgba(192,192,192,0.06); }
+.dcal-gold   { border-color: rgba(255,215,0,0.6);   background: rgba(255,215,0,0.08); }
+.dcal-stars  { font-size: 9px; line-height: 1; }
+
+/* Streak badge inside calendar title */
+.dcal-streak-badge {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 7px;
+  color: #fbbf24;
+  vertical-align: middle;
+}
+
+/* Daily game-over share/streak elements */
+#daily-go-streak {
+  font-size: 7px;
+  color: #fbbf24;
+  margin-top: 4px;
+}
+#daily-go-stars {
+  font-size: 14px;
+  margin: 4px 0;
+}
+#daily-go-share-btn {
+  display: inline-block;
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid rgba(0,204,255,0.5);
+  color: #0cf;
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+#daily-go-share-btn:hover { background: rgba(0,204,255,0.12); }
+#daily-go-share-feedback {
+  font-size: 7px;
+  color: #4ade80;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
 /* Weekly Challenge card — emerald/teal accent */
 .mode-card-weekly {
   border-color: rgba(0, 220, 140, 0.5);

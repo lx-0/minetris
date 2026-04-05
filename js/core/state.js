@@ -273,6 +273,11 @@ const BLITZ_BONUS_THRESHOLD_MS = 30000;  // final 30 seconds
 const BLITZ_BONUS_MULTIPLIER   = 2.0;
 const BLITZ_FIXED_MULTIPLIER   = Math.pow(1.1, 4); // ≈ 1.4641 (same as Sprint)
 
+// ── Daily challenge countdown timer ──────────────────────────────────────────
+let dailyTimerActive   = false;  // becomes true on first piece drop
+let dailyRemainingMs   = 180000; // milliseconds remaining (counts down)
+const DAILY_DURATION_MS = 180000; // 3 minutes
+
 // ── Accessibility ─────────────────────────────────────────────────────────────
 // true = deuteranopia-safe palette + surface patterns are used for block rendering.
 let colorblindMode = false;

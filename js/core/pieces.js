@@ -209,6 +209,10 @@ function spawnFallingPiece() {
   if (isBlitzMode && !blitzTimerActive && !blitzComplete) {
     blitzTimerActive = true;
   }
+  // In Daily challenge, start the 3-minute countdown on the very first piece drop
+  if (isDailyChallenge && !dailyTimerActive && !isGameOver) {
+    dailyTimerActive = true;
+  }
   // Battle: deliver one queued garbage row before this piece spawns.
   if (isBattleMode && typeof deliverPendingGarbage === 'function') {
     deliverPendingGarbage();

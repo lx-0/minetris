@@ -61,6 +61,15 @@ function animate() {
       sprintElapsedMs += delta * 1000;
     }
 
+    // Tick the daily challenge countdown timer (3 minutes)
+    if (isDailyChallenge && dailyTimerActive && !isGameOver) {
+      dailyRemainingMs -= delta * 1000;
+      if (dailyRemainingMs <= 0) {
+        dailyRemainingMs = 0;
+        if (typeof triggerGameOver === "function") triggerGameOver();
+      }
+    }
+
     // Tick the blitz countdown timer
     if (isBlitzMode && blitzTimerActive && !blitzComplete) {
       blitzRemainingMs -= delta * 1000;
@@ -245,7 +254,9 @@ function animate() {
         ? Math.ceil(blitzRemainingMs / 1000)
         : isSprintMode
           ? Math.floor(sprintElapsedMs / 1000)
-          : Math.floor(gameElapsedSeconds);
+          : (isDailyChallenge && dailyTimerActive)
+            ? Math.ceil(dailyRemainingMs / 1000)
+            : Math.floor(gameElapsedSeconds);
       if (currentSecond !== lastHudSecond) {
         lastHudSecond = currentSecond;
         updateScoreHUD();

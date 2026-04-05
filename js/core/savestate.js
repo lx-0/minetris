@@ -79,6 +79,8 @@ function saveGameState() {
     blitzRemainingMs,
     blitzTimerActive,
     blitzBonusActive,
+    dailyRemainingMs,
+    dailyTimerActive,
     pieceQueue:          pieceQueue.map(function (p) { return { index: p.index }; }),
     landedBlocks
   };
@@ -152,6 +154,9 @@ function restoreGameState() {
                       ? data.blitzRemainingMs : BLITZ_DURATION_MS;
   blitzTimerActive  = !!data.blitzTimerActive;
   blitzBonusActive  = !!data.blitzBonusActive;
+  dailyRemainingMs  = typeof data.dailyRemainingMs === "number"
+                      ? data.dailyRemainingMs : DAILY_DURATION_MS;
+  dailyTimerActive  = !!data.dailyTimerActive;
 
   // ── Piece queue ───────────────────────────────────────────────────────────
   if (Array.isArray(data.pieceQueue) && data.pieceQueue.length > 0) {

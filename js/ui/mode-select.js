@@ -35,9 +35,16 @@
       const dailyPbEl = document.getElementById("mode-pb-daily");
       const dailyDescEl = document.getElementById("mode-daily-desc");
       const dailyCardEl2 = document.getElementById("mode-card-daily");
+      const dailyStreak = typeof getDailyStreak === 'function' ? getDailyStreak() : 0;
+      const dailyStreakEl = document.getElementById("mode-daily-streak");
+      if (dailyStreakEl) {
+        dailyStreakEl.textContent = dailyStreak >= 2 ? '\uD83D\uDD25 ' + dailyStreak + '-day streak' : '';
+        dailyStreakEl.style.display = dailyStreak >= 2 ? 'block' : 'none';
+      }
       if (hasDailyAttemptedToday()) {
         const dailyBest = loadDailyBest();
-        if (dailyPbEl) dailyPbEl.textContent = getTodayLabel() + " \u2014 " + (dailyBest ? dailyBest.score : "Done");
+        const dailyStars = (dailyBest && typeof getDailyStarString === 'function') ? getDailyStarString(dailyBest.score) : '';
+        if (dailyPbEl) dailyPbEl.textContent = getTodayLabel() + " \u2014 " + (dailyBest ? dailyBest.score + (dailyStars ? ' ' + dailyStars : '') : "Done");
         if (dailyDescEl) dailyDescEl.textContent = "Come back tomorrow for a new challenge!";
         if (dailyCardEl2) dailyCardEl2.classList.add("mode-card-daily-done");
       } else {

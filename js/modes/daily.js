@@ -1,9 +1,13 @@
-// Daily challenge — seeded PRNG, date key, attempt enforcement, history, and calendar.
+// Daily challenge — seeded PRNG, date key, attempt enforcement, history, calendar, streak, and share.
 // Requires: nothing (standalone module).
 
 const DAILY_HS_KEY        = 'mineCtris_dailyBest';
 const DAILY_ATTEMPTED_KEY = 'mineCtris_dailyAttempted'; // value: "YYYY-MM-DD" of last attempt
 const DAILY_HISTORY_KEY   = 'mineCtris_dailyHistory';   // JSON array of past results
+const DAILY_STREAK_KEY    = 'mineCtris_dailyStreak';    // JSON: { streak, lastDate }
+
+// Epoch day 1 = 2024-01-01
+const DAILY_EPOCH = new Date('2024-01-01T00:00:00Z');
 
 /**
  * Simple 32-bit seeded PRNG (mulberry32).
@@ -51,6 +55,82 @@ function formatDailyLabel(dateStr) {
 /** Today's short label for HUD display, e.g. "Mar 15". */
 function getTodayLabel() {
   return formatDailyLabel(getDailyDateString());
+}
+
+// ── Challenge number ─────────────────────────────────────────────────────────
+
+/** Returns today's daily challenge number (day 1 = 2024-01-01). */
+function getDailyNumber() {
+  const today = new Date(getDailyDateString() + 'T00:00:00Z');
+  return Math.floor((today - DAILY_EPOCH) / 86400000) + 1;
+}
+
+// ── Star rating ──────────────────────────────────────────────────────────────
+
+/** Returns star count for a score: 1=bronze(<5000), 2=silver(<10000), 3=gold(>=10000). */
+function getDailyStarCount(score) {
+  if (score >= 10000) return 3;
+  if (score >= 5000)  return 2;
+  if (score > 0)      return 1;
+  return 0;
+}
+
+/** Returns a star emoji string for display (e.g. "⭐⭐⭐"). */
+function getDailyStarString(score) {
+  return '\u2B50'.repeat(getDailyStarCount(score));
+}
+
+// ── Streak tracking ──────────────────────────────────────────────────────────
+
+/** Returns yesterday's date as "YYYY-MM-DD" in UTC. */
+function _getYesterdayString() {
+  const d = new Date(getDailyDateString() + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Load the current daily challenge streak. Returns 0 if streak is broken. */
+function getDailyStreak() {
+  try {
+    const data = JSON.parse(localStorage.getItem(DAILY_STREAK_KEY) || 'null');
+    if (!data) return 0;
+    const today = getDailyDateString();
+    const yesterday = _getYesterdayString();
+    if (data.lastDate === today || data.lastDate === yesterday) return data.streak || 0;
+    return 0; // streak is broken
+  } catch (_) { return 0; }
+}
+
+/**
+ * Record that today's daily challenge was completed.
+ * Increments the streak if yesterday was completed, otherwise resets to 1.
+ */
+function recordDailyStreakCompletion() {
+  const today = getDailyDateString();
+  try {
+    let data = JSON.parse(localStorage.getItem(DAILY_STREAK_KEY) || 'null') || { streak: 0, lastDate: null };
+    if (data.lastDate === today) return; // already counted today
+    if (data.lastDate === _getYesterdayString()) {
+      data.streak = (data.streak || 0) + 1;
+    } else {
+      data.streak = 1;
+    }
+    data.lastDate = today;
+    localStorage.setItem(DAILY_STREAK_KEY, JSON.stringify(data));
+  } catch (_) {}
+}
+
+// ── Share result ─────────────────────────────────────────────────────────────
+
+/**
+ * Build the shareable daily result string.
+ * Format: "MineCtris Daily #142 — 8,450 pts ⭐⭐⭐"
+ */
+function buildDailyShareText(score) {
+  const num = getDailyNumber();
+  const stars = getDailyStarString(score);
+  const pts = score.toLocaleString();
+  return 'MineCtris Daily #' + num + ' \u2014 ' + pts + ' pts' + (stars ? ' ' + stars : '');
 }
 
 // ── One-attempt-per-day enforcement ──────────────────────────────────────────
@@ -147,12 +227,72 @@ function renderDailyBestGameOver(isNewBest) {
   if (!el) return;
   const best = loadDailyBest();
   if (!best) { el.style.display = 'none'; return; }
+
+  // Record streak completion now that the run is saved
+  recordDailyStreakCompletion();
+  const streak = getDailyStreak();
+  const stars = getDailyStarString(best.score);
+
   el.style.display = 'block';
   const scoreCls = isNewBest ? 'daily-best-score daily-best-new' : 'daily-best-score';
+  const streakHtml = streak >= 2
+    ? `<div id="daily-go-streak">\uD83D\uDD25 ${streak}-day streak!</div>`
+    : '';
+  const starsHtml = stars
+    ? `<div id="daily-go-stars">${stars}</div>`
+    : '';
   el.innerHTML =
-    `<div id="daily-go-label">DAILY BEST \u2014 ${formatDailyLabel(best.date)}</div>` +
+    `<div id="daily-go-label">DAILY #${getDailyNumber()} \u2014 ${formatDailyLabel(best.date)}</div>` +
     `<div class="${scoreCls}">${best.score}</div>` +
-    `<div id="daily-go-rank-row"></div>`;
+    starsHtml +
+    streakHtml +
+    `<div id="daily-go-rank-row"></div>` +
+    `<button id="daily-go-share-btn">Copy Result</button>` +
+    `<div id="daily-go-share-feedback"></div>`;
+
+  // Wire up share button
+  const shareBtn = el.querySelector('#daily-go-share-btn');
+  const shareFeedback = el.querySelector('#daily-go-share-feedback');
+  if (shareBtn) {
+    shareBtn.onclick = function () {
+      const text = buildDailyShareText(best.score);
+      function showCopied() {
+        if (shareFeedback) {
+          shareFeedback.textContent = 'Copied!';
+          shareFeedback.style.opacity = '1';
+          clearTimeout(shareFeedback._ft);
+          shareFeedback._ft = setTimeout(function () { shareFeedback.style.opacity = '0'; }, 1500);
+        }
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(showCopied).catch(function () {
+          _showDailyShareFallback(text, shareBtn);
+        });
+      } else {
+        _showDailyShareFallback(text, shareBtn);
+      }
+    };
+  }
+}
+
+/** Fallback: insert a pre-selected text input so user can manually copy. */
+function _showDailyShareFallback(text, anchorEl) {
+  const existing = document.getElementById('daily-share-fallback');
+  if (existing) existing.remove();
+  const wrap = document.createElement('div');
+  wrap.id = 'daily-share-fallback';
+  wrap.style.cssText = 'display:flex;gap:4px;margin-top:4px;';
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.value = text;
+  inp.readOnly = true;
+  inp.style.cssText = 'flex:1;font-size:0.6rem;padding:2px 4px;';
+  inp.onclick = function () { inp.select(); };
+  wrap.appendChild(inp);
+  if (anchorEl && anchorEl.parentNode) {
+    anchorEl.parentNode.insertBefore(wrap, anchorEl.nextSibling);
+  }
+  inp.select();
 }
 
 /**
@@ -191,6 +331,14 @@ function _renderDailyCalendarContent() {
   const container = document.getElementById('daily-calendar-grid');
   if (!container) return;
 
+  // Show streak in calendar title
+  const titleEl = document.getElementById('daily-calendar-title');
+  if (titleEl) {
+    const streak = getDailyStreak();
+    titleEl.innerHTML = '\u{1F4C5} DAILY HISTORY' +
+      (streak >= 2 ? `<span class="dcal-streak-badge">\uD83D\uDD25 ${streak} days</span>` : '');
+  }
+
   const history = loadDailyHistory();
   const historyByDate = {};
   history.forEach(function(e) { historyByDate[e.date] = e; });
@@ -211,9 +359,14 @@ function _renderDailyCalendarContent() {
       const rankStr = cell.entry.rank
         ? `<div class="dcal-rank">#${cell.entry.rank}${cell.entry.total ? ' / ' + cell.entry.total : ''}</div>`
         : '';
-      return `<div class="dcal-cell dcal-played" title="${cell.dateStr}">` +
+      const stars = getDailyStarString(cell.entry.score);
+      const starClass = cell.entry.score >= 10000 ? 'dcal-gold'
+        : cell.entry.score >= 5000 ? 'dcal-silver'
+        : 'dcal-bronze';
+      return `<div class="dcal-cell dcal-played ${starClass}" title="${cell.dateStr}">` +
         `<div class="dcal-date">${cell.label}</div>` +
         `<div class="dcal-score">${cell.entry.score}</div>` +
+        `<div class="dcal-stars">${stars}</div>` +
         rankStr +
         `</div>`;
     } else if (cell.dateStr === today) {
