@@ -489,14 +489,22 @@ function _initCoopHandlers() {
         if (typeof coopEmote !== 'undefined') coopEmote.receiveQuickChat(data);
       });
 
+      // ── Incoming chat emote (wheel-based) from partner ──
+      coop.on('chat_emote', function (data) {
+        if (!isCoopMode) return;
+        if (typeof chatEmotes !== 'undefined') chatEmotes.receive(data);
+      });
+
       // ── Destroy avatar when partner disconnects ──
       coop.on('partner_left', function () {
         if (typeof coopAvatar !== 'undefined') coopAvatar.destroy();
         if (typeof coopEmote !== 'undefined') { coopEmote.reset(); coopEmote.showHud(false); }
+        if (typeof chatEmotes !== 'undefined') chatEmotes.onSessionEnd();
       });
       coop.on('disconnected', function () {
         if (typeof coopAvatar !== 'undefined') coopAvatar.destroy();
         if (typeof coopEmote !== 'undefined') { coopEmote.reset(); coopEmote.showHud(false); }
+        if (typeof chatEmotes !== 'undefined') chatEmotes.onSessionEnd();
         if (typeof coopBoardHideDivider === 'function') coopBoardHideDivider();
       });
 

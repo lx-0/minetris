@@ -1173,6 +1173,18 @@ function initSettings() {
     });
   }
 
+  const showOpponentEmotesToggle = document.getElementById("show-opponent-emotes-toggle");
+  if (showOpponentEmotesToggle) {
+    // Initialise from storage
+    try {
+      const raw = localStorage.getItem('mineCtris_showOpponentEmotes');
+      if (raw !== null) showOpponentEmotesToggle.checked = raw === 'true';
+    } catch (_) {}
+    showOpponentEmotesToggle.addEventListener("change", function () {
+      try { localStorage.setItem('mineCtris_showOpponentEmotes', String(this.checked)); } catch (_) {}
+    });
+  }
+
   const closeBtn = document.getElementById("settings-close-btn");
   if (closeBtn) closeBtn.addEventListener("click", closeSettings);
 

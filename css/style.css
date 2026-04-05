@@ -10182,6 +10182,139 @@ body.sandstorm-active [data-ghost-piece] {
   white-space: nowrap;
 }
 
+/* ── Chat emote wheel ────────────────────────────────────────────────────────── */
+#chat-emote-wheel {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  pointer-events: none;
+}
+#chat-emote-wheel.cew-visible {
+  display: block;
+}
+#chat-emote-wheel-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.48);
+}
+#chat-emote-wheel-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid rgba(0, 255, 170, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: 6px;
+  color: rgba(0, 255, 170, 0.75);
+  text-align: center;
+  letter-spacing: 0.5px;
+  z-index: 1;
+}
+#chat-emote-cooldown-label {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 36px);
+  transform: translateX(-50%);
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  color: #ffcc44;
+  pointer-events: none;
+  text-shadow: 0 0 6px rgba(255, 180, 0, 0.6);
+}
+.chat-emote-slot {
+  position: absolute;
+  left: calc(50% + var(--sx));
+  top: calc(50% + var(--sy));
+  transform: translate(-50%, -50%) scale(1);
+  width: 66px;
+  height: 66px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.78);
+  border: 2px solid rgba(0, 255, 170, 0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: border-color 0.1s, background 0.1s, transform 0.12s;
+  user-select: none;
+}
+.chat-emote-slot:hover,
+.chat-emote-slot.ces-selected {
+  border-color: rgba(0, 255, 170, 0.9);
+  background: rgba(0, 55, 38, 0.92);
+  transform: translate(-50%, -50%) scale(1.13);
+}
+.cew-cooldown .chat-emote-slot {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.ces-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+.ces-label {
+  font-family: "Press Start 2P", monospace;
+  font-size: 5px;
+  color: rgba(190, 255, 210, 0.75);
+  white-space: nowrap;
+  max-width: 62px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Chat emote bubbles ───────────────────────────────────────────────────────── */
+.chat-emote-bubble {
+  display: none;
+  position: fixed;
+  top: 72px;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.88);
+  border: 2px solid rgba(0, 255, 170, 0.38);
+  border-radius: 8px;
+  padding: 6px 12px;
+  z-index: 9998;
+  pointer-events: none;
+  transform-origin: bottom center;
+}
+.ceb-local {
+  left: 18px;
+}
+.ceb-remote {
+  right: 18px;
+}
+.ceb-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.ceb-label {
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  color: rgba(200, 255, 220, 0.92);
+  white-space: nowrap;
+}
+
+/* ── Chat emote T-key cooldown timer in HUD ───────────────────────────────────── */
+#chat-emote-t-cooldown {
+  display: none;
+  font-family: "Press Start 2P", monospace;
+  font-size: 6px;
+  color: #ffaa33;
+  margin-left: 2px;
+}
+
 /* ── Battle FX overlays ─────────────────────────────────────────────────────── */
 
 /* Incoming attack — red vignette flash at screen edges */

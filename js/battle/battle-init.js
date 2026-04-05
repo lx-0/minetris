@@ -214,6 +214,7 @@ function _initBattleHandlers() {
           if (typeof triggerBattleResult === 'function') triggerBattleResult('win');
         }
         if (typeof battleHud !== 'undefined') battleHud.setConnectionStatus('red');
+        if (typeof chatEmotes !== 'undefined') chatEmotes.onSessionEnd();
       });
 
       // ── Choice view buttons ──
@@ -631,6 +632,11 @@ function _initBattleHandlers() {
         if (msg && typeof msg.rating === 'number') {
           battleOpponentRating = msg.rating;
         }
+      });
+
+      // ── Incoming chat emote (wheel-based) from opponent ──
+      battle.on("chat_emote", function (data) {
+        if (typeof chatEmotes !== 'undefined') chatEmotes.receive(data);
       });
 
       // ── Opponent mini-map event handlers ──

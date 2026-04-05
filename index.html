@@ -855,8 +855,11 @@
         <div class="coop-emote-key"><span class="coop-emote-key-label">V</span><span class="coop-emote-key-icon">⚠️</span></div>
         <div class="coop-emote-key coop-chat-key"><span class="coop-emote-key-label">G</span><span class="coop-emote-key-icon">Nice!</span></div>
         <div class="coop-emote-key coop-chat-key"><span class="coop-emote-key-label">H</span><span class="coop-emote-key-icon">Help!</span></div>
-        <div class="coop-emote-key coop-chat-key"><span class="coop-emote-key-label">T</span><span class="coop-emote-key-icon">Ready?</span></div>
+        <div class="coop-emote-key coop-chat-key"><span class="coop-emote-key-label">T</span><span class="coop-emote-key-icon">Emotes<span id="chat-emote-t-cooldown"></span></span></div>
       </div>
+
+      <!-- Chat emote wheel overlay (T-key radial picker) -->
+      <div id="chat-emote-wheel" aria-hidden="true"></div>
 
       <!-- Co-op partner-left dialog (choice: continue solo or quit) -->
       <div id="coop-partner-left-dialog" style="display:none;">
@@ -1313,6 +1316,15 @@
             </label>
           </div>
           <div class="settings-hint" data-i18n="settings.dynamic_music_hint">Tempo intensifies with stack height and game speed</div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="show-opponent-emotes-toggle">Show Opponent Emotes</label>
+            <label class="cb-toggle-switch">
+              <input type="checkbox" id="show-opponent-emotes-toggle" checked>
+              <span class="cb-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-hint">Show emote reactions sent by your opponent or co-op partner</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
             <label class="settings-label settings-label-toggle" for="cb-toggle" data-i18n="settings.colorblind_mode">Colorblind Mode</label>
@@ -2848,6 +2860,7 @@
     <script src="js/social/coop-avatar.js"></script>
     <script src="js/social/coop-trade.js"></script>
     <script src="js/social/coop-emote.js"></script>
+    <script src="js/social/chat-emotes.js"></script>
     <script src="js/social/coop-board.js"></script>
     <script src="js/battle/battle-rating.js"></script>
     <script src="js/battle/battle.js"></script>

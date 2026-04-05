@@ -72,6 +72,18 @@ function returnPlayerToSurface() {
 var _cKeyHoldTimeout = null;
 
 function onKeyDown(event) {
+  // Emote wheel open — ESC cancels, arrow keys navigate, other keys pass through
+  if (typeof chatEmotes !== 'undefined' && chatEmotes.isOpen()) {
+    if (event.code === 'Escape') {
+      chatEmotes.cancelWheel();
+      return;
+    }
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(event.code) >= 0) {
+      event.preventDefault();
+      chatEmotes.handleArrow(event.code);
+      return;
+    }
+  }
   // When crafting panel is open the pointer is unlocked; still allow craft key/Escape to close it
   if (craftingPanelOpen) {
     if (_resolveKeyCode(event.code) === "KeyC" || event.code === "Escape") {
@@ -268,8 +280,8 @@ function onKeyDown(event) {
       }
       break;
     case "KeyT":
-      if (isCoopMode && typeof coopEmote !== 'undefined') {
-        coopEmote.sendQuickChat('ready');
+      if ((isCoopMode || isBattleMode) && typeof chatEmotes !== 'undefined') {
+        chatEmotes.openWheel();
       }
       break;
     case "KeyR":
@@ -351,6 +363,11 @@ function onKeyUp(event) {
       break;
     case "KeyF":
       if (isPuzzleMode && typeof setThinkMode === "function") setThinkMode(false);
+      break;
+    case "KeyT":
+      if (typeof chatEmotes !== 'undefined' && chatEmotes.isOpen()) {
+        chatEmotes.closeWheel();
+      }
       break;
   }
 }
