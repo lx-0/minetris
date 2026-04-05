@@ -13,6 +13,9 @@ const _LAVA_INTERVAL   = 1 / 10; // 100 ms
 function animate() {
   requestAnimationFrame(animate);
 
+  // Yield to local multiplayer — it runs its own RAF loop.
+  if (typeof window !== 'undefined' && window.isLocalMultiActive) return;
+
   const time = performance.now();
   const rawDelta = clock.getDelta();
   // Cap delta to prevent timer skips after pause/tab-away (THREE.Clock accumulates real time)

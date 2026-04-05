@@ -2814,6 +2814,55 @@ body {
   box-shadow: 0 0 28px rgba(255, 60, 60, 0.55);
 }
 
+/* ── Local 1v1 mode card ── */
+.mode-card-local-multi {
+  border-color: rgba(34, 211, 238, 0.5);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.1);
+}
+.mode-card-local-multi .mode-card-name {
+  color: #22d3ee;
+  text-shadow: 0 0 6px #22d3ee;
+}
+.mode-card-local-multi .mode-card-desc {
+  color: #a5f3fc;
+}
+.mode-card-local-multi:hover {
+  border-color: #22d3ee !important;
+  box-shadow: 0 0 22px rgba(34, 211, 238, 0.4) !important;
+}
+.mode-card-local-multi.mode-card-highlighted {
+  border-color: #22d3ee;
+  box-shadow: 0 0 28px rgba(34, 211, 238, 0.55);
+}
+
+/* ── Local 1v1 KB settings panel ── */
+.lm-kb-panel {
+  background: #0d1117;
+  border: 2px solid #4ade80;
+  padding: 20px;
+  font-family: 'Press Start 2P', monospace;
+  color: #fff;
+  min-width: 320px;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.lm-kb-btn {
+  background: #111;
+  border: 1px solid #4ade80;
+  color: #4ade80;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.4em;
+  padding: 5px 8px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  min-width: 52px;
+  text-align: center;
+}
+.lm-kb-btn:hover { background: #1a2e1a; }
+.lm-kb-btn.lm-kb-listening { background: #1a1a00; border-color: #ffd700; color: #ffd700; animation: lm-blink 0.5s infinite; }
+@keyframes lm-blink { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
 /* ── Battle lobby overlay ── */
 #battle-overlay {
   position: absolute;

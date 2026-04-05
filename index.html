@@ -471,6 +471,11 @@
                   <div class="mode-card-desc">Fight your opponent. Last miner standing wins.</div>
                   <button class="mode-card-lb-btn" data-lb-tab="battle" title="Leaderboard">&#127942;</button>
                 </div>
+                <div class="mode-card mode-card-local-multi" id="mode-card-local_multi" data-mode="local_multi" tabindex="0" role="button" aria-label="Local 1v1 — Split-screen battle on the same device. No internet required.">
+                  <div class="mode-card-icon">&#127918;</div>
+                  <div class="mode-card-name">Local 1v1</div>
+                  <div class="mode-card-desc">Split-screen couch battle. Two players, one device. No internet needed.</div>
+                </div>
               </div>
             </div>
           </div>
@@ -2436,6 +2441,15 @@
       </div>
     </div>
 
+    <!-- Local 1v1 overlay — full-screen canvas split-screen game -->
+    <div id="local-multi-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:#0d1117;flex-direction:column;align-items:stretch;">
+      <canvas id="local-multi-canvas" style="display:block;width:100%;height:100%;flex:1 1 auto;"></canvas>
+      <!-- KB settings modal -->
+      <div id="lm-kb-settings" style="display:none;position:absolute;inset:0;z-index:9100;background:rgba(0,0,0,0.82);align-items:center;justify-content:center;"></div>
+      <!-- Settings button -->
+      <button id="lm-settings-btn" style="position:absolute;top:10px;right:14px;z-index:9050;background:rgba(0,0,0,0.55);border:1px solid #4ade80;color:#4ade80;font-family:'Press Start 2P',monospace;font-size:0.45em;padding:5px 10px;cursor:pointer;letter-spacing:1px;">&#9881; KEYS</button>
+    </div>
+
     <!-- Tournament overlay — shown when Tournament mode card is clicked -->
     <div id="tournament-overlay" style="display:none;">
       <div id="tournament-inner">
@@ -2640,6 +2654,7 @@
     <script src="js/rendering/resize.js"></script>
     <script src="js/rendering/parallax-background.js"></script>
         <script src="js/main.js"></script>
+    <script src="js/local-multi/local-multi.js"></script>
     <script src="js/social/community-goals.js"></script>
     <script src="js/events/seasonal-events.js"></script>
     <script src="js/ui/theme-editor.js"></script>

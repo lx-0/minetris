@@ -251,6 +251,23 @@ function init() {
 
     // ── End tournament setup ──────────────────────────────────────────────────
 
+    // ── Local 1v1 mode card ───────────────────────────────────────────────────
+    (function () {
+      var localMultiCard = document.getElementById('mode-card-local_multi');
+      if (localMultiCard && typeof localMulti !== 'undefined') {
+        function _openLocalMulti(e) {
+          e.stopPropagation();
+          hideModeSelect();
+          localMulti.start();
+        }
+        localMultiCard.addEventListener('click', _openLocalMulti);
+        localMultiCard.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') _openLocalMulti(e);
+        });
+      }
+    })();
+    // ── End local 1v1 setup ───────────────────────────────────────────────────
+
     // Survival: Reset World button + confirmation dialog
     const survivalResetBtn = document.getElementById("survival-reset-btn");
     const survivalResetConfirm = document.getElementById("survival-reset-confirm");
