@@ -227,8 +227,8 @@ function _buildBattleSummaryScreen(el, result, myStats, oppStats, xpEarned, oldX
           '<span class="brs-rating-gain"> Placement complete!</span>' +
           '</div>';
       }
-      const tier = (typeof getBattleRankTier === 'function') ? getBattleRankTier(ratingChange.ratingAfter) : null;
-      const tierBadge = tier ? ('<span class="battle-rank-badge battle-rank-' + tier.cls + '">' + tier.icon + ' ' + tier.name + '</span>') : '';
+      var tier = (typeof getBattleRankTier === 'function') ? getBattleRankTier(ratingChange.ratingAfter) : null;
+      var tierBadge = tier ? ('<span class="battle-rank-badge battle-rank-' + tier.cls + '">' + tier.icon + ' ' + tier.name + '</span>') : '';
       return '<div class="brs-rating">' +
         tierBadge +
         '<span class="brs-rating-val">' + ratingChange.ratingAfter + '</span>' +
