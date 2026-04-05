@@ -12,6 +12,25 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="MINETRIS" />
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:site_name"   content="MINETRIS" />
+    <meta property="og:title"       content="MINETRIS — Mine blocks, survive the drop" />
+    <meta property="og:description" content="A Minecraft-inspired Tetris game with 3D block mining, daily challenges, and survival mode. Free to play in your browser." />
+    <meta property="og:image"       content="icons/og-image.png" />
+    <meta property="og:url"         content="" id="meta-og-url" />
+    <script>
+      (function() {
+        var u = location.origin + location.pathname;
+        var el = document.getElementById('meta-og-url');
+        if (el) el.setAttribute('content', u);
+      })();
+    </script>
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="MINETRIS — Mine blocks, survive the drop" />
+    <meta name="twitter:description" content="A Minecraft-inspired Tetris game with 3D block mining, daily challenges, and survival mode. Free to play in your browser." />
+    <meta name="twitter:image"       content="icons/og-image.png" />
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
     <link
@@ -889,6 +908,10 @@
         <div id="endless-go-section" style="display:none;"></div>
         <button id="go-share-btn">Share Score</button>
         <div id="go-share-feedback"></div>
+        <div id="go-score-card-wrap" style="display:none;">
+          <canvas id="go-score-card-canvas"></canvas>
+          <button id="go-score-card-download">&#11015; Save Card</button>
+        </div>
         <button id="lb-submit-btn" style="display:none;">Submit to Leaderboard</button>
         <div id="lb-submit-feedback" class="lb-submit-feedback"></div>
         <button id="go-lb-btn">&#127942; Leaderboard</button>
@@ -2671,6 +2694,7 @@
     <script src="js/events/events-creeper.js"></script>
     <script src="js/ui/puzzle-codec.js"></script>
     <script src="js/ui/qr-canvas.js"></script>
+    <script src="js/ui/score-card.js"></script>
     <script src="js/ui/editor-tutorial.js"></script>
     <script src="js/ui/editor.js"></script>
     <script src="js/social/community.js"></script>

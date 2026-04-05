@@ -251,14 +251,20 @@ function renderDailyBestGameOver(isNewBest) {
     streakHtml +
     `<div id="daily-go-rank-row"></div>` +
     `<button id="daily-go-share-btn">Copy Result</button>` +
-    `<div id="daily-go-share-feedback"></div>`;
+    `<div id="daily-go-share-feedback"></div>` +
+    `<div id="daily-go-score-card-wrap" style="display:none;margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:6px;">` +
+    `<canvas id="daily-go-score-card-canvas"></canvas>` +
+    `<button id="daily-go-score-card-download" style="font-family:'Press Start 2P',cursive;font-size:9px;color:#0cf;background:transparent;border:1px solid rgba(0,204,255,0.4);padding:6px 14px;cursor:pointer;border-radius:4px;">&#11015; Save Card</button>` +
+    `</div>`;
 
   // Wire up share button
   const shareBtn = el.querySelector('#daily-go-share-btn');
   const shareFeedback = el.querySelector('#daily-go-share-feedback');
   if (shareBtn) {
     shareBtn.onclick = function () {
-      const text = buildDailyShareText(best.score);
+      const baseText = buildDailyShareText(best.score);
+      const baseUrl = location.href.split('?')[0].split('#')[0];
+      const text = baseText + '\n' + baseUrl;
       function showCopied() {
         if (shareFeedback) {
           shareFeedback.textContent = 'Copied!';
@@ -275,6 +281,43 @@ function renderDailyBestGameOver(isNewBest) {
         _showDailyShareFallback(text, shareBtn);
       }
     };
+  }
+
+  // Generate daily score card
+  if (typeof ScoreCard !== 'undefined') {
+    const _dcCanvas = el.querySelector('#daily-go-score-card-canvas');
+    const _dcWrap   = el.querySelector('#daily-go-score-card-wrap');
+    const _dcDl     = el.querySelector('#daily-go-score-card-download');
+    if (_dcCanvas && _dcWrap) {
+      const _scDate   = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const _scPlayer = typeof loadDisplayName === 'function' ? (loadDisplayName() || '') : '';
+      const _scTheme  = (typeof activeTheme !== 'undefined' && activeTheme) ? activeTheme : 'classic';
+      const _renderDailyCard = function () {
+        ScoreCard.render(_dcCanvas, {
+          score:        best.score,
+          linesCleared: best.linesCleared || 0,
+          blocksMined:  0,
+          timeStr:      (function() { var t = Math.floor(best.timeSurvived || 0); return String(Math.floor(t/60)).padStart(2,'0') + ':' + String(t%60).padStart(2,'0'); }()),
+          mode:         'Daily Challenge',
+          theme:        _scTheme,
+          rank:         null,
+          date:         _scDate,
+          playerName:   _scPlayer,
+          dailyNumber:  getDailyNumber(),
+        });
+        _dcWrap.style.display = 'flex';
+      };
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(_renderDailyCard);
+      } else {
+        _renderDailyCard();
+      }
+      if (_dcDl) {
+        _dcDl.onclick = function () {
+          ScoreCard.downloadPNG(_dcCanvas, 'minetris-daily-' + getDailyNumber() + '-' + best.score + '.png');
+        };
+      }
+    }
   }
 }
 

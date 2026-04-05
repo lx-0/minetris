@@ -413,6 +413,7 @@ function triggerGameOver() {
 
   // Submit and render high scores (not for survival/endless/expedition — each has its own screen)
   const _inExpedition = (typeof activeBiomeId !== 'undefined') && !!activeBiomeId;
+  let _goHsRank = null;
   if (!isSurvivalMode && !isEndlessSurvivalMode && !_inExpedition) {
     const hsRank = submitHighScore(
       state.score,
@@ -420,6 +421,7 @@ function triggerGameOver() {
       state.blocksMined,
       state.linesCleared
     );
+    _goHsRank = hsRank;
     renderHighScoresGameOver(hsRank);
   } else {
     // Hide classic HS table in survival/endless mode
@@ -597,9 +599,14 @@ function triggerGameOver() {
         shareUrl += "&sname=" + encodeURIComponent(displayName);
       }
 
-      // Fall back to plain text if URL somehow exceeds 2000 chars
+      // Build rich share text: "I scored X in MineCtris Mode! Can you beat me? [link]"
       const MAX_URL = 2000;
-      const copyContent = shareUrl.length <= MAX_URL ? shareUrl
+      const shareText = "I scored " + state.score.toLocaleString() +
+        " in MineCtris " + modeLine + "! Can you beat me?\n" +
+        (shareUrl.length <= MAX_URL ? shareUrl
+          : baseUrl);
+      const copyContent = shareUrl.length <= MAX_URL
+        ? "I scored " + state.score.toLocaleString() + " in MineCtris " + modeLine + "! Can you beat me?\n" + shareUrl
         : "MINETRIS\n" + modeLine + " \u2014 Score: " + state.score.toLocaleString() + " | Lines: " + state.linesCleared + " | Survived: " + mm + ":" + ss;
 
       // Remove any old fallback input
@@ -671,6 +678,54 @@ function triggerGameOver() {
   // Show Game Over overlay
   const gameOverEl = document.getElementById("game-over-screen");
   if (gameOverEl) gameOverEl.style.display = "flex";
+
+  // Generate score card
+  if (typeof ScoreCard !== 'undefined') {
+    const _scCanvas = document.getElementById('go-score-card-canvas');
+    const _scWrap   = document.getElementById('go-score-card-wrap');
+    const _scDl     = document.getElementById('go-score-card-download');
+    if (_scCanvas && _scWrap) {
+      const _scWeeklyLabel = isWeeklyChallenge
+        ? 'Weekly' + (weeklyModifier ? ' \u2014 ' + weeklyModifier.name : '')
+        : null;
+      const _scMode = isDailyChallenge ? 'Daily Challenge'
+        : _scWeeklyLabel ? _scWeeklyLabel
+        : isBlitzMode ? 'Blitz'
+        : isSurvivalMode ? 'Survival'
+        : isEndlessSurvivalMode ? 'Endless'
+        : 'Classic';
+      const _scDate = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const _scPlayer = typeof loadDisplayName === 'function' ? (loadDisplayName() || '') : '';
+      const _scTheme  = (typeof activeTheme !== 'undefined' && activeTheme) ? activeTheme : 'classic';
+      // Use font-ready promise so "Press Start 2P" renders correctly on canvas
+      const _renderCard = function () {
+        ScoreCard.render(_scCanvas, {
+          score:        state.score,
+          linesCleared: state.linesCleared,
+          blocksMined:  state.blocksMined,
+          timeStr:      mm + ':' + ss,
+          mode:         _scMode,
+          theme:        _scTheme,
+          rank:         _goHsRank,
+          date:         _scDate,
+          playerName:   _scPlayer,
+          dailyNumber:  isDailyChallenge && typeof getDailyNumber === 'function' ? getDailyNumber() : null,
+        });
+        _scWrap.style.display = 'flex';
+      };
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(_renderCard);
+      } else {
+        _renderCard();
+      }
+      if (_scDl) {
+        _scDl.onclick = function () {
+          const _dlName = 'minetris-' + _scMode.toLowerCase().replace(/\s+/g, '-') + '-' + state.score + '.png';
+          ScoreCard.downloadPNG(_scCanvas, _dlName);
+        };
+      }
+    }
+  }
 
   // Show "Return to Survival" button when the run was launched from the cave mouth.
   if (typeof showReturnToSurvivalBtn === 'function') showReturnToSurvivalBtn();

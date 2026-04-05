@@ -649,6 +649,36 @@ body {
   text-align: center;
 }
 
+/* ── Score card ── */
+#go-score-card-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+#go-score-card-canvas {
+  border-radius: 6px;
+  box-shadow: 0 0 24px rgba(74, 222, 128, 0.15), 0 2px 12px rgba(0,0,0,0.6);
+  max-width: min(560px, 92vw);
+  height: auto;
+}
+#go-score-card-download {
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: #4ade80;
+  background: transparent;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s, border-color 0.15s;
+}
+#go-score-card-download:hover {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: #4ade80;
+}
+
 /* ── Sprint complete screen ── */
 #sprint-complete-screen {
   position: absolute;

@@ -401,13 +401,19 @@ function _showReplayShareFlyout(replayData, anchorBtn) {
   const shareUrl = window.location.origin + window.location.pathname +
     '?replay=' + encodeURIComponent(b64);
 
+  // Build share text mentioning it's a replay
+  const _replayScore = replayData && replayData.score ? replayData.score.toLocaleString() : '';
+  const shareText = (_replayScore
+    ? 'Watch my MineCtris replay \u2014 ' + _replayScore + ' pts!\n'
+    : 'Watch this MineCtris replay!\n') + shareUrl;
+
   const wrap = document.createElement('div');
   wrap.className = 'replay-share-flyout';
 
   const input = document.createElement('input');
   input.type     = 'text';
   input.readOnly = true;
-  input.value    = shareUrl;
+  input.value    = shareText;
   input.className = 'replay-share-input';
 
   wrap.appendChild(input);
@@ -415,7 +421,7 @@ function _showReplayShareFlyout(replayData, anchorBtn) {
   input.select();
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(shareUrl).then(function() {
+    navigator.clipboard.writeText(shareText).then(function() {
       anchorBtn.textContent = 'Copied!';
       setTimeout(function() { anchorBtn.textContent = 'Share'; }, 1500);
     });
