@@ -6721,6 +6721,15 @@ body.theme-candy .inv-slot.selected {
 .lb-trend-up   { color: #4caf50; font-size: 0.8em; }
 .lb-trend-down { color: #f55;    font-size: 0.8em; }
 
+/* ── Verified badge (anti-cheat replay check passed) ── */
+.lb-verified-badge {
+  color: #4caf50;
+  font-size: 0.75em;
+  font-weight: bold;
+  vertical-align: middle;
+  opacity: 0.85;
+}
+
 /* ── Load-more button ── */
 .lb-load-more-btn {
   font-family: "Press Start 2P", cursive;

@@ -10,6 +10,7 @@ const REPLAY_VERSION     = 1;
 // ── Recording state ────────────────────────────────────────────────────────────
 let _replayRecording = false;
 let _replayData      = null;  // { version, mode, date, score, duration, pieces[], inputs[] }
+let _lastReplaySubmission = null; // compact submission data saved before _replayData is cleared
 
 // ── Playback state ─────────────────────────────────────────────────────────────
 let isReplayMode          = false;  // blocks live input when true
@@ -81,6 +82,14 @@ function replayFinishRecording(finalScore, linesCleared, blocksMined, duration) 
   _replayData.blocksMined  = blocksMined;
   _replayData.duration     = Math.round(duration);
 
+  // Capture compact submission data for anti-cheat before _replayData is cleared below.
+  _lastReplaySubmission = {
+    mode:         _replayData.mode,
+    pieceIndices: _replayData.pieces.map(function(p) { return p.i; }),
+    inputCount:   _replayData.inputs.length,
+    duration:     Math.round(duration),
+  };
+
   // Detect personal best for this mode
   const existing  = replayLoadAll();
   const sameMode  = existing.filter(function(r) { return r.mode === _replayData.mode; });
@@ -105,6 +114,16 @@ function replayFinishRecording(finalScore, linesCleared, blocksMined, duration) 
   const result = { isNewPB: isNewPB };
   _replayData = null;
   return result;
+}
+
+/**
+ * Returns the compact replay submission data captured at game-over, then clears it.
+ * Call this once from apiSubmitScore / apiSubmitModeScore; returns null if nothing queued.
+ */
+function replayConsumeSubmissionData() {
+  var d = _lastReplaySubmission;
+  _lastReplaySubmission = null;
+  return d;
 }
 
 /** Stop any active recording without saving (e.g. on resetGame during playback). */

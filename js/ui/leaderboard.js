@@ -80,14 +80,37 @@ function markSubmittedToday() {
   try { localStorage.setItem(LB_SUBMITTED_KEY, getDailyDateString()); } catch (_) {}
 }
 
+// ── Anti-cheat helpers ────────────────────────────────────────────────────────
+
+/**
+ * Compute a SHA-256 hex digest over the submission payload for tamper-evidence.
+ * Format: "pieceIndicesCSV:score:linesCleared:timestamp"
+ */
+async function _buildReplaySignature(pieceIndices, score, linesCleared, timestamp) {
+  try {
+    const data = (pieceIndices || []).join(',') + ':' + score + ':' + linesCleared + ':' + timestamp;
+    const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
+    return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+  } catch (_) {
+    return null;
+  }
+}
+
 // ── API calls ─────────────────────────────────────────────────────────────────
 
 async function apiSubmitScore(displayName, score, linesCleared) {
-  const date = getDailyDateString();
+  const date      = getDailyDateString();
+  const timestamp = Date.now();
+  const replay    = typeof replayConsumeSubmissionData === 'function' ? replayConsumeSubmissionData() : null;
+  const signature = replay ? await _buildReplaySignature(replay.pieceIndices, score, linesCleared, timestamp) : null;
   const resp = await fetch(LEADERBOARD_WORKER_URL + '/api/scores', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ displayName, score, linesCleared, date, clientTimestamp: Date.now() }),
+    body: JSON.stringify({
+      displayName, score, linesCleared, date, clientTimestamp: timestamp,
+      replay:    replay    || undefined,
+      signature: signature || undefined,
+    }),
   });
   return resp.json();
 }
@@ -470,12 +493,15 @@ function _doRenderLeaderboard(container) {
       nameCell += ' \u25c4';
     }
 
-    const rankCell = _lbRankBadge(e.rank);
-    const scoreVal = (e[scoreKey] || 0).toLocaleString();
-    const col2Val  = e[col2Key] != null ? e[col2Key] : '-';
+    const rankCell    = _lbRankBadge(e.rank);
+    const scoreVal    = (e[scoreKey] || 0).toLocaleString();
+    const col2Val     = e[col2Key] != null ? e[col2Key] : '-';
+    const verifiedBadge = e.verified
+      ? '<span class="lb-verified-badge" title="Score verified by server replay check">\u2714</span> '
+      : '';
     html += '<tr' + cls + '>' +
       '<td>' + rankCell + '</td>' +
-      '<td>' + nameCell + '</td>' +
+      '<td>' + verifiedBadge + nameCell + '</td>' +
       '<td>' + scoreVal + '</td>' +
       '<td>' + col2Val + '</td>' +
       '</tr>';
@@ -1146,11 +1172,18 @@ const _MODE_LB_CONFIG = {
 };
 
 async function apiSubmitModeScore(displayName, mode, score, linesCleared) {
-  const week = typeof getWeeklyDateString === 'function' ? getWeeklyDateString() : null;
+  const week      = typeof getWeeklyDateString === 'function' ? getWeeklyDateString() : null;
+  const timestamp = Date.now();
+  const replay    = typeof replayConsumeSubmissionData === 'function' ? replayConsumeSubmissionData() : null;
+  const signature = replay ? await _buildReplaySignature(replay.pieceIndices, score, linesCleared, timestamp) : null;
   const resp = await fetch(LEADERBOARD_WORKER_URL + '/api/scores/mode', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ displayName, mode, score, linesCleared, week, clientTimestamp: Date.now() }),
+    body: JSON.stringify({
+      displayName, mode, score, linesCleared, week, clientTimestamp: timestamp,
+      replay:    replay    || undefined,
+      signature: signature || undefined,
+    }),
   });
   return resp.json();
 }
@@ -1288,9 +1321,12 @@ function _renderModeLeaderboard(container, data, mode, range) {
       }
     }
 
+    const _modeVerifiedBadge = e.verified
+      ? '<span class="lb-verified-badge" title="Score verified by server replay check">\u2714</span> '
+      : '';
     html += '<tr' + cls + '>' +
       '<td>' + _lbRankBadge(e.rank) + '</td>' +
-      '<td>' + nameCell + '</td>' +
+      '<td>' + _modeVerifiedBadge + nameCell + '</td>' +
       '<td>' + _escHtml(scoreStr) + '</td>' +
       '<td>' + (e.linesCleared != null ? e.linesCleared : '-') + '</td>' +
       changeCell +

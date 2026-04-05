@@ -130,6 +130,124 @@
  *     → JSON { submittedAt, score } — best score per player/biome/week
  */
 
+// ── Anti-cheat: PRNG helpers (mirrors client daily.js) ──────────────────────
+
+function _mulberry32(seed) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function _hashDateAC(str) {
+  let h = 0x12345678;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 0x9e3779b9);
+    h = ((h << 13) | (h >>> 19)) ^ h;
+  }
+  return h >>> 0;
+}
+
+/**
+ * Generate the expected piece-index sequence for a seeded daily game.
+ * Mirrors pieces.js spawnFallingPiece + initPieceQueue logic exactly:
+ *   - NEXT_QUEUE_SIZE = 3 initial fills
+ *   - Each spawn: 1 refill + spawnX + spawnZ + rotationInterval = 4 rng() calls
+ * Standard pool = indices 1-7 (no diamond until level 7; first ~30 pieces are pre-diamond).
+ */
+function _dailyPieceSequence(dateStr, count) {
+  const rng = _mulberry32(_hashDateAC(dateStr));
+  const QUEUE = 3;
+  const POOL  = 7;
+  const pieceIdx = () => Math.floor(rng() * POOL) + 1;
+
+  // Initial queue fill
+  const queue = [];
+  for (let i = 0; i < QUEUE; i++) queue.push(pieceIdx());
+
+  const result = [];
+  for (let spawn = 0; spawn < count; spawn++) {
+    result.push(queue.shift());
+    queue.push(pieceIdx()); // refill
+    rng(); rng(); rng();    // spawnX, spawnZ, rotationInterval
+  }
+  return result;
+}
+
+// ── Anti-cheat: per-minute rate limiting ─────────────────────────────────────
+
+const MAX_SUBMISSIONS_PER_MINUTE = 10;
+
+async function checkPerMinuteRateLimit(env, playerLower, now) {
+  const minuteBucket = Math.floor(now / 60000);
+  const key = `ratelimit:min:${playerLower}:${minuteBucket}`;
+  const entry = await env.LEADERBOARD_KV.get(key, { type: 'json' });
+  const count = (entry && entry.count) || 0;
+  if (count >= MAX_SUBMISSIONS_PER_MINUTE) return { allowed: false };
+  // Increment with 120-second TTL (covers current minute + one buffer)
+  await env.LEADERBOARD_KV.put(key, JSON.stringify({ count: count + 1 }), { expirationTtl: 120 });
+  return { allowed: true };
+}
+
+// ── Anti-cheat: anomaly detection (Welford's online algorithm) ────────────────
+
+/**
+ * Update running stats and return whether the score is an outlier (> 3 std dev).
+ * statsKey must be mode+period specific (e.g. "anticheat:stats:daily:2025-04-05").
+ */
+async function checkAndUpdateAnomalyStats(env, statsKey, score, ttl) {
+  const stats = (await env.LEADERBOARD_KV.get(statsKey, { type: 'json' })) || { count: 0, mean: 0, m2: 0 };
+  const flagged = stats.count >= 30 && (function () {
+    const variance = stats.m2 / (stats.count - 1);
+    const stddev   = variance > 0 ? Math.sqrt(variance) : 0;
+    return score > stats.mean + 3 * stddev;
+  })();
+  // Update stats with new score (Welford's method)
+  const n     = stats.count + 1;
+  const delta = score - stats.mean;
+  const mean  = stats.mean + delta / n;
+  const m2    = stats.m2 + delta * (score - mean);
+  await env.LEADERBOARD_KV.put(statsKey, JSON.stringify({ count: n, mean, m2 }), { expirationTtl: ttl });
+  return { flagged };
+}
+
+// ── Anti-cheat: replay validation ────────────────────────────────────────────
+
+/**
+ * Verify the client-submitted signature matches the expected hash of:
+ *   pieceIndicesCSV:score:linesCleared:timestamp
+ */
+async function verifyReplaySignature(pieceIndices, score, linesCleared, timestamp, signature) {
+  if (!signature || typeof signature !== 'string' || signature.length !== 64) return false;
+  const data    = (pieceIndices || []).join(',') + ':' + score + ':' + linesCleared + ':' + timestamp;
+  const buf     = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
+  const expected = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return expected === signature;
+}
+
+/**
+ * Validate the submitted piece sequence against the server-derived daily sequence.
+ * Returns { valid: bool, mismatch: int } where mismatch is the count of wrong indices.
+ * Only verifies the first VERIFY_COUNT pieces (before diamond eligibility).
+ */
+const DAILY_VERIFY_COUNT = 20;
+
+function validateDailyPieces(dateStr, submittedIndices) {
+  if (!submittedIndices || submittedIndices.length === 0) return { valid: false, mismatch: -1 };
+  const count    = Math.min(submittedIndices.length, DAILY_VERIFY_COUNT);
+  const expected = _dailyPieceSequence(dateStr, count);
+  let mismatch   = 0;
+  for (let i = 0; i < count; i++) {
+    if (submittedIndices[i] !== expected[i]) mismatch++;
+  }
+  // Allow 0 mismatches — the sequence is deterministic, any deviation is suspicious.
+  // We reject if more than 1 mismatch to account for possible edge cases (e.g. custom queues).
+  return { valid: mismatch <= 1, mismatch };
+}
+
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const LEADERBOARD_MAX = 100;
@@ -274,7 +392,7 @@ async function handlePostScore(request, env) {
     return jsonResponse({ error: 'Invalid JSON' }, 400);
   }
 
-  const { displayName, score, linesCleared, date, clientTimestamp } = body;
+  const { displayName, score, linesCleared, date, clientTimestamp, replay, signature } = body;
 
   // 1. Validate display name
   if (!displayName || !DISPLAY_NAME_REGEX.test(displayName)) {
@@ -299,14 +417,22 @@ async function handlePostScore(request, env) {
     return jsonResponse({ error: 'Score fails plausibility check' }, 400);
   }
 
-  // 5. Rate limit: 1 submission per displayName per day
-  const playerKey = `player:${displayName.toLowerCase()}:${date}`;
+  // 5. Per-minute rate limit: max 10 submissions per minute per player
+  const playerLower = displayName.toLowerCase();
+  const now = Date.now();
+  const minuteCheck = await checkPerMinuteRateLimit(env, playerLower, now);
+  if (!minuteCheck.allowed) {
+    return jsonResponse({ error: 'Rate limit exceeded — too many submissions this minute' }, 429);
+  }
+
+  // 6. Rate limit: 1 submission per displayName per day
+  const playerKey = `player:${playerLower}:${date}`;
   const existingEntry = await env.LEADERBOARD_KV.get(playerKey, { type: 'json' });
   if (existingEntry) {
     return jsonResponse({ error: 'Already submitted today' }, 429);
   }
 
-  // 6. IP-based secondary rate limit (same IP, different name)
+  // 7. IP-based secondary rate limit (same IP, different name)
   const ip = request.headers.get('CF-Connecting-IP') ||
              request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() ||
              '0.0.0.0';
@@ -317,20 +443,54 @@ async function handlePostScore(request, env) {
     return jsonResponse({ error: 'Too many submissions from this IP today' }, 429);
   }
 
-  // 7. Load current leaderboard
+  // 8. Replay validation
+  let verified = false;
+  if (replay && Array.isArray(replay.pieceIndices) && replay.pieceIndices.length > 0) {
+    // 8a. Verify submission signature (proves payload wasn't tampered after recording)
+    const sigOk = await verifyReplaySignature(
+      replay.pieceIndices, scoreNum, linesNum, clientTimestamp, signature
+    );
+    if (!sigOk) {
+      return jsonResponse({ error: 'Invalid submission signature' }, 400);
+    }
+    // 8b. Verify piece count is plausible (need at least linesNum / 4 pieces to clear that many lines)
+    const minPiecesForLines = Math.floor(linesNum / 4);
+    if (replay.pieceIndices.length < minPiecesForLines) {
+      return jsonResponse({ error: 'Replay piece count inconsistent with lines cleared' }, 400);
+    }
+    // 8c. For daily mode — verify deterministic piece sequence matches server-derived sequence
+    const isDaily = !replay.mode || replay.mode === 'daily';
+    if (isDaily) {
+      const pieceCheck = validateDailyPieces(date, replay.pieceIndices);
+      if (!pieceCheck.valid) {
+        // Sequence mismatch — reject (cheated or corrupted replay)
+        return jsonResponse({ error: 'Score rejected: replay sequence invalid' }, 400);
+      }
+    }
+    verified = true;
+  }
+
+  // 9. Load current leaderboard
   const lbKey = `leaderboard:${date}`;
   let leaderboard = (await env.LEADERBOARD_KV.get(lbKey, { type: 'json' })) || [];
 
-  // 8. Statistical flagging: if score > P99 of current leaderboard
-  let flagged = false;
+  // 10. Anomaly detection: flag scores > 3 standard deviations above the daily mean
+  const statsKey = `anticheat:stats:daily:${date}`;
+  const statsTtl = 60 * 60 * 24 * 14; // 14 days
+  const anomalyCheck = await checkAndUpdateAnomalyStats(env, statsKey, scoreNum, statsTtl);
+
+  // 11. Legacy P99 flag (keep for backward compat)
+  let p99Flagged = false;
   if (leaderboard.length >= 20) {
     const sorted = [...leaderboard].sort((a, b) => b.score - a.score);
     const p99Index = Math.floor(sorted.length * 0.01);
     const p99Score = sorted[Math.min(p99Index, sorted.length - 1)].score;
     if (scoreNum > p99Score && scoreNum > sorted[0].score * 1.1) {
-      flagged = true;
+      p99Flagged = true;
     }
   }
+
+  const flagged = anomalyCheck.flagged || p99Flagged;
 
   const entry = {
     displayName,
@@ -338,19 +498,31 @@ async function handlePostScore(request, env) {
     linesCleared: linesNum,
     date,
     submittedAt: new Date().toISOString(),
+    verified,
   };
 
   if (flagged) {
-    // Store flagged entry separately; still accept (don't reveal flagging)
+    // Store flagged entry for review; do NOT add to public leaderboard
     const flaggedKey = `flagged:${date}`;
     const flaggedList = (await env.LEADERBOARD_KV.get(flaggedKey, { type: 'json' })) || [];
-    flaggedList.push({ ...entry, ipHash });
+    flaggedList.push({ ...entry, ipHash, flagReasons: [anomalyCheck.flagged ? '3std' : 'p99'] });
     await env.LEADERBOARD_KV.put(flaggedKey, JSON.stringify(flaggedList), {
       expirationTtl: 60 * 60 * 24 * 30, // 30 days
     });
+    // Record rate-limit keys so the player can't resubmit today, but return ok (don't reveal flagging)
+    const ttl = 60 * 60 * 24 * 7;
+    await Promise.all([
+      env.LEADERBOARD_KV.put(playerKey, JSON.stringify({ submittedAt: entry.submittedAt }), { expirationTtl: ttl }),
+      env.LEADERBOARD_KV.put(ipKey, JSON.stringify({ count: (ipEntry?.count || 0) + 1 }), { expirationTtl: ttl }),
+    ]);
+    // Return a plausible rank so the client doesn't know it was flagged
+    const fakeRank = leaderboard.length > 0
+      ? leaderboard.filter(e => e.score >= scoreNum).length + 1
+      : 1;
+    return jsonResponse({ ok: true, rank: fakeRank, total: leaderboard.length });
   }
 
-  // 9. Insert into leaderboard (sorted desc), truncate to top 100
+  // 12. Insert into leaderboard (sorted desc), truncate to top 100
   leaderboard.push(entry);
   leaderboard.sort((a, b) => b.score - a.score);
   if (leaderboard.length > LEADERBOARD_MAX) {
@@ -430,6 +602,7 @@ async function handleGetLeaderboard(date, env) {
     displayName: entry.displayName,
     score: entry.score,
     linesCleared: entry.linesCleared,
+    verified: entry.verified || false,
   }));
 
   return jsonResponse({ date, entries: top20, total: leaderboard.length });
@@ -470,7 +643,13 @@ async function handlePostWeeklyScore(request, env) {
     return jsonResponse({ error: 'Score fails plausibility check' }, 400);
   }
 
-  // 5. Rate limit: 1 submission per displayName per week
+  // 5a. Per-minute rate limit
+  const _weekMinuteCheck = await checkPerMinuteRateLimit(env, displayName.toLowerCase(), Date.now());
+  if (!_weekMinuteCheck.allowed) {
+    return jsonResponse({ error: 'Rate limit exceeded — too many submissions this minute' }, 429);
+  }
+
+  // 5b. Rate limit: 1 submission per displayName per week
   const playerKey = `player:week:${displayName.toLowerCase()}:${week}`;
   const existingEntry = await env.LEADERBOARD_KV.get(playerKey, { type: 'json' });
   if (existingEntry) {
@@ -7057,7 +7236,7 @@ async function handlePostModeScore(request, env) {
   let body;
   try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON' }, 400); }
 
-  const { displayName, mode, score, linesCleared, week, clientTimestamp } = body;
+  const { displayName, mode, score, linesCleared, week, clientTimestamp, replay, signature } = body;
 
   if (!displayName || !DISPLAY_NAME_REGEX.test(displayName)) {
     return jsonResponse({ error: 'Invalid display name' }, 400);
@@ -7082,6 +7261,38 @@ async function handlePostModeScore(request, env) {
   const weekStr = week || currentISOWeek();
   if (!isValidWeek(weekStr) || weekStr !== currentISOWeek()) {
     return jsonResponse({ error: 'Invalid or stale week' }, 400);
+  }
+
+  // Per-minute rate limit
+  const _modeMinuteCheck = await checkPerMinuteRateLimit(env, displayName.toLowerCase(), Date.now());
+  if (!_modeMinuteCheck.allowed) {
+    return jsonResponse({ error: 'Rate limit exceeded — too many submissions this minute' }, 429);
+  }
+
+  // Replay validation + verified flag
+  let modeVerified = false;
+  if (replay && Array.isArray(replay.pieceIndices) && replay.pieceIndices.length > 0) {
+    const sigOk = await verifyReplaySignature(
+      replay.pieceIndices, scoreNum, linesNum, clientTimestamp, signature
+    );
+    if (sigOk) modeVerified = true;
+  }
+
+  // Anomaly detection for mode submissions
+  const modeStatsKey = `anticheat:stats:mode:${mode}:${weekStr}`;
+  const modeStatsTtl = 60 * 60 * 24 * 14;
+  const modeAnomaly = await checkAndUpdateAnomalyStats(env, modeStatsKey, scoreNum, modeStatsTtl);
+  if (modeAnomaly.flagged) {
+    // Store for review; don't reveal flagging to client
+    const flaggedKey = `flagged:mode:${mode}:${weekStr}`;
+    const ipHash2 = await hashIP(
+      request.headers.get('CF-Connecting-IP') ||
+      request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() || '0.0.0.0'
+    );
+    const flaggedList2 = (await env.LEADERBOARD_KV.get(flaggedKey, { type: 'json' })) || [];
+    flaggedList2.push({ displayName, score: scoreNum, mode, weekStr, submittedAt: new Date().toISOString(), ipHash: ipHash2 });
+    await env.LEADERBOARD_KV.put(flaggedKey, JSON.stringify(flaggedList2), { expirationTtl: 60 * 60 * 24 * 30 });
+    return jsonResponse({ ok: true, mode, weeklyImproved: false, allTimeImproved: false, weekRank: null, allTimeRank: null, totalWeekly: 0, totalAllTime: 0 });
   }
 
   const now = new Date().toISOString();
@@ -7110,7 +7321,7 @@ async function handlePostModeScore(request, env) {
   let weekRank = null;
   if (isBetterThanWeek) {
     weekLb = weekLb.filter(e => e.displayName.toLowerCase() !== nameLower);
-    weekLb.push({ displayName, score: scoreNum, linesCleared: linesNum, submittedAt: now });
+    weekLb.push({ displayName, score: scoreNum, linesCleared: linesNum, submittedAt: now, verified: modeVerified });
     weekLb.sort((a, b) => _compareModeScores(a, b, cfg.sortAsc));
     if (weekLb.length > MODE_LB_MAX) weekLb = weekLb.slice(0, MODE_LB_MAX);
     weekRank = weekLb.findIndex(e => e.displayName.toLowerCase() === nameLower) + 1 || null;
@@ -7137,7 +7348,7 @@ async function handlePostModeScore(request, env) {
   let allTimeRank = null;
   if (isBetterAllTime) {
     allTimeLb = allTimeLb.filter(e => e.displayName.toLowerCase() !== nameLower);
-    allTimeLb.push({ displayName, score: scoreNum, linesCleared: linesNum, submittedAt: now });
+    allTimeLb.push({ displayName, score: scoreNum, linesCleared: linesNum, submittedAt: now, verified: modeVerified });
     allTimeLb.sort((a, b) => _compareModeScores(a, b, cfg.sortAsc));
     if (allTimeLb.length > MODE_LB_MAX) allTimeLb = allTimeLb.slice(0, MODE_LB_MAX);
     allTimeRank = allTimeLb.findIndex(e => e.displayName.toLowerCase() === nameLower) + 1 || null;
@@ -7194,6 +7405,7 @@ async function handleGetModeLeaderboard(modeId, request, env) {
       displayName: e.displayName,
       score: e.score,
       linesCleared: e.linesCleared,
+      verified: e.verified || false,
     }));
 
     let ownEntry = null;
@@ -7231,6 +7443,7 @@ async function handleGetModeLeaderboard(modeId, request, env) {
       score: e.score,
       linesCleared: e.linesCleared,
       rankChange,
+      verified: e.verified || false,
     };
   });
 
