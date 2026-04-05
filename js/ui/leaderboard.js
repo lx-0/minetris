@@ -363,6 +363,16 @@ function _renderLeaderboard(container, entries, date, labelOverride, isSeason) {
     }
 
     if (isMe) {
+      // Featured achievement badge next to name
+      if (typeof loadFeaturedBadge === 'function' && typeof ACHIEVEMENTS !== 'undefined') {
+        const _featuredId = loadFeaturedBadge();
+        if (_featuredId) {
+          const _featuredAch = ACHIEVEMENTS.find(function(a) { return a.id === _featuredId; });
+          if (_featuredAch) {
+            nameCell = '<span class="lb-featured-badge" title="Featured: ' + _featuredAch.name + '">' + _featuredAch.icon + '</span> ' + nameCell;
+          }
+        }
+      }
       // Prestige stars/crown next to name
       const _prestigeHtml = typeof getPrestigeStarsHtml === 'function' ? getPrestigeStarsHtml() : '';
       if (_prestigeHtml) nameCell = _prestigeHtml + ' ' + nameCell;

@@ -330,6 +330,7 @@ function _friendsRenderList() {
       + '</div></div>'
       + '<div class="friends-row-right">'
       + inviteBtns
+      + '<button class="friends-view-profile-btn friend-view-profile-btn" data-code="' + _esc(f.code) + '" title="View profile">&#128100;</button>'
       + '<button class="friends-remove-btn" data-code="' + _esc(f.code) + '" title="Remove friend">&#10005;</button>'
       + '</div>'
       + '</div>';
@@ -339,6 +340,11 @@ function _friendsRenderList() {
   container.querySelectorAll('.friends-invite-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
       friendsSendInvite(btn.dataset.code, btn.dataset.mode);
+    });
+  });
+  container.querySelectorAll('.friends-view-profile-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (typeof friendsViewProfile === 'function') friendsViewProfile(btn.dataset.code);
     });
   });
   container.querySelectorAll('.friends-remove-btn').forEach(function (btn) {

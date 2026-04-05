@@ -895,6 +895,31 @@ function _renderProfileMainTabs() {
   '</div>';
 }
 
+function _renderProfileShowcaseLauncher() {
+  var unlocked = typeof loadAchievements === 'function' ? loadAchievements() : {};
+  var unlockedCount = Object.keys(unlocked).length;
+  var featuredId = typeof loadFeaturedBadge === 'function' ? loadFeaturedBadge() : null;
+  var featuredAch = featuredId && typeof ACHIEVEMENTS !== 'undefined'
+    ? ACHIEVEMENTS.find(function (a) { return a.id === featuredId; }) : null;
+
+  var html = '<div class="profile-showcase-launcher">';
+  html += '<div class="profile-section-title">ACHIEVEMENT SHOWCASE</div>';
+  html += '<div class="profile-showcase-summary">';
+  html += '<span class="psl-badge-count">' + unlockedCount + ' badges earned</span>';
+  if (featuredAch) {
+    html += '<span class="psl-featured">Featured: ' + featuredAch.icon + ' ' + _escProfileHtml(featuredAch.name) + '</span>';
+  } else {
+    html += '<span class="psl-featured psl-featured-none">No featured badge set</span>';
+  }
+  html += '</div>';
+  html += '<div class="profile-showcase-btns">';
+  html += '<button class="profile-showcase-open-btn" id="profile-showcase-open-btn">&#127942; View Showcase</button>';
+  html += '<button class="profile-showcase-share-btn" id="profile-showcase-dl-btn">&#128247; Share Card</button>';
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
 function renderProfilePage() {
   var body = document.getElementById('profile-page-body');
   if (!body) return;
@@ -904,6 +929,7 @@ function renderProfilePage() {
   html += _renderProfileStats();
   html += '<div id="profile-equipped-section">' + _renderEquippedCosmetics() + '</div>';
   html += _renderMasteryBadges();
+  html += _renderProfileShowcaseLauncher();
   html += _renderProfileMainTabs();
   html += '<div id="profile-wardrobe-section"' + (_profileMainTab === 'history' ? ' style="display:none"' : '') + '>';
   html += _renderWardrobeTabs();
@@ -911,6 +937,20 @@ function renderProfilePage() {
   html += '<div id="profile-history-content"' + (_profileMainTab === 'wardrobe' ? ' style="display:none"' : '') + '></div>';
 
   body.innerHTML = html;
+
+  // Wire showcase launcher buttons
+  var showcaseOpenBtn = body.querySelector('#profile-showcase-open-btn');
+  if (showcaseOpenBtn) {
+    showcaseOpenBtn.addEventListener('click', function () {
+      if (typeof openAchievementShowcase === 'function') openAchievementShowcase();
+    });
+  }
+  var showcaseDlBtn = body.querySelector('#profile-showcase-dl-btn');
+  if (showcaseDlBtn) {
+    showcaseDlBtn.addEventListener('click', function () {
+      if (typeof downloadProfileCard === 'function') downloadProfileCard();
+    });
+  }
 
   // Wire main tab clicks
   var mainTabs = body.querySelectorAll('.profile-main-tab');
