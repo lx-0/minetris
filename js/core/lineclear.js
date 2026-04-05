@@ -171,6 +171,7 @@ function checkLineClear(newBlocks) {
     _lcPerfectClear = (_remainingCells === 0);
   }
   if (_lcPerfectClear) sessionPerfectClears++;
+  if (completeLevels.length >= 4) sessionTetrises++;
 
   // Audio: rumble + arpeggio
   playLineClearRumble();

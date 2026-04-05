@@ -86,7 +86,10 @@ function triggerSprintComplete() {
 
   // Log session for history graphs
   if (typeof logSession === 'function') {
-    logSession({ mode: 'sprint', score: score, lines: linesCleared, durationSecs: Math.floor((sprintElapsedMs || 0) / 1000), result: 'complete' });
+    var _sprintDurSecs = Math.floor((sprintElapsedMs || 0) / 1000);
+    logSession({ mode: 'sprint', score: score, lines: linesCleared, durationSecs: _sprintDurSecs, result: 'complete',
+      maxCombo: sessionHighestComboCount, tSpins: sessionTSpins, tetrises: sessionTetrises,
+      piecesPlaced: blocksPlaced, apm: _sprintDurSecs > 0 ? Math.round((blocksPlaced / (_sprintDurSecs / 60)) * 10) / 10 : 0 });
   }
 
   // Metrics: log session end

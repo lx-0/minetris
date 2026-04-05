@@ -58,6 +58,7 @@ function resetGame() {
   sessionHighestComboCount = 0;
   sessionTSpins = 0;
   sessionPerfectClears = 0;
+  sessionTetrises = 0;
   if (typeof achResetSession === "function") achResetSession();
   if (typeof resetMissionSession === "function") resetMissionSession();
 

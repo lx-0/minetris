@@ -317,11 +317,17 @@ function triggerGameOver() {
 
   // Log session for history graphs
   if (typeof logSession === 'function') {
+    var _gsDurSecs = state.elapsedSeconds || 0;
     logSession({
       mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isEndlessSurvivalMode ? 'endless' : (isSurvivalMode ? 'survival' : 'classic')),
       score: state.score,
       lines: state.linesCleared,
-      durationSecs: state.elapsedSeconds,
+      durationSecs: _gsDurSecs,
+      maxCombo: sessionHighestComboCount,
+      tSpins: sessionTSpins,
+      tetrises: sessionTetrises,
+      piecesPlaced: blocksPlaced,
+      apm: _gsDurSecs > 0 ? Math.round((blocksPlaced / (_gsDurSecs / 60)) * 10) / 10 : 0,
     });
   }
 

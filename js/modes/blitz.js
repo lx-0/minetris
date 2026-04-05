@@ -70,7 +70,9 @@ function triggerBlitzComplete() {
 
   // Log session for history graphs
   if (typeof logSession === 'function') {
-    logSession({ mode: 'blitz', score: score, lines: linesCleared, durationSecs: 120 });
+    logSession({ mode: 'blitz', score: score, lines: linesCleared, durationSecs: 120,
+      maxCombo: sessionHighestComboCount, tSpins: sessionTSpins, tetrises: sessionTetrises,
+      piecesPlaced: blocksPlaced, apm: Math.round((blocksPlaced / 2) * 10) / 10 });
   }
 
   // Metrics: log session end

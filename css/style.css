@@ -4733,8 +4733,21 @@ body {
 #stats-dash-footer {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   margin-top: 8px;
 }
+.stats-export-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: rgba(0, 200, 255, 0.7);
+  background: transparent;
+  border: 1px solid rgba(0, 200, 255, 0.35);
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s, color 0.15s;
+}
+.stats-export-btn:hover { background: rgba(0, 200, 255, 0.12); color: #0cf; }
 .stats-reset-btn {
   font-family: "Press Start 2P", cursive;
   font-size: 7px;
@@ -4754,6 +4767,26 @@ body {
   text-align: center;
   padding: 16px 0;
 }
+/* Trends metric selector */
+.stats-trends-metric-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.stats-trends-metric-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: rgba(0,255,0,0.5);
+  background: transparent;
+  border: 1px solid rgba(0,255,0,0.25);
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s, color 0.15s;
+}
+.stats-trends-metric-btn:hover { background: rgba(0,255,0,0.1); color: #0f0; }
+.stats-trends-metric-active { background: rgba(0,255,0,0.18) !important; color: #0f0 !important; border-color: #0f0 !important; }
 /* Trends chart */
 #stats-trends-canvas { border-radius: 4px; background: rgba(0,0,0,0.3); }
 .stats-trends-legend {
@@ -4762,6 +4795,38 @@ body {
   color: rgba(0,255,0,0.4);
   text-align: center;
   margin-top: 6px;
+}
+/* Session history list */
+.stats-history-list { display: flex; flex-direction: column; gap: 6px; }
+.stats-history-entry {
+  border: 1px solid rgba(0,255,0,0.18);
+  border-radius: 3px;
+  padding: 6px 8px;
+  background: rgba(0,255,0,0.03);
+}
+.stats-history-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.stats-history-mode {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: #0f0;
+}
+.stats-history-date {
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  color: rgba(0,255,0,0.45);
+}
+.stats-history-row {
+  display: flex;
+  gap: 10px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  color: rgba(0,255,0,0.65);
+  margin-top: 3px;
+  flex-wrap: wrap;
 }
 /* Milestones grid */
 .stats-milestones-grid {

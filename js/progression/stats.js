@@ -121,13 +121,18 @@ function loadSessionHistory() {
 /**
  * Log a completed play session.
  * @param {object} params
- * @param {string} params.mode        e.g. 'classic', 'blitz', 'sprint', 'battle', 'puzzle'
+ * @param {string} params.mode          e.g. 'classic', 'blitz', 'sprint', 'battle', 'puzzle'
  * @param {number} params.score
- * @param {number} params.lines       lines cleared
+ * @param {number} params.lines         lines cleared
  * @param {number} params.durationSecs
- * @param {string} [params.result]    'win' | 'loss' | 'complete' (optional)
+ * @param {string} [params.result]      'win' | 'loss' | 'complete' (optional)
+ * @param {number} [params.maxCombo]    highest combo count
+ * @param {number} [params.tSpins]      T-spins in session
+ * @param {number} [params.tetrises]    4-line clears in session
+ * @param {number} [params.piecesPlaced] pieces placed
+ * @param {number} [params.apm]         actions per minute
  */
-function logSession({ mode, score, lines, durationSecs, result }) {
+function logSession({ mode, score, lines, durationSecs, result, maxCombo, tSpins, tetrises, piecesPlaced, apm }) {
   try {
     const history = loadSessionHistory();
     history.unshift({
@@ -137,6 +142,11 @@ function logSession({ mode, score, lines, durationSecs, result }) {
       lines: lines || 0,
       durationSecs: Math.floor(durationSecs || 0),
       result: result || 'complete',
+      maxCombo: maxCombo || 0,
+      tSpins: tSpins || 0,
+      tetrises: tetrises || 0,
+      piecesPlaced: piecesPlaced || 0,
+      apm: apm || 0,
     });
     // Keep only the most recent entries
     if (history.length > SESSION_HISTORY_LIMIT) history.length = SESSION_HISTORY_LIMIT;
@@ -177,6 +187,27 @@ function _checkMilestones(stats) {
       stats.unlockedMilestones.push(m.id);
     }
   });
+}
+
+/** Export all stats and session history to a JSON file download. */
+function _exportStatsJson() {
+  try {
+    var exportData = {
+      exportedAt: new Date().toISOString(),
+      lifetimeStats: loadLifetimeStats(),
+      sessionHistory: loadSessionHistory(),
+    };
+    var json = JSON.stringify(exportData, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'minectris-stats-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (_) {}
 }
 
 /** Reset all lifetime stats and session history after confirmation. */
@@ -332,19 +363,27 @@ function _renderTabOverview(stats) {
   return html;
 }
 
+var _MODE_LABELS = {
+  classic:  'Classic',
+  blitz:    'Blitz',
+  sprint:   'Sprint',
+  daily:    'Daily',
+  weekly:   'Weekly',
+  puzzle:   'Puzzle',
+  survival: 'Survival',
+  endless:  'Endless',
+  battle:   'Battle',
+};
+var _MODE_PIE_COLORS = {
+  classic: '#00ff00', blitz: '#ff8800', sprint: '#00ccff', daily: '#ffff00',
+  weekly: '#ff00ff', puzzle: '#88ff00', survival: '#ff4444', endless: '#ff6688', battle: '#ff6666',
+};
+
 function _renderTabModes(stats) {
-  const MODE_LABELS = {
-    classic:  'Classic',
-    blitz:    'Blitz',
-    sprint:   'Sprint',
-    daily:    'Daily',
-    weekly:   'Weekly',
-    puzzle:   'Puzzle',
-    survival: 'Survival',
-    battle:   'Battle',
-  };
   var pm = stats.perMode || {};
-  var html = _statsSection('PER-MODE BREAKDOWN');
+  var html = _statsSection('TIME SPENT PER MODE');
+  html += '<canvas id="stats-pie-canvas" width="260" height="120" style="width:100%;max-width:260px;display:block;margin:4px auto 8px;"></canvas>';
+  html += _statsSection('PER-MODE BREAKDOWN');
   var modes = Object.keys(pm);
   if (modes.length === 0) {
     html += '<div class="stats-empty">No games recorded yet.</div>';
@@ -352,7 +391,7 @@ function _renderTabModes(stats) {
   }
   modes.forEach(function (modeKey) {
     var d = pm[modeKey];
-    var label = MODE_LABELS[modeKey] || modeKey.toUpperCase();
+    var label = _MODE_LABELS[modeKey] || modeKey.toUpperCase();
     var avg = d.games > 0 ? Math.round(d.totalScore / d.games) : 0;
     html += _statsSection(label.toUpperCase());
     html += _statsRow('GAMES',      d.games);
@@ -360,6 +399,20 @@ function _renderTabModes(stats) {
     html += _statsRow('AVG SCORE',  avg);
   });
   return html;
+}
+
+function _drawModePieChart() {
+  // Aggregate time per mode from session history
+  var history = typeof loadSessionHistory === 'function' ? loadSessionHistory() : [];
+  var timePerMode = {};
+  history.forEach(function (e) {
+    if (!timePerMode[e.mode]) timePerMode[e.mode] = 0;
+    timePerMode[e.mode] += e.durationSecs || 0;
+  });
+  var data = Object.keys(timePerMode).map(function (m) {
+    return { label: (_MODE_LABELS[m] || m), value: timePerMode[m], color: _MODE_PIE_COLORS[m] || '#00ff00' };
+  }).filter(function (d) { return d.value > 0; });
+  _drawPieChart('stats-pie-canvas', data);
 }
 
 function _renderTabRecords(stats) {
@@ -391,9 +444,25 @@ function _renderTabRecords(stats) {
   return html;
 }
 
+let _statsTrendMetric = 'score';
+
 function _renderTabTrends() {
-  return '<canvas id="stats-trends-canvas" width="400" height="180" style="width:100%;max-width:400px;display:block;margin:0 auto;"></canvas>' +
-    '<div class="stats-trends-legend">Last 20 games — score by session</div>';
+  return '<div class="stats-trends-metric-row">' +
+    '<button class="stats-trends-metric-btn stats-trends-metric-active" id="stm-score"   onclick="_setTrendMetric(\'score\')">SCORE</button>' +
+    '<button class="stats-trends-metric-btn" id="stm-lines"   onclick="_setTrendMetric(\'lines\')">LINES</button>' +
+    '<button class="stats-trends-metric-btn" id="stm-apm"     onclick="_setTrendMetric(\'apm\')">APM</button>' +
+    '</div>' +
+    '<canvas id="stats-trends-canvas" width="400" height="180" style="width:100%;max-width:400px;display:block;margin:0 auto;"></canvas>' +
+    '<div class="stats-trends-legend" id="stats-trends-legend">Last 20 games — score by session</div>';
+}
+
+function _setTrendMetric(metric) {
+  _statsTrendMetric = metric;
+  ['score', 'lines', 'apm'].forEach(function (m) {
+    var btn = document.getElementById('stm-' + m);
+    if (btn) btn.classList.toggle('stats-trends-metric-active', m === metric);
+  });
+  _drawTrendsChart();
 }
 
 function _drawTrendsChart() {
@@ -403,7 +472,16 @@ function _drawTrendsChart() {
   var recent = history.slice(0, 20).reverse();
   var ctx = canvas.getContext('2d');
   var W = canvas.width, H = canvas.height;
+  var PAD_L = 40, PAD_B = 20, PAD_R = 10, PAD_T = 10;
   ctx.clearRect(0, 0, W, H);
+
+  var metric = _statsTrendMetric || 'score';
+  var metricLabels = { score: 'score', lines: 'lines', apm: 'APM' };
+
+  // Update legend text
+  var legendEl = document.getElementById('stats-trends-legend');
+  if (legendEl) legendEl.textContent = 'Last 20 games — ' + (metricLabels[metric] || metric) + ' per session';
+
   if (recent.length === 0) {
     ctx.fillStyle = 'rgba(0,255,0,0.4)';
     ctx.font = '12px monospace';
@@ -411,22 +489,124 @@ function _drawTrendsChart() {
     ctx.fillText('No session history yet', W / 2, H / 2);
     return;
   }
-  var maxScore = recent.reduce(function (m, e) { return Math.max(m, e.score || 0); }, 1);
-  var barW = Math.floor((W - 20) / recent.length) - 2;
-  var BAR_COLORS = { classic: '#00ff00', blitz: '#ff8800', sprint: '#00ccff', daily: '#ffff00', weekly: '#ff00ff', puzzle: '#88ff00', survival: '#ff4444', battle: '#ff6666' };
-  recent.forEach(function (entry, i) {
-    var barH = Math.max(4, Math.floor(((entry.score || 0) / maxScore) * (H - 30)));
-    var x = 10 + i * (barW + 2);
-    var y = H - 20 - barH;
-    ctx.fillStyle = BAR_COLORS[entry.mode] || '#00ff00';
-    ctx.fillRect(x, y, barW, barH);
-  });
-  // X-axis line
+
+  var getValue = function (e) {
+    if (metric === 'score') return e.score || 0;
+    if (metric === 'lines') return e.lines || 0;
+    if (metric === 'apm')   return e.apm || 0;
+    return 0;
+  };
+
+  var values = recent.map(getValue);
+  var maxVal = values.reduce(function (m, v) { return Math.max(m, v); }, 1);
+  var chartW = W - PAD_L - PAD_R;
+  var chartH = H - PAD_T - PAD_B;
+
+  // Grid lines (4 horizontal)
+  ctx.strokeStyle = 'rgba(0,255,0,0.12)';
+  ctx.lineWidth = 1;
+  for (var g = 1; g <= 4; g++) {
+    var gy = PAD_T + chartH - (g / 4) * chartH;
+    ctx.beginPath(); ctx.moveTo(PAD_L, gy); ctx.lineTo(W - PAD_R, gy); ctx.stroke();
+    // Y-axis label
+    var labelVal = Math.round((g / 4) * maxVal);
+    ctx.fillStyle = 'rgba(0,255,0,0.4)';
+    ctx.font = '7px monospace';
+    ctx.textAlign = 'right';
+    var labelStr = labelVal >= 1000 ? (labelVal / 1000).toFixed(1) + 'k' : String(labelVal);
+    ctx.fillText(labelStr, PAD_L - 3, gy + 3);
+  }
+
+  // X-axis
   ctx.strokeStyle = 'rgba(0,255,0,0.3)';
   ctx.beginPath();
-  ctx.moveTo(10, H - 20);
-  ctx.lineTo(W - 10, H - 20);
+  ctx.moveTo(PAD_L, PAD_T + chartH);
+  ctx.lineTo(W - PAD_R, PAD_T + chartH);
   ctx.stroke();
+
+  // Y-axis
+  ctx.beginPath();
+  ctx.moveTo(PAD_L, PAD_T);
+  ctx.lineTo(PAD_L, PAD_T + chartH);
+  ctx.stroke();
+
+  if (recent.length === 1) {
+    // Single point — draw a dot
+    var _sx = PAD_L + chartW / 2;
+    var _sy = PAD_T + chartH - Math.max(4, (values[0] / maxVal) * chartH);
+    ctx.fillStyle = '#0f0';
+    ctx.beginPath(); ctx.arc(_sx, _sy, 4, 0, Math.PI * 2); ctx.fill();
+    return;
+  }
+
+  var stepX = chartW / (recent.length - 1);
+
+  // Line chart
+  ctx.strokeStyle = '#0f0';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  recent.forEach(function (entry, i) {
+    var x = PAD_L + i * stepX;
+    var y = PAD_T + chartH - (values[i] / maxVal) * chartH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Dots
+  ctx.fillStyle = '#0f0';
+  recent.forEach(function (entry, i) {
+    var x = PAD_L + i * stepX;
+    var y = PAD_T + chartH - (values[i] / maxVal) * chartH;
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+  });
+}
+
+function _drawPieChart(canvasId, data) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  var total = data.reduce(function (s, d) { return s + d.value; }, 0);
+  if (total === 0) {
+    ctx.fillStyle = 'rgba(0,255,0,0.4)';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('No data yet', W / 2, H / 2);
+    return;
+  }
+
+  var cx = W / 2 - 10, cy = H / 2, r = Math.min(cx, cy) - 10;
+  var angle = -Math.PI / 2;
+  data.forEach(function (d) {
+    if (d.value === 0) return;
+    var slice = (d.value / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle, angle + slice);
+    ctx.closePath();
+    ctx.fillStyle = d.color;
+    ctx.fill();
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    angle += slice;
+  });
+
+  // Legend (right side)
+  var legendX = cx + r + 14;
+  var legendY = cy - (data.length * 10) / 2;
+  data.forEach(function (d, i) {
+    if (d.value === 0) return;
+    var pct = Math.round((d.value / total) * 100);
+    ctx.fillStyle = d.color;
+    ctx.fillRect(legendX, legendY + i * 12, 8, 8);
+    ctx.fillStyle = 'rgba(0,255,0,0.7)';
+    ctx.font = '7px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(d.label + ' ' + pct + '%', legendX + 11, legendY + i * 12 + 7);
+  });
 }
 
 function _renderTabMilestones(stats) {
@@ -448,10 +628,46 @@ function _renderTabMilestones(stats) {
 // ── Active tab state ──────────────────────────────────────────────────────────
 let _statsDashTab = 'overview';
 
+function _renderTabHistory() {
+  var history = typeof loadSessionHistory === 'function' ? loadSessionHistory() : [];
+  var recent = history.slice(0, 20);
+  if (recent.length === 0) {
+    return _statsSection('RECENT GAMES') + '<div class="stats-empty">No games recorded yet.</div>';
+  }
+  var html = _statsSection('RECENT GAMES (last 20)');
+  html += '<div class="stats-history-list">';
+  recent.forEach(function (e) {
+    var dur = e.durationSecs || 0;
+    var durStr = dur >= 60 ? Math.floor(dur / 60) + 'm ' + (dur % 60) + 's' : dur + 's';
+    html += '<div class="stats-history-entry">' +
+      '<div class="stats-history-header">' +
+        '<span class="stats-history-mode">' + _escStatsHtml((_MODE_LABELS[e.mode] || e.mode).toUpperCase()) + '</span>' +
+        '<span class="stats-history-date">' + _escStatsHtml(e.date || '') + '</span>' +
+      '</div>' +
+      '<div class="stats-history-row">' +
+        '<span>Score: ' + _escStatsHtml(String(e.score || 0)) + '</span>' +
+        '<span>Lines: ' + _escStatsHtml(String(e.lines || 0)) + '</span>' +
+        '<span>Time: ' + _escStatsHtml(durStr) + '</span>' +
+      '</div>' +
+      '<div class="stats-history-row">' +
+        '<span>Combo: ' + _escStatsHtml(String(e.maxCombo || 0)) + '</span>' +
+        '<span>T-Spins: ' + _escStatsHtml(String(e.tSpins || 0)) + '</span>' +
+        '<span>Tetrises: ' + _escStatsHtml(String(e.tetrises || 0)) + '</span>' +
+      '</div>' +
+      '<div class="stats-history-row">' +
+        '<span>Pieces: ' + _escStatsHtml(String(e.piecesPlaced || 0)) + '</span>' +
+        '<span>APM: ' + _escStatsHtml(String(e.apm || 0)) + '</span>' +
+      '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
 function _switchStatsDashTab(tab) {
   _statsDashTab = tab;
   // Update tab button active states
-  ['overview', 'modes', 'records', 'trends', 'milestones'].forEach(function (t) {
+  ['overview', 'modes', 'records', 'trends', 'history', 'milestones'].forEach(function (t) {
     var btn = document.getElementById('stats-tab-' + t);
     if (btn) btn.classList.toggle('stats-tab-active', t === tab);
   });
@@ -467,9 +683,14 @@ function _renderActiveStatsDashTab() {
   else if (_statsDashTab === 'modes')  html = _renderTabModes(stats);
   else if (_statsDashTab === 'records') html = _renderTabRecords(stats);
   else if (_statsDashTab === 'trends') html = _renderTabTrends();
+  else if (_statsDashTab === 'history') html = _renderTabHistory();
   else if (_statsDashTab === 'milestones') html = _renderTabMilestones(stats);
   contentEl.innerHTML = html;
-  if (_statsDashTab === 'trends') _drawTrendsChart();
+  if (_statsDashTab === 'trends') {
+    _statsTrendMetric = 'score';
+    _drawTrendsChart();
+  }
+  if (_statsDashTab === 'modes') _drawModePieChart();
 }
 
 /** Render the full stats dashboard. */
@@ -482,10 +703,12 @@ function renderStatsPanel() {
       '<button id="stats-tab-modes"       class="stats-tab" onclick="_switchStatsDashTab(\'modes\')">MODES</button>' +
       '<button id="stats-tab-records"     class="stats-tab" onclick="_switchStatsDashTab(\'records\')">RECORDS</button>' +
       '<button id="stats-tab-trends"      class="stats-tab" onclick="_switchStatsDashTab(\'trends\')">TRENDS</button>' +
+      '<button id="stats-tab-history"     class="stats-tab" onclick="_switchStatsDashTab(\'history\')">HISTORY</button>' +
       '<button id="stats-tab-milestones"  class="stats-tab" onclick="_switchStatsDashTab(\'milestones\')">BADGES</button>' +
     '</div>' +
     '<div id="stats-dash-content"></div>' +
     '<div id="stats-dash-footer">' +
+      '<button class="stats-export-btn" onclick="_exportStatsJson()">Export JSON</button>' +
       '<button class="stats-reset-btn" onclick="_openStatsResetConfirm()">Reset Stats</button>' +
     '</div>';
   _statsDashTab = 'overview';

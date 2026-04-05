@@ -54,7 +54,10 @@ function _triggerPuzzleWin() {
 
   // Log session for history graphs
   if (typeof logSession === 'function') {
-    logSession({ mode: 'puzzle', score: score, lines: linesCleared, durationSecs: typeof getGameState === 'function' ? Math.floor(getGameState().elapsedSeconds || 0) : 0, result: 'complete' });
+    var _puzzDurSecs = typeof getGameState === 'function' ? Math.floor(getGameState().elapsedSeconds || 0) : 0;
+    logSession({ mode: 'puzzle', score: score, lines: linesCleared, durationSecs: _puzzDurSecs, result: 'complete',
+      maxCombo: sessionHighestComboCount, tSpins: sessionTSpins, tetrises: sessionTetrises,
+      piecesPlaced: blocksPlaced, apm: _puzzDurSecs > 0 ? Math.round((blocksPlaced / (_puzzDurSecs / 60)) * 10) / 10 : 0 });
   }
 
   // Metrics: log session end
