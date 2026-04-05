@@ -31,6 +31,14 @@
         const blitzBest = loadBlitzBest();
         blitzPbEl.textContent = blitzBest ? "Best: " + blitzBest.score : "";
       }
+      // Populate Marathon personal best
+      const marathonPbEl = document.getElementById("mode-pb-marathon");
+      if (marathonPbEl && typeof loadMarathonBest === 'function') {
+        const mBest = loadMarathonBest();
+        marathonPbEl.textContent = mBest
+          ? "Best: Level " + mBest.level + " (" + mBest.score + ")"
+          : "";
+      }
       // Populate Daily Challenge personal best and lock state
       const dailyPbEl = document.getElementById("mode-pb-daily");
       const dailyDescEl = document.getElementById("mode-daily-desc");
@@ -105,7 +113,7 @@
       // Render World Card stats panel
       if (typeof renderWorldCard === "function") renderWorldCard();
       // Apply highlight to the specified mode card
-      ["classic", "sprint", "blitz", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai"].forEach(function (mode) {
+      ["classic", "sprint", "blitz", "marathon", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai"].forEach(function (mode) {
         const cardEl = document.getElementById("mode-card-" + mode);
         if (cardEl) {
           if (mode === highlightMode) {
@@ -416,6 +424,25 @@
         applyWorldModifierHUD();
         try { localStorage.setItem("mineCtris_lastMode", "blitz"); } catch (_) {}
         if (typeof metricsModePlayed === 'function') metricsModePlayed('blitz');
+        hideModeSelect();
+        requestPointerLock();
+      });
+    }
+
+    const marathonCardEl = document.getElementById("mode-card-marathon");
+    if (marathonCardEl) {
+      marathonCardEl.addEventListener("click", function () {
+        isDailyChallenge    = false;
+        gameRng             = null;
+        isMarathonMode      = true;
+        marathonLevel       = 1;
+        marathonKillScreen  = false;
+        // Start at level 1 speed (base rate, no multiplier)
+        difficultyMultiplier = 1.0;
+        lastDifficultyTier   = 0;
+        applyWorldModifierHUD();
+        try { localStorage.setItem("mineCtris_lastMode", "marathon"); } catch (_) {}
+        if (typeof metricsModePlayed === 'function') metricsModePlayed('marathon');
         hideModeSelect();
         requestPointerLock();
       });

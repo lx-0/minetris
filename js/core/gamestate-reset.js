@@ -111,6 +111,11 @@ function resetGame() {
   if (nudgeHintEl) nudgeHintEl.style.display = "none";
   if (typeof resetDasState === 'function') resetDasState();
 
+  // Reset marathon state
+  isMarathonMode     = false;
+  marathonLevel      = 1;
+  marathonKillScreen = false;
+
   // Reset sprint state
   isSprintMode      = false;
   sprintTimerActive = false;

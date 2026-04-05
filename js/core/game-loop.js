@@ -330,6 +330,19 @@ function animate() {
       }
     }
 
+    // Combo screen shake — decays over 0.18s
+    if (comboShakeActive) {
+      const _cShakeDur = 0.18;
+      const _cAge = elapsedTime - comboShakeStart;
+      if (_cAge < _cShakeDur) {
+        const _ci = (1 - _cAge / _cShakeDur) * comboShakeStrength;
+        camera.position.x += (Math.random() - 0.5) * _ci;
+        camera.position.y += (Math.random() - 0.5) * _ci;
+      } else {
+        comboShakeActive = false;
+      }
+    }
+
     if (!isEditorMode) checkPlayerCollision(playerVelocity.y * delta);
 
     // Safety: below bedrock floor → respawn at surface to prevent softlock.

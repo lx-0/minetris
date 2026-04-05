@@ -147,6 +147,12 @@ let playerPushVelocity = new THREE.Vector3();
 let screenShakeActive = false;
 let screenShakeStart = 0;
 
+// ── Combo screen shake ────────────────────────────────────────────────────────
+// Separate from push-based screenShake; triggered by consecutive line clears.
+let comboShakeActive = false;
+let comboShakeStart  = 0;
+let comboShakeStrength = 0;
+
 // ── Piece nudge state ─────────────────────────────────────────────────────────
 let nudgeCooldown = 0;  // seconds remaining before next nudge is allowed
 
@@ -250,6 +256,17 @@ let weeklyGoldRush = false;        // Gold Rush: gold 3× more likely, 2× line-
 let weeklyIceAge = false;          // Ice Age: 60% ice pieces, Level 3 start
 let weeklyDoubleOrNothing = false; // Double or Nothing: 3× combo mult, −25% score on break
 let weeklyBlindDrop = false;       // Blind Drop: next-piece preview hidden
+
+// ── Marathon mode state ───────────────────────────────────────────────────────
+// Endless mode with level-based speed (like classic Tetris). Every 10 lines = +1 level.
+// Speed curve: level N multiplier = pow(MARATHON_LEVEL_RATE, N-1).
+// Kill screen at level 29 (very high speed). Milestone messages at levels 5,10,15,20,25,29.
+let isMarathonMode      = false;
+let marathonLevel       = 1;      // current level (1–29+)
+let marathonKillScreen  = false;  // true after level 29 is reached
+const MARATHON_LINES_PER_LEVEL = 10;
+const MARATHON_KILL_SCREEN_LEVEL = 29;
+const MARATHON_LEVEL_RATE = 1.18; // per-level speed multiplier (≈ 1.18^28 ≈ 84× at kill screen)
 
 // ── Sprint mode state ─────────────────────────────────────────────────────────
 // Target: clear exactly 40 lines as fast as possible.

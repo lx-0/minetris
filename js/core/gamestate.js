@@ -80,6 +80,19 @@ function updateScoreHUD() {
     timerEl.textContent = "Time: " + bm + ":" + bs;
     timerEl.style.color = blitzBonusActive ? "#ffd700" : "";
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Blitz";
+  } else if (isMarathonMode) {
+    // Marathon: show lines within the current level and level number
+    const mLinesInLevel = linesCleared % MARATHON_LINES_PER_LEVEL;
+    const mTotalSecs = Math.floor(gameElapsedSeconds);
+    const mm2 = Math.floor(mTotalSecs / 60).toString().padStart(2, "0");
+    const ss2 = (mTotalSecs % 60).toString().padStart(2, "0");
+    scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
+      "Lines: " + mLinesInLevel + "/" + MARATHON_LINES_PER_LEVEL;
+    scoreEl.querySelector(".hud-stat:nth-child(4)").textContent =
+      "Time: " + mm2 + ":" + ss2;
+    scoreEl.querySelector(".hud-stat:nth-child(4)").style.color = "";
+    scoreEl.querySelector(".hud-stat:nth-child(5)").textContent =
+      marathonKillScreen ? "KILL SCREEN!" : "Level " + marathonLevel;
   } else if (isSprintMode) {
     // Sprint: show progress toward 40 lines and sprint elapsed time
     scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
@@ -250,6 +263,11 @@ function triggerGameOver() {
     return;
   }
 
+  // Marathon mode: save best and submit stats
+  if (isMarathonMode && typeof onMarathonGameOver === "function") {
+    onMarathonGameOver();
+  }
+
   // Survival mode: record run, clear the world, then show special summary
   if (isSurvivalMode) {
     const survStats = typeof submitSurvivalStats === "function"
@@ -317,14 +335,14 @@ function triggerGameOver() {
     tSpins: sessionTSpins,
     perfectClears: sessionPerfectClears,
     durationSecs: state.elapsedSeconds,
-    mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isEndlessSurvivalMode ? 'endless' : (isSurvivalMode ? 'survival' : 'classic')),
+    mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isEndlessSurvivalMode ? 'endless' : (isSurvivalMode ? 'survival' : (isMarathonMode ? 'marathon' : 'classic'))),
   });
 
   // Log session for history graphs
   if (typeof logSession === 'function') {
     var _gsDurSecs = state.elapsedSeconds || 0;
     logSession({
-      mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isEndlessSurvivalMode ? 'endless' : (isSurvivalMode ? 'survival' : 'classic')),
+      mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isEndlessSurvivalMode ? 'endless' : (isSurvivalMode ? 'survival' : (isMarathonMode ? 'marathon' : 'classic'))),
       score: state.score,
       lines: state.linesCleared,
       durationSecs: _gsDurSecs,

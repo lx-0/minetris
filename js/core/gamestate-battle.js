@@ -302,6 +302,8 @@ function updateDifficulty(delta) {
     difficultyMultiplier = BLITZ_FIXED_MULTIPLIER;
     return;
   }
+  // Marathon: speed is managed by updateMarathonLevel() on each line clear; skip time escalation
+  if (isMarathonMode) return;
   // Puzzle mode: fixed slow speed; no escalation
   if (isPuzzleMode) return;
 

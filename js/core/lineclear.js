@@ -228,6 +228,11 @@ function checkLineClear(newBlocks) {
     triggerSprintComplete();
   }
 
+  // Marathon: advance level based on lines cleared
+  if (isMarathonMode && typeof updateMarathonLevel === "function") {
+    updateMarathonLevel();
+  }
+
   const now = clock.getElapsedTime();
   var _comboWindow = 3.0;
   if (lastClearTime >= 0 && (now - lastClearTime) <= _comboWindow) {
@@ -337,16 +342,36 @@ function checkLineClear(newBlocks) {
     comboBannerEl.style.display = "block";
     comboBannerTimer = 1.5;
 
-    // x3 combo: subtle vignette brightness pulse
-    if (comboCount >= 4) {
+    // ── Combo visual effects ─────────────────────────────────────────────────
+    if (!(typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled)) {
+      // Screen shake — intensity scales with combo
+      if (comboCount >= 2) {
+        const _shakeStr = comboCount >= 4 ? 0.22 : comboCount >= 3 ? 0.14 : 0.07;
+        comboShakeActive   = true;
+        comboShakeStart    = clock.getElapsedTime();
+        comboShakeStrength = _shakeStr;
+      }
+
+      // Flash overlay — combo 3+ gets an escalating color burst
       const flashEl = document.getElementById("lc-flash-overlay");
       if (flashEl) {
+        const _flashColor = comboCount >= 4 ? "#ff3300"
+                          : comboCount >= 3 ? "#ffd700"
+                          : "#ffe080";
+        const _flashAlpha = comboCount >= 4 ? "0.28"
+                          : comboCount >= 3 ? "0.20"
+                          : "0.12";
         flashEl.style.transition = "none";
-        flashEl.style.backgroundColor = "#ffe080";
-        flashEl.style.opacity = "0.18";
+        flashEl.style.backgroundColor = _flashColor;
+        flashEl.style.opacity = _flashAlpha;
         void flashEl.offsetHeight;
-        flashEl.style.transition = "opacity 0.5s ease-out";
+        flashEl.style.transition = "opacity 0.45s ease-out";
         flashEl.style.opacity = "0";
+      }
+
+      // Chromatic aberration burst at x3+ combo
+      if (comboCount >= 4 && typeof triggerChromaticAberration === 'function') {
+        triggerChromaticAberration(0.007, 0.35);
       }
     }
   }
