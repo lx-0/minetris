@@ -323,6 +323,46 @@ const LEGENDARY_TRAIL_EMISSIVE = {
   6: 0xff8c00, // gilded amber glow
 };
 
+// Ender theme palette — purple/black End dimension tones.
+// Index maps 1:1 with COLORS. canonicalColor (Classic hex) is always preserved.
+const ENDER_COLORS = [
+  null,
+  0x1a0f2e, // 1 → end stone grey-purple  (was dirt brown)
+  0x2d1b4e, // 2 → dark end stone          (was stone grey)
+  0xaa77ff, // 3 → ender shimmer           (was gold yellow)
+  0xd4aaff, // 4 → pale end crystal        (was ice cyan)
+  0x0d3030, // 5 → dark end teal           (was moss green)
+  0xcc44aa, // 6 → chorus flower pink      (was lava red)
+  0x0d0020, // 7 → deep void               (was crystal purple)
+  0x66ffaa, // 8 → ender eye green         (was diamond deep blue)
+];
+const ENDER_TRAIL_EMISSIVE = {
+  3: 0xaa77ff, // ender shimmer glow
+  4: 0xd4aaff, // pale crystal glow
+  6: 0xcc44aa, // chorus pink glow
+  8: 0x66ffaa, // ender eye glow
+};
+
+// Diamond theme palette — shimmering ice-blue crystal tones.
+// Index maps 1:1 with COLORS. canonicalColor (Classic hex) is always preserved.
+const DIAMOND_COLORS = [
+  null,
+  0x3ab8e0, // 1 → crystal blue      (was dirt brown)
+  0x1c6ca5, // 2 → deep sapphire     (was stone grey)
+  0xb8eaff, // 3 → pale crystal      (was gold yellow)
+  0x88ffff, // 4 → bright aqua ice   (was ice cyan)
+  0x0a7faf, // 5 → teal sapphire     (was moss green)
+  0x00b0ef, // 6 → electric blue     (was lava red)
+  0x4b7fff, // 7 → periwinkle        (was crystal purple)
+  0x00d5ff, // 8 → diamond sparkle   (was diamond deep blue)
+];
+const DIAMOND_TRAIL_EMISSIVE = {
+  3: 0xb8eaff, // pale crystal glow
+  4: 0x88ffff, // aqua ice glow
+  6: 0x00b0ef, // electric blue glow
+  8: 0x00d5ff, // diamond sparkle glow
+};
+
 // Diamond Season palette — icy crystalline blues for the season Diamond-tier full skin.
 // Index maps 1:1 with COLORS. canonicalColor (Classic hex) is always preserved.
 const DIAMOND_SEASON_COLORS = [

@@ -113,6 +113,8 @@ function _rematerialBlocks() {
     storm:     typeof STORM_COLORS     !== 'undefined' ? STORM_COLORS     : null,
     void:      typeof VOID_COLORS      !== 'undefined' ? VOID_COLORS      : null,
     legendary: typeof LEGENDARY_COLORS !== 'undefined' ? LEGENDARY_COLORS : null,
+    ender:     typeof ENDER_COLORS     !== 'undefined' ? ENDER_COLORS     : null,
+    diamond:   typeof DIAMOND_COLORS   !== 'undefined' ? DIAMOND_COLORS   : null,
   };
   const currentTheme = (typeof activeTheme !== 'undefined') ? activeTheme : 'classic';
   const themePalette = THEME_PALETTE_MAP[currentTheme] || null;

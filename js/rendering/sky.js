@@ -30,6 +30,32 @@ const _SEASON_SKY_THEMES = {
   // overworld: no override — normal sky is appropriate for Season 1
 };
 
+// Theme sky overrides — applied when a matching active theme is set.
+const _THEME_SKY_OVERRIDES = {
+  ender: {
+    zen: [  0,  0,   0], // true black zenith
+    hor: [ 20,  0,  50], // #140032 void purple horizon
+    fog: new THREE.Color(0x0d0020),
+    tint: 0.85,
+  },
+  nether: _SEASON_SKY_THEMES.nether,
+  diamond: {
+    zen: [ 10, 60, 100], // deep sapphire zenith
+    hor: [ 80, 180, 220], // ice-blue horizon
+    fog: new THREE.Color(0x1a8fbf),
+    tint: 0.45,
+  },
+};
+
+/**
+ * Returns the sky override for the current visual theme, or null if none.
+ * Skipped when a biome sky is active (biome takes priority).
+ */
+function getThemeSkyOverride() {
+  const theme = (typeof activeTheme !== 'undefined') ? activeTheme : 'classic';
+  return _THEME_SKY_OVERRIDES[theme] || null;
+}
+
 // Keyframes: t in [0,1] where 0/1=midnight, 0.25=dawn, 0.5=noon, 0.75=dusk
 // Colors as [r, g, b] 0-255
 const _SKY_KEYS = [
@@ -296,6 +322,13 @@ function updateSky(elapsedSeconds, delta = 0.016) {
     horArr = _lerpArr(horArr, _seasonTheme.hor, _seasonTheme.tint);
   }
 
+  // Theme sky override — applied for ender/nether/diamond visual themes (skipped in biome mode)
+  const _themeSkyOverride = !_biomeSkyTheme && !_seasonTheme ? getThemeSkyOverride() : null;
+  if (_themeSkyOverride) {
+    zenArr = _lerpArr(zenArr, _themeSkyOverride.zen, _themeSkyOverride.tint);
+    horArr = _lerpArr(horArr, _themeSkyOverride.hor, _themeSkyOverride.tint);
+  }
+
   // World modifier sky override — blend toward modifier fog color
   const _wmodSky = typeof getWorldModifier === 'function' ? getWorldModifier() : null;
   if (_wmodSky && _wmodSky.fogColor !== null) {
@@ -460,6 +493,11 @@ function updateSky(elapsedSeconds, delta = 0.016) {
     // Season fog tint (applied before danger override, skipped in biome mode)
     if (!_biomeSkyTheme && _seasonTheme && _seasonTheme.fog) {
       fogColor.lerp(_seasonTheme.fog, _seasonTheme.tint * 0.7);
+    }
+
+    // Theme fog tint (applied when ender/nether/diamond theme is active)
+    if (_themeSkyOverride && _themeSkyOverride.fog) {
+      fogColor.lerp(_themeSkyOverride.fog, _themeSkyOverride.tint * 0.7);
     }
 
     // World modifier fog tint

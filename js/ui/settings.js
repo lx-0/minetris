@@ -10,7 +10,8 @@ const AUDIO_SETTINGS_KEY    = "mineCtris_audioSettings";
 const COLORBLIND_KEY        = "mineCtris_colorblindMode";
 const REDUCED_MOTION_KEY    = "mineCtris_reducedMotion";
 const HIGH_CONTRAST_KEY     = "mineCtris_highContrast";
-const THEME_STORAGE_KEY     = "mineCtris_theme";
+const THEME_STORAGE_KEY          = "mineCtris_theme";
+const THEME_SCORE_UNLOCKS_KEY    = "mineCtris_themeScoreUnlocks";
 const MOBILE_DIFFICULTY_KEY = "mineCtris_mobileDifficulty";
 const DYNAMIC_MUSIC_KEY     = "mineCtris_dynamicMusic";
 const FONT_SIZE_KEY         = "mineCtris_uiFontSize";
@@ -234,7 +235,59 @@ function applyColorblindMode(enabled) {
 
 // ── Theme system ───────────────────────────────────────────────────────────────
 
-const _ALL_THEMES = ["classic", "nether", "ocean", "candy", "fossil", "storm", "void", "legendary"];
+const _ALL_THEMES = ["classic", "nether", "ocean", "candy", "fossil", "storm", "void", "legendary", "ender", "diamond"];
+
+// Score milestones for the five core themes (persist in localStorage once reached).
+const THEME_SCORE_MILESTONES = {
+  nether:  10000,
+  ocean:   25000,
+  ender:   50000,
+  diamond: 100000,
+};
+
+/** Load the set of score-unlocked themes from localStorage. */
+function loadScoreUnlockedThemes() {
+  try {
+    const raw = localStorage.getItem(THEME_SCORE_UNLOCKS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (_) { return []; }
+}
+
+/** Persist a newly unlocked score-gated theme. */
+function _saveScoreUnlockedTheme(themeKey) {
+  try {
+    const unlocked = loadScoreUnlockedThemes();
+    if (!unlocked.includes(themeKey)) {
+      unlocked.push(themeKey);
+      localStorage.setItem(THEME_SCORE_UNLOCKS_KEY, JSON.stringify(unlocked));
+    }
+  } catch (_) {}
+}
+
+/**
+ * Check current score against score milestones; unlock and notify for any newly reached.
+ * Call this from addScore() every time the score changes.
+ */
+function checkScoreThemeUnlocks(currentScore) {
+  const unlocked = loadScoreUnlockedThemes();
+  let anyNew = false;
+  for (const [themeKey, milestone] of Object.entries(THEME_SCORE_MILESTONES)) {
+    if (!unlocked.includes(themeKey) && currentScore >= milestone) {
+      _saveScoreUnlockedTheme(themeKey);
+      anyNew = true;
+      const label = themeKey.charAt(0).toUpperCase() + themeKey.slice(1);
+      if (typeof announceToScreenReader === 'function') {
+        announceToScreenReader(label + ' theme unlocked!');
+      }
+      if (typeof showCraftedBanner === 'function') {
+        showCraftedBanner('\uD83C\uDF1F ' + label + ' theme unlocked!');
+      }
+    }
+  }
+  if (anyNew && typeof _syncThemeButtons === 'function') {
+    _syncThemeButtons();
+  }
+}
 
 function _loadTheme() {
   try {
@@ -258,6 +311,17 @@ function _saveTheme() {
 /** Return true if the given theme key is currently unlocked. */
 function isThemeUnlocked(themeKey) {
   if (themeKey === "classic") return true;
+  // Score-gated core themes (nether, ocean, ender, diamond)
+  if (THEME_SCORE_MILESTONES[themeKey] !== undefined) {
+    const scoreUnlocked = loadScoreUnlockedThemes();
+    if (scoreUnlocked.includes(themeKey)) return true;
+    // Also check best lifetime score so returning players are not re-locked
+    if (typeof loadLifetimeStats === 'function') {
+      const stats = loadLifetimeStats();
+      if (stats.bestScore >= THEME_SCORE_MILESTONES[themeKey]) return true;
+    }
+    return false;
+  }
   // Level-gated skins (fossil, storm, void, legendary)
   if (typeof isLevelThemeUnlocked === 'function') {
     const levelThemes = ["fossil", "storm", "void", "legendary"];
@@ -265,9 +329,7 @@ function isThemeUnlocked(themeKey) {
   }
   try {
     const achs = loadAchievements ? loadAchievements() : {};
-    if (themeKey === "nether") return !!achs["iron_will"];
-    if (themeKey === "ocean")  return !!achs["architect"];
-    if (themeKey === "candy")  return !!achs["sprinter"];
+    if (themeKey === "candy") return !!achs["sprinter"];
   } catch (_) {}
   // Custom themes: require level 10 + the theme slot must exist
   if (themeKey.startsWith('custom_')) {
@@ -295,6 +357,8 @@ function applyTheme(themeKey) {
   document.body.classList.toggle("theme-storm",     themeKey === "storm");
   document.body.classList.toggle("theme-void",      themeKey === "void");
   document.body.classList.toggle("theme-legendary", themeKey === "legendary");
+  document.body.classList.toggle("theme-ender",     themeKey === "ender");
+  document.body.classList.toggle("theme-diamond",   themeKey === "diamond");
 
   // Resolve theme palette for material swapping.
   const THEME_PALETTE = {
@@ -305,6 +369,8 @@ function applyTheme(themeKey) {
     storm:          STORM_COLORS,
     void:           VOID_COLORS,
     legendary:      LEGENDARY_COLORS,
+    ender:          (typeof ENDER_COLORS   !== 'undefined' ? ENDER_COLORS   : null),
+    diamond:        (typeof DIAMOND_COLORS !== 'undefined' ? DIAMOND_COLORS : null),
     diamond_season: (typeof DIAMOND_SEASON_COLORS !== 'undefined' ? DIAMOND_SEASON_COLORS : null),
     cosmetic_carved_stone_board:   (typeof COSMETIC_CARVED_STONE_COLORS   !== 'undefined' ? COSMETIC_CARVED_STONE_COLORS   : null),
     cosmetic_ore_vein_theme:       (typeof COSMETIC_ORE_VEIN_COLORS       !== 'undefined' ? COSMETIC_ORE_VEIN_COLORS       : null),
@@ -390,6 +456,8 @@ function _syncThemeButtons() {
     { key: "storm",     btnId: "theme-btn-storm"     },
     { key: "void",      btnId: "theme-btn-void"      },
     { key: "legendary", btnId: "theme-btn-legendary" },
+    { key: "ender",     btnId: "theme-btn-ender"     },
+    { key: "diamond",   btnId: "theme-btn-diamond"   },
   ];
   themes.forEach(function(t) {
     const btn = document.getElementById(t.btnId);

@@ -57,6 +57,22 @@ const _BIOME_PARTICLE_THEMES = {
     fragSpark:  false,
     intensity:  1.15,
   },
+  // Ender theme: purple wisps, chorus sparks, ender eye flashes
+  ender: {
+    fragColors: [0xaa77ff, 0x7b1fa2, 0xcc44aa, 0x66ffaa, 0xd4aaff],
+    ringColor:  0xaa77ff,
+    lightColor: 0x9c27b0,
+    fragSpark:  true,
+    intensity:  1.1,
+  },
+  // Diamond theme: crystal ice shards and sparkles
+  diamond: {
+    fragColors: [0x88ffff, 0xb8eaff, 0x00d5ff, 0x4b7fff, 0x00b0ef],
+    ringColor:  0x00d5ff,
+    lightColor: 0x4fc3f7,
+    fragSpark:  false,
+    intensity:  1.2,
+  },
 };
 
 // Returned when no biome/theme override is active.
@@ -76,8 +92,11 @@ function getBiomeParticleTheme() {
   if (typeof activeBiomeId !== 'undefined' && activeBiomeId) {
     return _BIOME_PARTICLE_THEMES[activeBiomeId] || _BIOME_PARTICLE_DEFAULT;
   }
-  if (typeof activeTheme !== 'undefined' && activeTheme === 'void') {
-    return _BIOME_PARTICLE_THEMES.void;
+  if (typeof activeTheme !== 'undefined') {
+    if (activeTheme === 'void')    return _BIOME_PARTICLE_THEMES.void;
+    if (activeTheme === 'ender')   return _BIOME_PARTICLE_THEMES.ender;
+    if (activeTheme === 'diamond') return _BIOME_PARTICLE_THEMES.diamond;
+    if (activeTheme === 'nether')  return _BIOME_PARTICLE_THEMES.nether;
   }
   return _BIOME_PARTICLE_DEFAULT;
 }

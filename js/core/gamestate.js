@@ -23,6 +23,7 @@ function addScore(pts) {
   }
   updateScoreHUD();
   if (typeof achOnClassicScore === "function") achOnClassicScore(score);
+  if (typeof checkScoreThemeUnlocks === "function") checkScoreThemeUnlocks(score);
 }
 
 /** Re-render the co-op combined score HUD. */

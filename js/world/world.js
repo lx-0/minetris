@@ -119,6 +119,8 @@ function createBlockMesh(color) {
       nether: NETHER_COLORS, ocean: OCEAN_COLORS, candy: CANDY_COLORS,
       fossil: FOSSIL_COLORS, storm: STORM_COLORS, void: VOID_COLORS,
       legendary: LEGENDARY_COLORS,
+      ender:   (typeof ENDER_COLORS   !== 'undefined' ? ENDER_COLORS   : null),
+      diamond: (typeof DIAMOND_COLORS !== 'undefined' ? DIAMOND_COLORS : null),
       biome_stone: BIOME_STONE_COLORS, biome_forest: BIOME_FOREST_COLORS,
       biome_nether: NETHER_COLORS, biome_ice: BIOME_ICE_COLORS,
       cosmetic_carved_stone_board: COSMETIC_CARVED_STONE_COLORS,
