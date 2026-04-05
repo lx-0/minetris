@@ -21,7 +21,9 @@ function init() {
   }
 
   initAudio();
+  if (typeof initI18n === 'function') initI18n();
   initSettings();
+  if (typeof applyTranslations === 'function') applyTranslations();
   if (typeof initNotifications === 'function') initNotifications();
   if (typeof detectReturningPlayer === "function") detectReturningPlayer();
   if (typeof initLeaderboard === "function") initLeaderboard();

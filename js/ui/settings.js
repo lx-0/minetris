@@ -1167,6 +1167,19 @@ function initSettings() {
       tabs[next].click();
     });
   }
+
+  // Wire up language picker buttons.
+  var langPicker = document.getElementById('lang-picker');
+  if (langPicker && typeof setLanguage === 'function') {
+    langPicker.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-lang]');
+      if (!btn) return;
+      var code = btn.getAttribute('data-lang');
+      setLanguage(code);
+    });
+  }
+  // Apply current language state to DOM on open.
+  if (typeof applyTranslations === 'function') applyTranslations();
 }
 
 function _syncDisplayNameField() {

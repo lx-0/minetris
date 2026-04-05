@@ -74,7 +74,7 @@
         <div id="loading-bar"></div>
       </div>
       <p id="loading-pct">0%</p>
-      <p id="loading-tip-label">TIP</p>
+      <p id="loading-tip-label" data-i18n="loading.tip_label">TIP</p>
       <div id="loading-tip-wrap">
         <p id="loading-tip">Use WASD to move and Space to jump.</p>
       </div>
@@ -1014,29 +1014,29 @@
 
       <!-- Pause screen -->
       <div id="pause-screen">
-        <div id="pause-title">PAUSED</div>
-        <button id="pause-resume-btn">Resume</button>
-        <button id="pause-restart-btn">Restart</button>
-        <button id="pause-settings-btn">Settings</button>
-        <button id="pause-main-menu-btn">Main Menu</button>
+        <div id="pause-title" data-i18n="pause.title">PAUSED</div>
+        <button id="pause-resume-btn" data-i18n="pause.resume">Resume</button>
+        <button id="pause-restart-btn" data-i18n="pause.restart">Restart</button>
+        <button id="pause-settings-btn" data-i18n="pause.settings">Settings</button>
+        <button id="pause-main-menu-btn" data-i18n="pause.main_menu">Main Menu</button>
       </div>
 
       <!-- Achievements overlay -->
       <div id="achievements-overlay" style="display:none;">
         <div id="achievements-panel">
-          <div id="achievements-title">ACHIEVEMENTS</div>
+          <div id="achievements-title" data-i18n="panel.achievements">ACHIEVEMENTS</div>
           <div id="achievements-progress"></div>
           <div id="achievements-grid"></div>
-          <button id="achievements-close-btn">Close</button>
+          <button id="achievements-close-btn" data-i18n="panel.close">Close</button>
         </div>
       </div>
 
       <!-- Missions overlay -->
       <div id="missions-overlay" style="display:none;">
         <div id="missions-panel">
-          <div id="missions-title">DAILY MISSIONS</div>
+          <div id="missions-title" data-i18n="panel.daily_missions">DAILY MISSIONS</div>
           <div id="missions-panel-body"></div>
-          <button id="missions-close-btn">Close</button>
+          <button id="missions-close-btn" data-i18n="panel.close">Close</button>
         </div>
       </div>
 
@@ -1044,12 +1044,12 @@
       <div id="season-missions-overlay" style="display:none;">
         <div id="season-missions-panel">
           <div id="season-missions-header">
-            <span id="season-missions-title">&#128336; SEASON MISSIONS</span>
+            <span id="season-missions-title">&#128336; <span data-i18n="panel.season_missions">SEASON MISSIONS</span></span>
             <span id="season-missions-reset"></span>
           </div>
-          <div id="season-missions-subtitle">Complete all 5 missions in a track to earn +500 Season XP. Tracks reset every Monday.</div>
+          <div id="season-missions-subtitle" data-i18n="season.subtitle">Complete all 5 missions in a track to earn +500 Season XP. Tracks reset every Monday.</div>
           <div id="season-missions-tracks"></div>
-          <button id="season-missions-close-btn">Close</button>
+          <button id="season-missions-close-btn" data-i18n="panel.close">Close</button>
         </div>
       </div>
 
@@ -1063,7 +1063,7 @@
       <!-- Stats overlay -->
       <div id="stats-overlay">
         <div id="stats-panel">
-          <div id="stats-title">STATS</div>
+          <div id="stats-title" data-i18n="panel.stats">STATS</div>
           <div id="stats-season-rank" style="display:none;"></div>
           <div id="stats-panel-body"></div>
           <div id="stats-season-cards" style="display:none;"></div>
@@ -1195,119 +1195,131 @@
       <!-- Audio settings overlay -->
       <div id="settings-overlay" role="dialog" aria-modal="true" aria-label="Settings">
         <div id="settings-panel">
-          <div id="settings-title">SETTINGS</div>
+          <div id="settings-title" data-i18n="settings.title">SETTINGS</div>
           <!-- Tab navigation -->
           <div id="settings-tabs" role="tablist" aria-label="Settings sections">
-            <button id="settings-tab-general" class="settings-tab settings-tab-active" role="tab" aria-selected="true" aria-controls="settings-pane-general">General</button>
-            <button id="settings-tab-controls" class="settings-tab" role="tab" aria-selected="false" aria-controls="settings-pane-controls">Controls</button>
+            <button id="settings-tab-general" class="settings-tab settings-tab-active" role="tab" aria-selected="true" aria-controls="settings-pane-general" data-i18n="settings.tab_general">General</button>
+            <button id="settings-tab-controls" class="settings-tab" role="tab" aria-selected="false" aria-controls="settings-pane-controls" data-i18n="settings.tab_controls">Controls</button>
           </div>
           <!-- Pane: General -->
           <div id="settings-pane-general" role="tabpanel" aria-labelledby="settings-tab-general">
+          <!-- Language picker -->
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" data-i18n="settings.language">Language</label>
+            <div id="lang-picker">
+              <button id="lang-btn-en" class="lang-btn lang-btn-active" title="English" data-lang="en">🇺🇸 EN</button>
+              <button id="lang-btn-es" class="lang-btn" title="Español" data-lang="es">🇪🇸 ES</button>
+              <button id="lang-btn-pt" class="lang-btn" title="Português" data-lang="pt">🇧🇷 PT</button>
+              <button id="lang-btn-ja" class="lang-btn" title="日本語" data-lang="ja">🇯🇵 JA</button>
+              <button id="lang-btn-fr" class="lang-btn" title="Français" data-lang="fr">🇫🇷 FR</button>
+            </div>
+          </div>
+          <div class="settings-section-divider"></div>
           <div class="settings-row">
-            <label class="settings-label">Master</label>
+            <label class="settings-label" data-i18n="settings.master">Master</label>
             <input type="range" id="vol-master" class="vol-slider" min="0" max="100" value="80" aria-label="Master volume" aria-valuetext="80%">
             <span class="vol-val" id="vol-master-val" aria-hidden="true">80</span>
           </div>
           <div class="settings-row">
-            <label class="settings-label">SFX</label>
+            <label class="settings-label" data-i18n="settings.sfx">SFX</label>
             <input type="range" id="vol-sfx" class="vol-slider" min="0" max="100" value="100" aria-label="SFX volume" aria-valuetext="100%">
             <span class="vol-val" id="vol-sfx-val" aria-hidden="true">100</span>
           </div>
           <div class="settings-row">
-            <label class="settings-label">Music</label>
+            <label class="settings-label" data-i18n="settings.music">Music</label>
             <input type="range" id="vol-music" class="vol-slider" min="0" max="100" value="60" aria-label="Music volume" aria-valuetext="60%">
             <span class="vol-val" id="vol-music-val" aria-hidden="true">60</span>
           </div>
           <div class="settings-row settings-row-toggle">
-            <label class="settings-label settings-label-toggle" for="dynamic-music-toggle">Dynamic Music</label>
+            <label class="settings-label settings-label-toggle" for="dynamic-music-toggle" data-i18n="settings.dynamic_music">Dynamic Music</label>
             <label class="cb-toggle-switch">
               <input type="checkbox" id="dynamic-music-toggle" checked>
               <span class="cb-toggle-slider"></span>
             </label>
           </div>
-          <div class="settings-hint">Tempo intensifies with stack height and game speed</div>
+          <div class="settings-hint" data-i18n="settings.dynamic_music_hint">Tempo intensifies with stack height and game speed</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
-            <label class="settings-label settings-label-toggle" for="cb-toggle">Colorblind Mode</label>
+            <label class="settings-label settings-label-toggle" for="cb-toggle" data-i18n="settings.colorblind_mode">Colorblind Mode</label>
             <label class="cb-toggle-switch">
               <input type="checkbox" id="cb-toggle">
               <span class="cb-toggle-slider"></span>
             </label>
           </div>
-          <div class="settings-hint">Deuteranopia-safe palette + surface patterns</div>
+          <div class="settings-hint" data-i18n="settings.colorblind_hint">Deuteranopia-safe palette + surface patterns</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
-            <label class="settings-label settings-label-toggle" for="reduced-motion-toggle">Reduced Motion</label>
+            <label class="settings-label settings-label-toggle" for="reduced-motion-toggle" data-i18n="settings.reduced_motion">Reduced Motion</label>
             <label class="cb-toggle-switch">
               <input type="checkbox" id="reduced-motion-toggle">
               <span class="cb-toggle-slider"></span>
             </label>
           </div>
-          <div class="settings-hint">Disables camera shake, screen flash, and chromatic aberration</div>
+          <div class="settings-hint" data-i18n="settings.reduced_motion_hint">Disables camera shake, screen flash, and chromatic aberration</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
-            <label class="settings-label settings-label-toggle" for="high-contrast-toggle">High Contrast</label>
+            <label class="settings-label settings-label-toggle" for="high-contrast-toggle" data-i18n="settings.high_contrast">High Contrast</label>
             <label class="cb-toggle-switch">
               <input type="checkbox" id="high-contrast-toggle">
               <span class="cb-toggle-slider"></span>
             </label>
           </div>
-          <div class="settings-hint">White text, block outlines, and increased UI contrast for low-vision users</div>
+          <div class="settings-hint" data-i18n="settings.high_contrast_hint">White text, block outlines, and increased UI contrast for low-vision users</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
-            <label class="settings-label settings-label-toggle">UI Font Size</label>
+            <label class="settings-label settings-label-toggle" data-i18n="settings.ui_font_size">UI Font Size</label>
             <div id="font-size-btn-group">
               <button id="font-size-btn-small"  class="font-size-btn" aria-label="Small font size"  data-size="small">S</button>
               <button id="font-size-btn-medium" class="font-size-btn font-size-btn-selected" aria-label="Medium font size" data-size="medium">M</button>
               <button id="font-size-btn-large"  class="font-size-btn" aria-label="Large font size"  data-size="large">L</button>
             </div>
           </div>
-          <div class="settings-hint">Scales menus and HUD text</div>
+          <div class="settings-hint" data-i18n="settings.ui_font_size_hint">Scales menus and HUD text</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
-            <label class="settings-label settings-label-toggle" for="weather-effects-toggle">Weather Effects</label>
+            <label class="settings-label settings-label-toggle" for="weather-effects-toggle" data-i18n="settings.weather_effects">Weather Effects</label>
             <label class="cb-toggle-switch">
               <input type="checkbox" id="weather-effects-toggle" checked>
               <span class="cb-toggle-slider"></span>
             </label>
           </div>
-          <div class="settings-hint">Rain, snow, and storm particles during gameplay</div>
+          <div class="settings-hint" data-i18n="settings.weather_hint">Rain, snow, and storm particles during gameplay</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
-            <label class="settings-label settings-label-toggle" for="show-all-modes-toggle">Show All Modes</label>
+            <label class="settings-label settings-label-toggle" for="show-all-modes-toggle" data-i18n="settings.show_all_modes">Show All Modes</label>
             <label class="cb-toggle-switch">
               <input type="checkbox" id="show-all-modes-toggle">
               <span class="cb-toggle-slider"></span>
             </label>
           </div>
-          <div class="settings-hint">Bypass level requirements — all modes playable</div>
+          <div class="settings-hint" data-i18n="settings.show_all_modes_hint">Bypass level requirements — all modes playable</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
-            <label class="settings-label settings-label-toggle" for="touch-controls-toggle">Touch Controls</label>
+            <label class="settings-label settings-label-toggle" for="touch-controls-toggle" data-i18n="settings.touch_controls">Touch Controls</label>
             <label class="cb-toggle-switch">
               <input type="checkbox" id="touch-controls-toggle">
               <span class="cb-toggle-slider"></span>
             </label>
           </div>
-          <div class="settings-hint">Virtual D-pad overlay for touch devices</div>
+          <div class="settings-hint" data-i18n="settings.touch_controls_hint">Virtual D-pad overlay for touch devices</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
-            <label class="settings-label settings-label-toggle" for="mobile-difficulty-toggle">Mobile Difficulty</label>
+            <label class="settings-label settings-label-toggle" for="mobile-difficulty-toggle" data-i18n="settings.mobile_difficulty">Mobile Difficulty</label>
             <label class="cb-toggle-switch">
               <input type="checkbox" id="mobile-difficulty-toggle">
               <span class="cb-toggle-slider"></span>
             </label>
           </div>
-          <div class="settings-hint">Reduce piece speed by 20% on touch — ON by default for touch devices</div>
+          <div class="settings-hint" data-i18n="settings.mobile_difficulty_hint">Reduce piece speed by 20% on touch — ON by default for touch devices</div>
           <div class="settings-section-divider"></div>
-          <div class="settings-label settings-label-section">Leaderboard Name</div>
+          <div class="settings-label settings-label-section" data-i18n="settings.leaderboard_name">Leaderboard Name</div>
           <div id="settings-displayname-row" class="settings-row">
             <input type="text" id="settings-displayname-input" maxlength="16" autocomplete="off" spellcheck="false" placeholder="YourName">
-            <button id="settings-displayname-save-btn">Save</button>
+            <button id="settings-displayname-save-btn" data-i18n="settings.save">Save</button>
           </div>
           <div id="settings-displayname-feedback"></div>
           <div class="settings-section-divider"></div>
-          <div class="settings-label settings-label-section">Block Skin Theme</div>
+          <div class="settings-label settings-label-section" data-i18n="settings.block_skin_theme">Block Skin Theme</div>
           <div id="theme-selector">
             <button id="theme-btn-classic" class="theme-btn theme-btn-selected" title="Classic">
               <span class="theme-btn-icon">&#x1F333;</span>
@@ -1361,11 +1373,11 @@
             </button>
           </div>
           <div class="settings-section-divider"></div>
-          <div class="settings-label settings-label-section">Custom Themes</div>
+          <div class="settings-label settings-label-section" data-i18n="settings.custom_themes">Custom Themes</div>
           <div id="custom-theme-selector">
             <!-- populated by theme-editor.js -->
           </div>
-          <button id="theme-editor-open-btn" class="settings-link-btn" title="Reach Level 10 to unlock" disabled>&#127912; Create Custom Theme</button>
+          <button id="theme-editor-open-btn" class="settings-link-btn" title="Reach Level 10 to unlock" disabled data-i18n="settings.create_custom_theme">&#127912; Create Custom Theme</button>
           <div class="settings-section-divider"></div>
           <div class="settings-label settings-label-section">Animated Block Skins</div>
           <div class="settings-hint" style="margin-bottom:6px">Frame-animated skins — unlock and equip in the <a href="#" id="settings-wardrobe-link" style="color:var(--accent,#4fc3f7)">Cosmetic Wardrobe</a>.</div>
@@ -1682,7 +1694,7 @@
         </div>
         <div id="tutorial-footer">
           <span id="tutorial-step-count"></span>
-          <button id="tutorial-skip-btn">Skip Tutorial</button>
+          <button id="tutorial-skip-btn" data-i18n="tut.skip">Skip Tutorial</button>
         </div>
       </div>
 
@@ -2593,6 +2605,7 @@
     </div>
 
     <!-- Game modules — order matters: dependencies before dependents -->
+    <script src="js/i18n/i18n.js"></script>
     <script src="js/core/config.js"></script>
     <script src="js/rendering/shaders.js"></script>
     <script src="js/core/state.js"></script>

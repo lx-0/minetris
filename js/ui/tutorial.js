@@ -297,12 +297,17 @@ function _showStep(idx) {
   if (!overlayEl || !textEl) return;
 
   const step = TUTORIAL_STEPS[idx];
+  // Helper: look up translated string, fall back to the hard-coded English value.
+  const _tr = (typeof t === 'function')
+    ? function(key, fallback) { var v = t(key); return (v !== key) ? v : fallback; }
+    : function(_k, fallback) { return fallback; };
 
-  textEl.textContent = step.text;
+  textEl.textContent = _tr('tut.' + step.id + '.title', step.text);
 
   if (subtextEl) {
-    if (step.subtext) {
-      subtextEl.textContent = step.subtext;
+    const subtext = _tr('tut.' + step.id + '.subtext', step.subtext || '');
+    if (subtext) {
+      subtextEl.textContent = subtext;
       subtextEl.style.display = 'block';
     } else {
       subtextEl.style.display = 'none';
@@ -313,13 +318,13 @@ function _showStep(idx) {
   if (dismissBtn) {
     const showDismiss = step.canDismiss || !step.waitFor;
     dismissBtn.style.display = showDismiss ? 'inline-block' : 'none';
-    dismissBtn.textContent   = step.waitFor ? 'Got it!' : 'Got it!';
+    dismissBtn.textContent   = _tr('tut.got_it', 'Got it!');
   }
 
   // Action waiting label
   if (actionEl) {
     if (step.waitFor && step.actionLabel) {
-      actionEl.textContent = step.actionLabel;
+      actionEl.textContent = _tr('tut.' + step.id + '.action', step.actionLabel);
       actionEl.style.display = 'block';
     } else {
       actionEl.style.display = 'none';

@@ -118,9 +118,21 @@ function unlockAchievement(id) {
   }
 }
 
+function _achName(ach) {
+  if (typeof t !== 'function') return ach.name;
+  var v = t('ach.' + ach.id + '.name');
+  return (v !== 'ach.' + ach.id + '.name') ? v : ach.name;
+}
+function _achDesc(ach) {
+  if (typeof t !== 'function') return ach.desc;
+  var v = t('ach.' + ach.id + '.desc');
+  return (v !== 'ach.' + ach.id + '.desc') ? v : ach.desc;
+}
+
 function _showAchievementToast(ach) {
+  const prefix = (typeof t === 'function') ? t('ach.toast_prefix') : 'Achievement unlocked:';
   if (typeof notifPush === 'function') {
-    notifPush('achievement', ach.icon, 'Achievement unlocked: ' + ach.name + ' — ' + ach.desc);
+    notifPush('achievement', ach.icon, prefix + ' ' + _achName(ach) + ' — ' + _achDesc(ach));
   }
 
   const toastEl = document.getElementById("achievement-toast");
@@ -130,8 +142,8 @@ function _showAchievementToast(ach) {
   const nameEl = toastEl.querySelector(".ach-toast-name");
   const descEl = toastEl.querySelector(".ach-toast-desc");
   if (iconEl) iconEl.textContent = ach.icon;
-  if (nameEl) nameEl.textContent = ach.name;
-  if (descEl) descEl.textContent = ach.desc;
+  if (nameEl) nameEl.textContent = _achName(ach);
+  if (descEl) descEl.textContent = _achDesc(ach);
 
   // Re-trigger CSS animation by removing then re-adding the class
   toastEl.classList.remove("ach-toast-visible");
@@ -170,7 +182,10 @@ function renderAchievementsPanel() {
   const count = Object.keys(unlocked).length;
 
   const progressEl = document.getElementById("achievements-progress");
-  if (progressEl) progressEl.textContent = count + " / " + ACHIEVEMENTS.length + " Unlocked";
+  if (progressEl) {
+    const unlockedLabel = (typeof t === 'function') ? t('ach_panel.unlocked') : 'Unlocked';
+    progressEl.textContent = count + " / " + ACHIEVEMENTS.length + " " + unlockedLabel;
+  }
 
   // Ensure filter row exists
   const panel = document.getElementById("achievements-panel");
@@ -184,10 +199,10 @@ function renderAchievementsPanel() {
       if (gridEl) panel.insertBefore(filterRow, gridEl);
     }
     filterRow.innerHTML = "";
-    [["all", "All"], ["coop", "Co-op"], ["battle", "Battle"], ["tournament", "Tournament"]].forEach(function (pair) {
+    [["all", "ach_filter.all"], ["coop", "ach_filter.coop"], ["battle", "ach_filter.battle"], ["tournament", "ach_filter.tournament"]].forEach(function (pair) {
       const btn = document.createElement("button");
       btn.className = "ach-filter-btn" + (_achPanelFilter === pair[0] ? " active" : "");
-      btn.textContent = pair[1];
+      btn.textContent = (typeof t === 'function') ? t(pair[1]) : pair[0];
       btn.addEventListener("click", function () {
         _achPanelFilter = pair[0];
         renderAchievementsPanel();
@@ -218,11 +233,11 @@ function renderAchievementsPanel() {
 
     const nameEl = document.createElement("div");
     nameEl.className = "ach-card-name";
-    nameEl.textContent = ach.name;
+    nameEl.textContent = _achName(ach);
 
     const descEl = document.createElement("div");
     descEl.className = "ach-card-desc";
-    descEl.textContent = ach.desc;
+    descEl.textContent = _achDesc(ach);
 
     infoEl.appendChild(nameEl);
     infoEl.appendChild(descEl);

@@ -43,8 +43,11 @@ function getDailyPrng() {
   return mulberry32(_hashDate(getDailyDateString()));
 }
 
-/** Format "YYYY-MM-DD" → "Mar 15" */
+/** Format "YYYY-MM-DD" → locale-appropriate short date (e.g. "Mar 15", "15 mars", "3月15日"). */
 function formatDailyLabel(dateStr) {
+  // Use i18n locale-aware formatting when available.
+  if (typeof fmtLocalDate === 'function') return fmtLocalDate(dateStr);
+  // Fallback: original English format.
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const parts = dateStr.split('-');
   const month = months[parseInt(parts[1], 10) - 1];
@@ -52,7 +55,7 @@ function formatDailyLabel(dateStr) {
   return month + ' ' + day;
 }
 
-/** Today's short label for HUD display, e.g. "Mar 15". */
+/** Today's short label for HUD display. */
 function getTodayLabel() {
   return formatDailyLabel(getDailyDateString());
 }

@@ -20310,3 +20310,30 @@ body.ui-font-lg #menu-secondary { zoom: 1.15; }
 /* High-contrast overrides for font-size buttons */
 body.hc-mode .font-size-btn { color: #fff !important; border-color: #fff !important; background: #000 !important; }
 body.hc-mode .font-size-btn-selected { background: #ff0 !important; color: #000 !important; border-color: #ff0 !important; }
+
+/* ── Language picker ────────────────────────────────────────────────────── */
+#lang-picker {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.lang-btn {
+  background: #1a2a1a;
+  border: 1px solid #2a4a2a;
+  color: #ccc;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.45rem;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.lang-btn:hover { background: #243424; border-color: #4a6a4a; color: #fff; }
+.lang-btn-active {
+  background: #0f0 !important;
+  color: #000 !important;
+  border-color: #0f0 !important;
+}
+body.hc-mode .lang-btn { color: #fff !important; border-color: #fff !important; background: #000 !important; }
+body.hc-mode .lang-btn-active { background: #ff0 !important; color: #000 !important; border-color: #ff0 !important; }
