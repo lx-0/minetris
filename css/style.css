@@ -20048,3 +20048,51 @@ body.hc-mode .notif-item {
     will-change: auto;
   }
 }
+
+/* ── UI Font Size ─────────────────────────────────────────────────────────── */
+#font-size-btn-group {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.font-size-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  padding: 4px 10px;
+  background: #222;
+  color: #0f0;
+  border: 1px solid #444;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.12s;
+}
+.font-size-btn:hover { background: #333; }
+.font-size-btn-selected {
+  background: #0f0 !important;
+  color: #000 !important;
+  border-color: #0f0;
+}
+.font-size-btn:focus-visible {
+  outline: 2px solid #0f0;
+  outline-offset: 2px;
+}
+
+/* Small (90%) — zoom overlays and HUD */
+body.ui-font-sm #blocker,
+body.ui-font-sm #settings-overlay,
+body.ui-font-sm #pause-screen,
+body.ui-font-sm #score-display,
+body.ui-font-sm #next-pieces-panel,
+body.ui-font-sm #menu-secondary { zoom: 0.9; }
+
+/* Large (115%) — zoom overlays and HUD */
+body.ui-font-lg #blocker,
+body.ui-font-lg #settings-overlay,
+body.ui-font-lg #pause-screen,
+body.ui-font-lg #score-display,
+body.ui-font-lg #next-pieces-panel,
+body.ui-font-lg #menu-secondary { zoom: 1.15; }
+
+/* High-contrast overrides for font-size buttons */
+body.hc-mode .font-size-btn { color: #fff !important; border-color: #fff !important; background: #000 !important; }
+body.hc-mode .font-size-btn-selected { background: #ff0 !important; color: #000 !important; border-color: #ff0 !important; }

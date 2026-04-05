@@ -13,6 +13,7 @@ const HIGH_CONTRAST_KEY     = "mineCtris_highContrast";
 const THEME_STORAGE_KEY     = "mineCtris_theme";
 const MOBILE_DIFFICULTY_KEY = "mineCtris_mobileDifficulty";
 const DYNAMIC_MUSIC_KEY     = "mineCtris_dynamicMusic";
+const FONT_SIZE_KEY         = "mineCtris_uiFontSize";
 
 // Global: true = apply 20% speed reduction on mobile. Default ON for touch devices.
 let mobileDifficultyEnabled = false;
@@ -131,6 +132,39 @@ function announceToScreenReader(msg, priority) {
   // Clear then set forces re-announcement even if text is the same
   el.textContent = '';
   requestAnimationFrame(function() { el.textContent = msg; });
+}
+
+// ── UI Font Size ──────────────────────────────────────────────────────────────
+
+function _loadFontSize() {
+  try {
+    const raw = localStorage.getItem(FONT_SIZE_KEY);
+    if (raw === 'small' || raw === 'medium' || raw === 'large') {
+      applyFontSize(raw);
+    }
+  } catch (_) {}
+}
+
+/**
+ * Apply a UI font size: adds a body class that zooms key overlay and HUD panels.
+ * @param {'small'|'medium'|'large'} size
+ */
+function applyFontSize(size) {
+  document.body.classList.remove('ui-font-sm', 'ui-font-lg');
+  if (size === 'small')  document.body.classList.add('ui-font-sm');
+  if (size === 'large')  document.body.classList.add('ui-font-lg');
+  try { localStorage.setItem(FONT_SIZE_KEY, size); } catch (_) {}
+  _syncFontSizeButtons(size);
+}
+
+function _syncFontSizeButtons(size) {
+  if (!size) {
+    try { size = localStorage.getItem(FONT_SIZE_KEY) || 'medium'; } catch (_) { size = 'medium'; }
+  }
+  ['small', 'medium', 'large'].forEach(function(s) {
+    const btn = document.getElementById('font-size-btn-' + s);
+    if (btn) btn.classList.toggle('font-size-btn-selected', s === size);
+  });
 }
 
 // ── Colorblind mode ───────────────────────────────────────────────────────────
@@ -1030,6 +1064,13 @@ function initSettings() {
     });
   });
 
+  // Wire up font size buttons.
+  _loadFontSize();
+  ['small', 'medium', 'large'].forEach(function(size) {
+    const btn = document.getElementById('font-size-btn-' + size);
+    if (btn) btn.addEventListener('click', function() { applyFontSize(size); });
+  });
+
   _initControlsTab();
   _initTransferProgressSection();
   if (typeof initThemeEditor === 'function') initThemeEditor();
@@ -1083,6 +1124,7 @@ function openSettings(onClose) {
   if (tcToggleSync) tcToggleSync.checked = (typeof isTouchControlsEnabled === "function") && isTouchControlsEnabled();
   _syncThemeButtons();
   if (typeof _syncGraphicsQualityButtons === 'function') _syncGraphicsQualityButtons();
+  _syncFontSizeButtons();
   _syncDisplayNameField();
   _syncKeybindTable();
   _syncLastExportLabel();
