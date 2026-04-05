@@ -2903,6 +2903,7 @@
     <script src="js/ui/qr-canvas.js"></script>
     <script src="js/ui/score-card.js"></script>
     <script src="js/ui/editor-tutorial.js"></script>
+    <script src="js/ui/mini-game.js"></script>
     <script src="js/ui/editor.js"></script>
     <script src="js/social/community.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
@@ -2987,6 +2988,9 @@
     <div id="pwa-offline-badge" style="display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99997;background:#374151;color:#f9fafb;font-family:'Press Start 2P',monospace,sans-serif;font-size:0.55rem;padding:4px 10px;border-radius:4px;letter-spacing:0.05em;pointer-events:none;">
       OFFLINE
     </div>
+
+    <!-- Mini-game overlay: shown between rounds during reset transitions -->
+    <div id="mini-game-overlay" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;flex-direction:column;"></div>
 
     <!-- PWA: install prompt banner -->
     <div id="pwa-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99996;background:#1f2937;border-top:2px solid #4ade80;color:#f9fafb;font-family:'Press Start 2P',monospace,sans-serif;padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">

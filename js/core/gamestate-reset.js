@@ -2,6 +2,13 @@
 // Requires: core/gamestate.js loaded first.
 
 function resetGame() {
+  // Decide whether to show a mini-game before returning to the start screen.
+  // Only eligible after a real game over (not battle, expedition, or practice transitions).
+  const _mgEligible = isGameOver &&
+    !isBattleMode &&
+    !isPracticeMode &&
+    (typeof activeBiomeId === 'undefined' || !activeBiomeId);
+
   // Stop any active replay recording or playback
   if (typeof replayOnReset === 'function') replayOnReset();
 
@@ -432,16 +439,23 @@ function resetGame() {
 
   updateScoreHUD();
 
-  // Return to start screen (hide mode select if it was open)
-  const modeSelectEl = document.getElementById("mode-select");
-  if (modeSelectEl) modeSelectEl.style.display = "none";
-  blocker.style.display = "flex";
-  instructions.style.display = "";
-  crosshair.style.display = "none";
-  if (scoreEl) scoreEl.style.display = "none";
-  document.getElementById("inventory-hud").style.display = "none";
+  function _showStartScreen() {
+    // Return to start screen (hide mode select if it was open)
+    const modeSelectEl = document.getElementById("mode-select");
+    if (modeSelectEl) modeSelectEl.style.display = "none";
+    blocker.style.display = "flex";
+    instructions.style.display = "";
+    crosshair.style.display = "none";
+    if (scoreEl) scoreEl.style.display = "none";
+    document.getElementById("inventory-hud").style.display = "none";
+    renderHighScoresStart();
+  }
 
-  renderHighScoresStart();
+  if (_mgEligible && typeof miniGameShow === 'function') {
+    miniGameShow(_showStartScreen);
+  } else {
+    _showStartScreen();
+  }
 }
 
 // Battle mode Level 3 starting multiplier (tier 2 = Math.pow(1.1, 2))
