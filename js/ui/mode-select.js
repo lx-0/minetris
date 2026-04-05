@@ -39,6 +39,18 @@
           ? "Best: Level " + mBest.level + " (" + mBest.score + ")"
           : "";
       }
+      // Populate Zen personal best
+      const zenPbEl = document.getElementById("mode-pb-zen");
+      if (zenPbEl && typeof loadZenBest === 'function') {
+        const zBest = loadZenBest();
+        if (zBest) {
+          const zm = Math.floor(zBest.durationSecs / 60);
+          const zs = (zBest.durationSecs % 60).toString().padStart(2, "0");
+          zenPbEl.textContent = "Best: " + zm + ":" + zs + "  \u2022  " + zBest.linesCleared + " lines";
+        } else {
+          zenPbEl.textContent = "";
+        }
+      }
       // Populate Daily Challenge personal best and lock state
       const dailyPbEl = document.getElementById("mode-pb-daily");
       const dailyDescEl = document.getElementById("mode-daily-desc");
@@ -445,6 +457,40 @@
         if (typeof metricsModePlayed === 'function') metricsModePlayed('marathon');
         hideModeSelect();
         requestPointerLock();
+      });
+    }
+
+    const zenCardEl = document.getElementById("mode-card-zen");
+    if (zenCardEl) {
+      zenCardEl.addEventListener("click", function () {
+        isDailyChallenge = false;
+        gameRng = null;
+        isZenMode = true;
+        // Fixed gentle fall speed; difficulty escalation disabled
+        difficultyMultiplier = ZEN_FIXED_MULTIPLIER;
+        lastDifficultyTier   = 0;
+        // Show zen badge in HUD
+        const zenBadgeEl = document.getElementById("zen-badge");
+        if (zenBadgeEl) zenBadgeEl.style.display = "block";
+        applyWorldModifierHUD();
+        try { localStorage.setItem("mineCtris_lastMode", "zen"); } catch (_) {}
+        if (typeof metricsModePlayed === 'function') metricsModePlayed('zen');
+        hideModeSelect();
+        requestPointerLock();
+      });
+    }
+
+    // Wire up Zen session screen buttons
+    const zenPlayAgainBtn = document.getElementById("zen-play-again-btn");
+    if (zenPlayAgainBtn) {
+      zenPlayAgainBtn.addEventListener("click", function () {
+        resetGame();
+      });
+    }
+    const zenMainMenuBtn = document.getElementById("zen-main-menu-btn");
+    if (zenMainMenuBtn) {
+      zenMainMenuBtn.addEventListener("click", function () {
+        resetGame();
       });
     }
 

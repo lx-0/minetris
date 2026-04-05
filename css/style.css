@@ -18937,6 +18937,115 @@ button:focus-visible {
 }
 #practice-main-menu-btn:hover { background: #c0f; color: #fff; }
 
+/* ── Zen mode ────────────────────────────────────────────────────────────── */
+
+/* Zen mode card — soft green/teal colour scheme */
+.mode-card-zen {
+  border-color: rgba(168, 230, 207, 0.35);
+}
+.mode-card-zen .mode-card-name { color: #a8e6cf; }
+.mode-card-zen .mode-card-desc { color: rgba(168, 230, 207, 0.7); }
+.mode-card-zen:hover {
+  border-color: #a8e6cf;
+  box-shadow: 0 0 18px rgba(168, 230, 207, 0.3);
+}
+
+/* Zen HUD badge */
+#zen-badge {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: #a8e6cf;
+  text-shadow: 0 0 8px #a8e6cf;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4px 10px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 150;
+  white-space: nowrap;
+}
+
+/* Zen session screen */
+#zen-session-screen {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 12, 10, 0.92);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 200;
+}
+#zen-session-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 2em;
+  color: #a8e6cf;
+  text-shadow: 3px 3px #1a5040;
+  margin-bottom: 20px;
+}
+#zen-session-time-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: rgba(168, 230, 207, 0.55);
+  letter-spacing: 4px;
+  margin-bottom: 6px;
+}
+#zen-final-time {
+  font-family: "Press Start 2P", cursive;
+  font-size: 3em;
+  color: #fff;
+  text-shadow: 2px 2px #1a5040;
+  margin-bottom: 20px;
+}
+#zen-session-stats {
+  display: flex;
+  gap: 32px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 11px;
+  color: rgba(168, 230, 207, 0.8);
+  margin-bottom: 24px;
+}
+#zen-personal-best {
+  font-family: "Press Start 2P", cursive;
+  font-size: 11px;
+  margin-bottom: 36px;
+}
+#zen-personal-best.zen-new-best {
+  color: #ffd700;
+  text-shadow: 0 0 12px #ffd700;
+}
+#zen-personal-best.zen-pb-line {
+  color: rgba(255, 255, 255, 0.45);
+}
+#zen-play-again-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 12px;
+  color: #000;
+  background: #a8e6cf;
+  border: none;
+  padding: 14px 28px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  transition: background 0.15s;
+}
+#zen-play-again-btn:hover { background: #ff0; }
+#zen-main-menu-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 12px;
+  color: #000;
+  background: #5cd6a8;
+  border: none;
+  padding: 14px 28px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+#zen-main-menu-btn:hover { background: #c0f; color: #fff; }
+
 /* ── Notification Center ─────────────────────────────────────────────────── */
 
 #notif-bell-wrap {

@@ -752,6 +752,11 @@ function init() {
     const pauseScreenEl = document.getElementById("pause-screen");
     if (pauseScreenEl) pauseScreenEl.style.display = "none";
     isPaused = false;
+    // Zen: show session summary before returning to main menu
+    if (isZenMode && gameElapsedSeconds > 5 && typeof triggerZenSessionEnd === 'function') {
+      triggerZenSessionEnd();
+      return;
+    }
     resetGame();
   });
 

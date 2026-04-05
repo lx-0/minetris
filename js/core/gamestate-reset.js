@@ -320,6 +320,13 @@ function resetGame() {
   const practiceBadgeEl = document.getElementById("practice-badge");
   if (practiceBadgeEl) practiceBadgeEl.style.display = "none";
 
+  // Reset zen mode state
+  isZenMode = false;
+  const zenSessionEl = document.getElementById("zen-session-screen");
+  if (zenSessionEl) zenSessionEl.style.display = "none";
+  const zenBadgeEl = document.getElementById("zen-badge");
+  if (zenBadgeEl) zenBadgeEl.style.display = "none";
+
   // Resolve equipped block skin for this session (skin changes take effect on game start).
   if (typeof getEquipped === 'function') {
     const skinCosmetic = getEquipped('block_skin');

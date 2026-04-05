@@ -114,6 +114,17 @@ function updateScoreHUD() {
       "Time: " + sm + ":" + ss;
     scoreEl.querySelector(".hud-stat:nth-child(4)").style.color = "";
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Sprint";
+  } else if (isZenMode) {
+    // Zen: show lines, meditation timer (elapsed), and Zen label
+    const zenSecs = Math.floor(gameElapsedSeconds);
+    const zm = Math.floor(zenSecs / 60).toString().padStart(2, "0");
+    const zs = (zenSecs % 60).toString().padStart(2, "0");
+    scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
+      "Lines: " + linesCleared;
+    scoreEl.querySelector(".hud-stat:nth-child(4)").textContent =
+      "Time: " + zm + ":" + zs;
+    scoreEl.querySelector(".hud-stat:nth-child(4)").style.color = "#a8e6cf";
+    scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Zen";
   } else {
     const totalSecs = Math.floor(gameElapsedSeconds);
     const mm = Math.floor(totalSecs / 60).toString().padStart(2, "0");
@@ -154,8 +165,8 @@ function getMaxBlockHeight() {
 
 /** Show/hide the danger overlay based on current max block height. */
 function updateDangerWarning() {
-  // Sprint, Blitz, Puzzle, and Battle have no lose-by-height condition displayed here
-  if (isSprintMode || isBlitzMode || isPuzzleMode || isBattleMode) return;
+  // Sprint, Blitz, Puzzle, Battle, and Zen have no lose-by-height condition displayed here
+  if (isSprintMode || isBlitzMode || isPuzzleMode || isBattleMode || isZenMode) return;
   const dangerEl = document.getElementById("danger-overlay");
   const dangerTextEl = document.getElementById("danger-text");
   if (!dangerEl || !dangerTextEl) return;
@@ -176,8 +187,8 @@ function updateDangerWarning() {
 
 /** Check if any landed block has reached the game-over height. */
 function checkGameOver() {
-  // Sprint and Blitz have no lose condition — blocks can pile indefinitely
-  if (isSprintMode || isBlitzMode) return;
+  // Sprint, Blitz, and Zen have no lose condition — blocks can pile indefinitely
+  if (isSprintMode || isBlitzMode || isZenMode) return;
   if (isGameOver) return;
   const localMaxY = getMaxBlockHeight();
   const authHeight = isCoopMode ? Math.max(localMaxY, coopPartnerMaxY) : localMaxY;

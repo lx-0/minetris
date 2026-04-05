@@ -404,6 +404,12 @@
                   <div class="mode-card-desc">Skill builder. Undo placements, set speed, no scoring.</div>
                   <div class="mode-card-pb" id="mode-pb-practice"></div>
                 </div>
+                <div class="mode-card mode-card-zen" id="mode-card-zen" data-mode="zen" tabindex="0" role="button" aria-label="Zen mode — Relaxing play with no time pressure, ambient visuals, and meditation timer">
+                  <div class="mode-card-icon">&#129666;</div>
+                  <div class="mode-card-name">Zen</div>
+                  <div class="mode-card-desc">No pressure. No game over. Just mine and breathe.</div>
+                  <div class="mode-card-pb" id="mode-pb-zen"></div>
+                </div>
               </div>
             </div>
             <!-- ── CHALLENGE ── -->
@@ -650,6 +656,9 @@
 
       <!-- Practice mode badge (shown during practice runs) -->
       <div id="practice-badge" style="display:none;">&#127979; Practice — not scored</div>
+
+      <!-- Zen mode badge (shown during zen sessions) -->
+      <div id="zen-badge" style="display:none;">&#129666; Zen</div>
 
       <!-- Tutorial prompt: shown on first-ever Survival session (hidden by default) -->
       <div id="survival-tutorial-prompt" style="display:none;position:fixed;top:30%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);color:#fff;font-size:18px;padding:14px 28px;border-radius:8px;pointer-events:none;z-index:900;opacity:0;transition:opacity 0.5s ease;white-space:nowrap;">Mine blocks to survive and build your world</div>
@@ -1037,6 +1046,21 @@
         <div id="practice-stats"></div>
         <button id="practice-play-again-btn">Practice Again</button>
         <button id="practice-main-menu-btn">Main Menu</button>
+      </div>
+
+      <!-- Zen session screen -->
+      <div id="zen-session-screen" style="display:none;">
+        <div id="zen-session-title">SESSION COMPLETE</div>
+        <div id="zen-session-time-label">MEDITATION TIME</div>
+        <div id="zen-final-time">0:00</div>
+        <div id="zen-session-stats">
+          <div id="zen-final-lines">0 lines</div>
+          <div id="zen-final-score">0</div>
+        </div>
+        <div id="zen-personal-best"></div>
+        <div id="zen-xp-earned" class="xp-earned-display"></div>
+        <button id="zen-play-again-btn">Meditate Again</button>
+        <button id="zen-main-menu-btn">Main Menu</button>
       </div>
 
       <!-- Share card landing modal -->
@@ -2775,6 +2799,7 @@
     <script src="js/modes/blitz.js"></script>
     <script src="js/modes/marathon.js"></script>
     <script src="js/modes/practice.js"></script>
+    <script src="js/modes/zen.js"></script>
     <script src="js/modes/puzzle.js"></script>
     <script src="js/modes/puzzle-completion.js"></script>
     <script src="js/progression/achievements.js"></script>

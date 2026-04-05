@@ -49,6 +49,8 @@ function saveGameState() {
     if (typeof capturePracticeSnapshot === "function") capturePracticeSnapshot();
     return;
   }
+  // Zen mode: no mid-session savestate needed (endless, no critical progress)
+  if (isZenMode) return;
 
   // Collect all landed blocks (position + color)
   const landedBlocks = [];

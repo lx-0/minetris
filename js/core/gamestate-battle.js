@@ -306,6 +306,11 @@ function updateDifficulty(delta) {
   if (isMarathonMode) return;
   // Puzzle mode: fixed slow speed; no escalation
   if (isPuzzleMode) return;
+  // Zen mode: fixed gentle fall speed; no escalation, no speed-up banners
+  if (isZenMode) {
+    difficultyMultiplier = ZEN_FIXED_MULTIPLIER;
+    return;
+  }
 
   // Tick banner display timer
   if (speedUpBannerTimer > 0) {

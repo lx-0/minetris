@@ -507,3 +507,10 @@ let customPlayFromEditor     = false;
 let isPracticeMode      = false;
 let practiceUndoEnabled = true;
 let practiceUndoHistory = [];
+
+// ── Zen mode state ────────────────────────────────────────────────────────────
+// Relaxed endless mode: no time pressure, no game-over from block height,
+// slow fixed fall speed, ambient visuals, and a meditation (elapsed) timer.
+// Personal best is tracked by longest session time (tiebreak: lines cleared).
+let isZenMode = false;
+const ZEN_FIXED_MULTIPLIER = 0.35; // ~65% slower than default fall speed
