@@ -777,6 +777,7 @@ function updateFallingPieces(delta) {
     }
     fallingPiecesGroup.remove(pieceToLand);
     fallingPieces.splice(index, 1);
+    if (typeof tcVibrateOnLock === 'function') tcVibrateOnLock();
     checkLineClear(newBlocks);
     // Desert biome: schedule sand block crumble for sand pieces
     var _sandCrumbleSecs = typeof getDesertSandCrumbleSecs === 'function' ? getDesertSandCrumbleSecs() : 0;

@@ -2,6 +2,20 @@
  * Only visible on touch-capable devices (or when force-enabled in settings).
  */
 
+/* ── Browser gesture prevention ─────────────────────────────────────────────── */
+
+/* Disable pull-to-refresh and elastic overscroll on the document */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* Suppress all default touch handling on the game canvas so swipe gestures
+   are captured exclusively by our gesture zone listener. */
+#renderer-container {
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
 #touch-controls {
   position: fixed;
   inset: 0;

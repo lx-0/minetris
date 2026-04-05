@@ -67,7 +67,7 @@ function setTouchControlsEnabled(val) {
 function _tcUpdateVisibility() {
   const el = document.getElementById('touch-controls');
   if (!el) return;
-  const shouldShow = isTouchControlsEnabled() && _tcGameRunning;
+  const shouldShow = isTouchControlsEnabled() && _tcGameRunning && !_tcKeyboardActive;
   el.classList.toggle('tc-visible', shouldShow);
 }
 
@@ -261,6 +261,218 @@ function _tcObserveGameState() {
   _tcGameRunning = (blockerEl.style.display === 'none');
 }
 
+// ── Gesture zone (swipe / tap / long-press on the game canvas) ────────────────
+//
+// Mapped gestures:
+//   Single tap        → rotate CW
+//   Two-finger tap    → rotate CCW
+//   Swipe left/right  → move piece (steps proportional to distance)
+//   Swipe down        → soft drop (live, cancels on lift)
+//   Swipe up          → hard drop
+//   Long press        → activate held/power-up piece
+
+const TC_SWIPE_MIN_PX  = 30;   // min travel to count as a swipe
+const TC_TAP_MAX_PX    = 12;   // max travel to count as a tap
+const TC_TAP_MAX_MS    = 200;  // max duration (ms) for a tap
+const TC_SWIPE_MAX_MS  = 400;  // max duration (ms) for a directional swipe
+
+/** Long-press duration (ms) to trigger hold-piece / power-up. */
+const TC_LONG_PRESS_MS = 500;
+
+// touchId → { startX, startY, startT, longTimer }
+const _tcGestureState = {};
+// Peak concurrent touch count within the current gesture cycle
+let _tcGestureMaxFingers = 0;
+// True while a live soft-drop swipe is held
+let _tcGestureSoftDrop = false;
+
+function _tcGestureStartSoftDrop() {
+  if (_tcGestureSoftDrop) return;
+  _tcGestureSoftDrop = true;
+  _tcStartDAS('gz-softdrop', function () { moveBackward = true; });
+}
+
+function _tcGestureEndSoftDrop() {
+  if (!_tcGestureSoftDrop) return;
+  _tcGestureSoftDrop = false;
+  _tcStopDAS('gz-softdrop');
+  moveBackward = false;
+}
+
+function _tcGestureTouchStart(e) {
+  if (e.cancelable) e.preventDefault();
+  var nowMs = Date.now();
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    (function (id, cx, cy) {
+      var longTimer = setTimeout(function () {
+        if (!_tcGestureState[id]) return;
+        delete _tcGestureState[id];
+        _tcVibrate();
+        if (typeof activateEquippedPowerup === 'function' &&
+            typeof equippedPowerUpType !== 'undefined' && equippedPowerUpType) {
+          activateEquippedPowerup();
+        } else if (typeof activateLavaFlask === 'function') {
+          activateLavaFlask();
+        }
+      }, TC_LONG_PRESS_MS);
+      _tcGestureState[id] = { startX: cx, startY: cy, startT: nowMs, longTimer: longTimer };
+    }(e.changedTouches[i].identifier, e.changedTouches[i].clientX, e.changedTouches[i].clientY));
+  }
+  _tcGestureMaxFingers = Math.max(_tcGestureMaxFingers, Object.keys(_tcGestureState).length);
+}
+
+function _tcGestureTouchMove(e) {
+  if (e.cancelable) e.preventDefault();
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    var t = e.changedTouches[i];
+    var s = _tcGestureState[t.identifier];
+    if (!s) continue;
+    var dx = t.clientX - s.startX;
+    var dy = t.clientY - s.startY;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    // Cancel long-press timer if finger has moved significantly
+    if (dist > TC_TAP_MAX_PX && s.longTimer) {
+      clearTimeout(s.longTimer);
+      s.longTimer = null;
+    }
+    // Begin live soft-drop when dragging downward past the swipe threshold
+    if (dy > TC_SWIPE_MIN_PX && Math.abs(dy) > Math.abs(dx)) {
+      _tcGestureStartSoftDrop();
+    }
+  }
+}
+
+function _tcGestureTouchEnd(e) {
+  if (e.cancelable) e.preventDefault();
+  var nowMs = Date.now();
+  var peakFingers = _tcGestureMaxFingers;
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    var t = e.changedTouches[i];
+    var s = _tcGestureState[t.identifier];
+    if (!s) continue;
+    if (s.longTimer) clearTimeout(s.longTimer);
+    delete _tcGestureState[t.identifier];
+
+    var dx   = t.clientX - s.startX;
+    var dy   = t.clientY - s.startY;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    var dt   = nowMs - s.startT;
+
+    _tcGestureEndSoftDrop();
+
+    if (dt <= TC_TAP_MAX_MS && dist < TC_TAP_MAX_PX) {
+      // ── Tap ──────────────────────────────────────────────────────────────────
+      _tcVibrate();
+      if (peakFingers >= 2) {
+        // Two-finger tap → rotate CCW
+        if (typeof applyNudge === 'function') applyNudge(-1, 0);
+      } else {
+        // Single tap → rotate CW
+        if (typeof applyNudge === 'function') applyNudge(1, 0);
+      }
+    } else if (dt <= TC_SWIPE_MAX_MS && dist >= TC_SWIPE_MIN_PX) {
+      // ── Swipe ─────────────────────────────────────────────────────────────────
+      var absX = Math.abs(dx);
+      var absY = Math.abs(dy);
+      _tcVibrate();
+      if (absY > absX) {
+        // Vertical swipe
+        if (dy < 0) {
+          // Swipe up → hard drop
+          if (canJump && playerOnGround && typeof JUMP_VELOCITY !== 'undefined') {
+            playerVelocity.y += JUMP_VELOCITY;
+            canJump = false;
+            playerOnGround = false;
+          }
+        }
+        // Swipe down is handled live via touchmove → soft drop
+      } else {
+        // Horizontal swipe → move piece left/right
+        // Steps are proportional to swipe distance (every 40 px ≈ one additional step)
+        var steps = Math.max(1, Math.floor(absX / 40));
+        for (var step = 0; step < steps; step++) {
+          (function (delay, dir) {
+            setTimeout(function () {
+              if (dir < 0) { moveLeft  = true; setTimeout(function () { moveLeft  = false; }, 30); }
+              else         { moveRight = true; setTimeout(function () { moveRight = false; }, 30); }
+            }, delay);
+          }(step * TC_ARR_MS, dx < 0 ? -1 : 1));
+        }
+      }
+    }
+  }
+  // Reset peak-finger counter once all fingers are lifted
+  if (Object.keys(_tcGestureState).length === 0) {
+    _tcGestureMaxFingers = 0;
+  }
+}
+
+function _tcGestureTouchCancel(e) {
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    var s = _tcGestureState[e.changedTouches[i].identifier];
+    if (s && s.longTimer) clearTimeout(s.longTimer);
+    delete _tcGestureState[e.changedTouches[i].identifier];
+  }
+  _tcGestureEndSoftDrop();
+  if (Object.keys(_tcGestureState).length === 0) _tcGestureMaxFingers = 0;
+}
+
+/**
+ * Attaches gesture listeners to the game canvas (renderer-container).
+ * Also sets touch-action:none to suppress browser default gestures.
+ */
+function _tcInitGestureZone() {
+  var el = document.getElementById('renderer-container');
+  if (!el) return;
+  el.style.touchAction = 'none';
+  el.addEventListener('touchstart',  _tcGestureTouchStart,  { passive: false });
+  el.addEventListener('touchmove',   _tcGestureTouchMove,   { passive: false });
+  el.addEventListener('touchend',    _tcGestureTouchEnd,    { passive: false });
+  el.addEventListener('touchcancel', _tcGestureTouchCancel, { passive: false });
+}
+
+// ── Keyboard-priority detection ───────────────────────────────────────────────
+// Auto-hide touch controls when a physical keyboard is actively in use
+// (common on tablets paired with a Bluetooth keyboard).
+
+let _tcKeyboardActive = false;
+let _tcKeyboardTimer  = null;
+const TC_KEYBOARD_IDLE_MS = 5000; // ms of keyboard inactivity before re-showing controls
+
+function _tcOnKeyDown(e) {
+  // Ignore pure modifier keys
+  if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta') return;
+  if (!_tcKeyboardActive) {
+    _tcKeyboardActive = true;
+    _tcUpdateVisibility();
+  }
+  clearTimeout(_tcKeyboardTimer);
+  _tcKeyboardTimer = setTimeout(function () {
+    _tcKeyboardActive = false;
+    _tcUpdateVisibility();
+  }, TC_KEYBOARD_IDLE_MS);
+}
+
+// ── Haptic helpers (called by pieces.js / lineclear.js) ──────────────────────
+
+/** Short pulse when a falling piece locks to the board. */
+function tcVibrateOnLock() {
+  try { if (navigator.vibrate && mobileOverridesActive) navigator.vibrate(18); } catch (_) {}
+}
+
+/** Stronger rumble scaled to the number of lines cleared simultaneously. */
+function tcVibrateOnLineClear(numLines) {
+  try {
+    if (!navigator.vibrate || !mobileOverridesActive) return;
+    var pattern = numLines >= 4
+      ? [40, 20, 60]   // Tetris (4-line): double pulse
+      : numLines === 3
+        ? [30, 15, 30] // Triple
+        : [20];        // 1-2 lines
+    navigator.vibrate(pattern);
+  } catch (_) {}
+}
+
 // ── Public init ───────────────────────────────────────────────────────────────
 
 /**
@@ -284,6 +496,14 @@ function initTouchControls() {
     overlay.addEventListener('touchmove', function (e) {
       e.preventDefault();
     }, { passive: false });
+  }
+
+  // Attach swipe/tap/long-press gesture zone to the game canvas
+  _tcInitGestureZone();
+
+  // Listen for physical keyboard input to auto-hide virtual controls
+  if (_tcIsTouchDevice()) {
+    window.addEventListener('keydown', _tcOnKeyDown, { passive: true });
   }
 
   // Observe game running state

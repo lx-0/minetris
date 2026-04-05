@@ -508,6 +508,7 @@ function updateLineClear(delta) {
 
 function _lcDetonate() {
   const numLines = _lcNumLines;
+  if (typeof tcVibrateOnLineClear === 'function') tcVibrateOnLineClear(numLines);
 
   // Per-clear-type scaling
   let fragMult = 1.0, numRings = 1, doFlash = false, flashAmt = 0, doShake = false;
