@@ -1,10 +1,16 @@
-// Graphics quality preset system + FPS monitor.
+// Graphics quality preset system + FPS monitor + performance metrics.
 // Tiers: 'low' (mobile), 'medium', 'high' (default desktop), 'ultra'
 //
 // graphicsQualityTier — global read by shaders.js, sky.js, trails.js at runtime.
 // initGraphicsQuality() — call from initSettings() AFTER renderer is created.
 // applyGraphicsPreset(tier) — runtime tier switch (user-initiated).
 // updateFpsMonitor(timestamp) — call every frame from animate().
+//
+// Performance overlay (debug):
+//   togglePerfOverlay()   — show/hide full metrics panel (console command)
+//   toggleFpsCounter()    — show/hide simple FPS badge (console command)
+//   getPerfMetrics()      — returns snapshot of all tracked metrics
+//   perfMarkTransitionStart(label) / perfMarkTransitionEnd() — mode timing hooks
 
 const GRAPHICS_QUALITY_KEY   = 'mineCtris_graphicsQuality';
 const FPS_SUGGESTION_KEY     = 'mineCtris_fpsSuggestionDismissed';
@@ -14,10 +20,32 @@ const FPS_LOW_THRESHOLD      = 30;
 // ── Public global read by other modules ──────────────────────────────────────
 let graphicsQualityTier = 'high';
 
-// ── FPS monitor state ────────────────────────────────────────────────────────
+// ── FPS monitor state (suggestion logic) ─────────────────────────────────────
 let _fpsFrameCount   = 0;
 let _fpsWindowStart  = 0;
 let _fpsSuggestionShown = false;
+
+// ── Performance metrics state ─────────────────────────────────────────────────
+// Circular frametime buffer (ms per frame, last ~5 s at 60 fps).
+const _PERF_BUF_SIZE         = 300;
+const _PERF_DROP_THRESHOLD   = 33; // ms; frame longer than this counts as a drop
+const _PERF_FPS_HIST_SIZE    = 60; // per-second samples kept for graph
+
+let _perfBuf          = new Float32Array(_PERF_BUF_SIZE);
+let _perfHead         = 0;
+let _perfFilled       = 0;
+let _perfLastTs       = 0;    // timestamp of previous frame (ms)
+let _perfDropCount    = 0;    // cumulative frame-drop counter
+let _perfSecondAcc    = 0;    // ms accumulated in current 1-second window
+let _perfSecondFrames = 0;    // frame count in current 1-second window
+let _perfFpsHistory   = [];   // rolling per-second FPS values
+let _perfLoadStart    = performance.now(); // captured at script parse
+let _perfLoadTime     = null; // ms from script-parse to initGraphicsQuality()
+
+// Mode-transition timing
+let _perfTransStart = null;
+let _perfTransLabel = '';
+let _perfTransitions = []; // [{label, durationMs}] — last 10 recorded
 
 // ── Detection ────────────────────────────────────────────────────────────────
 
@@ -127,7 +155,10 @@ function getGraphicsQuality() { return graphicsQualityTier; }
 
 /**
  * Apply a graphics quality preset at runtime (user-initiated).
- * Adjusts renderer, post-processing, materials, sky, and trails immediately.
+ * Low  — no particles, no weather, static backgrounds, Lambert materials, no shadows.
+ * Medium — reduced particles, no weather, no bloom, no shadows.
+ * High — bloom, shadows, all effects (default desktop).
+ * Ultra — maximum quality, all effects.
  */
 function applyGraphicsPreset(tier) {
   if (!['low', 'medium', 'high', 'ultra'].includes(tier)) return;
@@ -151,12 +182,210 @@ function applyGraphicsPreset(tier) {
  * Called once from initSettings() after the renderer has been created.
  * Sets quality from storage / auto-detect and applies renderer-level settings.
  * Post-processing passes are applied later by initPostProcessing().
+ * Also records the initial load time.
  */
 function initGraphicsQuality() {
+  _perfLoadTime = performance.now() - _perfLoadStart;
   _loadGraphicsQuality();
   _applyRendererSettings(graphicsQualityTier);
   _syncGraphicsQualityButtons();
 }
+
+// ── Performance metrics helpers ───────────────────────────────────────────────
+
+function _perfComputeAvgFps() {
+  if (_perfFilled === 0) return 0;
+  const count = Math.min(_perfFilled, _PERF_BUF_SIZE);
+  let sum = 0;
+  for (let i = 0; i < count; i++) sum += _perfBuf[i];
+  const avgFt = sum / count;
+  return avgFt > 0 ? Math.round(1000 / avgFt) : 0;
+}
+
+function _perfComputeP95Fps() {
+  if (_perfFilled === 0) return 0;
+  const count = Math.min(_perfFilled, _PERF_BUF_SIZE);
+  // Copy the valid portion of the circular buffer into a sorted array.
+  const ft = Array.from(_perfBuf.subarray(0, count)).slice();
+  ft.sort(function(a, b) { return a - b; });
+  const p95ft = ft[Math.min(Math.floor(count * 0.95), count - 1)];
+  return p95ft > 0 ? Math.round(1000 / p95ft) : 0;
+}
+
+/**
+ * Mark the start of a mode transition for timing.
+ * @param {string} label  Human-readable label (e.g. 'mainMenu→classic')
+ */
+function perfMarkTransitionStart(label) {
+  _perfTransStart = performance.now();
+  _perfTransLabel = label || 'transition';
+}
+window.perfMarkTransitionStart = perfMarkTransitionStart;
+
+/**
+ * Mark the end of a mode transition; records the duration.
+ */
+function perfMarkTransitionEnd() {
+  if (_perfTransStart === null) return;
+  const dur = Math.round(performance.now() - _perfTransStart);
+  _perfTransitions.push({ label: _perfTransLabel, durationMs: dur });
+  if (_perfTransitions.length > 10) _perfTransitions.shift();
+  _perfTransStart = null;
+}
+window.perfMarkTransitionEnd = perfMarkTransitionEnd;
+
+/**
+ * Returns a plain-object snapshot of all tracked performance metrics.
+ */
+function getPerfMetrics() {
+  return {
+    currentFps:  _perfFpsHistory.length ? _perfFpsHistory[_perfFpsHistory.length - 1] : null,
+    avgFps:      _perfComputeAvgFps(),
+    p95Fps:      _perfComputeP95Fps(),
+    frameDrops:  _perfDropCount,
+    loadTimeMs:  _perfLoadTime,
+    transitions: _perfTransitions.slice(),
+    quality:     graphicsQualityTier,
+    fpsHistory:  _perfFpsHistory.slice(),
+  };
+}
+window.getPerfMetrics = getPerfMetrics;
+
+// ── Performance overlay (debug panel) ────────────────────────────────────────
+
+let _perfOverlayEnabled = false;
+let _perfOverlayEl      = null;
+let _perfOverlayStats   = null;
+let _perfGraphCanvas    = null;
+let _perfGraphCtx       = null;
+
+function _ensurePerfOverlayEl() {
+  if (_perfOverlayEl) return;
+
+  _perfOverlayEl = document.createElement('div');
+  _perfOverlayEl.id = 'perf-overlay';
+  Object.assign(_perfOverlayEl.style, {
+    position:     'fixed',
+    top:          '8px',
+    left:         '8px',
+    zIndex:       '99998',
+    background:   'rgba(0,0,0,0.82)',
+    color:        '#d8d8d8',
+    font:         '11px/1.6 monospace',
+    padding:      '8px 10px',
+    borderRadius: '5px',
+    pointerEvents:'none',
+    display:      'none',
+    minWidth:     '210px',
+    userSelect:   'none',
+    border:       '1px solid rgba(255,255,255,0.08)',
+  });
+
+  _perfOverlayStats = document.createElement('div');
+  _perfOverlayEl.appendChild(_perfOverlayStats);
+
+  // FPS history graph
+  _perfGraphCanvas = document.createElement('canvas');
+  _perfGraphCanvas.width  = 200;
+  _perfGraphCanvas.height = 44;
+  Object.assign(_perfGraphCanvas.style, { display: 'block', marginTop: '5px' });
+  _perfOverlayEl.appendChild(_perfGraphCanvas);
+  _perfGraphCtx = _perfGraphCanvas.getContext('2d');
+
+  document.body.appendChild(_perfOverlayEl);
+}
+
+function _renderPerfOverlay(currentFps) {
+  if (!_perfOverlayEnabled || !_perfOverlayEl) return;
+
+  const avgFps = _perfComputeAvgFps();
+  const p95Fps = _perfComputeP95Fps();
+
+  // Memory (Chrome-only Performance API)
+  let memStr = 'N/A';
+  if (performance.memory) {
+    memStr = Math.round(performance.memory.usedJSHeapSize / 1048576) + ' MB';
+  }
+
+  // Draw calls (Three.js renderer.info)
+  let drawStr = 'N/A';
+  if (typeof renderer !== 'undefined' && renderer && renderer.info) {
+    drawStr = String(renderer.info.render.calls);
+  }
+
+  const loadStr  = _perfLoadTime !== null
+    ? (_perfLoadTime / 1000).toFixed(2) + 's'
+    : '--';
+  const fpsColor = currentFps >= 55 ? '#00ff44' : currentFps >= 30 ? '#ffcc00' : '#ff4444';
+
+  _perfOverlayStats.innerHTML =
+    '<span style="color:#9af;font-weight:bold">PERF MONITOR</span>' +
+    '  <span style="color:#555;font-size:10px">togglePerfOverlay()</span><br>' +
+    'FPS <span style="color:' + fpsColor + '">' + currentFps + '</span>' +
+    '  avg <b>' + avgFps + '</b>' +
+    '  P95 <b>' + p95Fps + '</b><br>' +
+    'Drops <b>' + _perfDropCount + '</b>' +
+    '  Load <b>' + loadStr + '</b><br>' +
+    'Mem <b>' + memStr + '</b>' +
+    '  Draws <b>' + drawStr + '</b><br>' +
+    'Quality <span style="color:#7df">' + graphicsQualityTier + '</span>';
+
+  // Draw FPS history graph
+  if (_perfGraphCtx && _perfFpsHistory.length > 1) {
+    const ctx = _perfGraphCtx;
+    const w   = _perfGraphCanvas.width;
+    const h   = _perfGraphCanvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.fillRect(0, 0, w, h);
+
+    // 60 fps reference line
+    ctx.strokeStyle = 'rgba(0,255,68,0.25)';
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    const y60 = h - Math.round((60 / 90) * h);
+    ctx.moveTo(0, y60);
+    ctx.lineTo(w, y60);
+    ctx.stroke();
+
+    const hist = _perfFpsHistory;
+    const barW = w / _PERF_FPS_HIST_SIZE;
+    for (let i = 0; i < hist.length; i++) {
+      const fps  = hist[i];
+      const barH = Math.min(Math.round((fps / 90) * h), h);
+      ctx.fillStyle = fps >= 55 ? '#00cc44' : fps >= 30 ? '#ffcc00' : '#ff4444';
+      ctx.fillRect(
+        Math.round(i * barW),
+        h - barH,
+        Math.max(Math.floor(barW) - 1, 1),
+        barH
+      );
+    }
+  }
+}
+
+/**
+ * Toggle the full performance debug overlay.
+ * Usage (browser console):
+ *   togglePerfOverlay()       — flip current state
+ *   togglePerfOverlay(true)   — force on
+ *   togglePerfOverlay(false)  — force off
+ */
+function togglePerfOverlay(on) {
+  _perfOverlayEnabled = (typeof on === 'boolean') ? on : !_perfOverlayEnabled;
+  _ensurePerfOverlayEl();
+  _perfOverlayEl.style.display = _perfOverlayEnabled ? 'block' : 'none';
+  // Hide simple FPS counter when full overlay is active (redundant)
+  if (_fpsCounterEl) {
+    _fpsCounterEl.style.display = (_perfOverlayEnabled || !_fpsCounterEnabled) ? 'none' : 'block';
+  }
+  if (_perfOverlayEnabled) {
+    console.info('[PerfOverlay] ON — getPerfMetrics() for raw data, ' +
+      'perfMarkTransitionStart(label)/perfMarkTransitionEnd() for mode timing');
+  }
+  return _perfOverlayEnabled ? 'Perf overlay ON' : 'Perf overlay OFF';
+}
+window.togglePerfOverlay = togglePerfOverlay;
 
 // ── Debug FPS Counter ────────────────────────────────────────────────────────
 // Toggle via browser console: toggleFpsCounter()  or  toggleFpsCounter(true/false)
@@ -171,18 +400,18 @@ function _ensureFpsCounterEl() {
   _fpsCounterEl = document.createElement('div');
   _fpsCounterEl.id = 'debug-fps-counter';
   Object.assign(_fpsCounterEl.style, {
-    position: 'fixed',
-    top: '8px',
-    left: '8px',
-    zIndex: '99999',
-    background: 'rgba(0,0,0,0.65)',
-    color: '#00ff44',
-    font: 'bold 12px/1.6 monospace',
-    padding: '1px 7px',
+    position:     'fixed',
+    top:          '8px',
+    left:         '8px',
+    zIndex:       '99999',
+    background:   'rgba(0,0,0,0.65)',
+    color:        '#00ff44',
+    font:         'bold 12px/1.6 monospace',
+    padding:      '1px 7px',
     borderRadius: '3px',
-    pointerEvents: 'none',
-    display: 'none',
-    userSelect: 'none',
+    pointerEvents:'none',
+    display:      'none',
+    userSelect:   'none',
   });
   document.body.appendChild(_fpsCounterEl);
 }
@@ -197,7 +426,8 @@ function _ensureFpsCounterEl() {
 function toggleFpsCounter(on) {
   _fpsCounterEnabled = (typeof on === 'boolean') ? on : !_fpsCounterEnabled;
   _ensureFpsCounterEl();
-  _fpsCounterEl.style.display = _fpsCounterEnabled ? 'block' : 'none';
+  // Hide the simple counter if the full overlay is already visible
+  _fpsCounterEl.style.display = (_fpsCounterEnabled && !_perfOverlayEnabled) ? 'block' : 'none';
   if (_fpsCounterEnabled) {
     _fpsCounterFrames = 0;
     _fpsCounterStart  = 0;
@@ -208,7 +438,7 @@ function toggleFpsCounter(on) {
 window.toggleFpsCounter = toggleFpsCounter;
 
 function _tickFpsCounter(timestamp) {
-  if (!_fpsCounterEnabled || !_fpsCounterEl) return;
+  if (!_fpsCounterEnabled || !_fpsCounterEl || _perfOverlayEnabled) return;
   _fpsCounterFrames++;
   if (_fpsCounterStart === 0) { _fpsCounterStart = timestamp; return; }
   const elapsed = (timestamp - _fpsCounterStart) / 1000;
@@ -224,12 +454,39 @@ function _tickFpsCounter(timestamp) {
 
 /**
  * Call every frame from animate() with performance.now() timestamp.
- * Tracks FPS over 5-second windows; shows a one-time suggestion if < 30fps.
- * Also drives the debug FPS counter overlay when enabled.
+ * Tracks per-frame frametimes, computes per-second FPS samples, counts frame
+ * drops, and drives both the debug overlay and the low-FPS suggestion logic.
  */
 function updateFpsMonitor(timestamp) {
   _tickFpsCounter(timestamp);
 
+  // ── Per-frame frametime tracking ─────────────────────────────────────────
+  if (_perfLastTs > 0) {
+    const ft = timestamp - _perfLastTs;
+
+    // Store in circular buffer
+    _perfBuf[_perfHead] = ft;
+    _perfHead = (_perfHead + 1) % _PERF_BUF_SIZE;
+    if (_perfFilled < _PERF_BUF_SIZE) _perfFilled++;
+
+    // Count slow frames
+    if (ft > _PERF_DROP_THRESHOLD) _perfDropCount++;
+
+    // Accumulate for per-second FPS sample
+    _perfSecondAcc    += ft;
+    _perfSecondFrames += 1;
+    if (_perfSecondAcc >= 1000) {
+      const secFps = Math.round(_perfSecondFrames * 1000 / _perfSecondAcc);
+      _perfFpsHistory.push(secFps);
+      if (_perfFpsHistory.length > _PERF_FPS_HIST_SIZE) _perfFpsHistory.shift();
+      _renderPerfOverlay(secFps);
+      _perfSecondAcc    = 0;
+      _perfSecondFrames = 0;
+    }
+  }
+  _perfLastTs = timestamp;
+
+  // ── Low-FPS suggestion window (fires at most once per session) ───────────
   if (_fpsSuggestionShown) return;
 
   _fpsFrameCount++;

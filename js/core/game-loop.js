@@ -34,7 +34,8 @@ function animate() {
   _bgThrottleAcc += delta;
   if (_bgThrottleAcc >= _BG_INTERVAL) {
     updateSky(elapsedTime, _bgThrottleAcc);
-    if (typeof updateParallaxBg === 'function') updateParallaxBg(_bgThrottleAcc);
+    // Parallax scrolling disabled on Low quality (static background).
+    if (graphicsQualityTier !== 'low' && typeof updateParallaxBg === 'function') updateParallaxBg(_bgThrottleAcc);
     // Underground ambient dimming + fog shift (overrides sky values when camera is below surface).
     if (typeof applyUndergroundDepth === 'function' && camera) {
       applyUndergroundDepth(camera.position.y);
@@ -224,8 +225,11 @@ function animate() {
         if ((isPuzzleMode || isCustomPuzzleMode) && typeof updatePuzzleHUD === "function") updatePuzzleHUD();
       }
       updateLineClear(delta);
-      if (typeof updateWeather === 'function') updateWeather(delta);
-      if (typeof updateSeasonalParticles === 'function') updateSeasonalParticles(delta);
+      // Weather disabled on Low/Medium; seasonal particles disabled on Low only.
+      if (graphicsQualityTier !== 'low' && graphicsQualityTier !== 'medium' &&
+          typeof updateWeather === 'function') updateWeather(delta);
+      if (graphicsQualityTier !== 'low' &&
+          typeof updateSeasonalParticles === 'function') updateSeasonalParticles(delta);
       if (typeof updateHazardBlocks === 'function') updateHazardBlocks(delta);
       if (typeof tickDungeonModifiers === 'function') tickDungeonModifiers(delta);
       if (typeof tickBossBattle === 'function') tickBossBattle(delta);
