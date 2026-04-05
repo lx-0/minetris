@@ -564,6 +564,9 @@
         <div class="parallax-layer" id="parallax-near"></div>
       </div>
 
+      <!-- Board backgrounds — animated canvas scenes above CSS parallax -->
+      <canvas id="board-bg-canvas" aria-hidden="true"></canvas>
+
       <div id="renderer-container"></div>
       <div id="board-glow-overlay"></div>
       <div id="board-danger-overlay"></div>
@@ -1538,6 +1541,24 @@
             <button class="parallax-biome-btn" data-biome="nether" title="Nether">&#128293; Nether</button>
             <button class="parallax-biome-btn" data-biome="end" title="The End">&#127756; End</button>
             <button class="parallax-biome-btn" data-biome="ocean" title="Ocean">&#127754; Ocean</button>
+          </div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="board-bg-style-select">Board Backgrounds</label>
+            <select id="board-bg-style-select" style="background:#1e2a1e;color:#d4e8d4;border:1px solid #3a5a3a;border-radius:4px;padding:3px 8px;font-size:0.8em;cursor:pointer;">
+              <option value="animated">Animated</option>
+              <option value="static">Static</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
+          <div class="settings-hint">Canvas-based animated biome scenes behind the board</div>
+          <div id="board-bg-scene-selector">
+            <button class="bb-scene-btn bb-scene-btn-selected" data-scene="random" title="Random scene each session">&#127922; Random</button>
+            <button class="bb-scene-btn" data-scene="forest" title="Forest">&#127794; Forest</button>
+            <button class="bb-scene-btn" data-scene="ocean"  title="Ocean">&#127754; Ocean</button>
+            <button class="bb-scene-btn" data-scene="nether" title="Nether">&#128293; Nether</button>
+            <button class="bb-scene-btn" data-scene="desert" title="Desert">&#127964; Desert</button>
+            <button class="bb-scene-btn" data-scene="end"    title="The End">&#127756; End</button>
           </div>
           <div class="settings-section-divider"></div>
           <button id="settings-metrics-btn" class="settings-link-btn">&#128202; Player Metrics</button>
@@ -2943,6 +2964,7 @@
     <script src="js/core/game-loop.js"></script>
     <script src="js/rendering/resize.js"></script>
     <script src="js/rendering/parallax-background.js"></script>
+    <script src="js/rendering/board-backgrounds.js"></script>
         <script src="js/main.js"></script>
     <script src="js/local-multi/local-multi.js"></script>
     <script src="js/ai/ai-opponent.js"></script>

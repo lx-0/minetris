@@ -21108,6 +21108,46 @@ body.hc-mode .notif-item {
   }
 }
 
+/* ── Board backgrounds canvas ─────────────────────────────────────────────── */
+#board-bg-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  display: block;
+}
+
+#board-bg-scene-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+.bb-scene-btn {
+  background: #0d1f10;
+  border: 1px solid #2a3d2a;
+  color: #8aba8a;
+  font-family: 'Press Start 2P', monospace, sans-serif;
+  font-size: 0.6em;
+  padding: 5px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.bb-scene-btn:hover {
+  background: #152a18;
+  border-color: #4ade80;
+  color: #d4f4d4;
+}
+
+.bb-scene-btn-selected {
+  background: #0a2a10;
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
 /* ── UI Font Size ─────────────────────────────────────────────────────────── */
 #font-size-btn-group {
   display: flex;

@@ -69,6 +69,8 @@ function init() {
   initSky();
   // Initialise parallax background (after sky so it can toggle sky mesh visibility)
   if (typeof initParallaxBg === 'function') initParallaxBg();
+  // Initialise canvas board backgrounds (animated scenes per biome/mode)
+  if (typeof initBoardBg === 'function') initBoardBg();
   if (typeof initWeather === 'function') initWeather();
 
   worldGroup = new THREE.Group();

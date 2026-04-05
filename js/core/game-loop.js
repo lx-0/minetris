@@ -42,6 +42,8 @@ function animate() {
     updateSky(elapsedTime, _bgThrottleAcc);
     // Parallax scrolling disabled on Low quality (static background).
     if (graphicsQualityTier !== 'low' && typeof updateParallaxBg === 'function') updateParallaxBg(_bgThrottleAcc);
+    // Animated board background canvas (disabled on Low quality).
+    if (graphicsQualityTier !== 'low' && typeof updateBoardBg === 'function') updateBoardBg(_bgThrottleAcc);
     // Underground ambient dimming + fog shift (overrides sky values when camera is below surface).
     if (typeof applyUndergroundDepth === 'function' && camera) {
       applyUndergroundDepth(camera.position.y);

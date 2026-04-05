@@ -286,6 +286,8 @@ function resetGame() {
 
   // Notify parallax system of new game session (randomises biome if mode = 'random')
   if (typeof onParallaxGameStart === 'function') onParallaxGameStart();
+  // Notify board background system of new game session
+  if (typeof onBoardBgGameStart === 'function') onBoardBgGameStart();
 
   // Reset event engine
   if (typeof resetEventEngine === "function") resetEventEngine();

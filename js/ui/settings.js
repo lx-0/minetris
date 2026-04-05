@@ -1407,6 +1407,21 @@ function initSettings() {
     });
   });
 
+  // Wire up board background style selector.
+  const bbStyleSelect = document.getElementById('board-bg-style-select');
+  if (bbStyleSelect) {
+    bbStyleSelect.addEventListener('change', function() {
+      if (typeof setBoardBgStyle === 'function') setBoardBgStyle(this.value);
+    });
+  }
+
+  // Wire up board background scene buttons.
+  document.querySelectorAll('.bb-scene-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (typeof setBoardBgScene === 'function') setBoardBgScene(btn.dataset.scene);
+    });
+  });
+
   // Wire up font size buttons.
   _loadFontSize();
   ['small', 'medium', 'large'].forEach(function(size) {
