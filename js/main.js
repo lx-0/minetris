@@ -757,8 +757,16 @@ function init() {
 
   const startResumeBtn = document.getElementById("start-resume-btn");
   if (startResumeBtn) {
-    // Show button only if a save exists
-    startResumeBtn.style.display = (typeof hasSaveState === "function" && hasSaveState()) ? "block" : "none";
+    // Show button only if a save exists; label it with the saved mode context
+    if (typeof hasSaveState === "function" && hasSaveState()) {
+      startResumeBtn.style.display = "block";
+      if (typeof getSaveStateLabel === "function") {
+        const _saveLabel = getSaveStateLabel();
+        if (_saveLabel) startResumeBtn.textContent = '\u25B6 Resume ' + _saveLabel;
+      }
+    } else {
+      startResumeBtn.style.display = "none";
+    }
     startResumeBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       if (typeof hasSaveState !== "function" || !hasSaveState()) return;

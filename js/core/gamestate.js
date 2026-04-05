@@ -81,7 +81,7 @@ function updateScoreHUD() {
     timerEl.style.color = blitzBonusActive ? "#ffd700" : "";
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Blitz";
   } else if (isMarathonMode) {
-    // Marathon: show lines within the current level and level number
+    // Marathon: show lines within the current level, level number, and LPM
     const mLinesInLevel = linesCleared % MARATHON_LINES_PER_LEVEL;
     const mTotalSecs = Math.floor(gameElapsedSeconds);
     const mm2 = Math.floor(mTotalSecs / 60).toString().padStart(2, "0");
@@ -93,6 +93,16 @@ function updateScoreHUD() {
     scoreEl.querySelector(".hud-stat:nth-child(4)").style.color = "";
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent =
       marathonKillScreen ? "KILL SCREEN!" : "Level " + marathonLevel;
+    const lpmEl = document.getElementById("hud-lpm");
+    if (lpmEl) {
+      if (gameElapsedSeconds > 5 && linesCleared > 0) {
+        const curLpm = Math.round(linesCleared / (gameElapsedSeconds / 60));
+        lpmEl.textContent = "LPM: " + curLpm;
+      } else {
+        lpmEl.textContent = "LPM: —";
+      }
+      lpmEl.style.display = "";
+    }
   } else if (isSprintMode) {
     // Sprint: show progress toward 40 lines and sprint elapsed time
     scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
@@ -307,16 +317,41 @@ function triggerGameOver() {
   const ss = (totalSecs % 60).toString().padStart(2, "0");
   const statsEl = document.getElementById("game-over-stats");
   if (statsEl) {
-    const _goMod = typeof getWorldModifier === 'function' ? getWorldModifier() : null;
-    const _modBadge = (_goMod && _goMod.id !== 'normal')
-      ? `<div class="go-modifier-badge">${_goMod.icon} ${_goMod.name} <span class="go-modifier-mult">\xD7${_goMod.scoreMultiplier}</span></div>`
-      : '';
-    statsEl.innerHTML =
-      _modBadge +
-      `<div><span class="go-label">SCORE</span><br>${state.score}</div>` +
-      `<div><span class="go-label">BLOCKS MINED</span><br>${state.blocksMined}</div>` +
-      `<div><span class="go-label">LINES CLEARED</span><br>${state.linesCleared}</div>` +
-      `<div><span class="go-label">TIME SURVIVED</span><br>${mm}:${ss}</div>`;
+    if (isMarathonMode) {
+      // Marathon-specific post-game stats
+      const _finalLpm = state.elapsedSeconds > 0
+        ? Math.round(state.linesCleared / (state.elapsedSeconds / 60)) : 0;
+      const _peakLpm = (typeof marathonPeakLPM !== 'undefined' && marathonPeakLPM > 0)
+        ? marathonPeakLPM : _finalLpm;
+      statsEl.innerHTML =
+        `<div><span class="go-label">LEVEL REACHED</span><br>${marathonLevel}${marathonKillScreen ? ' — KILL SCREEN!' : ''}</div>` +
+        `<div><span class="go-label">SCORE</span><br>${state.score}</div>` +
+        `<div><span class="go-label">LINES CLEARED</span><br>${state.linesCleared}</div>` +
+        `<div><span class="go-label">PEAK LPM</span><br>${_peakLpm}</div>` +
+        `<div><span class="go-label">TIME SURVIVED</span><br>${mm}:${ss}</div>` +
+        `<div><span class="go-label">BEST COMBO</span><br>${sessionHighestComboCount}&times;</div>`;
+      // Show marathon section, hide others
+      const marathonGoEl = document.getElementById("marathon-go-section");
+      if (marathonGoEl) {
+        const mBest = typeof loadMarathonBest === 'function' ? loadMarathonBest() : null;
+        if (mBest) {
+          marathonGoEl.innerHTML = '<div class="go-label">MARATHON BEST</div>' +
+            '<div>Level ' + mBest.level + ' &mdash; ' + mBest.score.toLocaleString() + ' pts &mdash; ' + (mBest.date || '') + '</div>';
+          marathonGoEl.style.display = 'block';
+        }
+      }
+    } else {
+      const _goMod = typeof getWorldModifier === 'function' ? getWorldModifier() : null;
+      const _modBadge = (_goMod && _goMod.id !== 'normal')
+        ? `<div class="go-modifier-badge">${_goMod.icon} ${_goMod.name} <span class="go-modifier-mult">\xD7${_goMod.scoreMultiplier}</span></div>`
+        : '';
+      statsEl.innerHTML =
+        _modBadge +
+        `<div><span class="go-label">SCORE</span><br>${state.score}</div>` +
+        `<div><span class="go-label">BLOCKS MINED</span><br>${state.blocksMined}</div>` +
+        `<div><span class="go-label">LINES CLEARED</span><br>${state.linesCleared}</div>` +
+        `<div><span class="go-label">TIME SURVIVED</span><br>${mm}:${ss}</div>`;
+    }
   }
 
   // Seasonal events: record final score for event leaderboard and score-based challenges
@@ -576,7 +611,10 @@ function triggerGameOver() {
 
   // Per-mode leaderboard score submission (best-score model, silent)
   if (typeof trySubmitModeScore === 'function') {
-    if (isBlitzMode && !isDailyChallenge && !isWeeklyChallenge) {
+    if (isMarathonMode) {
+      // Marathon ranked by level reached; use level as score, linesCleared as tiebreaker
+      trySubmitModeScore('marathon', marathonLevel, state.linesCleared);
+    } else if (isBlitzMode && !isDailyChallenge && !isWeeklyChallenge) {
       trySubmitModeScore('blitz', state.score, state.linesCleared);
     } else if (typeof activeDungeonId !== 'undefined' && activeDungeonId) {
       trySubmitModeScore('depths', state.score, state.linesCleared);
@@ -592,6 +630,12 @@ function triggerGameOver() {
   if (!isSurvivalMode) {
     const survGoEl = document.getElementById('survival-go-section');
     if (survGoEl) survGoEl.style.display = 'none';
+  }
+
+  // Hide marathon section when not in marathon mode
+  if (!isMarathonMode) {
+    const marathonGoHideEl = document.getElementById('marathon-go-section');
+    if (marathonGoHideEl) marathonGoHideEl.style.display = 'none';
   }
 
   // Wire up Share Score button

@@ -264,6 +264,7 @@ let weeklyBlindDrop = false;       // Blind Drop: next-piece preview hidden
 let isMarathonMode      = false;
 let marathonLevel       = 1;      // current level (1–29+)
 let marathonKillScreen  = false;  // true after level 29 is reached
+let marathonPeakLPM     = 0;      // highest lines-per-minute seen during the run
 const MARATHON_LINES_PER_LEVEL = 10;
 const MARATHON_KILL_SCREEN_LEVEL = 29;
 const MARATHON_LEVEL_RATE = 1.18; // per-level speed multiplier (≈ 1.18^28 ≈ 84× at kill screen)

@@ -49,10 +49,19 @@ function saveMarathonBest(level, sc) {
 
 /**
  * Called after each line clear to check if marathonLevel should advance.
+ * Also tracks peak LPM and triggers checkpoint saves at milestone levels.
  * Returns the new level if it changed, or 0 if no change.
  */
 function updateMarathonLevel() {
   if (!isMarathonMode) return 0;
+
+  // Track peak LPM (lines per minute) on every line clear
+  if (typeof gameElapsedSeconds !== 'undefined' && gameElapsedSeconds > 5 &&
+      typeof linesCleared !== 'undefined' && linesCleared > 0) {
+    const curLpm = Math.round(linesCleared / (gameElapsedSeconds / 60));
+    if (curLpm > marathonPeakLPM) marathonPeakLPM = curLpm;
+  }
+
   const newLevel = Math.min(
     Math.floor(linesCleared / MARATHON_LINES_PER_LEVEL) + 1,
     MARATHON_KILL_SCREEN_LEVEL
@@ -91,6 +100,11 @@ function updateMarathonLevel() {
     levelEl.classList.add("level-up-flash");
   }
 
+  // Save checkpoint every 10 levels (10, 20, 29)
+  if (marathonLevel % 10 === 0 || marathonLevel === MARATHON_KILL_SCREEN_LEVEL) {
+    if (typeof saveGameState === 'function') saveGameState();
+  }
+
   updateScoreHUD();
   return newLevel;
 }
@@ -98,10 +112,13 @@ function updateMarathonLevel() {
 /**
  * Called on game over to record marathon result and show game-over screen.
  * The game-over is still handled by the standard triggerGameOver(); this just
- * saves the best and submits stats.
+ * saves the best, submits stats, and clears the mid-run checkpoint.
  */
 function onMarathonGameOver() {
   if (!isMarathonMode) return;
+
+  // Clear the checkpoint — the run is over
+  if (typeof clearSaveState === 'function') clearSaveState();
 
   const isNew = saveMarathonBest(marathonLevel, score);
 

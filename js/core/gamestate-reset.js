@@ -115,6 +115,9 @@ function resetGame() {
   isMarathonMode     = false;
   marathonLevel      = 1;
   marathonKillScreen = false;
+  marathonPeakLPM    = 0;
+  const _lpmEl = document.getElementById("hud-lpm");
+  if (_lpmEl) { _lpmEl.style.display = "none"; _lpmEl.textContent = "LPM: —"; }
 
   // Reset sprint state
   isSprintMode      = false;

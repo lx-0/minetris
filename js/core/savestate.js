@@ -12,6 +12,23 @@ function hasSaveState() {
   try { return !!localStorage.getItem(SAVE_STATE_KEY); } catch (_) { return false; }
 }
 
+/**
+ * Returns a short label like "Marathon Lv.15" or "Classic" for the saved game,
+ * useful for populating the resume button text.
+ */
+function getSaveStateLabel() {
+  try {
+    const raw = localStorage.getItem(SAVE_STATE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data) return null;
+    if (data.mode === 'marathon') {
+      return 'Marathon — Level ' + (data.marathonLevel || 1);
+    }
+    return data.mode ? (data.mode.charAt(0).toUpperCase() + data.mode.slice(1)) : 'Game';
+  } catch (_) { return null; }
+}
+
 /** Remove saved game from localStorage and hide the Resume button. */
 function clearSaveState() {
   try { localStorage.removeItem(SAVE_STATE_KEY); } catch (_) {}
@@ -51,7 +68,8 @@ function saveGameState() {
     }
   });
 
-  const mode = isSprintMode     ? "sprint"
+  const mode = isMarathonMode    ? "marathon"
+             : isSprintMode     ? "sprint"
              : isBlitzMode      ? "blitz"
              : isDailyChallenge ? "daily"
              : "classic";
@@ -81,6 +99,9 @@ function saveGameState() {
     blitzBonusActive,
     dailyRemainingMs,
     dailyTimerActive,
+    marathonLevel:       typeof marathonLevel !== 'undefined'      ? marathonLevel      : 1,
+    marathonKillScreen:  typeof marathonKillScreen !== 'undefined' ? marathonKillScreen : false,
+    marathonPeakLPM:     typeof marathonPeakLPM !== 'undefined'    ? marathonPeakLPM    : 0,
     pieceQueue:          pieceQueue.map(function (p) { return { index: p.index }; }),
     landedBlocks
   };
@@ -141,6 +162,7 @@ function restoreGameState() {
 
   // ── Game mode ─────────────────────────────────────────────────────────────
   const mode        = data.mode || "classic";
+  isMarathonMode    = mode === "marathon";
   isSprintMode      = mode === "sprint";
   isBlitzMode       = mode === "blitz";
   isDailyChallenge  = mode === "daily";
@@ -157,6 +179,16 @@ function restoreGameState() {
   dailyRemainingMs  = typeof data.dailyRemainingMs === "number"
                       ? data.dailyRemainingMs : DAILY_DURATION_MS;
   dailyTimerActive  = !!data.dailyTimerActive;
+
+  // ── Marathon state ────────────────────────────────────────────────────────
+  if (isMarathonMode) {
+    marathonLevel      = typeof data.marathonLevel === "number" ? data.marathonLevel : 1;
+    marathonKillScreen = !!data.marathonKillScreen;
+    marathonPeakLPM    = typeof data.marathonPeakLPM === "number" ? data.marathonPeakLPM : 0;
+    // Restore the speed multiplier for the saved level
+    difficultyMultiplier = Math.pow(MARATHON_LEVEL_RATE, marathonLevel - 1);
+    lastDifficultyTier   = marathonLevel - 1;
+  }
 
   // ── Piece queue ───────────────────────────────────────────────────────────
   if (Array.isArray(data.pieceQueue) && data.pieceQueue.length > 0) {

@@ -986,7 +986,7 @@ function initLeaderboard() {
       e.stopPropagation(); // don't trigger mode card click
       var tab = btn.getAttribute('data-lb-tab') || 'today';
       // Mode-specific tabs route through the Modes tab
-      if (tab === 'depths' || tab === 'classic' || tab === 'sprint' || tab === 'blitz') {
+      if (tab === 'depths' || tab === 'classic' || tab === 'sprint' || tab === 'blitz' || tab === 'marathon') {
         _lbActiveModeTab = tab;
         openLeaderboardPanel('modes');
       } else {
@@ -1156,14 +1156,15 @@ function closeHallOfFamePanel() {
 // ── Per-Mode Leaderboard ──────────────────────────────────────────────────────
 
 // Mode sub-tab state (persists across range toggles)
-let _lbActiveModeTab = 'classic'; // 'classic' | 'sprint' | 'blitz' | 'depths'
+let _lbActiveModeTab = 'classic'; // 'classic' | 'sprint' | 'blitz' | 'depths' | 'marathon'
 let _lbModeRange = 'weekly';      // 'weekly' | 'alltime'
 
 const _MODE_LB_CONFIG = {
   classic:  { label: 'Classic',   icon: '\u26cf\ufe0f',   scoreLabel: 'Score',   sortAsc: false },
   sprint:   { label: 'Sprint',    icon: '\u26a1',          scoreLabel: 'Time',    sortAsc: true  },
   blitz:    { label: 'Blitz',     icon: '\u23f1',          scoreLabel: 'Score',   sortAsc: false },
-  endless:  { label: 'Endless',   icon: '\u267E\ufe0f',    scoreLabel: 'Score',   sortAsc: false },
+  marathon: { label: 'Marathon',  icon: '\u267E\ufe0f',    scoreLabel: 'Level',   sortAsc: false },
+  endless:  { label: 'Endless',   icon: '\u221e',          scoreLabel: 'Score',   sortAsc: false },
   depths:   { label: 'Depths',    icon: '\u{1F573}\ufe0f', scoreLabel: 'Score',   sortAsc: false },
   ultra:    { label: 'Ultra',     icon: '\u{1F525}',       scoreLabel: 'Score',   sortAsc: false },
   survival: { label: 'Survival',  icon: '\u2764',          scoreLabel: 'Score',   sortAsc: false },
