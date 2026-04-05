@@ -213,6 +213,8 @@ function resetGame() {
   battleGarbageSent = 0;
   battleGarbageReceived = 0;
   battleRubbleMined = 0;
+  battlePiecesPlaced = 0;
+  _battleApmTimestamps = [];
   battleOpponentStats = null;
   if (typeof resetGarbageQueue === 'function') resetGarbageQueue();
   const battleBadgeEl = document.getElementById('battle-mode-badge');

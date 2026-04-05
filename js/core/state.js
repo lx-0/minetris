@@ -172,6 +172,9 @@ let battleOpponentLines = 0;
 let battleGarbageSent = 0;
 let battleGarbageReceived = 0;
 let battleRubbleMined = 0;
+let battlePiecesPlaced = 0;
+// Rolling timestamps of piece-land events for APM computation (last 60 s)
+let _battleApmTimestamps = [];
 // Opponent's end-of-match summary stats (set from battle_game_over / battle_score_race_end msg)
 let battleOpponentStats = null;
 // Opponent's battle rating (received via battle_rating WebSocket message; defaults to 1000)

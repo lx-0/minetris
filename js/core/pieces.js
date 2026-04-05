@@ -803,6 +803,15 @@ function updateFallingPieces(delta) {
     }
     // Battle: broadcast column heights so opponent can update their mini-map
     if (isBattleMode && typeof battle !== 'undefined' && battle.state === BattleState.IN_GAME) {
+      battlePiecesPlaced++;
+      // Rolling 60-second APM window
+      const _nowMs = Date.now();
+      _battleApmTimestamps.push(_nowMs);
+      const _cutoff = _nowMs - 60000;
+      while (_battleApmTimestamps.length > 0 && _battleApmTimestamps[0] < _cutoff) {
+        _battleApmTimestamps.shift();
+      }
+      const _apm = _battleApmTimestamps.length; // pieces placed in last 60 s = APM
       const _guildCosmetics = (typeof getMyGuildCosmetics === 'function') ? getMyGuildCosmetics() : null;
       battle.send({
         type: 'battle_board',
@@ -810,6 +819,8 @@ function updateFallingPieces(delta) {
         score: score,
         level: lastDifficultyTier + 1,
         linesCleared: linesCleared,
+        piecesPlaced: battlePiecesPlaced,
+        apm: _apm,
         guildEmblem:     _guildCosmetics ? _guildCosmetics.emblem : null,
         guildBoardSkin:  _guildCosmetics ? _guildCosmetics.activeBoardSkin : null,
         guildBannerColor: _guildCosmetics ? _guildCosmetics.bannerColor : null,
@@ -858,4 +869,29 @@ function _computeBattleColumnHeights() {
     }
   }
   return heights;
+}
+
+// Called when a spectator joins mid-match so they get an immediate board snapshot.
+function broadcastBoardState() {
+  if (!isBattleMode || typeof battle === 'undefined' || battle.state !== BattleState.IN_GAME) return;
+  const _nowMs = Date.now();
+  const _cutoff = _nowMs - 60000;
+  while (_battleApmTimestamps.length > 0 && _battleApmTimestamps[0] < _cutoff) {
+    _battleApmTimestamps.shift();
+  }
+  const _apm = _battleApmTimestamps.length;
+  const _guildCosmetics = (typeof getMyGuildCosmetics === 'function') ? getMyGuildCosmetics() : null;
+  battle.send({
+    type: 'battle_board',
+    cols: _computeBattleColumnHeights(),
+    score: score,
+    level: lastDifficultyTier + 1,
+    linesCleared: linesCleared,
+    piecesPlaced: battlePiecesPlaced,
+    apm: _apm,
+    guildEmblem:     _guildCosmetics ? _guildCosmetics.emblem : null,
+    guildBoardSkin:  _guildCosmetics ? _guildCosmetics.activeBoardSkin : null,
+    guildBannerColor: _guildCosmetics ? _guildCosmetics.bannerColor : null,
+    guildIsLegendary: _guildCosmetics ? _guildCosmetics.isLegendary : false,
+  });
 }

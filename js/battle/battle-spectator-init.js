@@ -380,13 +380,19 @@ function _initBattleSpectator() {
           statusEl.textContent = "Match in progress";
         }
         var from = msg.fromPlayer || 'host';
-        var scoreId = from === 'host' ? 'spectator-host-score' : 'spectator-guest-score';
-        var linesId = from === 'host' ? 'spectator-host-lines' : 'spectator-guest-lines';
-        var boardId = from === 'host' ? 'spectator-host-board' : 'spectator-guest-board';
-        var scoreEl = document.getElementById(scoreId);
-        var linesEl = document.getElementById(linesId);
-        if (scoreEl) scoreEl.textContent = msg.score != null ? msg.score : '\u2014';
-        if (linesEl) linesEl.textContent = msg.linesCleared != null ? msg.linesCleared : '\u2014';
+        var scoreId   = from === 'host' ? 'spectator-host-score'   : 'spectator-guest-score';
+        var linesId   = from === 'host' ? 'spectator-host-lines'   : 'spectator-guest-lines';
+        var piecesId  = from === 'host' ? 'spectator-host-pieces'  : 'spectator-guest-pieces';
+        var apmId     = from === 'host' ? 'spectator-host-apm'     : 'spectator-guest-apm';
+        var boardId   = from === 'host' ? 'spectator-host-board'   : 'spectator-guest-board';
+        var scoreEl   = document.getElementById(scoreId);
+        var linesEl   = document.getElementById(linesId);
+        var piecesEl  = document.getElementById(piecesId);
+        var apmEl     = document.getElementById(apmId);
+        if (scoreEl)  scoreEl.textContent  = msg.score        != null ? msg.score        : '\u2014';
+        if (linesEl)  linesEl.textContent  = msg.linesCleared != null ? msg.linesCleared : '\u2014';
+        if (piecesEl) piecesEl.textContent = msg.piecesPlaced != null ? msg.piecesPlaced : '\u2014';
+        if (apmEl)    apmEl.textContent    = msg.apm          != null ? msg.apm          : '\u2014';
         _drawSpectatorBoard(boardId, msg.cols);
 
         // Track max heights for auto-follow
