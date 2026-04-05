@@ -4,7 +4,7 @@
 // Requires: state.js, config.js, pieces.js loaded first.
 
 const REPLAY_STORAGE_KEY = 'mineCtris_replays';
-const REPLAY_MAX_COUNT   = 5;
+const REPLAY_MAX_COUNT   = 10;
 const REPLAY_VERSION     = 1;
 
 // ── Recording state ────────────────────────────────────────────────────────────
@@ -19,6 +19,9 @@ let _replayPlayData       = null;
 let _replayPieceIdx       = 0;
 let _replayInputIdx       = 0;
 let replaySpeedMultiplier = 1;      // 1 / 2 / 4 — applied to delta in game loop
+let _replaySeekTarget     = null;   // game-time target when fast-forwarding to a seek point
+let _replaySeekRestoreSpeed = 1;    // speed to restore after seek completes
+let _seekBarDragging      = false;  // true while user is dragging the seek bar
 
 // ── Auto-start recording ───────────────────────────────────────────────────────
 
@@ -109,13 +112,16 @@ function replayOnReset() {
   _replayRecording = false;
   _replayData      = null;
   if (_replayPlaying) {
-    isReplayMode          = false;
-    _replayPlaying        = false;
-    _replayPaused         = false;
-    _replayPlayData       = null;
-    _replayPieceIdx       = 0;
-    _replayInputIdx       = 0;
-    replaySpeedMultiplier = 1;
+    isReplayMode            = false;
+    _replayPlaying          = false;
+    _replayPaused           = false;
+    _replayPlayData         = null;
+    _replayPieceIdx         = 0;
+    _replayInputIdx         = 0;
+    replaySpeedMultiplier   = 1;
+    _replaySeekTarget       = null;
+    _replaySeekRestoreSpeed = 1;
+    _seekBarDragging        = false;
     _hideReplayControls();
   }
 }
@@ -179,12 +185,28 @@ function replayGetNextPiece() {
 /** Called from game loop each frame with current gameElapsedSeconds. */
 function replayTick(t) {
   if (!_replayPlaying || !_replayPlayData || _replayPaused) return;
+
+  // Check if we've reached a seek target and should restore normal speed
+  if (_replaySeekTarget !== null && t >= _replaySeekTarget) {
+    replaySetSpeed(_replaySeekRestoreSpeed);
+    _replaySeekTarget       = null;
+    _replaySeekRestoreSpeed = 1;
+  }
+
   // Fire all pending inputs whose game-time has been reached
   while (_replayInputIdx < _replayPlayData.inputs.length) {
     const inp = _replayPlayData.inputs[_replayInputIdx];
     if (inp.t > t) break;
     _replayFireInput(inp);
     _replayInputIdx++;
+  }
+
+  // Update seek bar position (skip while user is dragging it)
+  if (!_seekBarDragging) {
+    const seekBar = document.getElementById('replay-seek-bar');
+    if (seekBar && _replayPlayData.duration > 0) {
+      seekBar.value = Math.min(1000, Math.round((t / _replayPlayData.duration) * 1000));
+    }
   }
 }
 
@@ -194,6 +216,32 @@ function replayTogglePause() {
   _replayPaused = !_replayPaused;
   const label = document.getElementById('replay-controls-label');
   if (label) label.textContent = _replayPaused ? '\u23F8 PAUSED' : '\u25B6 REPLAY';
+}
+
+/** Seek to a position in the replay. fraction is 0.0–1.0. */
+function replaySeek(fraction) {
+  if (!_replayPlayData) return;
+  const targetT   = fraction * (_replayPlayData.duration || 0);
+  const currentT  = typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0;
+  const savedData = _replayPlayData;
+  const savedSpeed = (_replaySeekTarget !== null) ? _replaySeekRestoreSpeed : replaySpeedMultiplier;
+
+  if (targetT <= currentT || targetT < 0.5) {
+    // Backward seek: restart from beginning and fast-forward
+    replayOnReset();
+    if (typeof resetGame === 'function') resetGame();
+    _replaySeekTarget       = targetT > 0.5 ? targetT : 0;
+    _replaySeekRestoreSpeed = savedSpeed;
+    replayStartPlayback(savedData, _replaySeekTarget > 0.5 ? 32 : savedSpeed);
+    if (typeof controls !== 'undefined' && controls && typeof controls.lock === 'function') {
+      controls.lock();
+    }
+  } else {
+    // Forward seek: temporarily use high speed until target is reached
+    _replaySeekTarget       = targetT;
+    _replaySeekRestoreSpeed = savedSpeed;
+    replaySetSpeed(32);
+  }
 }
 
 function _replayFireInput(inp) {
@@ -246,6 +294,24 @@ function _showReplayControls(speed) {
   replaySetSpeed(speed || 1);
   const label = document.getElementById('replay-controls-label');
   if (label) label.textContent = '\u25B6 REPLAY';
+
+  // Wire seek bar — replace node to clear stale listeners
+  const seekBar = document.getElementById('replay-seek-bar');
+  if (seekBar) {
+    seekBar.value = 0;
+    const fresh = seekBar.cloneNode(true);
+    seekBar.parentNode.replaceChild(fresh, seekBar);
+    fresh.addEventListener('mousedown', function() { _seekBarDragging = true; });
+    fresh.addEventListener('touchstart', function() { _seekBarDragging = true; }, { passive: true });
+    fresh.addEventListener('mouseup', function() {
+      _seekBarDragging = false;
+      replaySeek(parseFloat(fresh.value) / 1000);
+    });
+    fresh.addEventListener('touchend', function() {
+      _seekBarDragging = false;
+      replaySeek(parseFloat(fresh.value) / 1000);
+    });
+  }
 }
 
 function _hideReplayControls() {
@@ -331,13 +397,17 @@ function _showReplayShareFlyout(replayData, anchorBtn) {
   const b64 = replayExport(replayData);
   if (!b64) return;
 
+  // Build a full share URL with ?replay= param
+  const shareUrl = window.location.origin + window.location.pathname +
+    '?replay=' + encodeURIComponent(b64);
+
   const wrap = document.createElement('div');
   wrap.className = 'replay-share-flyout';
 
   const input = document.createElement('input');
   input.type     = 'text';
   input.readOnly = true;
-  input.value    = b64;
+  input.value    = shareUrl;
   input.className = 'replay-share-input';
 
   wrap.appendChild(input);
@@ -345,11 +415,80 @@ function _showReplayShareFlyout(replayData, anchorBtn) {
   input.select();
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(b64).then(function() {
+    navigator.clipboard.writeText(shareUrl).then(function() {
       anchorBtn.textContent = 'Copied!';
       setTimeout(function() { anchorBtn.textContent = 'Share'; }, 1500);
     });
   }
+}
+
+// ── Main menu replay panel ─────────────────────────────────────────────────────
+
+/** Open the main-menu replay list panel. */
+function replayShowMenuPanel() {
+  const panel = document.getElementById('replay-menu-panel');
+  if (!panel) return;
+
+  const listEl = document.getElementById('replay-menu-list');
+  if (listEl) {
+    listEl.innerHTML = '';
+    const replays = replayLoadAll();
+    if (replays.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'replay-menu-empty';
+      empty.textContent = 'No replays yet. Finish a game to record one!';
+      listEl.appendChild(empty);
+    } else {
+      replays.forEach(function(r) {
+        const dur   = r.duration || 0;
+        const mm    = Math.floor(dur / 60).toString().padStart(2, '0');
+        const ss    = (dur % 60).toString().padStart(2, '0');
+        const dateStr = r.date ? new Date(r.date).toLocaleDateString() : '';
+        const pbBadge = r.isPB ? '<span class="replay-pb-badge">PB</span>' : '';
+
+        const li = document.createElement('div');
+        li.className = 'replay-list-item';
+        li.innerHTML =
+          pbBadge +
+          '<span class="replay-item-mode">' + (r.mode || 'classic') + '</span>' +
+          '<span class="replay-item-score">' + (r.score || 0) + '</span>' +
+          '<span class="replay-item-time">' + mm + ':' + ss + '</span>' +
+          '<span class="replay-item-date">' + dateStr + '</span>';
+
+        const watchBtn = document.createElement('button');
+        watchBtn.className = 'replay-watch-btn';
+        watchBtn.textContent = 'Watch';
+        watchBtn.onclick = function() {
+          replayHideMenuPanel();
+          const pending = r;
+          if (typeof resetGame === 'function') resetGame();
+          replayStartPlayback(pending, 1);
+          const blockerEl = document.getElementById('blocker');
+          if (blockerEl) blockerEl.style.display = 'none';
+          if (typeof controls !== 'undefined' && controls && typeof controls.lock === 'function') {
+            controls.lock();
+          }
+        };
+
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'replay-share-btn';
+        shareBtn.textContent = 'Share';
+        shareBtn.onclick = function() { _showReplayShareFlyout(r, shareBtn); };
+
+        li.appendChild(watchBtn);
+        li.appendChild(shareBtn);
+        listEl.appendChild(li);
+      });
+    }
+  }
+
+  panel.style.display = 'flex';
+}
+
+/** Close the main-menu replay list panel. */
+function replayHideMenuPanel() {
+  const panel = document.getElementById('replay-menu-panel');
+  if (panel) panel.style.display = 'none';
 }
 
 /** Show import dialog for pasting a shared replay string. */

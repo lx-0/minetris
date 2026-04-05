@@ -808,6 +808,29 @@ function init() {
     });
   }
 
+  // Replays button on main menu
+  const startReplaysBtn = document.getElementById("start-replays-btn");
+  if (startReplaysBtn) {
+    startReplaysBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (typeof replayShowMenuPanel === 'function') replayShowMenuPanel();
+    });
+  }
+
+  const replayMenuCloseBtn = document.getElementById("replay-menu-close");
+  if (replayMenuCloseBtn) {
+    replayMenuCloseBtn.addEventListener("click", function () {
+      if (typeof replayHideMenuPanel === 'function') replayHideMenuPanel();
+    });
+  }
+
+  const replayMenuImportBtn = document.getElementById("replay-menu-import-btn");
+  if (replayMenuImportBtn) {
+    replayMenuImportBtn.addEventListener("click", function () {
+      if (typeof replayShowImportDialog === 'function') replayShowImportDialog();
+    });
+  }
+
   // Community browser button
   const startCommunityBtn = document.getElementById("start-community-btn");
   if (startCommunityBtn) {
@@ -955,6 +978,43 @@ function init() {
   const _urlParams = new URLSearchParams(window.location.search);
   if (_urlParams.get("editor") === "1") {
     isEditorMode = true;
+  }
+
+  // Auto-play shared replay from ?replay= URL param
+  const _replayParam = _urlParams.get("replay");
+  if (_replayParam) {
+    (function () {
+      try {
+        const _sharedReplayData = typeof replayImport === 'function'
+          ? replayImport(decodeURIComponent(_replayParam))
+          : null;
+        if (_sharedReplayData && Array.isArray(_sharedReplayData.pieces)) {
+          // Add a "Watch Shared Replay" button above the normal start button
+          const _watchBtn = document.createElement('button');
+          _watchBtn.id = 'watch-shared-replay-btn';
+          _watchBtn.textContent = '\u25B6 Watch Shared Replay';
+          _watchBtn.style.cssText =
+            'display:block;width:100%;margin:6px 0;font-family:inherit;font-size:inherit;' +
+            'background:#0a3a0a;border:2px solid #0f0;color:#0f0;padding:8px;cursor:pointer;border-radius:4px;';
+          const _playGroup = document.querySelector('.menu-group-play');
+          if (_playGroup) _playGroup.insertAdjacentElement('afterbegin', _watchBtn);
+
+          _watchBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            _watchBtn.remove();
+            if (typeof resetGame === 'function') resetGame();
+            if (typeof replayStartPlayback === 'function') replayStartPlayback(_sharedReplayData, 1);
+            var _bl = document.getElementById('blocker');
+            if (_bl) _bl.style.display = 'none';
+            if (typeof controls !== 'undefined' && controls && typeof controls.lock === 'function') {
+              controls.lock();
+            }
+          });
+        }
+      } catch (_err) {
+        console.warn('[Replay] Failed to load shared replay from URL:', _err);
+      }
+    }());
   }
 
   // Load custom puzzle from ?puzzle= URL param

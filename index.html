@@ -298,6 +298,7 @@
                   <button id="start-settings-btn">&#9881; Settings</button>
                   <button id="start-create-btn">&#128736; Create</button>
                   <button id="start-tutorial-btn">&#127891; Tutorial</button>
+                  <button id="start-replays-btn">&#9654; Replays</button>
                 </div>
               </div>
             </div>
@@ -904,6 +905,7 @@
       <div id="replay-controls" style="display:none;">
         <span id="replay-controls-label">&#9654; REPLAY</span>
         <span id="replay-speed-display">1x</span>
+        <input type="range" id="replay-seek-bar" min="0" max="1000" value="0" step="1" title="Seek">
         <span class="replay-hint">SPACE = pause &nbsp; 1/2/4 = speed &nbsp; ESC = stop</span>
       </div>
 
@@ -1495,6 +1497,16 @@
           <button id="guild-panel-close" aria-label="Close guild panel">&#10005;</button>
         </div>
         <div id="guild-panel-content"></div>
+      </div>
+
+      <!-- Replay menu panel -->
+      <div id="replay-menu-panel" style="display:none;">
+        <div id="replay-menu-header">
+          <span id="replay-menu-title">&#9654; REPLAYS</span>
+          <button id="replay-menu-close" aria-label="Close replays panel">&#10005;</button>
+        </div>
+        <div id="replay-menu-list"></div>
+        <button id="replay-menu-import-btn">&#x1F4E5; Import Replay</button>
       </div>
 
       <!-- Friends panel -->
