@@ -347,6 +347,7 @@ function animate() {
 
     updateTargeting();
     if (isEditorMode && typeof updateEditorGhost === "function") updateEditorGhost();
+    if (isEditorMode && typeof tickEditorDrag === "function") tickEditorDrag();
     if (isEditorMode && typeof tickEditorAutosave === "function") tickEditorAutosave(delta);
 
     if (pickaxeGroup) {

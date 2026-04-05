@@ -908,6 +908,47 @@ function init() {
     });
   }
 
+  // Undo / Redo buttons
+  const editorUndoBtn = document.getElementById("editor-undo-btn");
+  if (editorUndoBtn) {
+    editorUndoBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (typeof editorUndo === "function") editorUndo();
+    });
+  }
+  const editorRedoBtn = document.getElementById("editor-redo-btn");
+  if (editorRedoBtn) {
+    editorRedoBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (typeof editorRedo === "function") editorRedo();
+    });
+  }
+
+  // Mirror H / V buttons
+  const editorMirrorHBtn = document.getElementById("editor-mirror-h-btn");
+  if (editorMirrorHBtn) {
+    editorMirrorHBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (typeof editorMirrorH === "function") editorMirrorH();
+    });
+  }
+  const editorMirrorVBtn = document.getElementById("editor-mirror-v-btn");
+  if (editorMirrorVBtn) {
+    editorMirrorVBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (typeof editorMirrorV === "function") editorMirrorV();
+    });
+  }
+
+  // Grid toggle button
+  const editorGridBtn = document.getElementById("editor-grid-btn");
+  if (editorGridBtn) {
+    editorGridBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (typeof editorToggleGrid === "function") editorToggleGrid();
+    });
+  }
+
   // Clear Draft button (inside editor HUD)
   const editorClearDraftBtn = document.getElementById("editor-clear-draft-btn");
   if (editorClearDraftBtn) {

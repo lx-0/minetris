@@ -4,11 +4,35 @@
 // ── Draft autosave ────────────────────────────────────────────────────────────
 
 const EDITOR_DRAFT_KEY = "mineCtris_editorDraft";
-const EDITOR_AUTOSAVE_INTERVAL = 5; // seconds
+const EDITOR_AUTOSAVE_INTERVAL = 30; // seconds
 
 let _editorAutosaveTimer = 0;
 // Set by main.js before pointer lock to carry a loaded draft into initEditorMode.
 let _pendingEditorDraft = null;
+
+// ── Undo/Redo ─────────────────────────────────────────────────────────────────
+const EDITOR_UNDO_MAX = 50;
+let _editorUndoStack = [];
+let _editorRedoStack = [];
+
+// ── Drag-to-paint / rect fill ─────────────────────────────────────────────────
+// mode: 'none' | 'paint' | 'erase' | 'rect'
+let _editorDragMode = 'none';
+let _editorDragLastKey = null;    // "x,y,z" of last affected cell (dedup)
+let _editorDragUndoCaptured = false;
+let _editorRectStart = null;      // {x,y,z} — first corner of rect fill
+let _editorRectPreview = [];      // temp ghost meshes showing rect preview
+let _editorShiftDown = false;     // tracked for rect-fill activation
+
+// ── Row clipboard ─────────────────────────────────────────────────────────────
+let _editorRowClipboard = null;   // null | {blocks:[{x,z,color}], srcY}
+
+// ── Grid helper ───────────────────────────────────────────────────────────────
+let _editorGridHelper = null;
+let _editorGridVisible = false;
+
+// ── Status toast ──────────────────────────────────────────────────────────────
+let _editorStatusTimeout = null;
 
 // ── Win condition state ───────────────────────────────────────────────────────
 // mode: "mine_all" | "clear_lines" | "survive_seconds" | "score_points"
@@ -114,6 +138,319 @@ function tickEditorAutosave(delta) {
     _editorAutosaveTimer = 0;
     saveEditorDraft();
   }
+}
+
+// ── Undo/Redo implementation ──────────────────────────────────────────────────
+
+function _captureEditorSnapshot() {
+  var snap = [];
+  worldGroup.children.forEach(function (c) {
+    if (c.name === "landed_block") {
+      var wp = new THREE.Vector3();
+      c.getWorldPosition(wp);
+      snap.push({ x: wp.x, y: wp.y, z: wp.z, color: c.userData.canonicalColor });
+    }
+  });
+  return snap;
+}
+
+function _restoreEditorSnapshot(snap) {
+  var toRemove = worldGroup.children.filter(function (c) { return c.name === "landed_block"; });
+  toRemove.forEach(function (b) {
+    unregisterBlock(b);
+    if (typeof disposeBlock === "function") disposeBlock(b);
+    worldGroup.remove(b);
+  });
+  if (typeof obsidianBlocks !== "undefined") obsidianBlocks.length = 0;
+  snap.forEach(function (b) {
+    var block = createBlockMesh(new THREE.Color(b.color));
+    block.name = "landed_block";
+    block.position.set(b.x, b.y, b.z);
+    worldGroup.add(block);
+    registerBlock(block);
+  });
+}
+
+function _pushUndo(preSnap) {
+  _editorUndoStack.push(preSnap || _captureEditorSnapshot());
+  if (_editorUndoStack.length > EDITOR_UNDO_MAX) _editorUndoStack.shift();
+  _editorRedoStack = [];
+  _updateUndoRedoBtns();
+}
+
+function editorUndo() {
+  if (_editorUndoStack.length === 0) return;
+  _editorRedoStack.push(_captureEditorSnapshot());
+  _restoreEditorSnapshot(_editorUndoStack.pop());
+  _updateUndoRedoBtns();
+  _flashEditorStatus("Undo");
+}
+
+function editorRedo() {
+  if (_editorRedoStack.length === 0) return;
+  _editorUndoStack.push(_captureEditorSnapshot());
+  _restoreEditorSnapshot(_editorRedoStack.pop());
+  _updateUndoRedoBtns();
+  _flashEditorStatus("Redo");
+}
+
+function _updateUndoRedoBtns() {
+  var undoBtn = document.getElementById("editor-undo-btn");
+  var redoBtn = document.getElementById("editor-redo-btn");
+  if (undoBtn) {
+    undoBtn.disabled = _editorUndoStack.length === 0;
+    undoBtn.style.opacity = _editorUndoStack.length === 0 ? "0.45" : "";
+  }
+  if (redoBtn) {
+    redoBtn.disabled = _editorRedoStack.length === 0;
+    redoBtn.style.opacity = _editorRedoStack.length === 0 ? "0.45" : "";
+  }
+}
+
+function _flashEditorStatus(msg) {
+  var el = document.getElementById("editor-status-toast");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = "1";
+  clearTimeout(_editorStatusTimeout);
+  _editorStatusTimeout = setTimeout(function () {
+    el.style.opacity = "0";
+  }, 1500);
+}
+
+// ── Drag-to-paint & rect fill ─────────────────────────────────────────────────
+
+/** Start a drag session: 'paint', 'erase', or 'rect' (Shift+paint). */
+function editorDragStart(mode) {
+  if (_editorDragMode !== "none") return;
+  _editorDragMode = mode;
+  _editorDragLastKey = null;
+  _editorDragUndoCaptured = false;
+  if (mode === "rect") {
+    _editorRectStart = null;
+    _clearRectPreview();
+  }
+}
+
+/** End the current drag session; commits rect fill if applicable. */
+function editorDragStop() {
+  if (_editorDragMode === "none") return;
+  if (_editorDragMode === "rect" && _editorRectStart) {
+    _commitRectFill();
+  }
+  _clearRectPreview();
+  _editorDragMode = "none";
+  _editorRectStart = null;
+  _editorDragLastKey = null;
+  _editorDragUndoCaptured = false;
+}
+
+/** Called each animation frame; handles continuous paint/erase/rect-preview. */
+function tickEditorDrag() {
+  if (_editorDragMode === "none") return;
+
+  if (_editorDragMode === "paint") {
+    var pos = _getGhostPlacementPos();
+    if (!pos) return;
+    var key = pos.x + "," + pos.y + "," + pos.z;
+    if (key === _editorDragLastKey) return;
+    if (!_isValidPlacementPos(pos.x, pos.y, pos.z)) return;
+    if (!_editorDragUndoCaptured) {
+      _pushUndo();
+      _editorDragUndoCaptured = true;
+    }
+    var entry = EDITOR_PALETTE[editorSelectedIdx];
+    var block = createBlockMesh(new THREE.Color(entry.hex));
+    block.name = "landed_block";
+    block.position.set(pos.x, pos.y, pos.z);
+    worldGroup.add(block);
+    registerBlock(block);
+    _editorDragLastKey = key;
+    if (typeof playPlaceSound === "function") playPlaceSound();
+    if (typeof editorTutorialNotifyBlockPlaced === "function") editorTutorialNotifyBlockPlaced();
+
+  } else if (_editorDragMode === "erase") {
+    if (!targetedBlock || targetedBlock.name !== "landed_block") return;
+    var wp = new THREE.Vector3();
+    targetedBlock.getWorldPosition(wp);
+    var eraseKey = wp.x + "," + wp.y + "," + wp.z;
+    if (eraseKey === _editorDragLastKey) return;
+    if (!_editorDragUndoCaptured) {
+      _pushUndo();
+      _editorDragUndoCaptured = true;
+    }
+    var b = targetedBlock;
+    unregisterBlock(b);
+    if (typeof disposeBlock === "function") disposeBlock(b);
+    worldGroup.remove(b);
+    if (typeof obsidianBlocks !== "undefined") {
+      var oi = obsidianBlocks.indexOf(b);
+      if (oi !== -1) obsidianBlocks.splice(oi, 1);
+    }
+    _editorDragLastKey = eraseKey;
+    targetedBlock = null;
+    if (typeof unhighlightTarget === "function") unhighlightTarget();
+
+  } else if (_editorDragMode === "rect") {
+    var rPos = _getGhostPlacementPos();
+    if (!rPos) return;
+    if (!_editorRectStart) {
+      _editorRectStart = { x: rPos.x, y: rPos.y, z: rPos.z };
+    }
+    _updateRectPreview(rPos);
+  }
+}
+
+function _updateRectPreview(curPos) {
+  _clearRectPreview();
+  if (!_editorRectStart) return;
+  var y = _editorRectStart.y;
+  var x0 = Math.min(_editorRectStart.x, curPos.x);
+  var x1 = Math.max(_editorRectStart.x, curPos.x);
+  var z0 = Math.min(_editorRectStart.z, curPos.z);
+  var z1 = Math.max(_editorRectStart.z, curPos.z);
+  var hexColor = EDITOR_PALETTE[editorSelectedIdx].hex;
+  for (var rx = x0; rx <= x1; rx += BLOCK_SIZE) {
+    for (var rz = z0; rz <= z1; rz += BLOCK_SIZE) {
+      var geo = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+      var mat = new THREE.MeshBasicMaterial({
+        color: hexColor, transparent: true, opacity: 0.35, depthWrite: false
+      });
+      var mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(rx, y, rz);
+      mesh.name = "editor_rect_preview";
+      scene.add(mesh);
+      _editorRectPreview.push(mesh);
+    }
+  }
+}
+
+function _clearRectPreview() {
+  _editorRectPreview.forEach(function (m) {
+    if (m.geometry) m.geometry.dispose();
+    if (m.material) m.material.dispose();
+    scene.remove(m);
+  });
+  _editorRectPreview = [];
+}
+
+function _commitRectFill() {
+  if (!_editorRectStart) return;
+  var curPos = _getGhostPlacementPos() || _editorRectStart;
+  var y = _editorRectStart.y;
+  var x0 = Math.min(_editorRectStart.x, curPos.x);
+  var x1 = Math.max(_editorRectStart.x, curPos.x);
+  var z0 = Math.min(_editorRectStart.z, curPos.z);
+  var z1 = Math.max(_editorRectStart.z, curPos.z);
+  _pushUndo();
+  var entry = EDITOR_PALETTE[editorSelectedIdx];
+  for (var fx = x0; fx <= x1; fx += BLOCK_SIZE) {
+    for (var fz = z0; fz <= z1; fz += BLOCK_SIZE) {
+      if (!_isValidPlacementPos(fx, y, fz)) continue;
+      var block = createBlockMesh(new THREE.Color(entry.hex));
+      block.name = "landed_block";
+      block.position.set(fx, y, fz);
+      worldGroup.add(block);
+      registerBlock(block);
+    }
+  }
+  var count = Math.round((x1 - x0 + 1) * (z1 - z0 + 1));
+  _flashEditorStatus("Filled " + count + " block" + (count === 1 ? "" : "s"));
+}
+
+// ── Row copy / paste ──────────────────────────────────────────────────────────
+
+/** Copy all blocks at the targeted block's Y level to the row clipboard. */
+function editorCopyRow() {
+  if (!targetedBlock) {
+    _flashEditorStatus("Aim at a block to copy its row");
+    return;
+  }
+  var wp = new THREE.Vector3();
+  targetedBlock.getWorldPosition(wp);
+  var srcY = wp.y;
+  var blocks = [];
+  worldGroup.children.forEach(function (c) {
+    if (c.name === "landed_block") {
+      var bwp = new THREE.Vector3();
+      c.getWorldPosition(bwp);
+      if (Math.abs(bwp.y - srcY) < 0.1) {
+        blocks.push({ x: bwp.x, z: bwp.z, color: c.userData.canonicalColor });
+      }
+    }
+  });
+  if (blocks.length === 0) return;
+  _editorRowClipboard = { blocks: blocks, srcY: srcY };
+  _flashEditorStatus("Copied row (" + blocks.length + " block" + (blocks.length === 1 ? "" : "s") + ")");
+}
+
+/** Paste the copied row at the targeted block's Y (or ground Y if none targeted). */
+function editorPasteRow() {
+  if (!_editorRowClipboard) {
+    _flashEditorStatus("Nothing to paste — copy a row first");
+    return;
+  }
+  var pos = _getGhostPlacementPos();
+  var destY = pos ? pos.y : _editorRowClipboard.srcY;
+  _pushUndo();
+  _editorRowClipboard.blocks.forEach(function (b) {
+    if (!_isValidPlacementPos(b.x, destY, b.z)) return;
+    var block = createBlockMesh(new THREE.Color(b.color));
+    block.name = "landed_block";
+    block.position.set(b.x, destY, b.z);
+    worldGroup.add(block);
+    registerBlock(block);
+  });
+  _flashEditorStatus("Pasted row at Y=" + destY);
+}
+
+// ── Mirror ────────────────────────────────────────────────────────────────────
+
+/** Flip all blocks horizontally (mirror X around their X centroid). */
+function editorMirrorH() {
+  var snap = _captureEditorSnapshot();
+  if (snap.length === 0) return;
+  var sumX = snap.reduce(function (a, b) { return a + b.x; }, 0);
+  var centerX = Math.round(sumX / snap.length);
+  _pushUndo(snap);
+  _restoreEditorSnapshot(snap.map(function (b) {
+    return { x: 2 * centerX - b.x, y: b.y, z: b.z, color: b.color };
+  }));
+  _flashEditorStatus("Mirrored H");
+}
+
+/** Flip all blocks vertically (mirror Z around their Z centroid). */
+function editorMirrorV() {
+  var snap = _captureEditorSnapshot();
+  if (snap.length === 0) return;
+  var sumZ = snap.reduce(function (a, b) { return a + b.z; }, 0);
+  var centerZ = Math.round(sumZ / snap.length);
+  _pushUndo(snap);
+  _restoreEditorSnapshot(snap.map(function (b) {
+    return { x: b.x, y: b.y, z: 2 * centerZ - b.z, color: b.color };
+  }));
+  _flashEditorStatus("Mirrored V");
+}
+
+// ── Grid guidelines ───────────────────────────────────────────────────────────
+
+/** Toggle a subtle grid overlay at Y≈0 for block alignment. */
+function editorToggleGrid() {
+  _editorGridVisible = !_editorGridVisible;
+  if (_editorGridVisible) {
+    if (!_editorGridHelper) {
+      _editorGridHelper = new THREE.GridHelper(WORLD_SIZE, WORLD_SIZE, 0x333333, 0x222222);
+      _editorGridHelper.position.y = 0.02;
+      _editorGridHelper.name = "editor_grid";
+      scene.add(_editorGridHelper);
+    }
+    _editorGridHelper.visible = true;
+  } else if (_editorGridHelper) {
+    _editorGridHelper.visible = false;
+  }
+  var btn = document.getElementById("editor-grid-btn");
+  if (btn) btn.classList.toggle("editor-btn-active", _editorGridVisible);
+  _flashEditorStatus(_editorGridVisible ? "Grid on" : "Grid off");
 }
 
 // ── Palette definition ────────────────────────────────────────────────────────
@@ -226,17 +563,18 @@ function editorPlaceBlock() {
   if (typeof editorTutorialNotifyBlockPlaced === "function") editorTutorialNotifyBlockPlaced();
 }
 
-/** Instantly remove the targeted block (no mining animation). */
+/** Instantly remove the targeted block (no mining animation). Pushes undo. */
 function editorEraseBlock() {
-  if (!targetedBlock) return;
-  unregisterBlock(targetedBlock);
-  worldGroup.remove(targetedBlock);
-  // Also remove from obsidian shimmer list if present
+  if (!targetedBlock || targetedBlock.name !== "landed_block") return;
+  _pushUndo();
+  var b = targetedBlock;
+  unregisterBlock(b);
+  if (typeof disposeBlock === "function") disposeBlock(b);
+  worldGroup.remove(b);
   if (typeof obsidianBlocks !== "undefined") {
-    const idx = obsidianBlocks.indexOf(targetedBlock);
+    var idx = obsidianBlocks.indexOf(b);
     if (idx !== -1) obsidianBlocks.splice(idx, 1);
   }
-  // Reset targeting so the stale reference isn't held
   targetedBlock = null;
   if (typeof unhighlightTarget === "function") unhighlightTarget();
 }
@@ -623,6 +961,17 @@ function initEditorMode() {
   _editorAutosaveTimer = 0;
   editorPuzzleMetadata = { name: "", description: "", author: "", difficulty: 0 };
   editorPieceSequence = { mode: "random", pieces: [] };
+  // Reset undo/redo, drag, and tool state
+  _editorUndoStack = [];
+  _editorRedoStack = [];
+  _editorDragMode = "none";
+  _editorDragLastKey = null;
+  _editorDragUndoCaptured = false;
+  _editorRectStart = null;
+  _clearRectPreview();
+  _editorShiftDown = false;
+  _editorRowClipboard = null;
+  _updateUndoRedoBtns();
   if (!editorGhostMesh) {
     editorGhostMesh = _createEditorGhost();
   } else {
@@ -650,6 +999,21 @@ function cleanupEditorMode() {
   saveEditorDraft();
   if (editorGhostMesh) {
     editorGhostMesh.visible = false;
+  }
+  // Stop any in-progress drag and clean up rect preview
+  _editorDragMode = "none";
+  _clearRectPreview();
+  // Remove grid helper
+  if (_editorGridHelper) {
+    scene.remove(_editorGridHelper);
+    _editorGridHelper.geometry.dispose();
+    if (Array.isArray(_editorGridHelper.material)) {
+      _editorGridHelper.material.forEach(function (m) { m.dispose(); });
+    } else if (_editorGridHelper.material) {
+      _editorGridHelper.material.dispose();
+    }
+    _editorGridHelper = null;
+    _editorGridVisible = false;
   }
   const container = document.getElementById("editor-palette");
   if (container) container.innerHTML = "";

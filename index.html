@@ -2545,14 +2545,20 @@
       <!-- Editor mode HUD — visible while in editor mode with pointer locked -->
       <div id="editor-hud" style="display:none;">
         <div id="editor-hud-badge">&#128736; EDITOR MODE</div>
-        <div id="editor-controls-hint">WASD — Move &nbsp;&#124;&nbsp; Space — Up &nbsp;&#124;&nbsp; Shift — Down &nbsp;&#124;&nbsp; Left Click — Place &nbsp;&#124;&nbsp; Right Click — Erase &nbsp;&#124;&nbsp; 1–9 — Block &nbsp;&#124;&nbsp; Esc — Exit</div>
+        <div id="editor-controls-hint">WASD&#8202;Move &nbsp;&#124;&nbsp; Space&#8202;Up &nbsp;&#124;&nbsp; Shift&#8202;Down &nbsp;&#124;&nbsp; LClick&#8202;Place &nbsp;&#124;&nbsp; RClick&#8202;Erase &nbsp;&#124;&nbsp; Shift+Drag&#8202;Rect&nbsp;Fill &nbsp;&#124;&nbsp; 1–9/Tab&#8202;Block &nbsp;&#124;&nbsp; Del&#8202;Erase &nbsp;&#124;&nbsp; Ctrl+Z/Y&#8202;Undo/Redo &nbsp;&#124;&nbsp; Ctrl+C/V&#8202;Copy/Paste&#8202;Row</div>
         <div id="editor-hud-actions">
+          <button id="editor-undo-btn" disabled style="opacity:0.45">&#8592; Undo</button>
+          <button id="editor-redo-btn" disabled style="opacity:0.45">&#8594; Redo</button>
+          <button id="editor-mirror-h-btn">&#8596; Mirror H</button>
+          <button id="editor-mirror-v-btn">&#8597; Mirror V</button>
+          <button id="editor-grid-btn">&#9783; Grid</button>
           <button id="editor-exit-btn">&#8592; Exit Editor</button>
           <button id="editor-clear-draft-btn">&#128465; Clear Draft</button>
           <button id="editor-test-btn">&#9654; Play</button>
           <button id="editor-save-btn">&#128190; Save</button>
           <button id="editor-share-btn">&#128279; Share</button>
         </div>
+        <div id="editor-status-toast" style="opacity:0;transition:opacity 0.4s;position:absolute;bottom:4px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#fff;padding:4px 12px;border-radius:4px;font-size:12px;pointer-events:none;white-space:nowrap;"></div>
         <!-- Win condition builder -->
         <div id="editor-win-condition"></div>
         <!-- Puzzle metadata panel -->

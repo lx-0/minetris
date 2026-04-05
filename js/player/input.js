@@ -96,12 +96,14 @@ function onMouseDown(event) {
     replayRecordInput('mousedown', event.button,
       typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);
   }
-  // ── Editor mode: left-click places, right-click erases ───────────────────
+  // ── Editor mode: start drag session (paint, rect-fill, or erase) ─────────
   if (isEditorMode) {
     if (event.button === 0) {
-      if (typeof editorPlaceBlock === "function") editorPlaceBlock();
+      if (typeof editorDragStart === "function") {
+        editorDragStart(_editorShiftDown ? "rect" : "paint");
+      }
     } else if (event.button === 2) {
-      if (typeof editorEraseBlock === "function") editorEraseBlock();
+      if (typeof editorDragStart === "function") editorDragStart("erase");
     }
     return;
   }
@@ -350,6 +352,14 @@ function onMouseDown(event) {
     }
   }
 }
+
+function onMouseUp(event) {
+  if (isEditorMode && typeof editorDragStop === "function") {
+    editorDragStop();
+  }
+}
+
+window.addEventListener("mouseup", onMouseUp);
 
 // ── Touch detection gate ──────────────────────────────────────────────────────
 // Initialise the virtual touch overlay when a touch-capable device is detected

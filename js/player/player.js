@@ -101,6 +101,46 @@ function onKeyDown(event) {
     return;
   }
   if (!controls || !controls.isLocked || isGameOver) return;
+
+  // ── Editor-mode shortcuts (intercept before regular gameplay bindings) ────
+  if (isEditorMode) {
+    const _ctrl = event.ctrlKey || event.metaKey;
+    if (_ctrl) {
+      if (event.code === "KeyZ" && !event.shiftKey) {
+        event.preventDefault();
+        if (typeof editorUndo === "function") editorUndo();
+        return;
+      }
+      if (event.code === "KeyY" || (event.code === "KeyZ" && event.shiftKey)) {
+        event.preventDefault();
+        if (typeof editorRedo === "function") editorRedo();
+        return;
+      }
+      if (event.code === "KeyC") {
+        event.preventDefault();
+        if (typeof editorCopyRow === "function") editorCopyRow();
+        return;
+      }
+      if (event.code === "KeyV") {
+        event.preventDefault();
+        if (typeof editorPasteRow === "function") editorPasteRow();
+        return;
+      }
+    }
+    if (event.code === "Delete" || event.code === "Backspace") {
+      if (typeof editorEraseBlock === "function") editorEraseBlock();
+      return;
+    }
+    if (event.code === "Tab") {
+      event.preventDefault();
+      // Tab cycles the selected palette block type forward
+      if (typeof selectEditorBlock === "function") {
+        selectEditorBlock((editorSelectedIdx + 1) % (typeof EDITOR_PALETTE !== "undefined" ? EDITOR_PALETTE.length : 9));
+      }
+      return;
+    }
+  }
+
   // Record input for replay
   if (typeof replayRecordInput === 'function') {
     replayRecordInput('keydown', event.code,
@@ -134,7 +174,11 @@ function onKeyDown(event) {
       break;
     case "ShiftLeft":
     case "ShiftRight":
-      if (isEditorMode) { moveDown = true; break; }
+      if (isEditorMode) {
+        moveDown = true;
+        if (typeof _editorShiftDown !== "undefined") _editorShiftDown = true;
+        break;
+      }
       if (typeof dasKeyDown === 'function') dasKeyDown('softDrop');
       break;
     case "Digit1":
@@ -290,6 +334,7 @@ function onKeyUp(event) {
     case "ShiftLeft":
     case "ShiftRight":
       moveDown = false;
+      if (typeof _editorShiftDown !== "undefined") _editorShiftDown = false;
       if (typeof dasKeyUp === 'function') dasKeyUp('softDrop');
       break;
     case "KeyQ":
