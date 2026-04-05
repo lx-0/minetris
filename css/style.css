@@ -1211,6 +1211,64 @@ body {
 #pause-settings-btn:hover { background: #08f; color: #fff; }
 #pause-main-menu-btn:hover { background: #c0f; color: #fff; }
 
+/* ── Speed modifier panel (inside pause screen) ── */
+#speed-modifier-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 12px 18px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  width: 220px;
+}
+#speed-modifier-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #aaa;
+  letter-spacing: 0.05em;
+}
+#speed-modifier-btns {
+  display: flex;
+  gap: 6px;
+}
+.speed-mod-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #fff;
+  background: #333;
+  border: 2px solid #555;
+  padding: 8px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  min-width: 44px;
+}
+.speed-mod-btn:hover {
+  background: #555;
+  border-color: #0f0;
+}
+.speed-mod-btn.active {
+  background: #0a0;
+  border-color: #0f0;
+  color: #fff;
+}
+.speed-mod-btn[data-modifier="slow"].active   { background: #07a; border-color: #0af; }
+.speed-mod-btn[data-modifier="double"].active { background: #a60; border-color: #fc0; color: #fff; }
+.speed-mod-chaos { position: relative; overflow: hidden; }
+.speed-mod-chaos.active {
+  background: #700;
+  border-color: #f44;
+  color: #f88;
+  animation: chaos-pulse 0.6s ease-in-out infinite alternate;
+}
+@keyframes chaos-pulse {
+  from { background: #700; box-shadow: 0 0 6px #f44; }
+  to   { background: #a00; box-shadow: 0 0 14px #f00; }
+}
+
 /* ── Audio settings overlay ── */
 #settings-overlay {
   position: absolute;

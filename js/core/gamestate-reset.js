@@ -66,6 +66,14 @@ function resetGame() {
   difficultyMultiplier = 1.0;
   lastDifficultyTier = 0;
   speedUpBannerTimer = 0;
+
+  // Reset speed modifier
+  speedModifier = 'normal';
+  speedModifierMultiplier = 1.0;
+  chaosPhaseAccumulator = 0;
+  document.querySelectorAll('.speed-mod-btn').forEach(function (b) {
+    b.classList.toggle('active', b.dataset.modifier === 'normal');
+  });
   if (speedUpBannerEl) {
     speedUpBannerEl.style.display = "none";
     speedUpBannerEl.style.color = "";

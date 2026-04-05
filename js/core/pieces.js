@@ -252,7 +252,7 @@ function spawnFallingPiece() {
     }
     const piece3D = createPiece3D(SHAPES[cp.index], cp.index);
     piece3D.position.set(_cpSpawnX, WORLD_SIZE * 0.6, _cpSpawnZ);
-    piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * _fallMult, 0);
+    piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult, 0);
     piece3D.userData.colorIndex = cp.index;
     piece3D.userData.timeSinceRotation = 0;
     piece3D.userData.rotationInterval = cp.rotationInterval;
@@ -284,7 +284,7 @@ function spawnFallingPiece() {
     if (!rp) return; // no more recorded pieces — replay is winding down
     const piece3D = createPiece3D(rp.shape, rp.index);
     piece3D.position.set(rp.spawnX, WORLD_SIZE * 0.6, rp.spawnZ);
-    piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * _fallMult, 0);
+    piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult, 0);
     piece3D.userData.colorIndex = rp.index;
     piece3D.userData.timeSinceRotation = 0;
     piece3D.userData.rotationInterval = rp.rotationInterval;
@@ -310,7 +310,7 @@ function spawnFallingPiece() {
     const spawnZ = (_rng() - 0.5) * (WORLD_SIZE * 0.8);
     const spawnY = WORLD_SIZE * 0.6;
     piece3D.position.set(spawnX, spawnY, spawnZ);
-    piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * _fallMult, 0);
+    piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult, 0);
     piece3D.userData.colorIndex = next.index;
     piece3D.userData.timeSinceRotation = 0;
     piece3D.userData.rotationInterval =
@@ -337,7 +337,7 @@ function spawnFallingPiece() {
       const spawnZ = (_rng() - 0.5) * (WORLD_SIZE * 0.8);
       const spawnY = WORLD_SIZE * 0.6;
       piece3D.position.set(spawnX, spawnY, spawnZ);
-      piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * _fallMult, 0);
+      piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult, 0);
       piece3D.userData.colorIndex = next.index;
       piece3D.userData.timeSinceRotation = 0;
       piece3D.userData.rotationInterval =
@@ -368,7 +368,7 @@ function spawnFallingPiece() {
   const spawnZ = (_rng() - 0.5) * _spawnRange;
   const spawnY = WORLD_SIZE * 0.6;
   piece3D.position.set(spawnX, spawnY, spawnZ);
-  piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * _fallMult, 0);
+  piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult, 0);
   piece3D.userData.colorIndex = index;
   piece3D.userData.timeSinceRotation = 0;
   piece3D.userData.rotationInterval =

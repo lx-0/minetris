@@ -312,6 +312,21 @@ function updateDifficulty(delta) {
     return;
   }
 
+  // Chaos speed modifier: oscillate speedModifierMultiplier and re-scale in-flight pieces
+  if (speedModifier === 'chaos') {
+    chaosPhaseAccumulator += delta * 2.5;
+    const newMult = SPEED_MOD_CHAOS_MIN + SPEED_MOD_CHAOS_RANGE * Math.abs(Math.sin(chaosPhaseAccumulator));
+    if (fallingPieces.length > 0 && Math.abs(newMult - speedModifierMultiplier) > 0.02) {
+      const ratio = newMult / speedModifierMultiplier;
+      for (let i = 0; i < fallingPieces.length; i++) {
+        if (fallingPieces[i].userData.velocity) {
+          fallingPieces[i].userData.velocity.y *= ratio;
+        }
+      }
+    }
+    speedModifierMultiplier = newMult;
+  }
+
   // Tick banner display timer
   if (speedUpBannerTimer > 0) {
     speedUpBannerTimer -= delta;

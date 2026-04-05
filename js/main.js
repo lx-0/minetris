@@ -760,6 +760,37 @@ function init() {
     resetGame();
   });
 
+  // Speed modifier buttons in pause screen
+  document.querySelectorAll('.speed-mod-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const modifier = this.dataset.modifier;
+      if (!modifier) return;
+      const prevMult = speedModifierMultiplier;
+      speedModifier = modifier;
+      if (modifier === 'slow')   speedModifierMultiplier = SPEED_MOD_SLOW;
+      else if (modifier === 'double') speedModifierMultiplier = SPEED_MOD_DOUBLE;
+      else if (modifier === 'chaos') {
+        chaosPhaseAccumulator = 0;
+        speedModifierMultiplier = SPEED_MOD_CHAOS_MIN + SPEED_MOD_CHAOS_RANGE * 0.5;
+      } else {
+        speedModifierMultiplier = SPEED_MOD_NORMAL;
+      }
+      // Re-scale in-flight pieces immediately so the change is felt on resume
+      if (prevMult > 0 && fallingPieces) {
+        const ratio = speedModifierMultiplier / prevMult;
+        for (let i = 0; i < fallingPieces.length; i++) {
+          if (fallingPieces[i].userData.velocity) {
+            fallingPieces[i].userData.velocity.y *= ratio;
+          }
+        }
+      }
+      // Update active button highlight
+      document.querySelectorAll('.speed-mod-btn').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.modifier === modifier);
+      });
+    });
+  });
+
   const startResumeBtn = document.getElementById("start-resume-btn");
   if (startResumeBtn) {
     // Show button only if a save exists; label it with the saved mode context

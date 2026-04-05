@@ -93,6 +93,11 @@ let lastDifficultyTier = 0;      // last tier that triggered a speed-up
 let speedUpBannerEl = null;      // DOM reference, assigned in init()
 let speedUpBannerTimer = 0;      // seconds remaining for speed-up banner
 
+// ── Speed modifier ────────────────────────────────────────────────────────────
+let speedModifier = 'normal';       // 'slow' | 'normal' | 'double' | 'chaos'
+let speedModifierMultiplier = 1.0;  // effective multiplier applied to new piece velocity
+let chaosPhaseAccumulator = 0;      // accumulates time for chaos oscillation (radians)
+
 // ── Game-over flag ────────────────────────────────────────────────────────────
 let isGameOver = false;
 
