@@ -6700,6 +6700,73 @@ body.theme-candy .inv-slot.selected {
 .lb-rank-same { color: #666;    font-size: 0.85em; }
 .lb-rank-new  { color: #88ddff; font-size: 0.75em; font-style: italic; }
 
+/* ── Rank badges (top-3 medals + top-10 number badges) ── */
+.lb-rank-badge { font-size: 1em; }
+.lb-rank-gold   { filter: drop-shadow(0 0 4px gold); }
+.lb-rank-silver { filter: drop-shadow(0 0 3px silver); }
+.lb-rank-bronze { filter: drop-shadow(0 0 3px #cd7f32); }
+.lb-rank-num-badge {
+  display: inline-block;
+  background: rgba(0,255,136,0.15);
+  border: 1px solid rgba(0,255,136,0.4);
+  border-radius: 3px;
+  color: #00ff88;
+  font-size: 0.8em;
+  padding: 0 4px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ── Score trend arrows ── */
+.lb-trend-up   { color: #4caf50; font-size: 0.8em; }
+.lb-trend-down { color: #f55;    font-size: 0.8em; }
+
+/* ── Load-more button ── */
+.lb-load-more-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  background: transparent;
+  border: 1px solid rgba(0,255,136,0.4);
+  border-radius: 4px;
+  color: #aaffcc;
+  padding: 8px 16px;
+  cursor: pointer;
+  margin: 8px auto;
+  display: block;
+  transition: all 0.15s;
+}
+.lb-load-more-btn:hover { color: #00ff88; border-color: #00ff88; background: rgba(0,255,136,0.08); }
+
+/* ── Country filter ── */
+.lb-filters {
+  padding: 4px 0 8px 0;
+  font-size: 0.8em;
+  color: #aaa;
+}
+.lb-country-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.lb-country-filter { cursor: pointer; }
+
+/* ── Friends leaderboard ── */
+.lb-friends-header {
+  font-size: 0.85em;
+  color: #00ff88;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0,255,136,0.2);
+}
+.lb-friends-note {
+  font-size: 0.7em;
+  color: #666;
+  text-align: center;
+  margin-top: 10px;
+  font-style: italic;
+}
+
 #lb-panel-close-btn {
   font-family: "Press Start 2P", cursive;
   font-size: 9px;

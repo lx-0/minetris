@@ -5,6 +5,54 @@ const LEADERBOARD_WORKER_URL = 'https://minectris-leaderboard.workers.dev';
 const DISPLAY_NAME_KEY = 'mineCtris_displayName';
 const LB_SUBMITTED_KEY = 'mineCtris_lbSubmitted'; // value: "YYYY-MM-DD"
 
+// ── 5-Minute Leaderboard Cache ────────────────────────────────────────────────
+const _LB_CACHE_TTL = 5 * 60 * 1000;
+const _lbCache = {};
+function _lbCacheGet(key) {
+  const e = _lbCache[key];
+  if (!e) return null;
+  if (Date.now() - e.ts > _LB_CACHE_TTL) { delete _lbCache[key]; return null; }
+  return e.data;
+}
+function _lbCacheSet(key, data) { _lbCache[key] = { data: data, ts: Date.now() }; }
+async function _lbCachedFetch(key, fn) {
+  const hit = _lbCacheGet(key);
+  if (hit !== null) return hit;
+  const data = await fn();
+  _lbCacheSet(key, data);
+  return data;
+}
+
+// ── Rank-trend tracking (compare current session rank vs. previous session) ───
+const _LB_RANK_HISTORY_KEY = 'mineCtris_lbRankHistory';
+function _lbGetRankHistory() {
+  try { return JSON.parse(localStorage.getItem(_LB_RANK_HISTORY_KEY) || '{}'); } catch (_) { return {}; }
+}
+function _lbRecordRank(tabKey, rank) {
+  const h = _lbGetRankHistory(); h[tabKey] = rank;
+  try { localStorage.setItem(_LB_RANK_HISTORY_KEY, JSON.stringify(h)); } catch (_) {}
+}
+function _lbPrevRank(tabKey) { return _lbGetRankHistory()[tabKey] || null; }
+function _lbTrendHtml(tabKey, currentRank) {
+  const prev = _lbPrevRank(tabKey);
+  if (prev == null || prev === currentRank) return '';
+  const delta = prev - currentRank; // positive = rank improved (moved up)
+  if (delta > 0) return ' <span class="lb-trend-up" title="Up ' + delta + ' from last session">\u2191' + delta + '</span>';
+  return ' <span class="lb-trend-down" title="Down ' + Math.abs(delta) + ' from last session">\u2193' + Math.abs(delta) + '</span>';
+}
+
+// ── Pagination state ──────────────────────────────────────────────────────────
+let _lbPaginationState = null; // { entries, date, labelOverride, isSeason, tabKey, count }
+
+// ── Rank badge helper ─────────────────────────────────────────────────────────
+function _lbRankBadge(rank) {
+  if (rank === 1) return '<span class="lb-rank-badge lb-rank-gold" title="1st">\ud83e\udd47</span>';
+  if (rank === 2) return '<span class="lb-rank-badge lb-rank-silver" title="2nd">\ud83e\udd48</span>';
+  if (rank === 3) return '<span class="lb-rank-badge lb-rank-bronze" title="3rd">\ud83e\udd49</span>';
+  if (rank <= 10) return '<span class="lb-rank-num-badge">' + rank + '</span>';
+  return rank + '';
+}
+
 // Season badge labels by rank (top-3 finishers)
 const _SEASON_BADGES = {
   1: { label: 'Champion', icon: '🏆' },
@@ -183,7 +231,7 @@ function openDisplayNameModal(onConfirm) {
 
 // ── Leaderboard Panel ─────────────────────────────────────────────────────────
 
-let _lbActiveTab = 'today'; // 'today' | 'yesterday' | 'thisweek' | 'lastweek' | 'season' | 'seasonrating' | 'coop' | 'dailycoop' | 'battle' | 'mastery' | 'modes'
+let _lbActiveTab = 'today'; // 'today' | 'yesterday' | 'thisweek' | 'lastweek' | 'season' | 'seasonrating' | 'coop' | 'dailycoop' | 'battle' | 'mastery' | 'modes' | 'friends'
 
 function openLeaderboardPanel(defaultTab) {
   const overlay = document.getElementById('lb-panel-overlay');
@@ -211,6 +259,7 @@ function _syncLbTabs() {
   const battleBtn       = document.getElementById('lb-tab-battle');
   const masteryBtn      = document.getElementById('lb-tab-mastery');
   const modesBtn        = document.getElementById('lb-tab-modes');
+  const friendsBtn      = document.getElementById('lb-tab-friends');
   if (todayBtn)        todayBtn.classList.toggle('lb-tab-active',        _lbActiveTab === 'today');
   if (yestBtn)         yestBtn.classList.toggle('lb-tab-active',         _lbActiveTab === 'yesterday');
   if (thisWeekBtn)     thisWeekBtn.classList.toggle('lb-tab-active',     _lbActiveTab === 'thisweek');
@@ -222,6 +271,7 @@ function _syncLbTabs() {
   if (battleBtn)       battleBtn.classList.toggle('lb-tab-active',       _lbActiveTab === 'battle');
   if (masteryBtn)      masteryBtn.classList.toggle('lb-tab-active',      _lbActiveTab === 'mastery');
   if (modesBtn)        modesBtn.classList.toggle('lb-tab-active',        _lbActiveTab === 'modes');
+  if (friendsBtn)      friendsBtn.classList.toggle('lb-tab-active',      _lbActiveTab === 'friends');
 }
 
 function _getYesterdayString() {
@@ -234,6 +284,7 @@ async function _loadLbTab(tab) {
   const body = document.getElementById('lb-panel-body');
   if (!body) return;
   body.innerHTML = '<div class="lb-loading">Loading...</div>';
+  _lbPaginationState = null; // reset pagination on tab switch
 
   try {
     if (tab === 'season') {
@@ -244,114 +295,143 @@ async function _loadLbTab(tab) {
       const endedSeason  = typeof getEndedSeasonConfig === 'function' ? getEndedSeasonConfig() : null;
 
       if (activeSeason && activeSeason.seasonId) {
-        // Active season — show live leaderboard
-        const data = await apiFetchSeasonLeaderboard();
+        const data = await _lbCachedFetch('season', apiFetchSeasonLeaderboard);
         if (data && data.entries) {
           const label = data.seasonName || 'Current Season';
-          _renderLeaderboard(body, data.entries, null, label, true);
+          _renderLeaderboard(body, data.entries, null, label, true, 'season');
           rendered = true;
         }
       }
 
       if (!rendered && endedSeason && endedSeason.seasonId) {
-        // Season just ended — show archive
-        const archive = await apiFetchSeasonArchive(endedSeason.seasonId);
+        const archive = await _lbCachedFetch('season-archive:' + endedSeason.seasonId, function() {
+          return apiFetchSeasonArchive(endedSeason.seasonId);
+        });
         if (archive && archive.top10) {
           const entries = archive.top10.map(function(e) {
-            return {
-              rank: e.rank,
-              displayName: e.displayName,
-              totalScore: e.totalScore,
-              gamesPlayed: e.gamesPlayed,
-              _archiveBadge: e.badge,
-            };
+            return { rank: e.rank, displayName: e.displayName, totalScore: e.totalScore, gamesPlayed: e.gamesPlayed, _archiveBadge: e.badge };
           });
-          _renderLeaderboard(body, entries, null, (archive.name || 'Season') + ' — Final', true);
+          _renderLeaderboard(body, entries, null, (archive.name || 'Season') + ' \u2014 Final', true, 'season');
           rendered = true;
         }
       }
 
       if (!rendered) {
-        // Fallback: try the live endpoint anyway (operator may not have set ended flag yet)
-        const data = await apiFetchSeasonLeaderboard();
+        const data = await _lbCachedFetch('season', apiFetchSeasonLeaderboard);
         if (!data || !data.entries) throw new Error('bad response');
-        const label = data.seasonName || 'Season';
-        _renderLeaderboard(body, data.entries, null, label, true);
+        _renderLeaderboard(body, data.entries, null, data.seasonName || 'Season', true, 'season');
       }
     } else if (tab === 'thisweek' || tab === 'lastweek') {
       const weekStr = tab === 'thisweek' ? getWeeklyDateString() : _getLastWeekString();
-      const data = await apiFetchWeeklyLeaderboard(weekStr);
+      const data = await _lbCachedFetch('week:' + weekStr, function() { return apiFetchWeeklyLeaderboard(weekStr); });
       if (!data || !data.entries) throw new Error('bad response');
       const label = formatWeeklyLabel(weekStr) +
-        (typeof formatWeeklyDateRange === 'function'
-          ? ' \u00b7 ' + formatWeeklyDateRange(weekStr)
-          : '');
-      _renderLeaderboard(body, data.entries, null, label);
+        (typeof formatWeeklyDateRange === 'function' ? ' \u00b7 ' + formatWeeklyDateRange(weekStr) : '');
+      _renderLeaderboard(body, data.entries, null, label, false, tab);
     } else if (tab === 'coop' || tab === 'dailycoop') {
       const isDaily = tab === 'dailycoop';
       const date = getDailyDateString();
-      const data = await apiFetchCoopLeaderboard(date, isDaily);
+      const data = await _lbCachedFetch('coop:' + tab + ':' + date, function() { return apiFetchCoopLeaderboard(date, isDaily); });
       if (!data || !data.entries) throw new Error('bad response');
       const label = (isDaily ? 'Daily Co-op \u2014 ' : 'Co-op \u2014 ') + formatDailyLabel(date);
       _renderCoopLeaderboard(body, data.entries, label);
     } else if (tab === 'seasonrating') {
       const myName = loadDisplayName();
-      const data = await apiFetchSeasonRatings(myName);
+      const data = await _lbCachedFetch('seasonrating:' + myName, function() { return apiFetchSeasonRatings(myName); });
       if (!data || !data.entries) throw new Error('bad response');
       _renderSeasonRatingLeaderboard(body, data);
     } else if (tab === 'battle') {
-      const data = await apiFetchBattleLeaderboard();
+      const data = await _lbCachedFetch('battle', apiFetchBattleLeaderboard);
       if (!data || !data.entries) throw new Error('bad response');
       _renderBattleLeaderboard(body, data.entries);
     } else if (tab === 'mastery') {
       const myName = loadDisplayName();
-      const data = await apiFetchMasteryLeaderboard(myName);
+      const data = await _lbCachedFetch('mastery:' + myName, function() { return apiFetchMasteryLeaderboard(myName); });
       if (!data || !data.entries) throw new Error('bad response');
       _renderMasteryLeaderboard(body, data.entries, data.ownEntry);
     } else if (tab === 'modes') {
       const myName = loadDisplayName();
-      const data = await apiFetchModeLeaderboard(_lbActiveModeTab, _lbModeRange, myName);
+      const data = await _lbCachedFetch('modes:' + _lbActiveModeTab + ':' + _lbModeRange, function() {
+        return apiFetchModeLeaderboard(_lbActiveModeTab, _lbModeRange, myName);
+      });
       if (!data || !data.entries) throw new Error('bad response');
       _renderModeLeaderboard(body, data, _lbActiveModeTab, _lbModeRange);
-      return; // _renderModeLeaderboard sets innerHTML itself
+      return;
+    } else if (tab === 'friends') {
+      await _loadFriendsTab(body);
+      return;
     } else {
       const date = tab === 'today' ? getDailyDateString() : _getYesterdayString();
-      const data = await apiFetchLeaderboard(date);
+      const data = await _lbCachedFetch('daily:' + date, function() { return apiFetchLeaderboard(date); });
       if (!data || !data.entries) throw new Error('bad response');
-      _renderLeaderboard(body, data.entries, date);
+      _renderLeaderboard(body, data.entries, date, null, false, tab);
     }
   } catch (_) {
     body.innerHTML = '<div class="lb-error">Could not load leaderboard.</div>';
   }
 }
 
-function _renderLeaderboard(container, entries, date, labelOverride, isSeason) {
+function _renderLeaderboard(container, entries, date, labelOverride, isSeason, tabKey) {
+  // Store for pagination
+  _lbPaginationState = { entries: entries, date: date, labelOverride: labelOverride, isSeason: isSeason, tabKey: tabKey, count: 25 };
+  _doRenderLeaderboard(container);
+}
+
+function _doRenderLeaderboard(container) {
+  if (!_lbPaginationState) return;
+  const { entries, date, labelOverride, isSeason, tabKey } = _lbPaginationState;
+  const count = _lbPaginationState.count;
+
   const myName = loadDisplayName().toLowerCase();
-  const dateLabel = labelOverride || formatDailyLabel(date);
+  const dateLabel = labelOverride || (date ? formatDailyLabel(date) : '');
 
   if (!entries.length) {
-    container.innerHTML = '<div class="lb-empty">No scores yet for ' + _escHtml(dateLabel) + '.</div>';
+    container.innerHTML = '<div class="lb-empty">No scores yet' + (dateLabel ? ' for ' + _escHtml(dateLabel) : '') + '.</div>';
     return;
   }
 
-  // Season tab: entries have totalScore + gamesPlayed instead of score + linesCleared
   const scoreKey = isSeason ? 'totalScore' : 'score';
   const col2Label = isSeason ? 'Games' : 'Lines';
   const col2Key   = isSeason ? 'gamesPlayed' : 'linesCleared';
 
-  let html = '<table class="lb-table"><thead><tr>' +
+  // Country filter
+  const myCountry = (navigator.language || '').split('-')[1] || '';
+  const hasCountryData = entries.some(function(e) { return e.country; });
+  const countryFilterEl = container.querySelector && container.querySelector('.lb-country-filter');
+  const countryFilterChecked = countryFilterEl ? countryFilterEl.checked : false;
+  const visibleEntries = (hasCountryData && countryFilterChecked && myCountry)
+    ? entries.filter(function(e) { return (e.country || '').toUpperCase() === myCountry.toUpperCase(); })
+    : entries;
+
+  const pageEntries = visibleEntries.slice(0, count);
+  const hasMore = visibleEntries.length > count;
+
+  let html = '';
+
+  // Country filter toggle
+  if (hasCountryData && myCountry) {
+    html += '<div class="lb-filters">' +
+      '<label class="lb-country-filter-label">' +
+      '<input type="checkbox" class="lb-country-filter"' + (countryFilterChecked ? ' checked' : '') + '> ' +
+      '\ud83c\udff3\ufe0f My country only (' + myCountry + ')' +
+      '</label></div>';
+  }
+
+  html += '<table class="lb-table"><thead><tr>' +
     '<th>#</th><th>Name</th><th>Score</th><th>' + col2Label + '</th>' +
     '</tr></thead><tbody>';
 
-  // Compute local player's level for their own row badge
   const _myLevel = (function() {
     if (typeof getLevelFromXP !== 'function' || typeof loadLifetimeStats !== 'function') return 1;
     return getLevelFromXP(loadLifetimeStats().playerXP || 0);
   })();
   const _myTitle = typeof getLevelTitle === 'function' ? getLevelTitle(_myLevel) : '';
 
-  entries.forEach(function(e) {
+  let myVisibleEntry = null;
+
+  pageEntries.forEach(function(e) {
     const isMe = myName && e.displayName.toLowerCase() === myName;
+    if (isMe) myVisibleEntry = e;
     const cls  = isMe ? ' class="lb-row-me"' : '';
     let nameCell = _escHtml(e.displayName);
 
@@ -363,7 +443,6 @@ function _renderLeaderboard(container, entries, date, labelOverride, isSeason) {
     }
 
     if (isMe) {
-      // Featured achievement badge next to name
       if (typeof loadFeaturedBadge === 'function' && typeof ACHIEVEMENTS !== 'undefined') {
         const _featuredId = loadFeaturedBadge();
         if (_featuredId) {
@@ -373,31 +452,29 @@ function _renderLeaderboard(container, entries, date, labelOverride, isSeason) {
           }
         }
       }
-      // Prestige stars/crown next to name
       const _prestigeHtml = typeof getPrestigeStarsHtml === 'function' ? getPrestigeStarsHtml() : '';
       if (_prestigeHtml) nameCell = _prestigeHtml + ' ' + nameCell;
       const badgeLabel = typeof getLevelBadgeLabel === 'function' ? getLevelBadgeLabel(_myLevel) : 'L' + _myLevel;
       nameCell += ' <span class="lb-level-badge">' + badgeLabel + '</span>';
       if (_myTitle) nameCell += ' <span class="lb-level-title">' + _myTitle + '</span>';
-      // Mastery score badge
       if (typeof getMasteryScore === 'function') {
-        const _masteryScore = getMasteryScore();
-        if (_masteryScore > 0) {
-          nameCell += ' <span class="lb-mastery-badge" title="Mastery Score: ' + _masteryScore + '/40">\u2694 ' + _masteryScore + '</span>';
-        }
+        const _ms = getMasteryScore();
+        if (_ms > 0) nameCell += ' <span class="lb-mastery-badge" title="Mastery Score: ' + _ms + '/40">\u2694 ' + _ms + '</span>';
       }
-      // Show guild emblem if in a guild
-      const _guildCosmetics = (typeof getMyGuildCosmetics === 'function') ? getMyGuildCosmetics() : null;
-      if (_guildCosmetics && _guildCosmetics.emblem) {
-        const _legendaryClass = _guildCosmetics.isLegendary ? ' lb-guild-emblem--legendary' : '';
-        nameCell += ' <span class="lb-guild-emblem' + _legendaryClass + '" title="Guild Emblem">' + _guildCosmetics.emblem + '</span>';
+      const _gc = (typeof getMyGuildCosmetics === 'function') ? getMyGuildCosmetics() : null;
+      if (_gc && _gc.emblem) {
+        nameCell += ' <span class="lb-guild-emblem' + (_gc.isLegendary ? ' lb-guild-emblem--legendary' : '') + '" title="Guild Emblem">' + _gc.emblem + '</span>';
       }
-      nameCell += ' ◀';
+      // Trend indicator
+      if (tabKey) nameCell += _lbTrendHtml(tabKey, e.rank);
+      nameCell += ' \u25c4';
     }
+
+    const rankCell = _lbRankBadge(e.rank);
     const scoreVal = (e[scoreKey] || 0).toLocaleString();
     const col2Val  = e[col2Key] != null ? e[col2Key] : '-';
     html += '<tr' + cls + '>' +
-      '<td>' + e.rank + '</td>' +
+      '<td>' + rankCell + '</td>' +
       '<td>' + nameCell + '</td>' +
       '<td>' + scoreVal + '</td>' +
       '<td>' + col2Val + '</td>' +
@@ -405,7 +482,47 @@ function _renderLeaderboard(container, entries, date, labelOverride, isSeason) {
   });
 
   html += '</tbody></table>';
+
+  // Load More button
+  if (hasMore) {
+    html += '<button class="lb-load-more-btn">Load More (' + (visibleEntries.length - count) + ' more)</button>';
+  }
+
+  // Pinned personal rank — shown when player is not in current page
+  const myFullEntry = !myVisibleEntry && myName
+    ? visibleEntries.find(function(e) { return e.displayName.toLowerCase() === myName; })
+    : null;
+  if (myFullEntry) {
+    const scoreVal = (myFullEntry[scoreKey] || 0).toLocaleString();
+    html += '<div class="lb-mode-own-entry lb-mode-own-entry-pinned">You \u2014 Rank #' + myFullEntry.rank + ' \u2014 ' + scoreVal + '</div>';
+  }
+
   container.innerHTML = html;
+
+  // Record rank for trend tracking (first time we see it this session)
+  if (myVisibleEntry && tabKey && _lbPrevRank(tabKey) === null) {
+    // do not overwrite if already set this session — only record once per session
+  }
+  const anyMyEntry = myVisibleEntry || myFullEntry;
+  if (anyMyEntry && tabKey) _lbRecordRank(tabKey, anyMyEntry.rank);
+
+  // Wire country filter toggle
+  const cfEl = container.querySelector('.lb-country-filter');
+  if (cfEl) {
+    cfEl.addEventListener('change', function() {
+      // rebuild with filter toggled
+      _doRenderLeaderboard(container);
+    });
+  }
+
+  // Wire load-more
+  const lmBtn = container.querySelector('.lb-load-more-btn');
+  if (lmBtn) {
+    lmBtn.addEventListener('click', function() {
+      _lbPaginationState.count += 25;
+      _doRenderLeaderboard(container);
+    });
+  }
 }
 
 function _renderBattleLeaderboard(container, entries) {
@@ -817,6 +934,15 @@ function initLeaderboard() {
     });
   }
 
+  const friendsTabBtn = document.getElementById('lb-tab-friends');
+  if (friendsTabBtn) {
+    friendsTabBtn.addEventListener('click', function() {
+      _lbActiveTab = 'friends';
+      _syncLbTabs();
+      _loadLbTab('friends');
+    });
+  }
+
   // Leaderboard panel refresh button
   const refreshBtn = document.getElementById('lb-panel-refresh-btn');
   if (refreshBtn) {
@@ -1008,11 +1134,15 @@ let _lbActiveModeTab = 'classic'; // 'classic' | 'sprint' | 'blitz' | 'depths'
 let _lbModeRange = 'weekly';      // 'weekly' | 'alltime'
 
 const _MODE_LB_CONFIG = {
-  classic: { label: 'Classic',  icon: '\u26cf\ufe0f',   scoreLabel: 'Score',   sortAsc: false },
-  sprint:  { label: 'Sprint',   icon: '\u26a1',          scoreLabel: 'Time',    sortAsc: true  },
-  blitz:   { label: 'Blitz',    icon: '\u23f1',          scoreLabel: 'Score',   sortAsc: false },
-  endless: { label: 'Endless',  icon: '\u267E\ufe0f',    scoreLabel: 'Score',   sortAsc: false },
-  depths:  { label: 'Depths',   icon: '\u{1F573}\ufe0f', scoreLabel: 'Score',   sortAsc: false },
+  classic:  { label: 'Classic',   icon: '\u26cf\ufe0f',   scoreLabel: 'Score',   sortAsc: false },
+  sprint:   { label: 'Sprint',    icon: '\u26a1',          scoreLabel: 'Time',    sortAsc: true  },
+  blitz:    { label: 'Blitz',     icon: '\u23f1',          scoreLabel: 'Score',   sortAsc: false },
+  endless:  { label: 'Endless',   icon: '\u267E\ufe0f',    scoreLabel: 'Score',   sortAsc: false },
+  depths:   { label: 'Depths',    icon: '\u{1F573}\ufe0f', scoreLabel: 'Score',   sortAsc: false },
+  ultra:    { label: 'Ultra',     icon: '\u{1F525}',       scoreLabel: 'Score',   sortAsc: false },
+  survival: { label: 'Survival',  icon: '\u2764',          scoreLabel: 'Score',   sortAsc: false },
+  daily:    { label: 'Daily',     icon: '\ud83d\udcc5',    scoreLabel: 'Score',   sortAsc: false },
+  puzzle:   { label: 'Puzzle',    icon: '\ud83e\udde9',    scoreLabel: 'Score',   sortAsc: false },
 };
 
 async function apiSubmitModeScore(displayName, mode, score, linesCleared) {
@@ -1063,9 +1193,11 @@ function _renderModeLeaderboard(container, data, mode, range) {
   });
   html += '</div>';
 
-  // Weekly / All-Time toggle
+  // Time range toggle: Today / Weekly / Monthly / All-Time
   html += '<div class="lb-mode-range-toggle">' +
-    '<button class="lb-mode-range-btn' + (range === 'weekly' ? ' lb-mode-range-active' : '') + '" data-range="weekly">Weekly</button>' +
+    '<button class="lb-mode-range-btn' + (range === 'today'   ? ' lb-mode-range-active' : '') + '" data-range="today">Today</button>' +
+    '<button class="lb-mode-range-btn' + (range === 'weekly'  ? ' lb-mode-range-active' : '') + '" data-range="weekly">Weekly</button>' +
+    '<button class="lb-mode-range-btn' + (range === 'monthly' ? ' lb-mode-range-active' : '') + '" data-range="monthly">Monthly</button>' +
     '<button class="lb-mode-range-btn' + (range === 'alltime' ? ' lb-mode-range-active' : '') + '" data-range="alltime">All-Time</button>' +
     '</div>';
 
@@ -1138,6 +1270,7 @@ function _renderModeLeaderboard(container, data, mode, range) {
       const badgeLabel = typeof getLevelBadgeLabel === 'function' ? getLevelBadgeLabel(_myLevel) : 'L' + _myLevel;
       nameCell += ' <span class="lb-level-badge">' + badgeLabel + '</span>';
       if (_myTitle) nameCell += ' <span class="lb-level-title">' + _myTitle + '</span>';
+      nameCell += _lbTrendHtml('mode:' + mode + ':' + range, e.rank);
       nameCell += ' \u25c4';
     }
 
@@ -1156,7 +1289,7 @@ function _renderModeLeaderboard(container, data, mode, range) {
     }
 
     html += '<tr' + cls + '>' +
-      '<td>' + e.rank + '</td>' +
+      '<td>' + _lbRankBadge(e.rank) + '</td>' +
       '<td>' + nameCell + '</td>' +
       '<td>' + _escHtml(scoreStr) + '</td>' +
       '<td>' + (e.linesCleared != null ? e.linesCleared : '-') + '</td>' +
@@ -1176,6 +1309,12 @@ function _renderModeLeaderboard(container, data, mode, range) {
 
   container.innerHTML = html;
   _attachModeTabListeners(container, mode, range);
+
+  // Record rank for trend tracking
+  const modeTabKey = 'mode:' + mode + ':' + range;
+  const myModeEntry = entries.find(function(e) { return myName && e.displayName.toLowerCase() === myName; })
+    || (ownEntry && ownEntry.rank != null ? ownEntry : null);
+  if (myModeEntry) _lbRecordRank(modeTabKey, myModeEntry.rank);
 }
 
 function _attachModeTabListeners(container, currentMode, currentRange) {
@@ -1190,7 +1329,87 @@ function _attachModeTabListeners(container, currentMode, currentRange) {
   container.querySelectorAll('.lb-mode-range-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       _lbModeRange = btn.getAttribute('data-range') || 'weekly';
+      _lbCacheSet('modes:' + _lbActiveModeTab + ':' + _lbModeRange, null); // bust cache for new range
       _loadLbTab('modes');
     });
   });
+}
+
+// ── Friends Leaderboard ───────────────────────────────────────────────────────
+
+async function _loadFriendsTab(container) {
+  // Get friend display names from the friends system
+  const friendList = (typeof friendsGetList === 'function') ? friendsGetList() : [];
+  const myName = loadDisplayName();
+
+  if (!myName) {
+    container.innerHTML = '<div class="lb-empty">Set your leaderboard name in Settings to use the Friends leaderboard.</div>';
+    return;
+  }
+
+  if (!friendList.length) {
+    container.innerHTML = '<div class="lb-empty">You have no friends added yet. Use the Friends panel to add friends by code.</div>';
+    return;
+  }
+
+  // Collect all display names to filter for (friends + yourself)
+  const friendNames = friendList
+    .map(function(f) { return (f.name || '').toLowerCase(); })
+    .filter(Boolean);
+  if (myName) friendNames.push(myName.toLowerCase());
+
+  // Fetch today's leaderboard (best option for friends since scores are submitted there)
+  const date = getDailyDateString();
+  let entries;
+  try {
+    const data = await _lbCachedFetch('daily:' + date, function() { return apiFetchLeaderboard(date); });
+    entries = (data && data.entries) ? data.entries : [];
+  } catch (_) {
+    container.innerHTML = '<div class="lb-error">Could not load friend scores.</div>';
+    return;
+  }
+
+  // Filter to only friends (and self)
+  const filtered = entries.filter(function(e) {
+    return friendNames.indexOf(e.displayName.toLowerCase()) !== -1;
+  });
+
+  if (!filtered.length) {
+    container.innerHTML = '<div class="lb-empty">None of your friends have submitted a score today yet.</div>';
+    return;
+  }
+
+  // Re-rank within friends scope
+  const reranked = filtered.map(function(e, i) {
+    return Object.assign({}, e, { friendRank: i + 1 });
+  });
+
+  _renderFriendsLeaderboard(container, reranked, date);
+}
+
+function _renderFriendsLeaderboard(container, entries, date) {
+  const myName = loadDisplayName().toLowerCase();
+  const dateLabel = date ? formatDailyLabel(date) : '';
+
+  let html = '<div class="lb-friends-header">\ud83d\udc65 Friends — ' + _escHtml(dateLabel) + '</div>';
+  html += '<table class="lb-table"><thead><tr>' +
+    '<th>#</th><th>Name</th><th>Score</th><th>Lines</th>' +
+    '</tr></thead><tbody>';
+
+  entries.forEach(function(e) {
+    const isMe = myName && e.displayName.toLowerCase() === myName;
+    const cls  = isMe ? ' class="lb-row-me"' : '';
+    let nameCell = _escHtml(e.displayName);
+    if (isMe) nameCell += ' \u25c4';
+    html += '<tr' + cls + '>' +
+      '<td>' + _lbRankBadge(e.friendRank) + '</td>' +
+      '<td>' + nameCell + '</td>' +
+      '<td>' + (e.score || 0).toLocaleString() + '</td>' +
+      '<td>' + (e.linesCleared != null ? e.linesCleared : '-') + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table>';
+  html += '<div class="lb-friends-note">Showing today\'s daily scores for friends on your list.</div>';
+  container.innerHTML = html;
 }
