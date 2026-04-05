@@ -38,9 +38,10 @@ const _LC_SHAKE_STR = 0.10;
 let _lcPhase    = 0;  // 0=idle, 1=anticipation, 2=aftermath
 let _lcPhaseAge = 0;
 let _lcNumLines = 0;
-let _lcIsTSpin      = false;  // current clear was triggered by a T-piece
-let _lcIsMiniTSpin  = false;  // current T-spin is a mini T-spin (2 corners)
-let _lcPerfectClear = false;  // board will be empty after this clear
+let _lcIsTSpin          = false;  // current clear was triggered by a T-piece
+let _lcIsMiniTSpin      = false;  // current T-spin is a mini T-spin (2 corners)
+let _lcPerfectClear     = false;  // board will be empty after this clear
+let _lcPerfectClearBonus = 0;     // bonus score awarded for perfect clear (shown in banner)
 
 // ─── Firework particles for T-spin / Perfect Clear ────────────────────────────
 // Simple pool-less burst using existing fragment pool; fired from _lcDetonate.
@@ -469,6 +470,19 @@ function checkLineClear(newBlocks) {
   }
   const _lcComputedScore = Math.round(baseScore * _b2bMult * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult);
   addScore(_lcComputedScore);
+
+  // Perfect Clear bonus: awarded on top of regular line-clear score.
+  // Bonus tiers (× level): 1-line=800, 2-line=1200, 3-line=1800, 4-line=2000.
+  // All active multipliers (blitz, gold rush, golden hour, depth) also apply.
+  if (_lcPerfectClear) {
+    const _pcBonusBase = [0, 800, 1200, 1800, 2000];
+    const _pcBase = _pcBonusBase[Math.min(completeLevels.length, 4)] * _level;
+    _lcPerfectClearBonus = Math.round(_pcBase * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult);
+    addScore(_lcPerfectClearBonus);
+  } else {
+    _lcPerfectClearBonus = 0;
+  }
+
   // Co-op: broadcast line-clear event so partner can score if local detection didn't fire
   if (isCoopMode && typeof coop !== 'undefined' && coop.state === CoopState.IN_GAME) {
     coop.send({ type: 'line_clear', rows: completeLevels, score: _lcComputedScore });
@@ -1015,10 +1029,11 @@ function _lcDetonate() {
     }
     // Banner for Perfect Clear (T-SPIN banner is set in checkLineClear; only update here for Perfect Clear)
     if (_lcPerfectClear && lineClearBannerEl) {
-      lineClearBannerEl.textContent = 'PERFECT CLEAR!';
-      lineClearBannerEl.style.color = '';
+      const _pcBonusLabel = _lcPerfectClearBonus > 0 ? '  +' + _lcPerfectClearBonus : '';
+      lineClearBannerEl.textContent = 'PERFECT CLEAR!' + _pcBonusLabel;
+      lineClearBannerEl.style.color = '#00e5ff';
       lineClearBannerEl.style.display = 'block';
-      bannerTimer = 2.0;
+      bannerTimer = 2.5;
     }
   }
 
