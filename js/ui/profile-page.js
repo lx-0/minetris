@@ -42,7 +42,16 @@ function _renderProfileHeader() {
   var borderClass = equippedBorder && equippedBorder.assets && equippedBorder.assets.animated
     ? ' profile-header-border-animated' : '';
 
+  // Avatar
+  var avatarHtml = '';
+  if (typeof getSelectedAvatar === 'function') {
+    avatarHtml = '<canvas id="profile-header-avatar" class="profile-header-avatar" width="48" height="48"></canvas>';
+  }
+
   var html = '<div class="profile-header' + borderClass + '">';
+  html += '<div class="profile-header-inner">';
+  if (avatarHtml) html += avatarHtml;
+  html += '<div class="profile-header-text">';
   html += '<div class="profile-name-row">';
   html += '<span class="profile-player-name">PLAYER</span>';
   if (prestigeStars) html += '<span class="profile-prestige-stars">' + prestigeStars + '</span>';
@@ -50,6 +59,8 @@ function _renderProfileHeader() {
   if (titleText) {
     html += '<div class="profile-title">' + _escProfileHtml(titleText) + '</div>';
   }
+  html += '</div>';
+  html += '</div>';
   html += '</div>';
   return html;
 }
@@ -258,6 +269,9 @@ function _renderMasteryDetail(modeKey) {
 function _renderWardrobeTabs() {
   var html = '<div class="profile-section-title">COSMETIC WARDROBE</div>';
   html += '<div class="profile-wardrobe-tabs">';
+  // Avatar tab first
+  var avatarTabActive = _profileActiveTab === 'avatar' ? ' profile-tab-active' : '';
+  html += '<button class="profile-tab-btn' + avatarTabActive + '" data-profile-tab="avatar">\uD83D\uDC64 Avatar</button>';
   for (var i = 0; i < PROFILE_COSMETIC_CATEGORIES.length; i++) {
     var cat = PROFILE_COSMETIC_CATEGORIES[i];
     var active = cat.key === _profileActiveTab ? ' profile-tab-active' : '';
@@ -381,6 +395,17 @@ function _renderWardrobeContent(categoryKey) {
   if (!el) return;
 
   _stopAnimPreviewLoop();
+
+  // Avatar tab — rendered by player-avatar.js
+  if (categoryKey === 'avatar') {
+    if (typeof renderAvatarSelectorHtml === 'function') {
+      el.innerHTML = renderAvatarSelectorHtml();
+      if (typeof mountAvatarSelector === 'function') mountAvatarSelector(el);
+    } else {
+      el.innerHTML = '<div class="av-unavailable">Avatar system not loaded.</div>';
+    }
+    return;
+  }
 
   var allInCat = typeof getCosmeticsByCategory === 'function'
     ? getCosmeticsByCategory(categoryKey) : [];
@@ -949,6 +974,12 @@ function renderProfilePage() {
   html += '<div id="profile-history-content"' + (_profileMainTab === 'wardrobe' ? ' style="display:none"' : '') + '></div>';
 
   body.innerHTML = html;
+
+  // Mount avatar canvas in header
+  var headerAvCanvas = body.querySelector('#profile-header-avatar');
+  if (headerAvCanvas && typeof renderAvatarToCanvas === 'function') {
+    renderAvatarToCanvas(headerAvCanvas, getSelectedAvatar(), getSelectedFrame());
+  }
 
   // Wire showcase launcher buttons
   var showcaseOpenBtn = body.querySelector('#profile-showcase-open-btn');

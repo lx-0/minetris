@@ -499,9 +499,13 @@ function _doRenderLeaderboard(container) {
     const verifiedBadge = e.verified
       ? '<span class="lb-verified-badge" title="Score verified by server replay check">\u2714</span> '
       : '';
+    // Local player gets a 24×24 avatar thumbnail (lazy-rendered via data attribute)
+    const avatarHtml = isMe && typeof renderAvatarToCanvas === 'function'
+      ? '<canvas class="lb-avatar-thumb" data-lb-avatar="1" width="24" height="24" style="vertical-align:middle;margin-right:4px;image-rendering:pixelated;"></canvas>'
+      : '';
     html += '<tr' + cls + '>' +
       '<td>' + rankCell + '</td>' +
-      '<td>' + verifiedBadge + nameCell + '</td>' +
+      '<td>' + verifiedBadge + avatarHtml + nameCell + '</td>' +
       '<td>' + scoreVal + '</td>' +
       '<td>' + col2Val + '</td>' +
       '</tr>';
@@ -524,6 +528,12 @@ function _doRenderLeaderboard(container) {
   }
 
   container.innerHTML = html;
+
+  // Lazy-render local player avatar thumbnail
+  const lbAvatarThumb = container.querySelector('.lb-avatar-thumb[data-lb-avatar]');
+  if (lbAvatarThumb && typeof renderAvatarToCanvas === 'function' && typeof getSelectedAvatar === 'function') {
+    renderAvatarToCanvas(lbAvatarThumb, getSelectedAvatar(), getSelectedFrame ? getSelectedFrame() : 'none');
+  }
 
   // Record rank for trend tracking (first time we see it this session)
   if (myVisibleEntry && tabKey && _lbPrevRank(tabKey) === null) {

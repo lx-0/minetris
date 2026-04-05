@@ -335,9 +335,21 @@ function drawProfileCardCanvas() {
   ctx.textAlign = 'right';
   ctx.fillText('MINETRIS', W - 18, H - 14);
 
+  // Avatar thumbnail (48×48 drawn at top-left of header)
+  if (typeof createAvatarCanvas === 'function') {
+    try {
+      var avC = createAvatarCanvas(
+        typeof getSelectedAvatar === 'function' ? getSelectedAvatar() : 'steve',
+        typeof getSelectedFrame  === 'function' ? getSelectedFrame()  : 'none',
+        48
+      );
+      ctx.drawImage(avC, 16, 8, 48, 48);
+    } catch (_) {}
+  }
+
   // Player name
   ctx.textAlign = 'left';
-  var nameX = 20;
+  var nameX = typeof createAvatarCanvas === 'function' ? 72 : 20;
   var nameStr = (displayName || 'PLAYER').toUpperCase();
   if (featuredAch) {
     // Draw featured badge emoji before name

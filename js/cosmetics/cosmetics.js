@@ -444,6 +444,53 @@ const COSMETIC_REGISTRY = [
     description:     'Defeated the Warden in Boss Battle mode',
   },
 
+  // ── Achievement / Milestone Titles ───────────────────────────────────────
+  {
+    id:              'title_block_breaker',
+    category:        'title',
+    name:            'Block Breaker',
+    rarity:          'common',
+    unlockCondition: { type: 'level', value: 10 },
+    assets:          { displayText: 'Block Breaker' },
+    description:     'Reach level 10',
+  },
+  {
+    id:              'title_speed_demon',
+    category:        'title',
+    name:            'Speed Demon',
+    rarity:          'rare',
+    unlockCondition: { type: 'mastery', mode: 'sprint', tier: 'bronze' },
+    assets:          { displayText: 'Speed Demon', nameColor: '#ff6600' },
+    description:     'Earn Bronze mastery in Sprint mode',
+  },
+  {
+    id:              'title_peaceful_soul',
+    category:        'title',
+    name:            'Peaceful Soul',
+    rarity:          'rare',
+    unlockCondition: { type: 'level', value: 20 },
+    assets:          { displayText: 'Peaceful Soul', nameColor: '#9B59B6' },
+    description:     'Reach level 20',
+  },
+  {
+    id:              'title_dungeon_delver',
+    category:        'title',
+    name:            'Dungeon Delver',
+    rarity:          'epic',
+    unlockCondition: { type: 'achievement', value: 'geologist' },
+    assets:          { displayText: 'Dungeon Delver', nameColor: '#8B6914' },
+    description:     'Unlock the Geologist achievement',
+  },
+  {
+    id:              'title_puzzle_solver',
+    category:        'title',
+    name:            'Puzzle Solver',
+    rarity:          'rare',
+    unlockCondition: { type: 'mastery', mode: 'daily', tier: 'bronze' },
+    assets:          { displayText: 'Puzzle Solver', nameColor: '#4fc3f7' },
+    description:     'Earn Bronze mastery in Daily Challenge mode',
+  },
+
 ];
 
 // ── Persistence helpers ─────────────────────────────────────────────────────────

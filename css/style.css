@@ -20910,3 +20910,114 @@ body.hc-mode .lang-btn-active { background: #ff0 !important; color: #000 !import
   text-align: center;
   flex-shrink: 0;
 }
+
+/* ── Player Avatar System ──────────────────────────────────────────────────── */
+.profile-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.profile-header-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.profile-header-avatar {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* Avatar selector section */
+.av-section {
+  padding: 8px 0;
+}
+.av-preview-area {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.av-preview-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border: 2px solid rgba(0,255,0,0.3);
+  border-radius: 6px;
+}
+.av-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: #4ade80;
+  letter-spacing: 1px;
+  margin: 10px 0 6px 0;
+}
+.av-skin-grid,
+.av-frame-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.av-skin-card,
+.av-frame-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 4px;
+  cursor: pointer;
+  background: rgba(0,0,0,0.3);
+  transition: border-color 0.15s;
+  min-width: 44px;
+}
+.av-skin-card:hover,
+.av-frame-card:not(.av-frame-locked):hover {
+  border-color: rgba(0,255,0,0.4);
+}
+.av-skin-card.av-skin-active {
+  border-color: #0f0;
+  box-shadow: 0 0 6px rgba(0,255,0,0.4);
+}
+.av-frame-card.av-frame-active {
+  border-color: #0f0;
+  box-shadow: 0 0 6px rgba(0,255,0,0.4);
+}
+.av-frame-card.av-frame-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.av-skin-mini,
+.av-frame-mini {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.av-skin-name,
+.av-frame-name {
+  font-size: 7px;
+  color: #ccc;
+  text-align: center;
+  max-width: 52px;
+  word-break: break-word;
+}
+.av-frame-lock {
+  font-size: 6px;
+  color: #888;
+  text-align: center;
+  max-width: 60px;
+  word-break: break-word;
+}
+.av-unavailable {
+  color: #888;
+  font-size: 12px;
+  padding: 16px;
+}
+
+/* Leaderboard avatar thumb */
+.lb-avatar-thumb {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border-radius: 2px;
+}
