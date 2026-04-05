@@ -638,6 +638,9 @@ function applyNudge(dx, dz) {
   nudgeCooldown = NUDGE_COOLDOWN_SECS;
   piece.userData.nudgePulseEnd = clock.getElapsedTime() + NUDGE_EMISSIVE_PULSE_SECS;
 
+  // Force an immediate trail snapshot so the afterimage shows the pre-nudge position.
+  if (piece.userData.trail) piece.userData.trail.pendingSnapshot = true;
+
   // Swoosh particles from piece center
   const center = new THREE.Vector3();
   const _tv = new THREE.Vector3();

@@ -7,10 +7,11 @@
 //   updateTrails(delta, t)    — call every frame
 //   disposePieceTrail(piece)  — call just before piece lands
 
-const TRAIL_SEGMENTS    = 8;    // ghost copies per block
-const TRAIL_MAX_OPACITY = 0.30; // opacity at the segment closest to the piece
-const TRAIL_SCALE_NEAR  = 0.88; // scale of the nearest segment
-const TRAIL_SCALE_FAR   = 0.42; // scale of the farthest segment
+const TRAIL_SEGMENTS      = 12;   // ghost copies per block
+const TRAIL_MAX_OPACITY   = 0.45; // opacity at the segment closest to the piece
+const TRAIL_SCALE_NEAR    = 0.92; // scale of the nearest segment
+const TRAIL_SCALE_FAR     = 0.38; // scale of the farthest segment
+const TRAIL_SAMPLE_INTERVAL = 0.06; // seconds between position snapshots (~4 frames at 60 fps)
 
 // Material-matched trail emissive colors keyed by colorIndex.
 // Gold (3): warm amber, Ice (4): cold blue-cyan, Lava (6): orange-red.
@@ -122,11 +123,13 @@ function createPieceTrail(piece) {
   piece.userData.trail = {
     posHistory,
     segmentMeshes,
-    historyHead:   0,  // next slot to write
-    historyFilled: 0,  // how many slots contain valid data
+    historyHead:     0,     // next slot to write
+    historyFilled:   0,     // how many slots contain valid data
     blockCount,
-    emissiveColor,     // THREE.Color or null — used for ground-proximity pulse
-    isLava,            // bool — enables per-segment flicker
+    emissiveColor,          // THREE.Color or null — used for ground-proximity pulse
+    isLava,                 // bool — enables per-segment flicker
+    sampleAccum:     0,     // seconds since last position snapshot
+    pendingSnapshot: false, // set true by nudge for immediate snapshot
   };
 }
 
@@ -185,14 +188,23 @@ function updateTrails(delta, elapsedTime) {
     }
 
     // ── Record current block world positions into ring buffer ───────────────
-    const head = trail.historyHead;
-    for (let b = 0; b < actualBlocks; b++) {
-      piece.children[b].getWorldPosition(posHistory[b][head]);
+    // Sample at fixed intervals (or immediately on nudge) so ghost images are
+    // visibly spaced apart rather than bunched every frame.
+    trail.sampleAccum += delta;
+    if (trail.sampleAccum >= TRAIL_SAMPLE_INTERVAL || trail.pendingSnapshot) {
+      trail.sampleAccum    = 0;
+      trail.pendingSnapshot = false;
+      const head = trail.historyHead;
+      for (let b = 0; b < actualBlocks; b++) {
+        piece.children[b].getWorldPosition(posHistory[b][head]);
+      }
+      trail.historyHead   = (head + 1) % TRAIL_SEGMENTS;
+      trail.historyFilled = Math.min(trail.historyFilled + 1, TRAIL_SEGMENTS);
     }
-    trail.historyHead   = (head + 1) % TRAIL_SEGMENTS;
-    trail.historyFilled = Math.min(trail.historyFilled + 1, TRAIL_SEGMENTS);
 
     // ── Position and show/hide segment meshes ──────────────────────────────
+    // historyHead points to the NEXT slot to write; most recent data is one behind it.
+    const mostRecentSlot = (trail.historyHead - 1 + TRAIL_SEGMENTS) % TRAIL_SEGMENTS;
     const filled = trail.historyFilled;
     for (let b = 0; b < actualBlocks; b++) {
       for (let s = 0; s < TRAIL_SEGMENTS; s++) {
@@ -203,16 +215,17 @@ function updateTrails(delta, elapsedTime) {
           continue;
         }
 
-        // s = 0  → most recent position (closest to piece)
-        // s = N  → oldest position in buffer (farthest, far end of trail)
-        const histIdx = (head - s + TRAIL_SEGMENTS) % TRAIL_SEGMENTS;
+        // s = 0  → most recent snapshot (closest to piece)
+        // s = N  → oldest snapshot in buffer (farthest, far end of trail)
+        const histIdx = (mostRecentSlot - s + TRAIL_SEGMENTS) % TRAIL_SEGMENTS;
         mesh.position.copy(posHistory[b][histIdx]);
         mesh.visible = true;
 
         const t     = s / Math.max(visSegments - 1, 1);        // 0 near, 1 far
         const scale = THREE.MathUtils.lerp(TRAIL_SCALE_NEAR, TRAIL_SCALE_FAR, t);
         mesh.scale.setScalar(scale);
-        let segOpacity = TRAIL_MAX_OPACITY * (1 - t) * (speedRatio / 3);
+        // Exponential falloff: recent ghosts are clearly visible, far ones fade quickly.
+        let segOpacity = TRAIL_MAX_OPACITY * Math.pow(1 - t, 1.5);
         if (isLava) segOpacity *= 0.85 + 0.15 * Math.random();
         mesh.material.opacity = segOpacity;
       }
