@@ -75,6 +75,7 @@ function _triggerPuzzleWin() {
       checkLevelUp(_pzXpBefore, loadLifetimeStats().playerXP || 0);
     }
     if (typeof updateStreakHUD === 'function') updateStreakHUD();
+    if (typeof awardXpPassGameEnd === 'function') awardXpPassGameEnd(false);
   }
 
   // Achievements

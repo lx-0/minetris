@@ -29,6 +29,7 @@ function init() {
   if (typeof initSeasonBanner === "function") initSeasonBanner();
   if (typeof initSeasonHUD === "function") initSeasonHUD();
   if (typeof initSeasonPassPanel === "function") initSeasonPassPanel();
+  if (typeof initXpSeasonPass === "function") initXpSeasonPass();
   if (typeof initBiomeCosmeticsPanel === "function") initBiomeCosmeticsPanel();
   if (typeof initBiomeLeaderboard === "function") initBiomeLeaderboard();
 

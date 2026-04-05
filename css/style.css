@@ -10575,6 +10575,175 @@ body.sandstorm-active [data-ghost-piece] {
   cursor: pointer;
 }
 
+/* ── Season Pass Tab Navigation ─────────────────────────────────────────────── */
+#sp-tab-nav {
+  display: flex;
+  gap: 4px;
+  padding: 0 16px 0;
+  border-bottom: 1px solid rgba(0,255,136,0.2);
+  margin-bottom: 0;
+}
+.sp-tab-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  padding: 7px 12px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(0,255,136,0.2);
+  border-bottom: none;
+  color: rgba(0,255,136,0.55);
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+  transition: background 0.15s, color 0.15s;
+}
+.sp-tab-btn:hover { background: rgba(0,255,136,0.12); color: #00ff88; }
+.sp-tab-active { background: rgba(0,255,136,0.14) !important; color: #00ff88 !important; border-color: rgba(0,255,136,0.5) !important; }
+
+/* ── XP Pass tab body wrapper ────────────────────────────────────────────────── */
+#sp-tab-body-xp,
+#sp-tab-body-history,
+#sp-tab-body-battle {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+/* ── XP Pass header ──────────────────────────────────────────────────────────── */
+.xpp-header {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(0,255,136,0.25);
+  border-radius: 6px;
+}
+.xpp-season-name {
+  font-family: "Press Start 2P", cursive;
+  font-size: 10px;
+  color: #00ff88;
+  margin-bottom: 6px;
+}
+.xpp-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+.xpp-tier-label { color: #fff; font-weight: bold; }
+.xpp-xp-val     { color: #aaa; }
+.xpp-days-left  { color: #00ccff; }
+.xpp-2x-badge {
+  background: rgba(255,200,0,0.2);
+  border: 1px solid rgba(255,200,0,0.6);
+  color: #ffd700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  animation: xpp2xPulse 1.4s ease-in-out infinite;
+}
+@keyframes xpp2xPulse {
+  0%,100% { opacity: 1; } 50% { opacity: 0.6; }
+}
+.xpp-bar-wrap {
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.xpp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg,#00cc66,#00ff88);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.xpp-bar-label { font-size: 9px; color: #888; }
+
+/* ── XP sources legend ───────────────────────────────────────────────────────── */
+.xpp-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 14px;
+  font-size: 9px;
+  color: #888;
+}
+.xpp-source-item { white-space: nowrap; }
+.xpp-source-boost { color: #ffd700; }
+
+/* ── Tier track ──────────────────────────────────────────────────────────────── */
+.xpp-tier-track {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.xpp-tier-row {
+  display: grid;
+  grid-template-columns: 28px 22px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 5px;
+  transition: border-color 0.15s;
+}
+.xpp-tier-row.xpp-earned {
+  border-color: rgba(0,255,136,0.35);
+  background: rgba(0,255,136,0.07);
+}
+.xpp-tier-row.xpp-current {
+  border-color: rgba(0,200,255,0.5);
+  background: rgba(0,200,255,0.06);
+  box-shadow: 0 0 6px rgba(0,200,255,0.15);
+}
+.xpp-tier-row.xpp-next {
+  border-color: rgba(255,200,0,0.35);
+}
+.xpp-tier-num {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: rgba(255,255,255,0.45);
+  text-align: right;
+}
+.xpp-tier-status { font-size: 13px; text-align: center; }
+.xpp-tier-content { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.xpp-tier-name {
+  font-size: 10px;
+  color: #ddd;
+  flex: 1 1 auto;
+}
+.xpp-reward-icon { margin-right: 4px; }
+.xpp-tier-type-badge {
+  font-size: 8px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.xpp-type-badge        { background: rgba(100,150,255,0.2); color: #8abaff; border: 1px solid rgba(100,150,255,0.4); }
+.xpp-type-border       { background: rgba(200,160,60,0.2);  color: #e0b84a; border: 1px solid rgba(200,160,60,0.4); }
+.xpp-type-theme_color  { background: rgba(80,220,80,0.2);   color: #6edd6e; border: 1px solid rgba(80,220,80,0.4); }
+.xpp-type-block_skin   { background: rgba(180,90,30,0.2);   color: #d47740; border: 1px solid rgba(180,90,30,0.4); }
+.xpp-type-trail        { background: rgba(200,80,200,0.2);  color: #dd6edd; border: 1px solid rgba(200,80,200,0.4); }
+.xpp-type-particle     { background: rgba(255,210,0,0.15);  color: #ffdb4a; border: 1px solid rgba(255,210,0,0.4); }
+.xpp-type-full_cosmetic{ background: rgba(0,200,255,0.15);  color: #4ae0ff; border: 1px solid rgba(0,200,255,0.4); }
+.xpp-tier-xp-needed { font-size: 9px; color: #777; width: 100%; }
+
+/* ── History tab ─────────────────────────────────────────────────────────────── */
+.xpp-history-empty { font-size: 10px; color: #666; text-align: center; padding: 24px 0; }
+.xpp-history-list  { display: flex; flex-direction: column; gap: 8px; }
+.xpp-history-entry {
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 5px;
+}
+.xpp-history-name  { font-family: "Press Start 2P", cursive; font-size: 9px; color: #00ff88; margin-bottom: 5px; }
+.xpp-history-meta  { display: flex; gap: 12px; font-size: 9px; margin-bottom: 6px; }
+.xpp-history-tier  { color: #fff; }
+.xpp-history-dates { color: #666; }
+.xpp-history-rewards { display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px; }
+
 /* ── Reward notification in season-end screen ────────────────────────────── */
 .season-reward-notification {
   margin-top: 12px;

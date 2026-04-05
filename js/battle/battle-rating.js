@@ -146,6 +146,9 @@ function applyTournamentWinBonus() {
     awardGuildXP('tournament_match_win');
   }
 
+  // XP Season Pass: 50 XP for tournament win
+  if (typeof awardXpPassTournamentWin === 'function') awardXpPassTournamentWin();
+
   if (_isNewHigh && typeof onSeasonMissionRatingHigh === 'function') {
     onSeasonMissionRatingHigh();
   }

@@ -88,6 +88,7 @@ function triggerBlitzComplete() {
   }
   if (typeof checkLevelUp === 'function') checkLevelUp(_blitzXpBefore, loadLifetimeStats().playerXP || 0);
   if (typeof updateStreakHUD === 'function') updateStreakHUD();
+  if (typeof awardXpPassGameEnd === 'function') awardXpPassGameEnd(false);
 
   const finalScore = score;
   const isNewBest  = saveBlitzBest(finalScore);

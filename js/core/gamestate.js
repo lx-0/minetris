@@ -363,6 +363,9 @@ function triggerGameOver() {
   // Coach mark: first game over — explain XP and leveling
   if (typeof coachMarkGameOver === 'function') coachMarkGameOver();
 
+  // XP Season Pass: 10 XP for game completion, +25 XP bonus for daily challenge
+  if (typeof awardXpPassGameEnd === 'function') awardXpPassGameEnd(!!isDailyChallenge);
+
   // Key lifetime stats on game-over screen
   const lifetimeStats = loadLifetimeStats();
   const goLifetimeEl = document.getElementById('go-lifetime-stats');

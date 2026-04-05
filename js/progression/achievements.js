@@ -108,6 +108,9 @@ function unlockAchievement(id) {
     }
   }
 
+  // XP Season Pass: 5 XP per achievement unlock
+  if (typeof awardXpPassAchievement === 'function') awardXpPassAchievement();
+
   // Completionist check (unlocking 10 others — don't count itself)
   const total = Object.keys(state).length;
   if (total >= 10 && !state["completionist"]) {

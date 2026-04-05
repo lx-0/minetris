@@ -205,6 +205,9 @@ function checkLineClear(newBlocks) {
   // Seasonal events: track challenge progress
   if (typeof onSeasonalLineClear === "function") onSeasonalLineClear(completeLevels.length);
 
+  // XP Season Pass: 1 XP per line cleared
+  if (typeof awardXpPassLines === "function") awardXpPassLines(completeLevels.length);
+
   // Screen reader: announce line clear count
   if (typeof announceToScreenReader === "function") {
     const n = completeLevels.length;

@@ -104,6 +104,7 @@ function triggerSprintComplete() {
   }
   if (typeof checkLevelUp === 'function') checkLevelUp(_sprintXpBefore, loadLifetimeStats().playerXP || 0);
   if (typeof updateStreakHUD === 'function') updateStreakHUD();
+  if (typeof awardXpPassGameEnd === 'function') awardXpPassGameEnd(false);
 
   const finalTimeMs = sprintElapsedMs;
   const isNewBest   = saveSprintBest(finalTimeMs);
