@@ -513,8 +513,12 @@ function init() {
         instructions.style.display = "none";
         blocker.style.display = "none";
         if (typeof startBgMusic === "function") startBgMusic();
-        // Transition from menu mood → calm when gameplay begins
-        if (typeof forceAmbientMood === "function") forceAmbientMood("calm");
+        // Transition from menu mood to a mode-specific initial mood
+        if (typeof forceAmbientMood === "function") {
+          const _isSurvival = (typeof isSurvivalMode !== 'undefined' && isSurvivalMode) ||
+                              (typeof isEndlessSurvivalMode !== 'undefined' && isEndlessSurvivalMode);
+          forceAmbientMood(_isSurvival ? 'tense' : 'calm');
+        }
         // First-run tutorial (v4.0 — 7-step interactive overlay)
         if (typeof initTutorial === "function" &&
             !(typeof isReplayMode !== 'undefined' && isReplayMode)) {

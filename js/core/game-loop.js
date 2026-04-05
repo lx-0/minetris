@@ -104,7 +104,7 @@ function animate() {
     }
 
     // ── Ambient mood decision — maps game state to audio mood ──────────────
-    // Intensity tiers: Calm (<40%), Tension (40–70%), Danger (>70%)
+    // Intensity tiers: Calm (<33%), Tension (33–66%), High (66–80%), Danger (>80%)
     if (typeof setAmbientMood === 'function' && typeof getMaxBlockHeight === 'function') {
       var _heightRatio = getMaxBlockHeight() / GAME_OVER_HEIGHT;
       var _bossActive = (typeof getBossState === 'function') &&
@@ -112,12 +112,14 @@ function animate() {
       var _stormActive = (typeof pieceStormActive !== 'undefined') && pieceStormActive;
       var _creeperFuseActive = (typeof _creeperFusing !== 'undefined') && _creeperFusing;
 
-      if (_bossActive || _stormActive || _creeperFuseActive || _heightRatio >= 0.70) {
-        setAmbientMood('intense'); // Danger tier
-      } else if (_heightRatio >= 0.40) {
-        setAmbientMood('tense');   // Tension tier
+      if (_bossActive || _stormActive || _creeperFuseActive || _heightRatio >= 0.80) {
+        setAmbientMood('danger');  // Critical danger tier (>80% or boss/storm/creeper)
+      } else if (_heightRatio >= 0.66) {
+        setAmbientMood('intense'); // High intensity tier (66–80%)
+      } else if (_heightRatio >= 0.33) {
+        setAmbientMood('tense');   // Tension tier (33–66%)
       } else {
-        setAmbientMood('calm');    // Calm tier
+        setAmbientMood('calm');    // Calm tier (<33%)
       }
 
       // Update music tempo based on stack height and game speed

@@ -36,6 +36,7 @@ function triggerBattleResult(result) {
   }
 
   if (typeof stopBgMusic === 'function') stopBgMusic();
+  if (result === 'win' && typeof playVictoryFanfare === 'function') playVictoryFanfare();
 
   // Award flat XP for battle (win: 150, draw: 75, loss: 50)
   const _xpEarned = result === 'win' ? 150 : result === 'draw' ? 75 : 50;

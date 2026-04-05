@@ -149,6 +149,17 @@ function playLineClearSound(numLines) {
       try { glassBreakSynth.triggerAttackRelease('32n', now + 0.18); } catch (_e) {}
     }
   }
+  // Melodic sting for 1-2 line clears — brief ascending note pair/triplet
+  if (clearSynth && numLines <= 2) {
+    if (numLines === 1) {
+      try { clearSynth.triggerAttackRelease('E4', '16n', now + 0.05, 0.30); } catch (_e) {}
+      try { clearSynth.triggerAttackRelease('G4', '16n', now + 0.16, 0.22); } catch (_e) {}
+    } else { // 2 lines
+      try { clearSynth.triggerAttackRelease('E4', '16n', now + 0.05, 0.35); } catch (_e) {}
+      try { clearSynth.triggerAttackRelease('G4', '16n', now + 0.14, 0.30); } catch (_e) {}
+      try { clearSynth.triggerAttackRelease('A4', '16n', now + 0.23, 0.25); } catch (_e) {}
+    }
+  }
   // Subtle rising tone layer for 3-4 line clears (satisfying sweep)
   if (clearSynth && numLines >= 3) {
     const sweepNotes = numLines >= 4
@@ -196,6 +207,23 @@ function playCoreVictoryFanfare() {
   var fanfare = ["C4", "E4", "G4", "C5", "E5", "G5", "C6"];
   for (var i = 0; i < fanfare.length; i++) {
     clearSynth.triggerAttackRelease(fanfare[i], "8n", now + i * 0.12);
+  }
+}
+
+/** Triumphant victory fanfare for multiplayer / vs-AI wins — ascending G major with resolve. */
+function playVictoryFanfare() {
+  if (!audioReady || !clearSynth) return;
+  const now = Tone.now();
+  // Ascending G major arpeggio, crescendo to final held note
+  const notes = ['G4', 'B4', 'D5', 'G5', 'B5', 'D6', 'G6'];
+  for (let i = 0; i < notes.length; i++) {
+    const dur = i === notes.length - 1 ? '4n' : '16n';
+    const vel = Math.min(0.65 + i * 0.05, 1.0);
+    try { clearSynth.triggerAttackRelease(notes[i], dur, now + i * 0.13, vel); } catch (_e) {}
+  }
+  // Warm bass resolution thud
+  if (rumbleSynth) {
+    try { rumbleSynth.triggerAttackRelease('G2', '2n', now + notes.length * 0.13 + 0.05); } catch (_e) {}
   }
 }
 

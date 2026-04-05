@@ -85,8 +85,12 @@ const _amb = {
   padGain:    null,
   bass:       null,   // low sine drone
   bassGain:   null,
+  // Danger percussion layer (active in 'danger' mood only)
+  kick:       null,   // MembraneSynth for danger kick drum
+  kickGain:   null,   // gain for kick layer (0 when not in danger)
+  kickLoopId: null,   // Tone.Transport repeat id for kick pattern
   // Scheduling state
-  mood:       'calm', // 'calm' | 'tense' | 'intense' | 'menu'
+  mood:       'calm', // 'calm' | 'tense' | 'intense' | 'danger' | 'menu'
   nextPhrase: 0,      // Tone.now() time for next phrase
   silenceUntil: 0,    // breathing pause until this time
   loopId:     null,   // Tone.Transport scheduled repeat id
@@ -353,7 +357,7 @@ function initAudio() {
 
 // ── Ambient music system ─────────────────────────────────────────────────────
 // C418-inspired: sparse piano motifs, warm pads, low drones, breathing silences.
-// Two mood states (calm / tense) with smooth crossfading between them.
+// Four mood states (calm / tense / intense / danger) with smooth crossfading.
 
 // Key centres — rotate for emotional variety
 const _AMB_KEYS = [
@@ -415,6 +419,15 @@ function _initBgMusic() {
   }).connect(_amb.bassGain);
   _amb.bass.volume.value = -18;
 
+  // Danger kick drum — MembraneSynth, starts silent (activated in danger mood)
+  _amb.kickGain = new Tone.Gain(0).connect(_amb.gain);
+  _amb.kick = new Tone.MembraneSynth({
+    pitchDecay: 0.05,
+    octaves: 5,
+    envelope: { attack: 0.001, decay: 0.18, sustain: 0, release: 0.1 },
+  }).connect(_amb.kickGain);
+  _amb.kick.volume.value = -10;
+
   Tone.Transport.bpm.value = 72; // slow, contemplative tempo
 }
 
@@ -427,6 +440,7 @@ const _AMB_TEMPO_BPM = {
   calm:    72,   // sparse, contemplative
   tense:   90,   // slightly faster, more urgent
   intense: 112,  // high stakes, driven
+  danger:  132,  // critical — urgent percussion, dramatic bass
   menu:    60,   // very slow, ambient
 };
 
@@ -482,9 +496,10 @@ function _ambPlayPhrase(startTime) {
 
   // --- Piano motif: note count and character varies by mood ---
   var baseNoteCount = 3 + Math.floor(Math.random() * 4);
-  // Menu: fewer notes (1–3), intense: more notes (4–7)
+  // Menu: fewer notes (1–3), intense: more notes (4–7), danger: most notes (5–8)
   if (_amb.mood === 'menu') baseNoteCount = 1 + Math.floor(Math.random() * 3);
   if (_amb.mood === 'intense') baseNoteCount = 4 + Math.floor(Math.random() * 4);
+  if (_amb.mood === 'danger') baseNoteCount = 5 + Math.floor(Math.random() * 4);
   var noteCount = baseNoteCount;
   var t = startTime;
   for (var i = 0; i < noteCount; i++) {
@@ -509,6 +524,12 @@ function _ambPlayPhrase(startTime) {
       gap *= 0.45;
       vel += 0.15;
       dur *= 0.7;
+    }
+    // Danger mood: rapid-fire, loudest, most urgent
+    if (_amb.mood === 'danger') {
+      gap *= 0.28;
+      vel += 0.25;
+      dur *= 0.45;
     }
 
     try {
@@ -540,6 +561,14 @@ function _ambPlayPhrase(startTime) {
     var chord  = chords[Math.floor(Math.random() * chords.length)];
     try {
       _amb.pad.triggerAttackRelease(chord, phraseDur * 0.3, startTime + 0.2, 0.15);
+    } catch (_e) {}
+  }
+  // Danger mood: sharp, stabby pad — barely audible, all focus on piano/bass/kick
+  if (_amb.mood === 'danger' && Math.random() < 0.3) {
+    var chords = _AMB_CHORDS[root] || _AMB_CHORDS['A'];
+    var chord  = chords[Math.floor(Math.random() * chords.length)];
+    try {
+      _amb.pad.triggerAttackRelease(chord, phraseDur * 0.2, startTime + 0.1, 0.10);
     } catch (_e) {}
   }
   // Menu mood: rare, whisper-quiet pad — mostly silence
@@ -578,10 +607,12 @@ function _ambLoop(time) {
   var _silenceThreshold = 3 + Math.floor(Math.random() * 3);
   if (_amb.mood === 'menu') _silenceThreshold = 1 + Math.floor(Math.random() * 2); // more silence
   if (_amb.mood === 'intense') _silenceThreshold = 5 + Math.floor(Math.random() * 3); // less silence
+  if (_amb.mood === 'danger') _silenceThreshold = 8 + Math.floor(Math.random() * 4); // almost no silence
   if (_amb.phraseCount > 0 && _amb.phraseCount % _silenceThreshold === 0) {
     var silenceDur = 4 + Math.random() * 4;
     if (_amb.mood === 'menu') silenceDur = 6 + Math.random() * 8; // long pauses
     if (_amb.mood === 'intense') silenceDur = 2 + Math.random() * 2; // brief pauses
+    if (_amb.mood === 'danger') silenceDur = 0.5 + Math.random() * 0.8; // barely any silence
     _amb.silenceUntil = now + silenceDur;
     // Rotate key during silence for variety
     _amb.keyIndex = (_amb.keyIndex + 1) % _AMB_KEYS.length;
@@ -604,7 +635,7 @@ function _ambLoop(time) {
  */
 function setAmbientMood(mood) {
   if (!_amb.gain) return;
-  if (mood !== 'calm' && mood !== 'tense' && mood !== 'intense' && mood !== 'menu') return;
+  if (mood !== 'calm' && mood !== 'tense' && mood !== 'intense' && mood !== 'menu' && mood !== 'danger') return;
   if (mood === _amb.mood) return; // no-op if already in this mood
 
   // Debounce: prevent rapid mood flicker (1.5s minimum between changes)
@@ -614,6 +645,16 @@ function setAmbientMood(mood) {
   _amb.mood = mood;
 
   var fadeTime = 2.0; // 2 second crossfade
+
+  // Stop danger kick drum when leaving danger mood
+  if (mood !== 'danger') {
+    if (_amb.kickLoopId !== null) {
+      try { Tone.Transport.clear(_amb.kickLoopId); } catch (_e) {}
+      _amb.kickLoopId = null;
+    }
+    if (_amb.kickGain) _amb.kickGain.gain.rampTo(0, 1.0);
+  }
+
   if (mood === 'menu') {
     // Ultra-sparse: very quiet piano, no pad, no bass — mostly silence
     _amb.piano.volume.rampTo(-16, fadeTime);
@@ -625,10 +666,24 @@ function setAmbientMood(mood) {
     _amb.padGain.gain.rampTo(0.25, fadeTime);
     _amb.bassGain.gain.rampTo(0.6, fadeTime);
   } else if (mood === 'intense') {
-    // Boss fight: prominent bass, louder piano, minimal pad for tension
+    // High stakes: prominent bass, louder piano, minimal pad for tension
     _amb.piano.volume.rampTo(-4, fadeTime);
     _amb.padGain.gain.rampTo(0.15, fadeTime);
     _amb.bassGain.gain.rampTo(0.8, fadeTime);
+  } else if (mood === 'danger') {
+    // Critical danger: maximum bass, loudest piano, near-silent pad + kick drum
+    _amb.piano.volume.rampTo(-2, fadeTime);
+    _amb.padGain.gain.rampTo(0.08, fadeTime);
+    _amb.bassGain.gain.rampTo(1.1, fadeTime);
+    // Start repeating kick drum pattern on quarter notes
+    if (_amb.kick && _amb.kickLoopId === null) {
+      _amb.kickGain.gain.rampTo(0.7, fadeTime);
+      _amb.kickLoopId = Tone.Transport.scheduleRepeat(function(time) {
+        if (_amb.mood === 'danger' && _amb.kick) {
+          try { _amb.kick.triggerAttackRelease('C1', '16n', time); } catch (_e) {}
+        }
+      }, '4n');
+    }
   } else {
     // Default calm levels
     _amb.piano.volume.rampTo(-10, fadeTime);
@@ -680,6 +735,13 @@ function stopBgMusic() {
   if (!audioReady || !_amb.gain || !bgMusicPlaying) return;
   bgMusicPlaying = false;
 
+  // Clean up danger kick drum
+  if (_amb.kickLoopId !== null) {
+    try { Tone.Transport.clear(_amb.kickLoopId); } catch (_e) {}
+    _amb.kickLoopId = null;
+  }
+  if (_amb.kickGain) _amb.kickGain.gain.cancelScheduledValues(Tone.now());
+
   // 3 second fade out
   _amb.gain.gain.rampTo(0, 3);
   setTimeout(() => {
@@ -705,6 +767,15 @@ function resetBgMusic() {
   if (_amb.loopId !== null) {
     try { Tone.Transport.clear(_amb.loopId); } catch (_e) {}
     _amb.loopId = null;
+  }
+  // Clean up danger kick drum
+  if (_amb.kickLoopId !== null) {
+    try { Tone.Transport.clear(_amb.kickLoopId); } catch (_e) {}
+    _amb.kickLoopId = null;
+  }
+  if (_amb.kickGain) {
+    _amb.kickGain.gain.cancelScheduledValues(Tone.now());
+    _amb.kickGain.gain.setValueAtTime(0, Tone.now());
   }
   Tone.Transport.stop();
   _amb.phraseCount  = 0;

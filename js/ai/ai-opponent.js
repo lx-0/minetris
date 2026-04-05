@@ -935,6 +935,9 @@
     if (state.p1.wins >= 2 || state.p2.wins >= 2) {
       state.phase = 'match_over';
       _recordStats(state.p1.wins > state.p2.wins);
+      if (state.p1.wins > state.p2.wins && typeof playVictoryFanfare === 'function') {
+        playVictoryFanfare();
+      }
     }
   }
 
