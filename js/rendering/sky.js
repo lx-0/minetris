@@ -109,6 +109,14 @@ function initSky() {
   });
   skyMesh = new THREE.Mesh(skyGeo, skyMat);
   skyMesh.renderOrder = -1;
+  // Hide sky mesh immediately if parallax bg already has a saved enabled state.
+  // initParallaxBg() will also set visibility after it runs; this covers the
+  // brief window between initSky() and initParallaxBg().
+  try {
+    if (localStorage.getItem('mineCtris_parallaxEnabled') !== 'false') {
+      skyMesh.visible = false;
+    }
+  } catch (_) {}
   scene.add(skyMesh);
 
   // ── Stars ─────────────────────────────────────────────────────────────────
@@ -257,6 +265,9 @@ function _updateSkyStatic() {
 
 /** Called every frame from animate(). elapsedSeconds = clock.getElapsedTime(), delta = frame delta in seconds. */
 function updateSky(elapsedSeconds, delta = 0.016) {
+  // Parallax background active: CSS provides sky; skip 3D sky dome update.
+  if (typeof getParallaxActive === 'function' && getParallaxActive()) return;
+
   // Low quality: static noon sky — skip animated day/night cycle entirely.
   if (typeof graphicsQualityTier !== 'undefined' && graphicsQualityTier === 'low') {
     _updateSkyStatic();

@@ -499,6 +499,14 @@
         </div>
       </div>
 
+      <!-- Parallax biome background — CSS layers behind the Three.js canvas -->
+      <div id="parallax-bg" aria-hidden="true">
+        <div id="parallax-night-overlay"></div>
+        <div class="parallax-layer" id="parallax-far"></div>
+        <div class="parallax-layer" id="parallax-mid"></div>
+        <div class="parallax-layer" id="parallax-near"></div>
+      </div>
+
       <div id="renderer-container"></div>
       <div id="crosshair"></div>
 
@@ -1342,6 +1350,24 @@
             </button>
           </div>
           <div class="settings-hint">Auto-selected: Low on touch/mobile, High on desktop</div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="parallax-bg-toggle">Parallax Backgrounds</label>
+            <label class="cb-toggle-switch">
+              <input type="checkbox" id="parallax-bg-toggle" checked>
+              <span class="cb-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-hint">Animated Minecraft-themed scenery behind the game world</div>
+          <div id="parallax-biome-selector">
+            <button class="parallax-biome-btn parallax-biome-btn-selected" data-biome="random" title="Random biome each session">&#127922; Random</button>
+            <button class="parallax-biome-btn" data-biome="plains" title="Plains">&#127807; Plains</button>
+            <button class="parallax-biome-btn" data-biome="forest" title="Forest">&#127794; Forest</button>
+            <button class="parallax-biome-btn" data-biome="desert" title="Desert">&#127964; Desert</button>
+            <button class="parallax-biome-btn" data-biome="nether" title="Nether">&#128293; Nether</button>
+            <button class="parallax-biome-btn" data-biome="end" title="The End">&#127756; End</button>
+            <button class="parallax-biome-btn" data-biome="ocean" title="Ocean">&#127754; Ocean</button>
+          </div>
           <div class="settings-section-divider"></div>
           <button id="settings-metrics-btn" class="settings-link-btn">&#128202; Player Metrics</button>
           <button id="settings-replay-tutorial-btn" class="settings-link-btn">&#127891; Replay Tutorial</button>
@@ -2602,6 +2628,7 @@
     <script src="js/core/replay.js"></script>
     <script src="js/core/game-loop.js"></script>
     <script src="js/rendering/resize.js"></script>
+    <script src="js/rendering/parallax-background.js"></script>
         <script src="js/main.js"></script>
     <script src="js/social/community-goals.js"></script>
     <script src="js/events/seasonal-events.js"></script>

@@ -31,6 +31,7 @@ function animate() {
   _bgThrottleAcc += delta;
   if (_bgThrottleAcc >= _BG_INTERVAL) {
     updateSky(elapsedTime, _bgThrottleAcc);
+    if (typeof updateParallaxBg === 'function') updateParallaxBg(_bgThrottleAcc);
     // Underground ambient dimming + fog shift (overrides sky values when camera is below surface).
     if (typeof applyUndergroundDepth === 'function' && camera) {
       applyUndergroundDepth(camera.position.y);

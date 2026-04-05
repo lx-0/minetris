@@ -1010,6 +1010,25 @@ function initSettings() {
     });
   });
 
+  // Wire up parallax background toggle.
+  const parallaxToggle = document.getElementById('parallax-bg-toggle');
+  if (parallaxToggle) {
+    // Sync initial state from the parallax module (may have loaded a saved pref).
+    if (typeof getParallaxActive === 'function') {
+      parallaxToggle.checked = getParallaxActive();
+    }
+    parallaxToggle.addEventListener('change', function() {
+      if (typeof setParallaxEnabled === 'function') setParallaxEnabled(this.checked);
+    });
+  }
+
+  // Wire up parallax biome selector buttons.
+  document.querySelectorAll('.parallax-biome-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (typeof setParallaxBiomePref === 'function') setParallaxBiomePref(btn.dataset.biome);
+    });
+  });
+
   _initControlsTab();
   _initTransferProgressSection();
   if (typeof initThemeEditor === 'function') initThemeEditor();

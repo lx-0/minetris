@@ -51,7 +51,8 @@ function init() {
     1000
   );
   camera.position.y = PLAYER_HEIGHT;
-  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setClearColor(0x000000, 0); // transparent — parallax CSS shows through
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
   rendererContainer.appendChild(renderer.domElement);
@@ -63,6 +64,8 @@ function init() {
   }
 
   initSky();
+  // Initialise parallax background (after sky so it can toggle sky mesh visibility)
+  if (typeof initParallaxBg === 'function') initParallaxBg();
   if (typeof initWeather === 'function') initWeather();
 
   worldGroup = new THREE.Group();

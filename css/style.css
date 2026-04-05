@@ -19331,3 +19331,86 @@ body.hc-mode .notif-item {
   border: 1px solid #fff !important;
   color: #fff !important;
 }
+
+/* ── Parallax biome backgrounds ─────────────────────────────────────────────── */
+
+#parallax-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #0d1117;
+}
+
+#parallax-night-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: linear-gradient(180deg, #000918 0%, #000510 60%, #000210 100%);
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+  transition: none;
+}
+
+.parallax-layer {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat-x;
+  background-size: 800px 100%;
+  background-position-y: bottom;
+  pointer-events: none;
+  will-change: background-position-x;
+}
+
+#parallax-far  { z-index: 1; }
+#parallax-mid  { z-index: 2; }
+#parallax-near { z-index: 3; }
+
+/* Make renderer canvas sit above parallax but transparent background allowed */
+#renderer-container {
+  position: relative;
+  z-index: 5;
+}
+
+/* Settings: Parallax biome selector */
+#parallax-biome-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+.parallax-biome-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.42rem;
+  padding: 6px 10px;
+  background: #1a2a1a;
+  border: 1px solid #2a4a2a;
+  color: #8fa88f;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.parallax-biome-btn:hover {
+  background: #243824;
+  border-color: #4a8a4a;
+  color: #c0d8c0;
+}
+
+.parallax-biome-btn-selected {
+  background: #0a2a10;
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
+/* Respect reduced-motion: disable will-change optimisations */
+@media (prefers-reduced-motion: reduce) {
+  .parallax-layer,
+  #parallax-night-overlay {
+    will-change: auto;
+  }
+}

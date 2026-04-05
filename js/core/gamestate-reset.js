@@ -257,6 +257,9 @@ function resetGame() {
   // Clear expedition biome theme (restores user's cosmetic theme)
   if (typeof clearBiomeTheme === "function") clearBiomeTheme();
 
+  // Notify parallax system of new game session (randomises biome if mode = 'random')
+  if (typeof onParallaxGameStart === 'function') onParallaxGameStart();
+
   // Reset event engine
   if (typeof resetEventEngine === "function") resetEventEngine();
 
