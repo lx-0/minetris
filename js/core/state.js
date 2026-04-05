@@ -161,6 +161,8 @@ let isBattleMode = false;
 let battleResult = null;
 // Match mode: 'survival' (last standing) | 'score_race' (highest score in 3 min)
 let battleMatchMode = 'survival';
+// Whether the current battle is a ranked (ELO-affecting) match
+let battleIsRanked = false;
 // Score Race: countdown timer in ms (3 minutes)
 let battleScoreRaceRemainingMs = 180000;
 // Opponent's last known score and lines cleared (updated from battle_board messages)

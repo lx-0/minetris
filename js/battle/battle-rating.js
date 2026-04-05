@@ -5,26 +5,60 @@ const BATTLE_RATING_KEY           = 'mineCtris_battleRating';
 const BATTLE_RATING_SUBMITTED_KEY = 'mineCtris_battleRatingSubmitted';
 
 // Rank tiers (ordered highest first for lookup)
+// Wood (0-999), Stone (1000-1299), Iron (1300-1599), Gold (1600-1899), Diamond (1900-2199), Netherite (2200+)
 const BATTLE_RANK_TIERS = [
-  { name: 'Obsidian', icon: '\u2726', cls: 'obsidian', min: 1600 },
-  { name: 'Diamond',  icon: '\u25C6', cls: 'diamond',  min: 1400 },
-  { name: 'Gold',     icon: '\u2605', cls: 'gold',     min: 1200 },
-  { name: 'Iron',     icon: '\u25A3', cls: 'iron',     min: 1000 },
-  { name: 'Stone',    icon: '\u25A1', cls: 'stone',    min: 0    },
+  { name: 'Netherite', icon: '\u2736', cls: 'netherite', min: 2200 },
+  { name: 'Diamond',   icon: '\u25C6', cls: 'diamond',   min: 1900 },
+  { name: 'Gold',      icon: '\u2605', cls: 'gold',      min: 1600 },
+  { name: 'Iron',      icon: '\u25A3', cls: 'iron',      min: 1300 },
+  { name: 'Stone',     icon: '\u25A1', cls: 'stone',     min: 1000 },
+  { name: 'Wood',      icon: '\u25CB', cls: 'wood',      min: 0    },
 ];
+
+// Number of placement matches before rating is revealed
+const PLACEMENT_MATCH_COUNT = 10;
 
 // ── Storage ──────────────────────────────────────────────────────────────────
 
 function _defaultBattleRating() {
   return {
-    rating:     1000,
-    wins:       0,
-    losses:     0,
-    draws:      0,
-    matchCount: 0,
-    winStreak:  0,
-    peakRating: 1000,
+    rating:          1000,
+    wins:            0,
+    losses:          0,
+    draws:           0,
+    matchCount:      0,
+    rankedCount:     0,   // matches played in ranked queue
+    placementDone:   false,
+    winStreak:       0,
+    peakRating:      1000,
   };
+}
+
+/** Returns true if the player is still in placement (first 10 ranked matches). */
+function isInPlacement() {
+  const data = loadBattleRating();
+  return !data.placementDone && (data.rankedCount || 0) < PLACEMENT_MATCH_COUNT;
+}
+
+/** Returns placement progress string, e.g. "3 / 10". */
+function getPlacementProgress() {
+  const data = loadBattleRating();
+  const done = Math.min(data.rankedCount || 0, PLACEMENT_MATCH_COUNT);
+  return done + ' / ' + PLACEMENT_MATCH_COUNT;
+}
+
+/**
+ * Returns an HTML snippet showing placement or tier badge.
+ * During placement, shows "Placement X/10" instead of the rating.
+ */
+function getRankedStatusHtml() {
+  const data = loadBattleRating();
+  if (!data.placementDone && (data.rankedCount || 0) < PLACEMENT_MATCH_COUNT) {
+    var done = data.rankedCount || 0;
+    return '<span class="battle-rank-badge battle-rank-placement" title="Complete placement matches to reveal your rank">' +
+      '\u26A1 Placement ' + done + '/' + PLACEMENT_MATCH_COUNT + '</span>';
+  }
+  return getBattleRankBadgeHtml(data.rating);
 }
 
 function loadBattleRating() {
@@ -52,16 +86,25 @@ function _eloExpected(myRating, oppRating) {
 }
 
 /**
- * Apply Elo update after a match. Returns { ratingBefore, ratingAfter, delta }.
+ * Apply Elo update after a match. Returns { ratingBefore, ratingAfter, delta, isPlacement }.
  * @param {'win'|'loss'|'draw'} result
  * @param {number} [oppRating=1000]  Opponent's rating (1000 default if unknown)
+ * @param {boolean} [ranked=false]   Whether this was a ranked match
  */
-function updateBattleRating(result, oppRating) {
+function updateBattleRating(result, oppRating, ranked) {
   const data = loadBattleRating();
   const ratingBefore = data.rating;
+  const wasInPlacement = !data.placementDone && (data.rankedCount || 0) < PLACEMENT_MATCH_COUNT;
 
-  // K-factor: 32 for first 20 matches, 16 thereafter
-  const K        = (data.matchCount || 0) < 20 ? 32 : 16;
+  // K-factor: 48 during placement (fast calibration), 32 for first 30 matches, 16 thereafter
+  let K;
+  if (ranked && wasInPlacement) {
+    K = 48;
+  } else if ((data.matchCount || 0) < 30) {
+    K = 32;
+  } else {
+    K = 16;
+  }
   const opp      = (oppRating != null && !isNaN(oppRating)) ? oppRating : 1000;
   const expected = _eloExpected(data.rating, opp);
   const actual   = result === 'win' ? 1 : result === 'draw' ? 0.5 : 0;
@@ -69,6 +112,14 @@ function updateBattleRating(result, oppRating) {
 
   data.rating     = Math.max(0, (data.rating || 1000) + delta);
   data.matchCount = (data.matchCount || 0) + 1;
+
+  // Track ranked match count for placement
+  if (ranked) {
+    data.rankedCount = (data.rankedCount || 0) + 1;
+    if (!data.placementDone && data.rankedCount >= PLACEMENT_MATCH_COUNT) {
+      data.placementDone = true;
+    }
+  }
 
   if (result === 'win') {
     data.wins      = (data.wins || 0) + 1;
@@ -101,7 +152,7 @@ function updateBattleRating(result, oppRating) {
     onSeasonMissionGoldTierReached();
   }
 
-  return { ratingBefore, ratingAfter: data.rating, delta };
+  return { ratingBefore, ratingAfter: data.rating, delta, isPlacement: wasInPlacement, placementDone: data.placementDone };
 }
 
 // ── Rank tiers ────────────────────────────────────────────────────────────────

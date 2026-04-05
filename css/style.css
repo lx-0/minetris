@@ -3414,11 +3414,31 @@ body {
   letter-spacing: 0.5px;
   vertical-align: middle;
 }
-.battle-rank-stone    { color: #a0a0a0; background: rgba(160,160,160,0.15); border: 1px solid #a0a0a0; }
-.battle-rank-iron     { color: #b0c8d0; background: rgba(176,200,208,0.15); border: 1px solid #b0c8d0; }
-.battle-rank-gold     { color: #ffd700; background: rgba(255,215,0,0.15);   border: 1px solid #ffd700; }
-.battle-rank-diamond  { color: #44ddff; background: rgba(68,221,255,0.15);  border: 1px solid #44ddff; }
-.battle-rank-obsidian { color: #cc88ff; background: rgba(204,136,255,0.15); border: 1px solid #cc88ff; }
+.battle-rank-wood      { color: #a07850; background: rgba(160,120,80,0.15);  border: 1px solid #a07850; }
+.battle-rank-stone     { color: #a0a0a0; background: rgba(160,160,160,0.15); border: 1px solid #a0a0a0; }
+.battle-rank-iron      { color: #b0c8d0; background: rgba(176,200,208,0.15); border: 1px solid #b0c8d0; }
+.battle-rank-gold      { color: #ffd700; background: rgba(255,215,0,0.15);   border: 1px solid #ffd700; }
+.battle-rank-diamond   { color: #44ddff; background: rgba(68,221,255,0.15);  border: 1px solid #44ddff; }
+.battle-rank-netherite { color: #cc88ff; background: rgba(204,136,255,0.15); border: 1px solid #cc88ff; }
+.battle-rank-placement { color: #ffaa33; background: rgba(255,170,51,0.15);  border: 1px solid #ffaa33; }
+
+/* Ranked match button — primary call-to-action */
+#battle-ranked-btn {
+  background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(68,221,255,0.15));
+  border: 1px solid #ffd700;
+  color: #ffd700;
+  font-weight: bold;
+}
+#battle-ranked-btn:hover {
+  background: linear-gradient(135deg, rgba(255,215,0,0.4), rgba(68,221,255,0.25));
+}
+/* Ranked queue status line in create view */
+#battle-ranked-queue-status {
+  font-size: 0.48em;
+  color: #ffaa33;
+  margin: 4px 0 2px;
+  text-align: center;
+}
 
 /* Battle lobby player rank display */
 #battle-player-rank {

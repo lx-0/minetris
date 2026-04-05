@@ -45,9 +45,9 @@ function triggerBattleResult(result) {
   if (typeof saveLifetimeStats === 'function') saveLifetimeStats(_lsStats);
   const _newXP = _lsStats.playerXP;
 
-  // Update Elo battle rating
+  // Update Elo battle rating (pass ranked flag for placement tracking)
   const _ratingChange = (typeof updateBattleRating === 'function')
-    ? updateBattleRating(result, typeof battleOpponentRating !== 'undefined' ? battleOpponentRating : 1000)
+    ? updateBattleRating(result, typeof battleOpponentRating !== 'undefined' ? battleOpponentRating : 1000, typeof battleIsRanked !== 'undefined' ? battleIsRanked : false)
     : null;
 
   // Fire battle achievements (win streak already updated by updateBattleRating above)
@@ -208,10 +208,27 @@ function _buildBattleSummaryScreen(el, result, myStats, oppStats, xpEarned, oldX
     '</div>' +
     '<div class="brs-badges">' + badges.map(_badgeHtml).join('') + '</div>' +
     (ratingChange ? (function () {
-      const tier = (typeof getBattleRankTier === 'function') ? getBattleRankTier(ratingChange.ratingAfter) : null;
-      const tierBadge = tier ? ('<span class="battle-rank-badge battle-rank-' + tier.cls + '">' + tier.icon + ' ' + tier.name + '</span>') : '';
       const sign = ratingChange.delta >= 0 ? '+' : '';
       const deltaCls = ratingChange.delta >= 0 ? 'brs-rating-gain' : 'brs-rating-loss';
+      if (ratingChange.isPlacement && !ratingChange.placementDone) {
+        // Still in placement — show progress, not raw rating
+        var placedCount = typeof getPlacementProgress === 'function' ? getPlacementProgress() : '';
+        return '<div class="brs-rating">' +
+          '<span class="battle-rank-badge battle-rank-placement">\u26A1 Placement ' + placedCount + '</span>' +
+          '</div>';
+      }
+      if (ratingChange.isPlacement && ratingChange.placementDone) {
+        // Just finished placement — reveal tier
+        var tier = (typeof getBattleRankTier === 'function') ? getBattleRankTier(ratingChange.ratingAfter) : null;
+        var tierBadge = tier ? ('<span class="battle-rank-badge battle-rank-' + tier.cls + '">' + tier.icon + ' ' + tier.name + '</span>') : '';
+        return '<div class="brs-rating">' +
+          tierBadge +
+          '<span class="brs-rating-val">' + ratingChange.ratingAfter + '</span>' +
+          '<span class="brs-rating-gain"> Placement complete!</span>' +
+          '</div>';
+      }
+      const tier = (typeof getBattleRankTier === 'function') ? getBattleRankTier(ratingChange.ratingAfter) : null;
+      const tierBadge = tier ? ('<span class="battle-rank-badge battle-rank-' + tier.cls + '">' + tier.icon + ' ' + tier.name + '</span>') : '';
       return '<div class="brs-rating">' +
         tierBadge +
         '<span class="brs-rating-val">' + ratingChange.ratingAfter + '</span>' +

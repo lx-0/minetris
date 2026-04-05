@@ -35,9 +35,12 @@ function _initBattleHandlers() {
         battleOverlay.style.display = "flex";
         // Show player's current rank badge in battle lobby
         var rankEl = document.getElementById('battle-player-rank');
-        if (rankEl && typeof getBattleRankBadgeHtml === 'function' && typeof loadBattleRating === 'function') {
+        if (rankEl && typeof loadBattleRating === 'function') {
           var rd = loadBattleRating();
-          rankEl.innerHTML = getBattleRankBadgeHtml(rd.rating) +
+          var rankHtml = (typeof getRankedStatusHtml === 'function')
+            ? getRankedStatusHtml()
+            : (typeof getBattleRankBadgeHtml === 'function' ? getBattleRankBadgeHtml(rd.rating) : '');
+          rankEl.innerHTML = rankHtml +
             ' <span class="battle-rank-pts">' + rd.rating + ' pts</span>' +
             ' <span class="battle-rank-record">' + rd.wins + 'W&nbsp;' + rd.losses + 'L&nbsp;' + rd.draws + 'D</span>';
         }
@@ -162,6 +165,8 @@ function _initBattleHandlers() {
       var _battleGuestReady = false;
       // Match mode selected by host (default: survival)
       var _battleSelectedMode = 'survival';
+      // Whether current queued match is ranked
+      var _battleQueueIsRanked = false;
 
       function _updateBattleReadyIndicators() {
         var hostEl  = document.getElementById("battle-host-ready-indicator");
@@ -215,6 +220,7 @@ function _initBattleHandlers() {
       var battleCreateBtn = document.getElementById("battle-create-btn");
       if (battleCreateBtn) {
         battleCreateBtn.addEventListener("click", function () {
+          _battleQueueIsRanked = false;
           showBattleView("create");
           var roomCodeEl   = document.getElementById("battle-room-code");
           var statusMsg    = document.getElementById("battle-status-msg");
@@ -249,12 +255,15 @@ function _initBattleHandlers() {
       var battleQmBtn = document.getElementById("battle-quickmatch-btn");
       if (battleQmBtn) {
         battleQmBtn.addEventListener("click", function () {
+          _battleQueueIsRanked = false;
           showBattleView("create");
           var roomCodeEl   = document.getElementById("battle-room-code");
           var statusMsg    = document.getElementById("battle-status-msg");
           var waitingEl    = document.getElementById("battle-waiting-spinner");
+          var rankedStatusEl = document.getElementById("battle-ranked-queue-status");
           if (roomCodeEl) roomCodeEl.textContent = "\u2026";
           if (statusMsg)  statusMsg.textContent  = "";
+          if (rankedStatusEl) rankedStatusEl.style.display = "none";
           battle.quickMatch().then(function (data) {
             if (data.waiting) {
               // We are host waiting for an opponent
@@ -267,6 +276,55 @@ function _initBattleHandlers() {
             }
           }).catch(function () {
             if (statusMsg) statusMsg.textContent = "Quick match failed. Try again.";
+          });
+        });
+      }
+
+      // ── Ranked match button ──
+      var _rankedQueueExpandTimer = null;
+      var battleRankedBtn = document.getElementById("battle-ranked-btn");
+      if (battleRankedBtn) {
+        battleRankedBtn.addEventListener("click", function () {
+          _battleQueueIsRanked = true;
+          showBattleView("create");
+          var roomCodeEl     = document.getElementById("battle-room-code");
+          var statusMsg      = document.getElementById("battle-status-msg");
+          var waitingEl      = document.getElementById("battle-waiting-spinner");
+          var rankedStatusEl = document.getElementById("battle-ranked-queue-status");
+          var copyLinkBtn    = document.getElementById("battle-copy-link-btn");
+          if (roomCodeEl) roomCodeEl.textContent = "\u2026";
+          if (statusMsg)  statusMsg.textContent  = "";
+          if (copyLinkBtn) copyLinkBtn.style.display = "none"; // no invite links for ranked
+          if (rankedStatusEl) {
+            rankedStatusEl.style.display = "";
+            var inPlacement = typeof isInPlacement === 'function' && isInPlacement();
+            if (inPlacement) {
+              var prog = typeof getPlacementProgress === 'function' ? getPlacementProgress() : '';
+              rankedStatusEl.innerHTML = '<span class="battle-rank-placement">\u26A1 Placement ' + prog + '</span> &mdash; play ranked to calibrate your tier';
+            } else {
+              rankedStatusEl.innerHTML = '\u274F Searching within <strong>\u00B1200 ELO</strong>\u2026';
+            }
+          }
+          var myRating = 1000;
+          if (typeof loadBattleRating === 'function') myRating = loadBattleRating().rating;
+          battle.rankedMatch(myRating).then(function (data) {
+            if (data.waiting) {
+              if (roomCodeEl) roomCodeEl.textContent = data.roomCode;
+              if (waitingEl) waitingEl.textContent = "\u9696 Ranked queue \u2014 searching for opponent\u2026";
+              // After 30s, indicate range is expanding
+              if (_rankedQueueExpandTimer) clearTimeout(_rankedQueueExpandTimer);
+              _rankedQueueExpandTimer = setTimeout(function () {
+                if (rankedStatusEl && rankedStatusEl.style.display !== "none") {
+                  rankedStatusEl.innerHTML = '\u274F Expanding search range\u2026';
+                }
+              }, 30000);
+            } else {
+              if (roomCodeEl) roomCodeEl.textContent = data.roomCode;
+              if (waitingEl) waitingEl.textContent = "\u9696 Found ranked opponent \u2014 connecting\u2026";
+            }
+          }).catch(function () {
+            if (statusMsg) statusMsg.textContent = "Ranked match failed. Try again.";
+            if (rankedStatusEl) rankedStatusEl.style.display = "none";
           });
         });
       }
@@ -301,7 +359,12 @@ function _initBattleHandlers() {
 
       var battleCreateCancelBtn = document.getElementById("battle-create-cancel-btn");
       if (battleCreateCancelBtn) {
-        battleCreateCancelBtn.addEventListener("click", function () { closeBattleOverlay(); });
+        battleCreateCancelBtn.addEventListener("click", function () {
+          if (_rankedQueueExpandTimer) { clearTimeout(_rankedQueueExpandTimer); _rankedQueueExpandTimer = null; }
+          var copyLinkBtn = document.getElementById("battle-copy-link-btn");
+          if (copyLinkBtn) copyLinkBtn.style.display = "";
+          closeBattleOverlay();
+        });
       }
 
       // ── Join view ──
@@ -523,6 +586,8 @@ function _initBattleHandlers() {
         // Reset world and set battle mode flags before the countdown
         resetGame();
         isBattleMode = true;
+        battleIsRanked = _battleQueueIsRanked; // persist ranked flag across resetGame
+        _battleQueueIsRanked = false;          // clear for next match
         if (typeof metricsModePlayed === 'function') metricsModePlayed('battle');
         battleMatchMode = _mode; // restore after resetGame reset it to 'survival'
         battleScoreRaceRemainingMs = 180000;

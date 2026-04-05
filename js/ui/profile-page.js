@@ -61,14 +61,25 @@ function _renderProfileStats() {
   var prestigeLevel = typeof getPrestigeLevel === 'function' ? getPrestigeLevel() : 0;
   var xpProgress = typeof getXPProgress === 'function' ? getXPProgress(totalXP) : null;
 
+  // Ranked tier badge (placement-aware)
+  var rankedTierHtml = '';
+  if (typeof loadBattleRating === 'function') {
+    var rd = loadBattleRating();
+    if (typeof getRankedStatusHtml === 'function') {
+      rankedTierHtml = getRankedStatusHtml();
+    } else if (typeof getBattleRankBadgeHtml === 'function') {
+      rankedTierHtml = getBattleRankBadgeHtml(rd.rating);
+    }
+  }
+
   // Season rank
   var seasonRank = '';
   if (typeof loadBattleRating === 'function') {
-    var rating = loadBattleRating().rating;
+    var _profileRating = loadBattleRating().rating;
     if (typeof getSeasonRankBadgeHtml === 'function') {
-      seasonRank = getSeasonRankBadgeHtml(rating);
+      seasonRank = getSeasonRankBadgeHtml(_profileRating);
     } else {
-      seasonRank = rating + ' pts';
+      seasonRank = _profileRating + ' pts';
     }
   }
 
@@ -77,6 +88,7 @@ function _renderProfileStats() {
     { label: 'TOTAL XP', value: totalXP.toLocaleString() },
     { label: 'PRESTIGE', value: prestigeLevel > 0 ? '\u2B50'.repeat(Math.min(prestigeLevel, 10)) + ' (' + prestigeLevel + ')' : 'None' },
   ];
+  if (rankedTierHtml) items.push({ label: 'RANK TIER', value: rankedTierHtml });
   if (seasonRank) items.push({ label: 'SEASON RANK', value: seasonRank });
 
   var html = '<div class="profile-stats-row">';

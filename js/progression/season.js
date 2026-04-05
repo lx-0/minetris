@@ -40,7 +40,7 @@ const _SEASON_RESET_APPLIED_KEY = 'mineCtris_seasonResetApplied';
 
 /**
  * Apply the between-season rating soft-reset if not already done for this season.
- * new rating = round(oldRating * 0.75 + 375)
+ * new rating = round(oldRating * 0.75 + 250)  → equilibrium at 1000 (Stone tier start)
  * Idempotent per seasonId — tracks last-reset season in localStorage.
  * @param {string} seasonId  The new (incoming) season's ID.
  * @returns {number|null}  New rating, or null if reset was already applied.
@@ -56,7 +56,8 @@ function applySeasonRatingResetIfNeeded(seasonId) {
   if (typeof loadBattleRating === 'function' && typeof saveBattleRating === 'function') {
     const data = loadBattleRating();
     const oldRating = data.rating || 1000;
-    newRating = Math.round(oldRating * 0.75 + 375);
+    // Compress toward 1000 (Stone tier entry point) — preserves relative rank
+    newRating = Math.round(oldRating * 0.75 + 250);
     data.rating = newRating;
     saveBattleRating(data);
   }

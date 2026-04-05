@@ -248,6 +248,33 @@ const battle = (function () {
     },
 
     /**
+     * POST /battle/quickmatch → join the ranked ELO-based waiting queue.
+     * Sends eloRating so the server can match within 200 ELO (expanding after 30s).
+     * Returns { waiting: true, roomCode } if created as host, or joins existing room as guest.
+     * @param {number} eloRating  The player's current ELO rating.
+     */
+    async rankedMatch(eloRating) {
+      _reconnectCount = 0;
+      const resp = await fetch(BATTLE_WORKER_URL + '/battle/quickmatch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ranked: true, eloRating: eloRating || 1000 }),
+      });
+      if (!resp.ok) throw new Error('Ranked match failed');
+      const data = await resp.json();
+      _roomCode = data.roomCode;
+      if (data.waiting) {
+        _isHost = true;
+        _emit('ranked_waiting', { roomCode: _roomCode });
+        _connectWs(data.wsUrl);
+      } else {
+        _isHost = false;
+        _connectWs(data.wsUrl);
+      }
+      return data;
+    },
+
+    /**
      * GET /battle/room/{CODE}/spectate → connect as a read-only spectator.
      * Throws if room is private, full, or has no active match.
      */

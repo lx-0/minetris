@@ -202,6 +202,7 @@ function resetGame() {
   isBattleMode = false;
   battleResult = null;
   battleMatchMode = 'survival';
+  battleIsRanked = false;
   battleScoreRaceRemainingMs = 180000;
   battleOpponentScore = 0;
   battleOpponentLines = 0;
