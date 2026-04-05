@@ -385,6 +385,29 @@ body {
 .np-empty {
   background: transparent;
 }
+
+/* ── Hold-piece panel ── */
+#hold-piece-panel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  font-family: "Press Start 2P", cursive;
+  pointer-events: none;
+  display: none;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  border-radius: 4px;
+  padding: 8px 12px;
+}
+.hp-empty {
+  min-width: 20px;
+  min-height: 20px;
+  opacity: 0.3;
+}
+.hp-locked {
+  opacity: 0.4;
+  filter: grayscale(80%);
+}
 .hud-score {
   font-size: 20px;
   color: #ff0;

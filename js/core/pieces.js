@@ -202,6 +202,91 @@ function updateNextPiecesHUD() {
   nextPiecesEl.innerHTML = html;
 }
 
+/** Render the held piece inside #hold-piece-panel. */
+function updateHoldPanelHUD() {
+  if (!holdPanelEl) holdPanelEl = document.getElementById('hold-piece-panel');
+  if (!holdPanelEl) return;
+  let html = '<div class="np-label">HOLD</div>';
+  if (!holdPiece) {
+    html += '<div class="np-pieces-row"><div class="np-piece hp-empty"><div class="np-row"><div class="np-cell np-empty"></div></div></div></div>';
+    holdPanelEl.innerHTML = html;
+    return;
+  }
+  const { index, shape } = holdPiece;
+  let palette;
+  if (typeof colorblindMode !== 'undefined' && colorblindMode && typeof COLORBLIND_COLORS !== 'undefined' && COLORBLIND_COLORS[index] !== null) {
+    palette = COLORBLIND_COLORS[index];
+  } else if (typeof activeBlockSkin !== 'undefined' && activeBlockSkin && typeof BLOCK_SKIN_PALETTES !== 'undefined' && BLOCK_SKIN_PALETTES[activeBlockSkin]) {
+    const skinDef = BLOCK_SKIN_PALETTES[activeBlockSkin];
+    palette = (skinDef.colors[index] !== null) ? skinDef.colors[index] : COLORS[index];
+  } else {
+    const THEME_PALETTE = {
+      nether: typeof NETHER_COLORS !== 'undefined' ? NETHER_COLORS : null,
+      ocean:  typeof OCEAN_COLORS  !== 'undefined' ? OCEAN_COLORS  : null,
+      candy:  typeof CANDY_COLORS  !== 'undefined' ? CANDY_COLORS  : null,
+      fossil: typeof FOSSIL_COLORS !== 'undefined' ? FOSSIL_COLORS : null,
+      storm:  typeof STORM_COLORS  !== 'undefined' ? STORM_COLORS  : null,
+      void:   typeof VOID_COLORS   !== 'undefined' ? VOID_COLORS   : null,
+    };
+    const tp = typeof activeTheme !== 'undefined' && THEME_PALETTE[activeTheme] ? THEME_PALETTE[activeTheme] : null;
+    palette = (tp && tp[index] !== null) ? tp[index] : COLORS[index];
+  }
+  const hex = '#' + palette.toString(16).padStart(6, '0');
+  const glowSize = (typeof activeBlockSkin !== 'undefined' && activeBlockSkin === 'neon') ? 8 : 3;
+  const lockedClass = (typeof holdLocked !== 'undefined' && holdLocked) ? ' hp-locked' : '';
+  html += '<div class="np-pieces-row"><div class="np-piece' + lockedClass + '">';
+  shape.forEach(function (row) {
+    html += '<div class="np-row">';
+    row.forEach(function (v) {
+      html += v
+        ? '<div class="np-cell" style="background:' + hex + ';box-shadow:0 0 ' + glowSize + 'px ' + hex + ';"></div>'
+        : '<div class="np-cell np-empty"></div>';
+    });
+    html += '</div>';
+  });
+  html += '</div></div>';
+  holdPanelEl.innerHTML = html;
+}
+
+/**
+ * Hold the current falling piece.
+ * - First hold: stores piece and spawns the next piece from the queue.
+ * - Subsequent holds: swaps held piece with the current falling piece.
+ * - Locked after use until the current piece lands (holdLocked reset in landing code).
+ */
+function doHoldPiece() {
+  if (typeof isPuzzleMode !== 'undefined' && isPuzzleMode) return;
+  if (typeof isCustomPuzzleMode !== 'undefined' && isCustomPuzzleMode) return;
+  if (typeof holdLocked !== 'undefined' && holdLocked) return;
+  if (!fallingPieces || fallingPieces.length === 0) return;
+
+  // Target: the piece with the highest position (most recently spawned / least far down).
+  // In practice there is usually one active piece; use the last one in the array.
+  const piece = fallingPieces[fallingPieces.length - 1];
+  const currentIndex = piece.userData.colorIndex;
+
+  // Remove piece from scene
+  if (typeof disposePieceTrail === 'function') disposePieceTrail(piece);
+  if (typeof removePieceShadow === 'function') removePieceShadow(piece);
+  fallingPiecesGroup.remove(piece);
+  fallingPieces.splice(fallingPieces.length - 1, 1);
+
+  if (holdPiece !== null) {
+    // Swap: inject the held piece at the front of the queue so spawnFallingPiece picks it up.
+    pieceQueue.unshift(holdPiece);
+  }
+  // Store the removed piece as the new held piece.
+  holdPiece = { index: currentIndex, shape: SHAPES[currentIndex] };
+
+  // Spawn next piece (will use the injected held piece if swap, or queue if first hold).
+  spawnFallingPiece();
+
+  holdLocked = true;
+  holdUsedCount++;
+  updateHoldPanelHUD();
+  if (typeof tutorialNotify === 'function') tutorialNotify('hold');
+}
+
 function spawnFallingPiece() {
   // In Sprint mode, start the timer on the very first piece drop
   if (isSprintMode && !sprintTimerActive && !sprintComplete) {
@@ -784,6 +869,11 @@ function updateFallingPieces(delta) {
     }
     fallingPiecesGroup.remove(pieceToLand);
     fallingPieces.splice(index, 1);
+    // Unlock hold so the player can hold again next turn.
+    if (typeof holdLocked !== 'undefined') {
+      holdLocked = false;
+      if (typeof updateHoldPanelHUD === 'function') updateHoldPanelHUD();
+    }
     if (typeof tcVibrateOnLock === 'function') tcVibrateOnLock();
     checkLineClear(newBlocks);
     // Desert biome: schedule sand block crumble for sand pieces

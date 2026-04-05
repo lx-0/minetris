@@ -23,6 +23,7 @@ const KB_ACTION_LABELS = {
   craft:        "Crafting",
   powerup:      "Use Power-up",
   iceBridge:    "Ice Bridge",
+  hold:         "Hold Piece",
 };
 
 // Factory-default key codes (must stay immutable — used as canonical IDs).
@@ -37,6 +38,7 @@ const KB_DEFAULTS = {
   craft:        "KeyC",
   powerup:      "KeyF",
   iceBridge:    "KeyG",
+  hold:         "KeyH",
 };
 
 // Named presets.
@@ -52,6 +54,7 @@ const KB_PRESETS = {
     craft:        "KeyC",
     powerup:      "KeyF",
     iceBridge:    "KeyG",
+    hold:         "KeyH",
   },
   arrows: {
     moveForward:  "ArrowUp",
@@ -64,6 +67,7 @@ const KB_PRESETS = {
     craft:        "KeyC",
     powerup:      "KeyF",
     iceBridge:    "KeyG",
+    hold:         "KeyH",
   },
   leftHanded: {
     moveForward:  "KeyI",

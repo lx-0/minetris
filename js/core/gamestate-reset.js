@@ -360,6 +360,13 @@ function resetGame() {
   initPieceQueue();
   if (nextPiecesEl) nextPiecesEl.style.display = "none";
 
+  // Reset hold-piece state
+  holdPiece = null;
+  holdLocked = false;
+  holdUsedCount = 0;
+  if (!holdPanelEl) holdPanelEl = document.getElementById('hold-piece-panel');
+  if (holdPanelEl) holdPanelEl.style.display = "none";
+
   // Reset mining feedback state
   miningShakeActive = false;
   miningShakeBlock = null;

@@ -557,6 +557,9 @@ function init() {
         announceToScreenReader('Game started. ' + modeName + ' mode. Good luck!');
       }
       if (nextPiecesEl) nextPiecesEl.style.display = "block";
+      // Show hold panel (disabled in puzzle modes)
+      if (!holdPanelEl) holdPanelEl = document.getElementById('hold-piece-panel');
+      if (holdPanelEl && !isPuzzleMode && !isCustomPuzzleMode) holdPanelEl.style.display = "block";
       gameTimerRunning = true;
       // Metrics: log session start
       if (typeof metricsSessionStart === 'function') metricsSessionStart();

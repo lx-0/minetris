@@ -275,6 +275,7 @@ function onKeyDown(event) {
       }
       break;
     case "KeyH":
+      if (typeof doHoldPiece === 'function') { doHoldPiece(); break; }
       if (isCoopMode && typeof coopEmote !== 'undefined') {
         coopEmote.sendQuickChat('help');
       }

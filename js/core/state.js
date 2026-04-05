@@ -165,6 +165,12 @@ let nudgeCooldown = 0;  // seconds remaining before next nudge is allowed
 // Each entry: { index: colorIndex, shape: SHAPES[index] }
 let pieceQueue = [];
 
+// ── Hold-piece queue ──────────────────────────────────────────────────────────
+let holdPiece = null;      // { index, shape } or null when empty
+let holdLocked = false;    // cannot hold again until current piece lands
+let holdUsedCount = 0;     // session stat: number of times hold was used
+let holdPanelEl = null;    // DOM ref for #hold-piece-panel
+
 // ── Battle mode state ─────────────────────────────────────────────────────────
 // true while a battle session is active.
 let isBattleMode = false;
