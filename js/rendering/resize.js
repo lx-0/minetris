@@ -11,6 +11,7 @@ function onWindowResize() {
     if (composer) composer.setSize(w, h);
     resizePostProcessing(w, h);
     if (typeof coopAvatar !== 'undefined') coopAvatar.onResize();
+    if (typeof _lcResizeParticleCanvas === 'function') _lcResizeParticleCanvas();
     applyResponsiveHUD(w);
   }, 100);
 }

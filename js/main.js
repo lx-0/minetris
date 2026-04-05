@@ -1313,6 +1313,7 @@ function init() {
   // ──────────────────────────────────────────────────────────────────────────
 
   initLineClearFragmentPool();
+  _lcResizeParticleCanvas();
   initTrails();
   initAuras();
   initLandingRingPool();

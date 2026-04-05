@@ -99,6 +99,100 @@ function _lcRelease(entry) {
   entry.active = false;
 }
 
+// ─── 2-D combo particle burst ─────────────────────────────────────────────────
+// Lightweight canvas overlay: horizontal particles shoot from cleared-line rows.
+const _lcParticles = [];  // { x, y, vx, vy, r, color, age, maxAge }
+
+function _lcSpawnComboBurst(numLines, combo) {
+  const cvs = document.getElementById("combo-particle-canvas");
+  if (!cvs) return;
+  const W = cvs.width, H = cvs.height;
+  if (!W || !H) return;
+
+  // Board occupies roughly the center 40% of the canvas width.
+  const boardLeft  = W * 0.30;
+  const boardRight = W * 0.70;
+  const boardTop   = H * 0.08;
+  const boardBot   = H * 0.92;
+
+  // Count: base 8 per line × combo intensity, capped at 60.
+  const count = Math.min(Math.round(8 * numLines * Math.min(combo * 0.5, 3.0)), 60);
+  const colors = combo >= 10 ? ["#cc44ff","#ee88ff","#ffffff"]
+               : combo >= 5  ? ["#ff3300","#ff6600","#ffaa00"]
+               : combo >= 3  ? ["#ffd700","#ffee44","#ffffff"]
+               :               ["#ffaa00","#ffe080","#ffffff"];
+
+  for (let i = 0; i < count; i++) {
+    // Spawn along the height corresponding to cleared rows (spread evenly across board).
+    const rowFrac = Math.random();
+    const spawnY  = boardTop + rowFrac * (boardBot - boardTop);
+    // Alternate left / right edge spawn for burst-from-rows look.
+    const fromLeft = Math.random() < 0.5;
+    const spawnX   = fromLeft ? boardLeft + Math.random() * (boardRight - boardLeft) * 0.2
+                              : boardRight - Math.random() * (boardRight - boardLeft) * 0.2;
+    const speed    = 120 + Math.random() * 200 * (1 + combo * 0.15);
+    const angle    = fromLeft
+      ? (Math.random() - 0.5) * Math.PI * 0.8 - Math.PI * 0.5   // leftward fan
+      : (Math.random() - 0.5) * Math.PI * 0.8 + Math.PI * 0.5 + Math.PI; // rightward fan
+    // For Medium quality, reduce particle size.
+    const _quality = (typeof graphicsQualityTier !== 'undefined') ? graphicsQualityTier : 'high';
+    const radius   = _quality === 'medium' ? 2 + Math.random() * 2 : 2 + Math.random() * 4;
+    _lcParticles.push({
+      x: spawnX, y: spawnY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 30,  // slight upward bias
+      r: radius,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      age: 0,
+      maxAge: 0.35 + Math.random() * 0.30,
+    });
+  }
+}
+
+function _lcUpdateComboBurst(delta) {
+  const cvs = document.getElementById("combo-particle-canvas");
+  if (!cvs) return;
+  if (_lcParticles.length === 0) return;
+  const ctx = cvs.getContext("2d");
+  ctx.clearRect(0, 0, cvs.width, cvs.height);
+  for (let i = _lcParticles.length - 1; i >= 0; i--) {
+    const p = _lcParticles[i];
+    p.age += delta;
+    if (p.age >= p.maxAge) { _lcParticles.splice(i, 1); continue; }
+    p.x  += p.vx * delta;
+    p.y  += p.vy * delta;
+    p.vy += 200 * delta;  // gravity
+    const alpha = Math.max(0, 1 - p.age / p.maxAge);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (_lcParticles.length === 0) ctx.clearRect(0, 0, cvs.width, cvs.height);
+  ctx.globalAlpha = 1;
+}
+
+function _lcResizeParticleCanvas() {
+  const cvs = document.getElementById("combo-particle-canvas");
+  if (!cvs) return;
+  const rc = document.getElementById("renderer-container");
+  if (!rc) return;
+  cvs.width  = rc.clientWidth  || window.innerWidth;
+  cvs.height = rc.clientHeight || window.innerHeight;
+}
+
+// ─── Board glow (combo active) ────────────────────────────────────────────────
+function _lcUpdateBoardGlow(combo) {
+  const el = document.getElementById("board-glow-overlay");
+  if (!el) return;
+  el.className = combo >= 10 ? "combo-glow-4"
+               : combo >= 5  ? "combo-glow-3"
+               : combo >= 3  ? "combo-glow-2"
+               : combo >= 2  ? "combo-glow-1"
+               : "";
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -328,39 +422,62 @@ function checkLineClear(newBlocks) {
     bannerTimer = 1.5;
   }
 
-  // Combo banner (shown only from 2nd consecutive clear onward)
+  // Combo banner (shown from 2nd consecutive clear onward)
   if (comboCount >= 2 && comboBannerEl) {
-    const comboLabels = weeklyDoubleOrNothing
-      ? ["", "", "COMBO x3!", "COMBO x3!", "COMBO x3!"]
-      : ["", "", "COMBO x1.5!", "COMBO x2!", "COMBO x3!"];
-    const comboColors = ["", "", "#f80", "#ffd700", "#ff3300"];
-    comboBannerEl.textContent = comboLabels[comboIdx];
-    comboBannerEl.style.color = comboColors[comboIdx];
-    // Re-trigger animation by toggling display
+    // Color escalation: white→yellow→orange→red→purple at 10+
+    const _comboColor = comboCount >= 10 ? "#cc44ff"
+                      : comboCount >= 5  ? "#ff3300"
+                      : comboCount >= 3  ? "#ffd700"
+                      : comboCount >= 2  ? "#ffaa00"
+                      : "#ffffff";
+    // Label: show actual count, capped label for DoubleOrNothing modifier
+    const _comboLabel = weeklyDoubleOrNothing
+      ? comboCount + "x COMBO (3\xd7)"
+      : comboCount + "x COMBO";
+    // Font size scales with combo (20px base, +2px per extra combo, cap at 36px)
+    const _comboFontPx = Math.min(20 + (comboCount - 2) * 2, 36);
+    comboBannerEl.textContent = _comboLabel;
+    comboBannerEl.style.color = _comboColor;
+    comboBannerEl.style.fontSize = _comboFontPx + "px";
+    // Re-trigger bounce animation by toggling display
+    comboBannerEl.style.animation = "none";
     comboBannerEl.style.display = "none";
     void comboBannerEl.offsetHeight;
+    comboBannerEl.style.animation = "";
     comboBannerEl.style.display = "block";
     comboBannerTimer = 1.5;
 
     // ── Combo visual effects ─────────────────────────────────────────────────
-    if (!(typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled)) {
-      // Screen shake — intensity scales with combo
-      if (comboCount >= 2) {
-        const _shakeStr = comboCount >= 4 ? 0.22 : comboCount >= 3 ? 0.14 : 0.07;
-        comboShakeActive   = true;
-        comboShakeStart    = clock.getElapsedTime();
-        comboShakeStrength = _shakeStr;
-      }
+    const _reducedMotion = (typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled);
+    if (!_reducedMotion) {
+      // Screen shake — scales with both combo count AND lines cleared this clear
+      const _linesBonus = completeLevels.length >= 4 ? 0.12
+                        : completeLevels.length >= 3 ? 0.06
+                        : completeLevels.length >= 2 ? 0.03
+                        : 0;
+      const _shakeBase  = comboCount >= 10 ? 0.30
+                        : comboCount >= 5  ? 0.22
+                        : comboCount >= 3  ? 0.14
+                        : 0.07;
+      comboShakeActive   = true;
+      comboShakeStart    = clock.getElapsedTime();
+      comboShakeStrength = Math.min(_shakeBase + _linesBonus, 0.40);
 
-      // Flash overlay — combo 3+ gets an escalating color burst
+      // Flash overlay — intensity escalates with both combo and clear size
       const flashEl = document.getElementById("lc-flash-overlay");
       if (flashEl) {
-        const _flashColor = comboCount >= 4 ? "#ff3300"
-                          : comboCount >= 3 ? "#ffd700"
+        const _flashColor = comboCount >= 10 ? "#cc44ff"
+                          : comboCount >= 5  ? "#ff3300"
+                          : comboCount >= 3  ? "#ffd700"
                           : "#ffe080";
-        const _flashAlpha = comboCount >= 4 ? "0.28"
-                          : comboCount >= 3 ? "0.20"
-                          : "0.12";
+        const _baseAlpha  = comboCount >= 10 ? 0.38
+                          : comboCount >= 5  ? 0.28
+                          : comboCount >= 3  ? 0.20
+                          : 0.12;
+        const _clearBonus = completeLevels.length >= 4 ? 0.10
+                          : completeLevels.length >= 3 ? 0.05
+                          : 0;
+        const _flashAlpha = String(Math.min(_baseAlpha + _clearBonus, 0.50).toFixed(2));
         flashEl.style.transition = "none";
         flashEl.style.backgroundColor = _flashColor;
         flashEl.style.opacity = _flashAlpha;
@@ -369,11 +486,21 @@ function checkLineClear(newBlocks) {
         flashEl.style.opacity = "0";
       }
 
-      // Chromatic aberration burst at x3+ combo
+      // Chromatic aberration burst — scales with combo tier
       if (comboCount >= 4 && typeof triggerChromaticAberration === 'function') {
-        triggerChromaticAberration(0.007, 0.35);
+        const _caStr = comboCount >= 10 ? 0.014 : comboCount >= 6 ? 0.010 : 0.007;
+        triggerChromaticAberration(_caStr, 0.35);
+      }
+
+      // Particle burst from cleared lines (quality gate: not Low)
+      const _quality = (typeof graphicsQualityTier !== 'undefined') ? graphicsQualityTier : 'high';
+      if (_quality !== 'low') {
+        _lcSpawnComboBurst(completeLevels.length, comboCount);
       }
     }
+
+    // Board glow — update regardless of reduced motion (it's a subtle border effect)
+    _lcUpdateBoardGlow(comboCount);
   }
 }
 
@@ -402,7 +529,11 @@ function updateLineClear(delta) {
     }
     comboCount = 0;
     lastClearTime = -1;
+    _lcUpdateBoardGlow(0);
   }
+
+  // 2-D combo particle burst update
+  _lcUpdateComboBurst(delta);
 
   // ── Camera jolt (upward impulse, decays over ~120 ms) ──────────────────────
   if (_lcJoltAge >= 0) {
