@@ -2412,6 +2412,35 @@
             <button class="tourn-tab tourn-tab-active" id="tourn-tab-all">Open</button>
             <button class="tourn-tab" id="tourn-tab-mine">Mine</button>
             <button class="tourn-tab" id="tourn-tab-past">&#128193; Past</button>
+            <button class="tourn-tab tourn-tab-create" id="tourn-tab-create-btn">+ Create</button>
+          </div>
+          <!-- ── Create tournament form ── -->
+          <div id="tourn-create-panel" style="display:none;">
+            <div id="tourn-create-title">&#127942; New Tournament</div>
+            <div class="tourn-create-field">
+              <label class="tourn-create-label" for="tourn-create-name">Name</label>
+              <input id="tourn-create-name" class="tourn-create-input" type="text" maxlength="32" placeholder="Tournament name..." autocomplete="off">
+            </div>
+            <div class="tourn-create-field">
+              <label class="tourn-create-label" for="tourn-create-size">Bracket size</label>
+              <select id="tourn-create-size" class="tourn-create-select">
+                <option value="4">4 players</option>
+                <option value="8" selected>8 players</option>
+                <option value="16">16 players</option>
+              </select>
+            </div>
+            <div class="tourn-create-field">
+              <label class="tourn-create-label" for="tourn-create-mode">Game mode</label>
+              <select id="tourn-create-mode" class="tourn-create-select">
+                <option value="Survival">Survival</option>
+                <option value="Score Race">Score Race</option>
+              </select>
+            </div>
+            <div id="tourn-create-feedback"></div>
+            <div class="tourn-create-btns">
+              <button id="tourn-create-submit-btn">&#9654; Create</button>
+              <button id="tourn-create-cancel-btn">Cancel</button>
+            </div>
           </div>
           <div id="tourn-list-body"></div>
           <button id="tourn-list-close-btn">&#8592; Back</button>
@@ -2421,6 +2450,7 @@
         <div id="tourn-bracket-view" style="display:none;">
           <div id="tourn-bracket-title"></div>
           <div id="tourn-bracket-status-badge"></div>
+          <div id="tourn-bracket-meta"></div>
           <div id="tourn-champion-banner" style="display:none;"></div>
           <div id="tourn-bracket-tree"></div>
           <div id="tourn-match-entry" style="display:none;">
@@ -2432,6 +2462,15 @@
             <div id="tourn-reg-info"></div>
             <button id="tourn-register-btn">Register</button>
             <div id="tourn-reg-feedback"></div>
+          </div>
+          <!-- ── Tournament chat ── -->
+          <div id="tourn-chat-panel">
+            <div id="tourn-chat-title">&#128172; Tournament Chat</div>
+            <div id="tourn-chat-messages"></div>
+            <div id="tourn-chat-input-row">
+              <input id="tourn-chat-input" type="text" maxlength="200" placeholder="Message..." autocomplete="off">
+              <button id="tourn-chat-send">Send</button>
+            </div>
           </div>
           <button id="tourn-bracket-back-btn">&#8592; Back to List</button>
         </div>

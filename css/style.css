@@ -9916,6 +9916,250 @@ body.sandstorm-active [data-ghost-piece] {
   text-align: left;
 }
 
+/* ── Tournament mode / meta tags ────────────────────────────────────────────── */
+.tourn-mode-tag,
+.tourn-meta-tag {
+  display: inline-block;
+  font-size: 0.75em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(255,200,0,0.09);
+  border: 1px solid rgba(255,200,0,0.25);
+  color: #aa8844;
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+#tourn-bracket-meta {
+  font-size: 0.46em;
+  color: #887744;
+  margin-bottom: 4px;
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ── Create tournament tab ───────────────────────────────────────────────────── */
+.tourn-tab-create {
+  margin-left: auto;
+  color: #00ff88 !important;
+  border-color: rgba(0,255,136,0.35) !important;
+}
+.tourn-tab-create:hover {
+  background: rgba(0,255,136,0.1) !important;
+}
+.tourn-tab-create.tourn-tab-active {
+  background: rgba(0,255,136,0.15) !important;
+  border-color: rgba(0,255,136,0.65) !important;
+}
+
+/* ── Create tournament panel ────────────────────────────────────────────────── */
+#tourn-create-panel {
+  background: rgba(0,255,136,0.04);
+  border: 1px solid rgba(0,255,136,0.2);
+  border-radius: 7px;
+  padding: 20px 18px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: stretch;
+}
+#tourn-create-title {
+  font-size: 0.65em;
+  color: #00ff88;
+  letter-spacing: 1px;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(0,255,136,0.4);
+}
+.tourn-create-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+}
+.tourn-create-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.42em;
+  color: #887744;
+  letter-spacing: 0.5px;
+}
+.tourn-create-input,
+.tourn-create-select {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.55em;
+  padding: 9px 12px;
+  background: rgba(20,14,0,0.9);
+  border: 1px solid rgba(255,200,0,0.35);
+  border-radius: 4px;
+  color: #ffd700;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.tourn-create-input:focus,
+.tourn-create-select:focus {
+  border-color: rgba(0,255,136,0.6);
+  box-shadow: 0 0 6px rgba(0,255,136,0.2);
+}
+.tourn-create-select option {
+  background: #140e00;
+  color: #ffd700;
+}
+.tourn-create-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+#tourn-create-submit-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.6em;
+  padding: 11px 24px;
+  background: rgba(0,255,136,0.15);
+  border: 2px solid rgba(0,255,136,0.55);
+  color: #00ff88;
+  border-radius: 5px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+#tourn-create-submit-btn:hover:not(:disabled) {
+  background: rgba(0,255,136,0.28);
+  box-shadow: 0 0 14px rgba(0,255,136,0.4);
+}
+#tourn-create-submit-btn:disabled { opacity: 0.5; cursor: default; }
+#tourn-create-cancel-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.6em;
+  padding: 11px 20px;
+  background: transparent;
+  border: 1px solid rgba(255,200,0,0.3);
+  color: #887744;
+  border-radius: 5px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s, color 0.15s;
+}
+#tourn-create-cancel-btn:hover {
+  background: rgba(255,200,0,0.08);
+  color: #ffd700;
+}
+#tourn-create-feedback {
+  font-size: 0.44em;
+  color: #00ff88;
+  text-align: center;
+  min-height: 1em;
+  line-height: 1.8;
+}
+
+/* ── Tournament chat ─────────────────────────────────────────────────────────── */
+#tourn-chat-panel {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,200,0,0.18);
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#tourn-chat-title {
+  font-size: 0.48em;
+  color: #887744;
+  letter-spacing: 1px;
+  text-align: center;
+}
+#tourn-chat-messages {
+  min-height: 80px;
+  max-height: 160px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,200,0,0.3) transparent;
+}
+#tourn-chat-messages::-webkit-scrollbar { width: 4px; }
+#tourn-chat-messages::-webkit-scrollbar-thumb { background: rgba(255,200,0,0.3); border-radius: 2px; }
+.tourn-chat-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+.tourn-chat-msg-own { align-items: flex-end; text-align: right; }
+.tourn-chat-user {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.38em;
+  color: #aa8844;
+}
+.tourn-chat-msg-own .tourn-chat-user { color: #00cc66; }
+.tourn-chat-time {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.35em;
+  color: #554422;
+  margin-left: 6px;
+}
+.tourn-chat-text {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.42em;
+  color: #ccaa55;
+  word-break: break-word;
+  background: rgba(255,200,0,0.06);
+  border-radius: 4px;
+  padding: 4px 8px;
+  display: inline-block;
+  max-width: 90%;
+}
+.tourn-chat-msg-own .tourn-chat-text {
+  background: rgba(0,255,136,0.08);
+  color: #aaffcc;
+  border: 1px solid rgba(0,255,136,0.15);
+}
+.tourn-chat-empty {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.4em;
+  color: #554422;
+  text-align: center;
+  padding: 16px 0;
+}
+#tourn-chat-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+#tourn-chat-input {
+  flex: 1;
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.5em;
+  padding: 8px 10px;
+  background: rgba(20,14,0,0.9);
+  border: 1px solid rgba(255,200,0,0.28);
+  border-radius: 4px;
+  color: #ffd700;
+  outline: none;
+  transition: border-color 0.15s;
+}
+#tourn-chat-input:focus {
+  border-color: rgba(255,200,0,0.55);
+}
+#tourn-chat-input::placeholder { color: #443322; }
+#tourn-chat-send {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.48em;
+  padding: 8px 14px;
+  background: rgba(255,200,0,0.12);
+  border: 1px solid rgba(255,200,0,0.4);
+  color: #ffd700;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+#tourn-chat-send:hover {
+  background: rgba(255,200,0,0.24);
+}
+
 /* ── Season in-game HUD badge (shown when < 14 days remain) ──────────────── */
 #season-game-hud {
   display: none;

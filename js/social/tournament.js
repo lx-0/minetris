@@ -3,7 +3,9 @@
 
 const TOURNAMENT_STORAGE_KEY      = 'mineCtris_tournaments';
 const TOURNAMENT_REGISTRATIONS_KEY = 'mineCtris_tournamentRegs';
-const TOURNAMENT_MAX_PLAYERS       = 8;
+const TOURNAMENT_MAX_PLAYERS       = 8; // legacy default; new tournaments use bracketSize
+const TOURNAMENT_CHAT_KEY          = 'mineCtris_tournChat';
+const TOURNAMENT_CHAT_MAX          = 60;
 
 const TournamentStatus = {
   OPEN:        'open',
@@ -25,6 +27,70 @@ function _tBotName() {
   return firsts[Math.floor(Math.random() * firsts.length)] +
          lasts[Math.floor(Math.random() * lasts.length)] +
          Math.floor(Math.random() * 90 + 10);
+}
+
+// ── Unified bracket round accessor ────────────────────────────────────────────
+
+/**
+ * Returns a normalized rounds array from any bracket format.
+ * Each element: { label: string, matches: Array<match> }
+ */
+function _tGetRounds(bracket) {
+  if (!bracket) return [];
+  if (bracket.rounds) return bracket.rounds;
+  // Legacy format (qf/sf/final fixed for 8-player)
+  var rounds = [];
+  if (bracket.r16)   rounds.push({ label: 'ROUND OF 16',    matches: bracket.r16   });
+  if (bracket.qf)    rounds.push({ label: 'QUARTER-FINALS', matches: bracket.qf    });
+  if (bracket.sf)    rounds.push({ label: 'SEMI-FINALS',    matches: bracket.sf    });
+  if (bracket.final) rounds.push({ label: 'FINAL',          matches: [bracket.final] });
+  return rounds;
+}
+
+// ── Flexible single-elimination bracket builder ───────────────────────────────
+
+/**
+ * Build an empty single-elimination bracket for `size` players (4, 8, or 16).
+ * Players must already be sorted by rating descending (seed 1 = index 0).
+ * Returns { rounds: [...], size } where rounds is an array of { label, matches }.
+ */
+function _tBuildFlexBracket(players, size) {
+  var roundLabels = ['FINAL', 'SEMI-FINALS', 'QUARTER-FINALS', 'ROUND OF 16'];
+  var numRounds   = Math.log2(size); // 2 for 4p, 3 for 8p, 4 for 16p
+
+  // First round: snake seeding (top vs bottom, working inward)
+  var half          = size / 2;
+  var firstMatches  = [];
+  for (var i = 0; i < half; i++) {
+    firstMatches.push({
+      p1:     players[i]               || null,
+      p2:     players[size - 1 - i]    || null,
+      result: null,
+      live:   false,
+    });
+  }
+
+  // Build subsequent rounds (empty TBD slots)
+  var allRounds = [firstMatches];
+  for (var r = 1; r < numRounds; r++) {
+    var n = allRounds[r - 1].length / 2;
+    var nextMatches = [];
+    for (var m = 0; m < n; m++) {
+      nextMatches.push({ p1: null, p2: null, result: null, live: false });
+    }
+    allRounds.push(nextMatches);
+  }
+
+  // Apply labels (last round = FINAL, working backwards)
+  var rounds = allRounds.map(function (matches, i) {
+    var labelIdx = numRounds - 1 - i;
+    return {
+      label:   labelIdx < roundLabels.length ? roundLabels[labelIdx] : ('ROUND ' + (i + 1)),
+      matches: matches,
+    };
+  });
+
+  return { rounds: rounds, size: size };
 }
 
 // ── Seed data ─────────────────────────────────────────────────────────────────
@@ -95,12 +161,26 @@ function _tSeedTournaments() {
   wbBracket.final.result = 'p2';
   var wbWinner = wbBracket.final.p2.name;
 
+  // ── Spring Sprint — open 4-player ──
+  var sp4Players = [];
+  for (var s = 0; s < 2; s++) {
+    sp4Players.push(_tMakePlayer(_tBotName(), Math.floor(Math.random() * 300) + 1100));
+  }
+
+  // ── Mega Cup — open 16-player ──
+  var mc16Players = [];
+  for (var mc = 0; mc < 5; mc++) {
+    mc16Players.push(_tMakePlayer(_tBotName(), Math.floor(Math.random() * 400) + 1050));
+  }
+
   return [
     {
       id: 'tourn_grand',
       name: 'Grand Invitational',
       prize: { label: '\u2605 Grand', color: '#ffd700' },
       status: TournamentStatus.OPEN,
+      bracketSize: 8,
+      gameMode: 'Survival',
       players: [
         _tMakePlayer(_tBotName(), 1380),
         _tMakePlayer(_tBotName(), 1250),
@@ -111,10 +191,36 @@ function _tSeedTournaments() {
       createdAt: now - 3600000,
     },
     {
+      id: 'tourn_spring4',
+      name: 'Spring Sprint',
+      prize: { label: '\u2665 Open', color: '#cd7f32' },
+      status: TournamentStatus.OPEN,
+      bracketSize: 4,
+      gameMode: 'Score Race',
+      players: sp4Players,
+      bracket: null,
+      matchReady: false,
+      createdAt: now - 1800000,
+    },
+    {
+      id: 'tourn_mega16',
+      name: 'Mega Cup',
+      prize: { label: '\u26a1 Pro', color: '#c0c0c0' },
+      status: TournamentStatus.OPEN,
+      bracketSize: 16,
+      gameMode: 'Survival',
+      players: mc16Players,
+      bracket: null,
+      matchReady: false,
+      createdAt: now - 900000,
+    },
+    {
       id: 'tourn_elite',
       name: 'Elite Challenge',
       prize: { label: '\u26A1 Elite', color: '#c0c0c0' },
       status: TournamentStatus.IN_PROGRESS,
+      bracketSize: 8,
+      gameMode: 'Survival',
       players: ipPlayers,
       bracket: { qf: qf, sf: sf, final: final },
       matchReady: false,
@@ -125,6 +231,8 @@ function _tSeedTournaments() {
       name: 'Classic Cup',
       prize: { label: '\u2764 Classic', color: '#cd7f32' },
       status: TournamentStatus.COMPLETED,
+      bracketSize: 8,
+      gameMode: 'Survival',
       players: ccPlayers,
       bracket: ccBracket,
       winner: ccWinner,
@@ -137,6 +245,8 @@ function _tSeedTournaments() {
       name: 'Winter Blitz',
       prize: { label: '\u2744 Winter', color: '#88ccff' },
       status: TournamentStatus.COMPLETED,
+      bracketSize: 8,
+      gameMode: 'Score Race',
       players: wbPlayers,
       bracket: wbBracket,
       winner: wbWinner,
@@ -169,6 +279,74 @@ function _tLoadRegistrations() {
 
 function _tSaveRegistrations(data) {
   try { localStorage.setItem(TOURNAMENT_REGISTRATIONS_KEY, JSON.stringify(data)); } catch (_) {}
+}
+
+// ── Tournament chat (client-side, localStorage) ───────────────────────────────
+
+function _tcKey(id) { return TOURNAMENT_CHAT_KEY + '_' + id; }
+
+function tcLoad(tournamentId) {
+  try { return JSON.parse(localStorage.getItem(_tcKey(tournamentId)) || '[]'); } catch (_) { return []; }
+}
+
+function tcPost(tournamentId, text) {
+  var msgs = tcLoad(tournamentId);
+  var name;
+  try { name = localStorage.getItem('mineCtris_displayName') || 'You'; } catch (_) { name = 'You'; }
+  text = (text || '').trim().slice(0, 200);
+  if (!text) return msgs;
+  msgs.push({
+    id:     Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+    userId: name,
+    text:   text,
+    ts:     Date.now(),
+  });
+  if (msgs.length > TOURNAMENT_CHAT_MAX) msgs = msgs.slice(-TOURNAMENT_CHAT_MAX);
+  try { localStorage.setItem(_tcKey(tournamentId), JSON.stringify(msgs)); } catch (_) {}
+  return msgs;
+}
+
+/**
+ * Seed initial bot messages when chat is empty, so the chat feels alive.
+ */
+function tcSeedBotMessages(tournamentId) {
+  if (tcLoad(tournamentId).length > 0) return;
+  var bots  = [_tBotName(), _tBotName(), _tBotName()];
+  var lines = [
+    'gl hf everyone!',
+    'This bracket looks tough',
+    'Let\'s go!',
+    'May the best miner win!',
+    'Who\'s the favorite here?',
+    'Ready to mine some Ws',
+  ];
+  var now  = Date.now() - 240000;
+  var msgs = bots.map(function (b, i) {
+    return { id: (now + i * 40000).toString(36), userId: b, text: lines[i % lines.length], ts: now + i * 40000 };
+  });
+  try { localStorage.setItem(_tcKey(tournamentId), JSON.stringify(msgs)); } catch (_) {}
+}
+
+// ── Submit tournament win to leaderboard ──────────────────────────────────────
+
+function _tSubmitWin(tournament) {
+  try {
+    var myName;
+    try { myName = localStorage.getItem('mineCtris_displayName') || ''; } catch (_) { myName = ''; }
+    if (!myName || myName === 'You') return;
+    fetch('https://minectris-leaderboard.workers.dev/api/tournament/wins', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        displayName:    myName,
+        tournamentId:   tournament.id,
+        tournamentName: tournament.name,
+        bracketSize:    tournament.bracketSize || 8,
+        gameMode:       tournament.gameMode || 'Survival',
+        wonAt:          Date.now(),
+      }),
+    }).catch(function () {}); // silent — endpoint may not exist yet
+  } catch (_) {}
 }
 
 // ── Module ────────────────────────────────────────────────────────────────────
@@ -217,15 +395,60 @@ var tournamentLobby = (function () {
     return _registrations[id] || null;
   }
 
+  // ── Helpers ──
+
+  function _getMyName() {
+    try { return localStorage.getItem('mineCtris_displayName') || 'You'; } catch (_) { return 'You'; }
+  }
+
+  function _getMyRating() {
+    if (typeof loadBattleRating === 'function') return loadBattleRating().rating;
+    return 1000;
+  }
+
+  // ── Auto-start when bracket is full ──────────────────────────────────────────
+
+  function _tAutoStart(tournamentId) {
+    var t = getById(tournamentId);
+    if (!t || t.status !== TournamentStatus.OPEN) return;
+    var size = t.bracketSize || TOURNAMENT_MAX_PLAYERS;
+    if (t.players.length < size) return;
+
+    // Sort by rating, build bracket
+    var sorted  = t.players.slice().sort(function (a, b) { return b.rating - a.rating; });
+    t.bracket   = _tBuildFlexBracket(sorted, size);
+    t.status    = TournamentStatus.IN_PROGRESS;
+    t.startedAt = Date.now();
+
+    // Mark the player's first-round match as live
+    var myName = _getMyName();
+    if (_registrations[tournamentId]) {
+      var rounds = _tGetRounds(t.bracket);
+      if (rounds.length > 0) {
+        rounds[0].matches.forEach(function (match) {
+          if (!match) return;
+          var inMatch = (match.p1 && match.p1.name === myName) ||
+                        (match.p2 && match.p2.name === myName);
+          if (inMatch) { match.live = true; t.matchReady = true; }
+        });
+      }
+    }
+
+    // Seed chat with opening bot messages
+    tcSeedBotMessages(tournamentId);
+    _tSaveTournaments(_tournaments);
+  }
+
   // ── Registration ──
 
   function register(tournamentId) {
     _ensure();
-    var t = getById(tournamentId);
-    if (!t)                                         return { ok: false, reason: 'not_found' };
-    if (t.status !== TournamentStatus.OPEN)         return { ok: false, reason: 'not_open' };
-    if (t.players.length >= TOURNAMENT_MAX_PLAYERS) return { ok: false, reason: 'full' };
-    if (_registrations[tournamentId])               return { ok: false, reason: 'already_registered' };
+    var t    = getById(tournamentId);
+    var size = (t && t.bracketSize) || TOURNAMENT_MAX_PLAYERS;
+    if (!t)                                return { ok: false, reason: 'not_found' };
+    if (t.status !== TournamentStatus.OPEN) return { ok: false, reason: 'not_open' };
+    if (t.players.length >= size)           return { ok: false, reason: 'full' };
+    if (_registrations[tournamentId])       return { ok: false, reason: 'already_registered' };
 
     var myName   = _getMyName();
     var myRating = _getMyRating();
@@ -241,21 +464,46 @@ var tournamentLobby = (function () {
     if (typeof recordSeasonTournamentEntered === 'function') recordSeasonTournamentEntered();
     if (typeof onSeasonMissionTournamentEntered === 'function') onSeasonMissionTournamentEntered();
 
+    // Auto-start if bracket is now full
+    _tAutoStart(tournamentId);
+
     return { ok: true, seedPos: seedPos, rating: myRating, count: t.players.length };
   }
 
-  // ── Helpers ──
+  // ── Create tournament ─────────────────────────────────────────────────────────
 
-  function _getMyName() {
-    try { return localStorage.getItem('mineCtris_displayName') || 'You'; } catch (_) { return 'You'; }
+  function createTournament(name, bracketSize, gameMode) {
+    _ensure();
+    var validSizes = [4, 8, 16];
+    name = (name || '').trim().slice(0, 32);
+    if (!name)                            return { ok: false, reason: 'invalid_name' };
+    if (validSizes.indexOf(bracketSize) === -1) return { ok: false, reason: 'invalid_size' };
+
+    var prizeBySize  = { 4: { label: '\u2665 Open',  color: '#cd7f32' },
+                         8: { label: '\u26a1 Pro',   color: '#c0c0c0' },
+                        16: { label: '\u2605 Grand', color: '#ffd700' } };
+
+    var id = 'tourn_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    var t  = {
+      id:          id,
+      name:        name,
+      prize:       prizeBySize[bracketSize] || prizeBySize[8],
+      status:      TournamentStatus.OPEN,
+      bracketSize: bracketSize,
+      gameMode:    gameMode || 'Survival',
+      players:     [],
+      bracket:     null,
+      matchReady:  false,
+      createdBy:   _getMyName(),
+      createdAt:   Date.now(),
+    };
+
+    _tournaments.unshift(t); // add to front so it appears first
+    _tSaveTournaments(_tournaments);
+    return { ok: true, id: id };
   }
 
-  function _getMyRating() {
-    if (typeof loadBattleRating === 'function') return loadBattleRating().rating;
-    return 1000;
-  }
-
-  // ── Match result ──
+  // ── Match result ──────────────────────────────────────────────────────────────
 
   /**
    * Record a match result for the player in a tournament bracket.
@@ -272,13 +520,13 @@ var tournamentLobby = (function () {
       return { advanced: false, tournamentWon: false };
     }
 
-    var myName = _getMyName();
-    var rounds = [t.bracket.qf, t.bracket.sf, [t.bracket.final]].filter(Boolean);
-    var advanced = false;
+    var myName     = _getMyName();
+    var rounds     = _tGetRounds(t.bracket);
+    var advanced   = false;
     var tournamentWon = false;
 
     for (var ri = 0; ri < rounds.length; ri++) {
-      var round = rounds[ri];
+      var round = rounds[ri].matches;
       for (var mi = 0; mi < round.length; mi++) {
         var match = round[mi];
         if (!match || match.result) continue; // already resolved
@@ -289,31 +537,31 @@ var tournamentLobby = (function () {
         // Record result
         match.result = won ? (isP1 ? 'p1' : 'p2') : (isP1 ? 'p2' : 'p1');
         match.live   = false;
-        advanced = true;
+        advanced     = true;
 
         // Determine winner object
         var winner = won ? (isP1 ? match.p1 : match.p2) : (isP1 ? match.p2 : match.p1);
 
         // Is this the Final match?
         if (ri === rounds.length - 1) {
-          t.status = TournamentStatus.COMPLETED;
-          t.winner = winner ? winner.name : null;
+          t.status      = TournamentStatus.COMPLETED;
+          t.winner      = winner ? winner.name : null;
           t.completedAt = Date.now();
           if (won) {
             tournamentWon = true;
-            // Apply +50 rating bonus for tournament winner
-            if (typeof applyTournamentWinBonus === 'function') {
-              applyTournamentWinBonus();
-            }
+            if (typeof applyTournamentWinBonus === 'function') applyTournamentWinBonus();
+            _tSubmitWin(t);
           }
         } else {
           // Advance winner to next round slot
-          var nextRound = rounds[ri + 1];
-          var nextSlotIdx = Math.floor(mi / 2);
+          var nextRound    = rounds[ri + 1].matches;
+          var nextSlotIdx  = Math.floor(mi / 2);
           if (nextRound && nextRound[nextSlotIdx]) {
             var nextMatch = nextRound[nextSlotIdx];
             if (mi % 2 === 0) { nextMatch.p1 = winner; }
-            else              { nextMatch.p2 = winner; }
+            else               { nextMatch.p2 = winner; }
+            // Mark as live if player advanced
+            if (won) { nextMatch.live = true; t.matchReady = true; }
           }
           // If player won the semi-final, they've reached the Final
           if (won && ri === rounds.length - 2) {
@@ -331,9 +579,9 @@ var tournamentLobby = (function () {
     if (advanced && won) {
       // Count how many matches this player has won in this tournament
       var winsInTournament = 0;
-      var allRounds = [t.bracket.qf, t.bracket.sf, [t.bracket.final]].filter(Boolean);
+      var allRounds = _tGetRounds(t.bracket);
       allRounds.forEach(function (round) {
-        round.forEach(function (match) {
+        round.matches.forEach(function (match) {
           if (!match || !match.result) return;
           var isP1 = match.p1 && match.p1.name === myName;
           var isP2 = match.p2 && match.p2.name === myName;
@@ -375,7 +623,7 @@ var tournamentLobby = (function () {
    */
   function getTournamentStats() {
     _ensure();
-    var myName = _getMyName();
+    var myName  = _getMyName();
     var entered = 0;
     var wins    = 0;
     var finalist = false;
@@ -386,10 +634,16 @@ var tournamentLobby = (function () {
       if (t.status !== TournamentStatus.COMPLETED) return;
       if (t.winner === myName) {
         wins++;
-      } else if (t.bracket && t.bracket.final) {
-        var f = t.bracket.final;
-        if ((f.p1 && f.p1.name === myName) || (f.p2 && f.p2.name === myName)) {
-          finalist = true;
+      } else if (t.bracket) {
+        var rounds  = _tGetRounds(t.bracket);
+        var lastRd  = rounds.length > 0 ? rounds[rounds.length - 1] : null;
+        if (lastRd) {
+          lastRd.matches.forEach(function (f) {
+            if (!f) return;
+            if ((f.p1 && f.p1.name === myName) || (f.p2 && f.p2.name === myName)) {
+              finalist = true;
+            }
+          });
         }
       }
     });
@@ -433,20 +687,17 @@ var tournamentLobby = (function () {
   function setMatchRoomCode(roomCode) {
     _ensure();
     // Find the live match involving the current player across all tournaments
-    var myName = _getMyName();
+    var myName  = _getMyName();
     var changed = false;
     _tournaments.forEach(function (t) {
       if (t.status !== TournamentStatus.IN_PROGRESS || !t.bracket) return;
-      var rounds = [t.bracket.qf, t.bracket.sf, [t.bracket.final]].filter(Boolean);
+      var rounds = _tGetRounds(t.bracket);
       rounds.forEach(function (round) {
-        round.forEach(function (match) {
+        round.matches.forEach(function (match) {
           if (!match || match.result || !match.live) return;
           var isInMatch = (match.p1 && match.p1.name === myName) ||
                           (match.p2 && match.p2.name === myName);
-          if (isInMatch) {
-            match.roomCode = roomCode;
-            changed = true;
-          }
+          if (isInMatch) { match.roomCode = roomCode; changed = true; }
         });
       });
     });
@@ -462,11 +713,16 @@ var tournamentLobby = (function () {
     getRegistration:      getRegistration,
     getRegistrations:     getRegistrations,
     register:             register,
+    createTournament:     createTournament,
     recordMatchResult:    recordMatchResult,
     setMatchRoomCode:     setMatchRoomCode,
     startCountdown:       startCountdown,
     stopCountdown:        stopCountdown,
     getCountdownSecs:     getCountdownSecs,
+    // Chat
+    chatLoad:             tcLoad,
+    chatPost:             tcPost,
+    chatSeedBots:         tcSeedBotMessages,
   };
 }());
 
