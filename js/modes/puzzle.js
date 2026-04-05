@@ -11,32 +11,35 @@ const PUZZLES = [
   {
     id: 1,
     name: "First Steps",
-    difficulty: "tutorial",
+    difficulty: "easy",
     description: "Mine all the stone blocks to clear the field.",
     layout: [
       [-1, 0, 0, 2], [0, 0, 0, 2], [1, 0, 0, 2],
     ],
     pieces: [1, 3, 5, 2, 7, 4, 6],
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
   },
   {
     id: 2,
     name: "L-Shape",
-    difficulty: "tutorial",
+    difficulty: "easy",
     description: "An L-shaped wall. Mine your way through it.",
     layout: [
       [0, 0, 0, 2], [0, 1, 0, 2], [0, 2, 0, 2], [1, 0, 0, 2],
     ],
     pieces: [2, 4, 6, 1, 3, 5, 7, 2],
+    hintBlocks: [[0, 0], [1, 0]],
   },
   {
     id: 3,
     name: "The Staircase",
-    difficulty: "tutorial",
+    difficulty: "easy",
     description: "Blocks ascend like stairs. Reach and mine each one.",
     layout: [
       [-2, 0, 0, 2], [-1, 1, 0, 2], [0, 2, 0, 2], [1, 3, 0, 2], [2, 4, 0, 2],
     ],
     pieces: [3, 1, 5, 2, 7, 4, 6, 1, 3],
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0]],
   },
   {
     id: 4,
@@ -48,6 +51,7 @@ const PUZZLES = [
       [-1, 1, 0, 3], [0, 1, 0, 3], [1, 1, 0, 3],
     ],
     pieces: [2, 5, 7, 4, 1, 3, 6, 2, 5, 7],
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
   },
   {
     id: 5,
@@ -58,6 +62,7 @@ const PUZZLES = [
       [0, 0, 0, 7], [0, 1, 0, 7], [0, 2, 0, 7], [0, 3, 0, 7], [0, 4, 0, 7],
     ],
     pieces: [1, 6, 3, 5, 2, 4, 7, 1, 6, 3],
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
   },
   {
     id: 6,
@@ -70,6 +75,7 @@ const PUZZLES = [
       [0, 2, 0, 5],
     ],
     pieces: [4, 7, 2, 5, 1, 6, 3, 4, 7, 2, 5],
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
   },
   {
     id: 7,
@@ -82,6 +88,7 @@ const PUZZLES = [
       [-1, 2, 0, 2], [0, 2, 0, 2], [1, 2, 0, 2],
     ],
     pieces: [3, 1, 7, 5, 2, 6, 4, 3, 1, 7, 5, 2],
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0]],
   },
   {
     id: 8,
@@ -94,6 +101,7 @@ const PUZZLES = [
     ],
     pieces: [2, 4, 7, 1, 5, 3, 6, 2, 4, 7, 1, 5],
     winCondition: { mode: "clear_lines", n: 3 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0]],
   },
   {
     id: 9,
@@ -108,6 +116,7 @@ const PUZZLES = [
     ],
     pieces: [1, 5, 3, 7, 2, 6, 4, 1, 5, 3, 7, 2, 6, 4],
     winCondition: { mode: "no_craft" },
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
   },
   {
     id: 10,
@@ -122,9 +131,75 @@ const PUZZLES = [
     ],
     pieces: [4, 6, 2, 7, 1, 5, 3, 4, 6, 2, 7, 1, 5, 3, 4, 6],
     winCondition: { mode: "timed_score", scoreTarget: 500, timeLimit: 120 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0]],
   },
 
-  // ── Pack 2 ────────────────────────────────────────────────────────────────────
+  // ── Easy tier continued ───────────────────────────────────────────────────────
+  {
+    id: 16,
+    name: "Lone Wolf",
+    difficulty: "easy",
+    description: "A single stone block stands alone. Mine it to move on.",
+    layout: [[0, 0, 0, 2]],
+    pieces: [4, 1, 2, 3, 7],
+    hintBlocks: [[-1, 0], [0, 0]],
+  },
+  {
+    id: 17,
+    name: "Gold Speck",
+    difficulty: "easy",
+    description: "One gold block — it won't take long.",
+    layout: [[0, 0, 0, 3]],
+    pieces: [2, 4, 1, 3, 5],
+    hintBlocks: [[0, 0], [1, 0]],
+  },
+  {
+    id: 18,
+    name: "Neighbors",
+    difficulty: "easy",
+    description: "Two stone blocks side by side. Take them both out.",
+    layout: [[-1, 0, 0, 2], [1, 0, 0, 2]],
+    pieces: [3, 1, 4, 2, 5, 7],
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 19,
+    name: "Short Stack",
+    difficulty: "easy",
+    description: "Three blocks stacked in a column. Reach the top.",
+    layout: [[0, 0, 0, 2], [0, 1, 0, 2], [0, 2, 0, 2]],
+    pieces: [4, 1, 3, 5, 2, 7, 6],
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 20,
+    name: "Flat Four",
+    difficulty: "easy",
+    description: "Four stone blocks in a row at ground level. Clear them all.",
+    layout: [[-1, 0, 0, 2], [0, 0, 0, 2], [1, 0, 0, 2], [2, 0, 0, 2]],
+    pieces: [4, 4, 2, 1, 3, 5],
+    hintBlocks: [[-1, 0], [0, 0], [1, 0], [2, 0]],
+  },
+  {
+    id: 21,
+    name: "Ice Row",
+    difficulty: "easy",
+    description: "Three ice blocks in a row — they shatter in one hit each.",
+    layout: [[-1, 0, 0, 4], [0, 0, 0, 4], [1, 0, 0, 4]],
+    pieces: [1, 3, 5, 2, 4, 7],
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 22,
+    name: "Corner Step",
+    difficulty: "easy",
+    description: "Three stone blocks forming an L. Mine around the bend.",
+    layout: [[-1, 0, 0, 2], [0, 0, 0, 2], [0, 1, 0, 2]],
+    pieces: [7, 4, 1, 2, 3, 5],
+    hintBlocks: [[-1, 0], [0, 0]],
+  },
+
+  // ── Medium tier continued ─────────────────────────────────────────────────────
   {
     id: 11,
     name: "The Bridge",
@@ -137,15 +212,7 @@ const PUZZLES = [
     ],
     pieces: [7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1, 7, 1],
     winCondition: { mode: "clear_lines", n: 3 },
-  },
-  {
-    id: 12,
-    name: "Tetris Tower",
-    difficulty: "hard",
-    description: "Stack I-pieces to reach height 15 without clearing a single line. Every clear is failure.",
-    layout: [],
-    pieces: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-    winCondition: { mode: "reach_height", targetHeight: 14 },
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
   },
   {
     id: 13,
@@ -161,6 +228,64 @@ const PUZZLES = [
     ],
     pieces: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
     winCondition: { mode: "clear_lines", n: 5 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0]],
+  },
+  {
+    id: 23,
+    name: "Tall Tower",
+    difficulty: "medium",
+    description: "A six-block stone column. Stack pieces alongside it to reach the summit.",
+    layout: [
+      [0, 0, 0, 2], [0, 1, 0, 2], [0, 2, 0, 2],
+      [0, 3, 0, 2], [0, 4, 0, 2], [0, 5, 0, 2],
+    ],
+    pieces: [1, 6, 4, 3, 5, 2, 7, 1, 4],
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 24,
+    name: "Gold Cluster",
+    difficulty: "medium",
+    description: "Six gold blocks form a 2×3 wall. Mine them all before pieces run out.",
+    layout: [
+      [-1, 0, 0, 3], [0, 0, 0, 3], [1, 0, 0, 3],
+      [-1, 1, 0, 3], [0, 1, 0, 3], [1, 1, 0, 3],
+    ],
+    pieces: [3, 3, 4, 2, 7, 1, 5, 6],
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 25,
+    name: "Crystal Trio",
+    difficulty: "medium",
+    description: "Three crystals at varying heights. Stack smartly to reach each one.",
+    layout: [[-2, 0, 0, 7], [0, 2, 0, 7], [2, 0, 0, 7]],
+    pieces: [4, 2, 1, 5, 7, 3, 4, 6, 1],
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0]],
+  },
+  {
+    id: 26,
+    name: "Lava Pillars",
+    difficulty: "medium",
+    description: "Two twin lava pillars. Mine them before the heat gets you.",
+    layout: [
+      [-2, 0, 0, 6], [-2, 1, 0, 6],
+      [2, 0, 0, 6], [2, 1, 0, 6],
+    ],
+    pieces: [5, 7, 1, 4, 2, 3, 6, 5],
+    hintBlocks: [[-2, 0], [-1, 0]],
+  },
+
+  // ── Hard tier continued ───────────────────────────────────────────────────────
+  {
+    id: 12,
+    name: "Tetris Tower",
+    difficulty: "hard",
+    description: "Stack I-pieces to reach height 15 without clearing a single line. Every clear is failure.",
+    layout: [],
+    pieces: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+    winCondition: { mode: "reach_height", targetHeight: 14 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0]],
   },
   {
     id: 14,
@@ -176,11 +301,12 @@ const PUZZLES = [
     ],
     pieces: [4, 2, 1, 7, 4, 2, 1, 7, 4, 2, 1, 7, 4, 2, 1, 7, 4, 2, 1, 7],
     winCondition: { mode: "clear_lines", n: 8 },
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
   },
   {
     id: 15,
     name: "Obsidian Gauntlet",
-    difficulty: "expert",
+    difficulty: "hard",
     description: "Obsidian blocks stand scattered — each takes 8 hits to break. Endure and clear them all.",
     layout: [
       [-2, 0, 0, 15], [0, 0, 0, 15], [2, 0, 0, 15],
@@ -190,10 +316,97 @@ const PUZZLES = [
       [0, 4, 0, 15],
     ],
     pieces: [1, 5, 2, 7, 3, 4, 6, 1, 5, 2, 7, 3, 4, 6, 1, 5, 2, 7, 3, 4, 6],
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0]],
+  },
+  {
+    id: 27,
+    name: "Stone Pyramid",
+    difficulty: "hard",
+    description: "A full pyramid of stone crowned with gold. Mine it all from base to peak.",
+    layout: [
+      [-3, 0, 0, 2], [-2, 0, 0, 2], [-1, 0, 0, 2], [0, 0, 0, 2], [1, 0, 0, 2], [2, 0, 0, 2], [3, 0, 0, 2],
+      [-2, 1, 0, 2], [-1, 1, 0, 2], [0, 1, 0, 2], [1, 1, 0, 2], [2, 1, 0, 2],
+      [-1, 2, 0, 2], [0, 2, 0, 2], [1, 2, 0, 2],
+      [0, 3, 0, 3],
+    ],
+    pieces: [4, 2, 7, 5, 1, 3, 6, 4, 2, 7, 5, 1, 3, 6, 4, 2],
+    hintBlocks: [[-3, 0], [-2, 0], [-1, 0], [0, 0]],
+  },
+  {
+    id: 28,
+    name: "Score Chase",
+    difficulty: "hard",
+    description: "High-value ore scattered across the field. Score 600 points in 2 minutes.",
+    layout: [
+      [-2, 0, 0, 3], [0, 0, 0, 7], [2, 0, 0, 3],
+      [-1, 1, 0, 7], [1, 1, 0, 7],
+      [0, 2, 0, 3],
+    ],
+    pieces: [4, 2, 7, 5, 1, 3, 6, 4, 2, 7, 5, 1, 3, 6, 4, 2, 7, 5, 1],
+    winCondition: { mode: "timed_score", scoreTarget: 600, timeLimit: 120 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0]],
+  },
+  {
+    id: 29,
+    name: "Crystal Cascade",
+    difficulty: "hard",
+    description: "Crystals staircase upward — each step higher than the last.",
+    layout: [
+      [-3, 0, 0, 7], [-2, 1, 0, 7], [-1, 2, 0, 7],
+      [0, 3, 0, 7], [1, 4, 0, 7], [2, 5, 0, 7], [3, 6, 0, 7],
+    ],
+    pieces: [1, 4, 2, 5, 3, 7, 6, 1, 4, 2, 5, 3, 7, 6],
+    hintBlocks: [[-3, 0], [-2, 0], [-1, 0], [0, 0]],
+  },
+  {
+    id: 30,
+    name: "Final Trial",
+    difficulty: "hard",
+    description: "Stone walls flank an open channel. Fill 10 complete lines to win.",
+    layout: [
+      [-4, 0, 0, 2], [-3, 0, 0, 2], [-2, 0, 0, 2], [2, 0, 0, 2], [3, 0, 0, 2], [4, 0, 0, 2],
+      [-4, 1, 0, 2], [-3, 1, 0, 2], [3, 1, 0, 2], [4, 1, 0, 2],
+      [-4, 2, 0, 2], [-3, 2, 0, 7], [3, 2, 0, 7], [4, 2, 0, 2],
+      [-4, 3, 0, 2], [4, 3, 0, 2],
+    ],
+    pieces: [4, 4, 4, 1, 1, 2, 7, 5, 3, 4, 4, 4, 1, 1, 2, 7, 5, 3, 4, 4, 4, 1, 1, 2, 7, 5],
+    winCondition: { mode: "clear_lines", n: 10 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0]],
   },
 ];
 
 // ── Progress persistence ───────────────────────────────────────────────────────
+
+// Fail count storage — tracks how many times each puzzle has been failed.
+const PUZZLE_FAIL_KEY = "mineCtris_puzzleFailCounts";
+
+function _loadPuzzleFailCounts() {
+  try { return JSON.parse(localStorage.getItem(PUZZLE_FAIL_KEY)) || {}; } catch (_) { return {}; }
+}
+
+/** Return number of failed attempts for a puzzle (0 if never failed). */
+function getPuzzleFailCount(puzzleId) {
+  return (_loadPuzzleFailCounts()[puzzleId] || 0);
+}
+
+/** Increment the fail count for a puzzle by 1. */
+function incPuzzleFailCount(puzzleId) {
+  const counts = _loadPuzzleFailCounts();
+  counts[puzzleId] = (counts[puzzleId] || 0) + 1;
+  try { localStorage.setItem(PUZZLE_FAIL_KEY, JSON.stringify(counts)); } catch (_) {}
+}
+
+/** Reset fail count for a puzzle (called on win). */
+function resetPuzzleFailCount(puzzleId) {
+  const counts = _loadPuzzleFailCounts();
+  counts[puzzleId] = 0;
+  try { localStorage.setItem(PUZZLE_FAIL_KEY, JSON.stringify(counts)); } catch (_) {}
+}
+
+/** Return true if the hint ghost should be shown for this puzzle (≥3 fails). */
+function shouldShowPuzzleHint(puzzleId) {
+  return getPuzzleFailCount(puzzleId) >= 3;
+}
 
 /** Load all puzzle progress from localStorage. Returns { [puzzleId]: { stars, date } }. */
 function loadPuzzleProgress() {
@@ -223,10 +436,34 @@ function getPuzzleStars(puzzleId) {
   return (progress[puzzleId] || {}).stars || 0;
 }
 
-/** Puzzle N is unlocked once puzzle N-1 has at least 1 star. Puzzle 1 is always unlocked. */
+/** Count completed puzzles (≥1 star) in the given difficulty tier. */
+function countCompletedByDiff(diff) {
+  const progress = loadPuzzleProgress();
+  return PUZZLES.filter(function (p) {
+    return p.difficulty === diff && (progress[p.id] || {}).stars >= 1;
+  }).length;
+}
+
+/**
+ * Unlock rules (per difficulty tier, sorted by puzzle id within tier):
+ *  - easy:   first is always unlocked; each subsequent needs previous easy solved.
+ *  - medium: first needs 5 easy solved; each subsequent needs previous medium solved.
+ *  - hard:   first needs 5 medium solved; each subsequent needs previous hard solved.
+ */
 function isPuzzleUnlocked(puzzleId) {
-  if (puzzleId <= 1) return true;
-  return getPuzzleStars(puzzleId - 1) >= 1;
+  const puzzle = getPuzzleById(puzzleId);
+  if (!puzzle) return false;
+  const diff = puzzle.difficulty;
+  const tier = PUZZLES.filter(function (p) { return p.difficulty === diff; })
+                      .sort(function (a, b) { return a.id - b.id; });
+  const idx = tier.findIndex(function (p) { return p.id === puzzleId; });
+  if (idx <= 0) {
+    if (diff === "easy") return true;
+    if (diff === "medium") return countCompletedByDiff("easy") >= 5;
+    if (diff === "hard") return countCompletedByDiff("medium") >= 5;
+    return false;
+  }
+  return getPuzzleStars(tier[idx - 1].id) >= 1;
 }
 
 /** Count how many puzzles have been completed (≥1 star). */
@@ -241,23 +478,9 @@ function countThreeStarPuzzles() {
   return Object.keys(progress).filter(id => (progress[id].stars || 0) >= 3).length;
 }
 
-/** Count completed puzzles in Pack 1 (IDs 1–10). */
-function countCompletedPack1() {
-  const progress = loadPuzzleProgress();
-  return Object.keys(progress).filter(id => {
-    const n = parseInt(id, 10);
-    return n >= 1 && n <= 10 && (progress[id].stars || 0) >= 1;
-  }).length;
-}
-
-/** Count completed puzzles in Pack 2 (IDs 11–15). */
-function countCompletedPack2() {
-  const progress = loadPuzzleProgress();
-  return Object.keys(progress).filter(id => {
-    const n = parseInt(id, 10);
-    return n >= 11 && n <= 15 && (progress[id].stars || 0) >= 1;
-  }).length;
-}
+/** @deprecated Legacy helpers kept for external call-sites. */
+function countCompletedPack1() { return countCompletedByDiff("easy"); }
+function countCompletedPack2() { return countCompletedByDiff("medium"); }
 
 // ── Runtime state ─────────────────────────────────────────────────────────────
 // These track the current puzzle session; reset in resetPuzzleState().
@@ -271,6 +494,61 @@ let _puzzleNoCraftViolated = false; // True if player crafted during a no_craft 
 let _puzzleTimeLimitSecs = 0;       // Time limit for timed_score puzzles (0 = no limit)
 let _puzzleTimeElapsed = 0;         // Seconds elapsed for timed_score puzzles
 
+// ── Hint ghost state ──────────────────────────────────────────────────────────
+let _hintGhostMeshes = [];  // Transparent hint block meshes shown after 3 fails
+
+/**
+ * Remove all hint ghost meshes from the scene and dispose their resources.
+ * Safe to call even if no hint is active.
+ */
+function clearPuzzleHintGhost() {
+  _hintGhostMeshes.forEach(function (m) {
+    if (typeof worldGroup !== "undefined" && worldGroup) worldGroup.remove(m);
+    if (m.geometry) m.geometry.dispose();
+    if (m.material) m.material.dispose();
+  });
+  _hintGhostMeshes = [];
+}
+
+/**
+ * Place semi-transparent hint blocks in the world showing where to land the first piece.
+ * Called from setupPuzzleLayout() when shouldShowPuzzleHint() is true.
+ * Requires THREE.js, worldGroup, gridOccupancy to be available.
+ */
+function setupPuzzleHintGhost() {
+  clearPuzzleHintGhost();
+  if (!shouldShowPuzzleHint(puzzlePuzzleId)) return;
+  const puzzle = getPuzzleById(puzzlePuzzleId);
+  if (!puzzle || !puzzle.hintBlocks || puzzle.hintBlocks.length === 0) return;
+  if (typeof THREE === "undefined" || typeof worldGroup === "undefined" || !worldGroup) return;
+
+  const geo = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+  puzzle.hintBlocks.forEach(function (hb) {
+    const hx = hb[0], hz = hb[1];
+    // Find landing Y: the first unoccupied Y above the highest occupied cell at this x,z
+    let landY = 0;
+    if (typeof gridOccupancy !== "undefined") {
+      for (let y = WORLD_SIZE - 1; y >= 0; y--) {
+        const row = gridOccupancy.get(y);
+        if (row && row.has(hx + "," + hz)) { landY = y + 1; break; }
+      }
+    }
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.38,
+      emissive: new THREE.Color(0xffff66),
+      emissiveIntensity: 0.6,
+      depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(hx, landY + 0.5, hz);
+    mesh.name = "puzzle_hint_ghost";
+    worldGroup.add(mesh);
+    _hintGhostMeshes.push(mesh);
+  });
+}
+
 function resetPuzzleState() {
   _puzzlePresetBlocks = [];
   _puzzleInitialCount = 0;
@@ -279,6 +557,7 @@ function resetPuzzleState() {
   _puzzleNoCraftViolated = false;
   _puzzleTimeLimitSecs = 0;
   _puzzleTimeElapsed = 0;
+  clearPuzzleHintGhost();
 }
 
 // ── Piece queue for puzzle mode ────────────────────────────────────────────────
@@ -314,6 +593,8 @@ function initPuzzleWinCondition() {
 function drawPuzzlePiece() {
   if (puzzleFixedQueue.length === 0) return null;
   _puzzlePiecesUsed++;
+  // Clear hint ghost as soon as the first piece is drawn (hint served its purpose)
+  if (_puzzlePiecesUsed === 1) clearPuzzleHintGhost();
   const idx = puzzleFixedQueue.shift();
   // Rebuild preview from remaining fixed queue
   pieceQueue.length = 0;
@@ -426,6 +707,9 @@ function setupPuzzleLayout() {
   // Check if this is the first attempt (no stars recorded yet)
   const progress = loadPuzzleProgress();
   _puzzleIsFirstAttempt = !progress[puzzlePuzzleId];
+
+  // Show hint ghost after 3 failed attempts (placed after preset blocks so landing Y is correct)
+  setupPuzzleHintGhost();
 }
 
 // ── Custom puzzle layout setup ────────────────────────────────────────────────

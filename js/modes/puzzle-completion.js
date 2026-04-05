@@ -24,6 +24,9 @@ function _triggerPuzzleWin() {
   isGameOver = true;
   gameTimerRunning = false;
 
+  // Reset fail count on success so the hint doesn't linger after the player improves
+  if (typeof resetPuzzleFailCount === "function") resetPuzzleFailCount(puzzlePuzzleId);
+
   const puzzle = getPuzzleById(puzzlePuzzleId);
   const piecesTotal = puzzle ? puzzle.pieces.length : 1;
   const stars = _calcStars(piecesTotal, _puzzlePiecesUsed, _puzzleIsFirstAttempt);
@@ -94,6 +97,9 @@ function _triggerPuzzleLose(reason) {
   puzzleComplete = true;
   isGameOver = true;
   gameTimerRunning = false;
+
+  // Track fail count — after 3 fails the hint ghost will show on next attempt
+  if (typeof incPuzzleFailCount === "function") incPuzzleFailCount(puzzlePuzzleId);
 
   const pzXpElLose = document.getElementById('puzzle-xp-earned');
   if (pzXpElLose) { pzXpElLose.textContent = ''; pzXpElLose.className = 'xp-earned-display'; }
@@ -541,35 +547,101 @@ function updatePuzzleHUD() {
 
 // ── Puzzle selector ───────────────────────────────────────────────────────────
 
-/** Render the puzzle-select list inside #puzzle-select-list. */
-function renderPuzzleSelectList() {
+/** Currently selected difficulty tab ('easy' | 'medium' | 'hard' | 'daily'). */
+if (typeof _activePuzzleDiffTab === "undefined") { var _activePuzzleDiffTab = "easy"; }
+
+/** Returns today's daily puzzle ID (1–N), seeded by UTC date. */
+function getDailyPuzzleId() {
+  var seed;
+  if (typeof _hashDate === "function" && typeof getDailyDateString === "function") {
+    seed = _hashDate(getDailyDateString() + "_pzl");
+  } else {
+    var d = new Date();
+    var doy = Math.floor((d - new Date(d.getUTCFullYear(), 0, 0)) / 86400000);
+    seed = (d.getUTCFullYear() * 1000 + doy) | 0;
+  }
+  var rng = (typeof mulberry32 === "function") ? mulberry32(seed) : function () { return 0.5; };
+  return (Math.floor(rng() * PUZZLES.length) + 1);
+}
+
+/** Render the daily-puzzle entry row into listEl. */
+function _renderDailyPuzzleEntry(listEl) {
+  const dailyId = getDailyPuzzleId();
+  const puzzle = getPuzzleById(dailyId);
+  if (!puzzle) return;
+
+  const dateStr = (typeof getDailyDateString === "function") ? getDailyDateString() : "";
+  const dateLabel = (typeof formatDailyLabel === "function" && dateStr) ? formatDailyLabel(dateStr) : dateStr;
+
+  const header = document.createElement("div");
+  header.className = "puzzle-pack-header";
+  header.textContent = "Today\u2019s Daily Puzzle \u2014 " + dateLabel;
+  listEl.appendChild(header);
+
+  const stars = getPuzzleStars(dailyId);
+  const playedKey = "mineCtris_dailyPuzzlePlayed_" + dateStr;
+  const played = dateStr ? localStorage.getItem(playedKey) : null;
+  const diffLabel = puzzle.difficulty.charAt(0).toUpperCase() + puzzle.difficulty.slice(1);
+
+  const item = document.createElement("div");
+  item.className = "puzzle-list-item puzzle-daily-item";
+  item.innerHTML =
+    '<div class="puzzle-list-num">\u2605</div>' +
+    '<div class="puzzle-list-info">' +
+      '<div class="puzzle-list-name">' + puzzle.name + '</div>' +
+      '<div class="puzzle-list-diff puzzle-diff-' + puzzle.difficulty + '">' +
+        diffLabel + (played ? ' \u00b7 Played Today!' : ' \u00b7 NEW TODAY') +
+      '</div>' +
+    '</div>' +
+    '<div class="puzzle-list-stars">' + '\u2605'.repeat(stars) + '\u2606'.repeat(3 - stars) + '</div>';
+
+  item.addEventListener("click", function () {
+    if (dateStr) localStorage.setItem(playedKey, "1");
+    puzzlePuzzleId = dailyId;
+    hidePuzzleSelect();
+    if (typeof Tone !== "undefined" && Tone.context.state !== "running") {
+      Tone.start().then(function () { controls.lock(); }).catch(function () { controls.lock(); });
+    } else if (controls) {
+      controls.lock();
+    }
+  });
+  listEl.appendChild(item);
+}
+
+/**
+ * Render the puzzle-select list.
+ * @param {string} [tabOverride] - 'easy' | 'medium' | 'hard' | 'daily'
+ */
+function renderPuzzleSelectList(tabOverride) {
+  if (tabOverride) _activePuzzleDiffTab = tabOverride;
   const listEl = document.getElementById("puzzle-select-list");
   if (!listEl) return;
 
   listEl.innerHTML = "";
 
-  // Pack boundaries: insert a section header when crossing into a new pack.
-  const PACKS = [
-    { label: "Pack 1", startId: 1,  endId: 10, total: 10 },
-    { label: "Pack 2", startId: 11, endId: 15, total: 5  },
-  ];
-  let packIdx = -1;
+  // Update tab button active states
+  ["easy", "medium", "hard", "daily"].forEach(function (tab) {
+    const btn = document.getElementById("puzzle-tab-" + tab);
+    if (btn) btn.classList.toggle("puzzle-tab-active", tab === _activePuzzleDiffTab);
+  });
 
-  PUZZLES.forEach(puzzle => {
-    // Insert pack header when entering a new pack range.
-    const newPackIdx = PACKS.findIndex(p => puzzle.id >= p.startId && puzzle.id <= p.endId);
-    if (newPackIdx !== packIdx) {
-      packIdx = newPackIdx;
-      if (packIdx >= 0) {
-        const pack = PACKS[packIdx];
-        const completedInPack = packIdx === 0 ? countCompletedPack1() : countCompletedPack2();
-        const header = document.createElement("div");
-        header.className = "puzzle-pack-header";
-        header.textContent = pack.label + "  (" + completedInPack + "/" + pack.total + " solved)";
-        listEl.appendChild(header);
-      }
-    }
+  if (_activePuzzleDiffTab === "daily") {
+    _renderDailyPuzzleEntry(listEl);
+    return;
+  }
 
+  const diff = _activePuzzleDiffTab;
+  const tier = PUZZLES.filter(function (p) { return p.difficulty === diff; })
+                      .sort(function (a, b) { return a.id - b.id; });
+  const completedInTier = countCompletedByDiff(diff);
+  const diffLabel = diff.charAt(0).toUpperCase() + diff.slice(1);
+
+  const header = document.createElement("div");
+  header.className = "puzzle-pack-header";
+  header.textContent = diffLabel + "  (" + completedInTier + "/" + tier.length + " solved)";
+  listEl.appendChild(header);
+
+  tier.forEach(function (puzzle) {
     const unlocked = isPuzzleUnlocked(puzzle.id);
     const stars = getPuzzleStars(puzzle.id);
 
@@ -577,8 +649,8 @@ function renderPuzzleSelectList() {
     item.className = "puzzle-list-item" + (unlocked ? "" : " puzzle-locked");
 
     const starsStr = unlocked
-      ? ("★".repeat(stars) + "☆".repeat(3 - stars))
-      : "🔒";
+      ? ("\u2605".repeat(stars) + "\u2606".repeat(3 - stars))
+      : "\uD83D\uDD12";
 
     item.innerHTML =
       '<div class="puzzle-list-num">' + puzzle.id + '</div>' +
@@ -592,9 +664,8 @@ function renderPuzzleSelectList() {
       item.addEventListener("click", function () {
         puzzlePuzzleId = puzzle.id;
         hidePuzzleSelect();
-        // Lock pointer (mirrors requestPointerLock in main.js)
         if (typeof Tone !== "undefined" && Tone.context.state !== "running") {
-          Tone.start().then(() => controls.lock()).catch(() => controls.lock());
+          Tone.start().then(function () { controls.lock(); }).catch(function () { controls.lock(); });
         } else if (controls) {
           controls.lock();
         }
@@ -605,6 +676,7 @@ function renderPuzzleSelectList() {
 }
 
 function showPuzzleSelect() {
+  _activePuzzleDiffTab = "easy";
   const el = document.getElementById("puzzle-select-screen");
   if (el) {
     renderPuzzleSelectList();

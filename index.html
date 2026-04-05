@@ -398,10 +398,10 @@
                   <div class="mode-card-pb" id="mode-pb-weekly"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="thisweek" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card mode-card-puzzle" id="mode-card-puzzle" data-mode="puzzle" tabindex="0" role="button" aria-label="Puzzle mode — Curated mining puzzles, solve them all">
+                <div class="mode-card mode-card-puzzle" id="mode-card-puzzle" data-mode="puzzle" tabindex="0" role="button" aria-label="Puzzle mode — 30 curated mining puzzles across Easy, Medium, and Hard">
                   <div class="mode-card-icon">&#129513;</div>
                   <div class="mode-card-name">Puzzle</div>
-                  <div class="mode-card-desc">10 curated mining puzzles. Solve them all.</div>
+                  <div class="mode-card-desc">30 puzzles across 3 tiers. Daily puzzle every day.</div>
                   <div class="mode-card-pb" id="mode-pb-puzzle"></div>
                 </div>
               </div>
@@ -925,6 +925,12 @@
         <div id="puzzle-select-inner">
           <div id="puzzle-select-title">SELECT PUZZLE</div>
           <div id="puzzle-select-hint">Hold F for Think Mode (zero gravity)</div>
+          <div id="puzzle-tab-bar">
+            <button id="puzzle-tab-easy"   class="puzzle-tab-btn puzzle-tab-active" onclick="renderPuzzleSelectList('easy')">Easy</button>
+            <button id="puzzle-tab-medium" class="puzzle-tab-btn" onclick="renderPuzzleSelectList('medium')">Medium</button>
+            <button id="puzzle-tab-hard"   class="puzzle-tab-btn" onclick="renderPuzzleSelectList('hard')">Hard</button>
+            <button id="puzzle-tab-daily"  class="puzzle-tab-btn" onclick="renderPuzzleSelectList('daily')">Daily</button>
+          </div>
           <div id="puzzle-select-list"></div>
           <button id="puzzle-select-back">&#8592; Back</button>
         </div>

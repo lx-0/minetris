@@ -3925,10 +3925,43 @@ body {
   font-family: "Press Start 2P", cursive;
   font-size: 7px;
 }
+.puzzle-diff-easy     { color: #7bf07b; }
 .puzzle-diff-tutorial { color: #7bf07b; }
 .puzzle-diff-medium   { color: #ffd700; }
 .puzzle-diff-hard     { color: #ff6060; }
 .puzzle-diff-expert   { color: #cc44ff; }
+
+#puzzle-tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  width: 100%;
+}
+.puzzle-tab-btn {
+  flex: 1;
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  padding: 7px 4px;
+  background: rgba(96, 32, 128, 0.2);
+  border: 1px solid rgba(180, 100, 255, 0.35);
+  border-radius: 4px;
+  color: rgba(200, 160, 255, 0.7);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.puzzle-tab-btn:hover {
+  background: rgba(180, 100, 255, 0.2);
+  border-color: #c060ff;
+  color: #e0b0ff;
+}
+.puzzle-tab-active {
+  background: rgba(160, 64, 220, 0.35) !important;
+  border-color: #c060ff !important;
+  color: #ffffff !important;
+}
+.puzzle-daily-item .puzzle-list-num {
+  color: #ffd700;
+}
 .puzzle-pack-header {
   font-family: "Press Start 2P", cursive;
   font-size: 8px;
