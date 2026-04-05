@@ -970,6 +970,7 @@
             <button id="puzzle-tab-medium" class="puzzle-tab-btn" onclick="renderPuzzleSelectList('medium')">Medium</button>
             <button id="puzzle-tab-hard"   class="puzzle-tab-btn" onclick="renderPuzzleSelectList('hard')">Hard</button>
             <button id="puzzle-tab-daily"  class="puzzle-tab-btn" onclick="renderPuzzleSelectList('daily')">Daily</button>
+            <button id="puzzle-tab-my"     class="puzzle-tab-btn" onclick="renderPuzzleSelectList('my')">&#128736; Mine</button>
           </div>
           <div id="puzzle-select-list"></div>
           <button id="puzzle-select-back">&#8592; Back</button>
@@ -2481,6 +2482,7 @@
           <button id="editor-exit-btn">&#8592; Exit Editor</button>
           <button id="editor-clear-draft-btn">&#128465; Clear Draft</button>
           <button id="editor-test-btn">&#9654; Play</button>
+          <button id="editor-save-btn">&#128190; Save</button>
           <button id="editor-share-btn">&#128279; Share</button>
         </div>
         <!-- Win condition builder -->
@@ -2519,6 +2521,21 @@
           <div id="cpls-author"></div>
           <div id="cpls-desc"></div>
           <button id="cpls-play-btn">&#9654; Play</button>
+        </div>
+      </div>
+
+      <!-- Puzzle import modal — paste a share code to add to My Puzzles -->
+      <div id="puzzle-import-modal" style="display:none;">
+        <div id="pim-inner">
+          <button id="pim-close-btn" aria-label="Close">&#x2715;</button>
+          <div id="pim-title">&#128220; IMPORT PUZZLE</div>
+          <div id="pim-desc">Paste a share code or full URL below to add it to your puzzle library.</div>
+          <textarea id="pim-code-input" placeholder="Paste share code or URL here…" rows="4" spellcheck="false" autocomplete="off"></textarea>
+          <div id="pim-feedback"></div>
+          <div id="pim-actions">
+            <button id="pim-import-btn">&#43; Import</button>
+            <button id="pim-cancel-btn">Cancel</button>
+          </div>
         </div>
       </div>
 
@@ -2693,6 +2710,7 @@
     <script src="js/events/events.js"></script>
     <script src="js/events/events-creeper.js"></script>
     <script src="js/ui/puzzle-codec.js"></script>
+    <script src="js/ui/puzzle-library.js"></script>
     <script src="js/ui/qr-canvas.js"></script>
     <script src="js/ui/score-card.js"></script>
     <script src="js/ui/editor-tutorial.js"></script>

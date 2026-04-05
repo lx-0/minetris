@@ -614,7 +614,7 @@ function _renderDailyPuzzleEntry(listEl) {
 
 /**
  * Render the puzzle-select list.
- * @param {string} [tabOverride] - 'easy' | 'medium' | 'hard' | 'daily'
+ * @param {string} [tabOverride] - 'easy' | 'medium' | 'hard' | 'daily' | 'my'
  */
 function renderPuzzleSelectList(tabOverride) {
   if (tabOverride) _activePuzzleDiffTab = tabOverride;
@@ -624,13 +624,18 @@ function renderPuzzleSelectList(tabOverride) {
   listEl.innerHTML = "";
 
   // Update tab button active states
-  ["easy", "medium", "hard", "daily"].forEach(function (tab) {
+  ["easy", "medium", "hard", "daily", "my"].forEach(function (tab) {
     const btn = document.getElementById("puzzle-tab-" + tab);
     if (btn) btn.classList.toggle("puzzle-tab-active", tab === _activePuzzleDiffTab);
   });
 
   if (_activePuzzleDiffTab === "daily") {
     _renderDailyPuzzleEntry(listEl);
+    return;
+  }
+
+  if (_activePuzzleDiffTab === "my") {
+    _renderMyPuzzlesTab(listEl);
     return;
   }
 
@@ -677,6 +682,267 @@ function renderPuzzleSelectList(tabOverride) {
     }
     listEl.appendChild(item);
   });
+}
+
+/** Render the "My Puzzles" tab content into the given container. */
+function _renderMyPuzzlesTab(listEl) {
+  var puzzles = (typeof puzzleLibraryGetAll === "function") ? puzzleLibraryGetAll() : [];
+  var count   = puzzles.length;
+  var max     = (typeof PUZZLE_LIBRARY_MAX !== "undefined") ? PUZZLE_LIBRARY_MAX : 50;
+
+  // Header row: count + action buttons
+  var header = document.createElement("div");
+  header.className = "puzzle-pack-header puzzle-my-header";
+  header.innerHTML =
+    '<span>MY PUZZLES (' + count + '/' + max + ')</span>' +
+    '<div class="puzzle-my-actions">' +
+      '<button class="puzzle-my-action-btn" id="psl-create-btn">&#128736; Create</button>' +
+      '<button class="puzzle-my-action-btn" id="psl-import-btn">&#128220; Import</button>' +
+    '</div>';
+  listEl.appendChild(header);
+
+  // Wire header buttons
+  var createBtn = header.querySelector("#psl-create-btn");
+  if (createBtn) {
+    createBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      hidePuzzleSelect();
+      // Open editor
+      if (typeof isEditorMode !== "undefined") {
+        isEditorMode = true;
+        var draft = typeof loadEditorDraft === "function" ? loadEditorDraft() : null;
+        var promptEl = document.getElementById("editor-draft-prompt");
+        var blockerEl = document.getElementById("blocker");
+        if (draft && Array.isArray(draft.blocks) && draft.blocks.length > 0 && promptEl) {
+          promptEl.style.display = "flex";
+        } else {
+          if (blockerEl) blockerEl.style.display = "none";
+          _puzzleSelectLock();
+        }
+      }
+    });
+  }
+
+  var importBtn = header.querySelector("#psl-import-btn");
+  if (importBtn) {
+    importBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      _openPuzzleImportModal();
+    });
+  }
+
+  if (count === 0) {
+    var empty = document.createElement("div");
+    empty.className = "puzzle-my-empty";
+    empty.innerHTML =
+      '<div class="puzzle-my-empty-icon">&#128736;</div>' +
+      '<div>No saved puzzles yet.</div>' +
+      '<div class="puzzle-my-empty-sub">Click <strong>Create</strong> to build your first puzzle, or <strong>Import</strong> to add one from a share code.</div>';
+    listEl.appendChild(empty);
+    return;
+  }
+
+  puzzles.forEach(function (p) {
+    var diffStars = p.metadata && p.metadata.difficulty
+      ? "\u2605".repeat(p.metadata.difficulty) + "\u2606".repeat(3 - p.metadata.difficulty)
+      : "";
+
+    var item = document.createElement("div");
+    item.className = "puzzle-list-item puzzle-my-item";
+
+    var nameText = (p.metadata && p.metadata.name) ? p.metadata.name : "Untitled";
+    var authorText = (p.metadata && p.metadata.author) ? " \u2022 " + p.metadata.author : "";
+    var wcText = _winConditionLabel(p.winCondition);
+
+    item.innerHTML =
+      '<div class="puzzle-list-info">' +
+        '<div class="puzzle-list-name">' + _escHtml(nameText) + '</div>' +
+        '<div class="puzzle-my-meta">' + _escHtml(wcText) + authorText + '</div>' +
+      '</div>' +
+      (diffStars ? '<div class="puzzle-list-stars puzzle-my-stars">' + diffStars + '</div>' : '') +
+      '<div class="puzzle-my-item-btns">' +
+        '<button class="puzzle-my-btn puzzle-my-play-btn" title="Play">&#9654;</button>' +
+        '<button class="puzzle-my-btn puzzle-my-edit-btn" title="Edit in Editor">&#9998;</button>' +
+        '<button class="puzzle-my-btn puzzle-my-share-btn" title="Share">&#128279;</button>' +
+        '<button class="puzzle-my-btn puzzle-my-delete-btn" title="Delete">&#128465;</button>' +
+      '</div>';
+
+    // Play
+    item.querySelector(".puzzle-my-play-btn").addEventListener("click", function (e) {
+      e.stopPropagation();
+      _playCustomLibraryPuzzle(p);
+    });
+
+    // Edit in editor
+    item.querySelector(".puzzle-my-edit-btn").addEventListener("click", function (e) {
+      e.stopPropagation();
+      _editCustomLibraryPuzzle(p);
+    });
+
+    // Share
+    item.querySelector(".puzzle-my-share-btn").addEventListener("click", function (e) {
+      e.stopPropagation();
+      _shareCustomLibraryPuzzle(p);
+    });
+
+    // Delete
+    item.querySelector(".puzzle-my-delete-btn").addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (!confirm('Delete "' + nameText + '"?')) return;
+      if (typeof puzzleLibraryDelete === "function") puzzleLibraryDelete(p.id);
+      renderPuzzleSelectList("my");
+    });
+
+    listEl.appendChild(item);
+  });
+}
+
+function _escHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function _winConditionLabel(wc) {
+  if (!wc) return "Mine All";
+  switch (wc.mode) {
+    case "mine_all":       return "Mine All Blocks";
+    case "clear_lines":    return "Clear " + (wc.n || 0) + " Lines";
+    case "survive_seconds":return "Survive " + (wc.n || 0) + "s";
+    case "score_points":   return "Score " + (wc.n || 0) + " pts";
+    default:               return wc.mode || "Mine All";
+  }
+}
+
+function _playCustomLibraryPuzzle(p) {
+  if (typeof customPuzzleLayout === "undefined") return;
+  // Convert blocks to layout format: setupCustomPuzzleLayout expects {x, y, z, color} with hex color string
+  var layout = [];
+  (p.blocks || []).forEach(function (b) {
+    if (Array.isArray(b)) {
+      // [x, y, z, paletteIdx] — convert paletteIdx to hex color string
+      var hexInt = 0x808080; // default stone
+      if (typeof EDITOR_PALETTE !== "undefined" && b[3] !== undefined && EDITOR_PALETTE[b[3]]) {
+        hexInt = EDITOR_PALETTE[b[3]].hex;
+      }
+      var hexStr = "#" + hexInt.toString(16).padStart(6, "0");
+      layout.push({ x: b[0], y: b[1], z: b[2], color: hexStr });
+    } else if (b && typeof b === "object") {
+      layout.push({ x: b.x, y: b.y, z: b.z, color: b.color || "#808080" });
+    }
+  });
+  customPuzzleLayout = layout;
+  customPuzzleWinCondition = p.winCondition || { mode: "mine_all", n: 10 };
+  customPuzzleMetadata = p.metadata || { name: "", description: "", author: "", difficulty: 0 };
+  customPieceSequence = p.pieceSequence || { mode: "random", pieces: [] };
+  if (typeof isCustomPuzzleMode !== "undefined") {
+    isCustomPuzzleMode = true;
+    puzzleComplete = false;
+    difficultyMultiplier = 0.5;
+    lastDifficultyTier = 0;
+  }
+  hidePuzzleSelect();
+  _puzzleSelectLock();
+}
+
+function _editCustomLibraryPuzzle(p) {
+  // Build an editor draft from saved puzzle data and open the editor
+  var draft = {
+    blocks: [],
+    selectedIdx: 0,
+    winCondition: p.winCondition || { mode: "mine_all", n: 10 },
+    metadata: p.metadata || { name: "", description: "", author: "", difficulty: 0 },
+    pieceSequence: p.pieceSequence || { mode: "random", pieces: [] },
+    _libraryId: p.id,
+    savedAt: Date.now(),
+  };
+  // Convert blocks: applyEditorDraft expects {x, y, z, color} where color is a THREE.Color-compatible value
+  (p.blocks || []).forEach(function (b) {
+    if (Array.isArray(b)) {
+      // [x, y, z, paletteIdx] — convert paletteIdx to hex int
+      var hexInt = 0x808080;
+      if (typeof EDITOR_PALETTE !== "undefined" && b[3] !== undefined && EDITOR_PALETTE[b[3]]) {
+        hexInt = EDITOR_PALETTE[b[3]].hex;
+      }
+      draft.blocks.push({ x: b[0], y: b[1], z: b[2], color: hexInt });
+    } else if (b && typeof b === "object") {
+      // color may be a hex string like "#808080" or an int
+      var colorVal = b.color;
+      if (typeof colorVal === "string" && colorVal[0] === "#") {
+        colorVal = parseInt(colorVal.slice(1), 16);
+      }
+      draft.blocks.push({ x: b.x, y: b.y, z: b.z, color: colorVal || 0x808080 });
+    }
+  });
+
+  // Store draft in localStorage and as pending draft for immediate editor pickup
+  try {
+    localStorage.setItem(
+      (typeof EDITOR_DRAFT_KEY !== "undefined" ? EDITOR_DRAFT_KEY : "mineCtris_editorDraft"),
+      JSON.stringify(draft)
+    );
+  } catch (_) {}
+  // Set pending draft so initEditorMode loads it without the draft-prompt interstitial
+  if (typeof _pendingEditorDraft !== "undefined") _pendingEditorDraft = draft;
+
+  hidePuzzleSelect();
+  if (typeof isEditorMode !== "undefined") isEditorMode = true;
+  var blockerEl = document.getElementById("blocker");
+  if (blockerEl) blockerEl.style.display = "none";
+  _puzzleSelectLock();
+}
+
+function _shareCustomLibraryPuzzle(p) {
+  var code = p.shareCode;
+  if (!code && typeof puzzleCodecEncode === "function") {
+    code = puzzleCodecEncode({
+      winCondition:  p.winCondition  || { mode: "mine_all", n: 10 },
+      blocks:        p.blocks        || [],
+      metadata:      p.metadata      || { name: "", description: "", author: "", difficulty: 0 },
+      pieceSequence: p.pieceSequence || { mode: "random", pieces: [] },
+    });
+  }
+  if (!code) {
+    alert("Could not generate share code for this puzzle.");
+    return;
+  }
+  var url = location.origin + location.pathname + "?puzzle=" + encodeURIComponent(code);
+  if (typeof _openPuzzleShareModal === "function") {
+    _openPuzzleShareModal(url);
+  } else {
+    // Fallback: copy to clipboard or prompt
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).catch(function () { window.prompt("Copy link:", url); });
+    } else {
+      window.prompt("Copy puzzle link:", url);
+    }
+  }
+}
+
+function _openPuzzleImportModal() {
+  var modal = document.getElementById("puzzle-import-modal");
+  if (!modal) return;
+  var textarea = document.getElementById("pim-code-input");
+  if (textarea) textarea.value = "";
+  var feedback = document.getElementById("pim-feedback");
+  if (feedback) { feedback.textContent = ""; feedback.className = ""; }
+  modal.style.display = "flex";
+  if (textarea) setTimeout(function () { textarea.focus(); }, 60);
+}
+
+/** Lock pointer (start game) from puzzle select context. Handles Tone init. */
+function _puzzleSelectLock() {
+  if (typeof Tone !== "undefined" && Tone.context.state !== "running") {
+    Tone.start().then(function () {
+      if (typeof controls !== "undefined") controls.lock();
+    }).catch(function () {
+      if (typeof controls !== "undefined") controls.lock();
+    });
+  } else if (typeof controls !== "undefined") {
+    controls.lock();
+  }
 }
 
 function showPuzzleSelect() {

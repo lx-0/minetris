@@ -957,7 +957,155 @@ function init() {
   // Wire share modal close + copy + publish buttons
   _initShareModal();
 
-  function _openPuzzleShareModal(url) {
+  // Editor "Save to Library" button
+  const editorSaveBtn = document.getElementById("editor-save-btn");
+  if (editorSaveBtn) {
+    editorSaveBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (typeof puzzleLibrarySave !== "function") return;
+
+      // Build blocks array
+      var blocks = [];
+      if (typeof worldGroup !== "undefined") {
+        worldGroup.children.forEach(function (child) {
+          if (child.name === "landed_block") {
+            const wp = new THREE.Vector3();
+            child.getWorldPosition(wp);
+            var hexInt = 0;
+            if (child.material && child.material.color) hexInt = child.material.color.getHex();
+            var paletteIdx = 0;
+            if (typeof EDITOR_PALETTE !== "undefined") {
+              for (var i = 0; i < EDITOR_PALETTE.length; i++) {
+                if (EDITOR_PALETTE[i].hex === hexInt) { paletteIdx = i; break; }
+              }
+            }
+            blocks.push([Math.round(wp.x), Math.round(wp.y * 10) / 10, Math.round(wp.z), paletteIdx]);
+          }
+        });
+      }
+
+      if (blocks.length === 0) {
+        editorSaveBtn.textContent = "Place blocks first!";
+        setTimeout(function () { editorSaveBtn.textContent = "\uD83D\uDCBE Save"; }, 1500);
+        return;
+      }
+
+      var winCond = (typeof editorWinCondition !== "undefined")
+        ? { mode: editorWinCondition.mode, n: editorWinCondition.n }
+        : { mode: "mine_all", n: 10 };
+      var meta = (typeof editorPuzzleMetadata !== "undefined")
+        ? { name: editorPuzzleMetadata.name, description: editorPuzzleMetadata.description,
+            author: editorPuzzleMetadata.author, difficulty: editorPuzzleMetadata.difficulty }
+        : { name: "", description: "", author: "", difficulty: 0 };
+      var seq = (typeof editorPieceSequence !== "undefined")
+        ? { mode: editorPieceSequence.mode, pieces: editorPieceSequence.pieces.slice() }
+        : { mode: "random", pieces: [] };
+
+      // Generate share code
+      var shareCode = (typeof encodePuzzleShareCode === "function") ? encodePuzzleShareCode() : null;
+
+      var payload = { blocks: blocks, winCondition: winCond, metadata: meta, pieceSequence: seq, shareCode: shareCode };
+
+      var result;
+      // Check if we are editing a previously saved puzzle (draft carries _libraryId)
+      var draft = (typeof loadEditorDraft === "function") ? loadEditorDraft() : null;
+      var libraryId = (draft && draft._libraryId) ? draft._libraryId : null;
+      if (libraryId && typeof puzzleLibraryGet === "function" && puzzleLibraryGet(libraryId)) {
+        result = puzzleLibraryUpdate(libraryId, payload);
+      } else {
+        result = puzzleLibrarySave(payload);
+        if (result.ok) {
+          // Persist libraryId back to draft so future saves update
+          var currentDraft = (typeof loadEditorDraft === "function") ? loadEditorDraft() : null;
+          if (currentDraft) {
+            currentDraft._libraryId = result.id;
+            try {
+              localStorage.setItem(
+                (typeof EDITOR_DRAFT_KEY !== "undefined" ? EDITOR_DRAFT_KEY : "mineCtris_editorDraft"),
+                JSON.stringify(currentDraft)
+              );
+            } catch (_) {}
+          }
+        }
+      }
+
+      if (result.ok) {
+        editorSaveBtn.textContent = "\u2713 Saved!";
+        setTimeout(function () { editorSaveBtn.textContent = "\uD83D\uDCBE Save"; }, 1800);
+      } else {
+        editorSaveBtn.textContent = "Error!";
+        console.warn("[PuzzleEditor] Save failed:", result.error);
+        setTimeout(function () {
+          editorSaveBtn.textContent = "\uD83D\uDCBE Save";
+          alert(result.error);
+        }, 200);
+      }
+    });
+  }
+
+  // Puzzle import modal wiring
+  (function () {
+    var modal = document.getElementById("puzzle-import-modal");
+    if (!modal) return;
+
+    function closeModal() { modal.style.display = "none"; }
+
+    var closeBtn = document.getElementById("pim-close-btn");
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+
+    var cancelBtn = document.getElementById("pim-cancel-btn");
+    if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+
+    // Click outside to close
+    modal.addEventListener("click", function (e) {
+      if (e.target === modal) closeModal();
+    });
+
+    var importBtn = document.getElementById("pim-import-btn");
+    if (importBtn) {
+      importBtn.addEventListener("click", function () {
+        var textarea = document.getElementById("pim-code-input");
+        var feedback = document.getElementById("pim-feedback");
+        if (!textarea || typeof puzzleLibraryImport !== "function") return;
+
+        var raw = textarea.value.trim();
+        // Allow full URLs — extract puzzle param
+        var code = raw;
+        try {
+          if (raw.indexOf("?") !== -1 || raw.indexOf("http") === 0) {
+            var urlObj = new URL(raw, location.href);
+            var param = urlObj.searchParams.get("puzzle");
+            if (param) code = decodeURIComponent(param);
+          }
+        } catch (_) {}
+
+        if (!code) {
+          if (feedback) { feedback.textContent = "Please paste a share code or URL."; feedback.className = "pim-error"; }
+          return;
+        }
+
+        var result = puzzleLibraryImport(code);
+        if (result.ok) {
+          if (feedback) { feedback.textContent = "\u2713 Puzzle imported! Find it in My Puzzles."; feedback.className = "pim-success"; }
+          textarea.value = "";
+          setTimeout(function () {
+            closeModal();
+            // Refresh My Puzzles tab if it's active
+            if (typeof renderPuzzleSelectList === "function") renderPuzzleSelectList("my");
+          }, 1200);
+        } else {
+          if (feedback) {
+            feedback.textContent = result.versionMismatch
+              ? "This puzzle requires a newer version of the game."
+              : (result.error || "Could not import puzzle.");
+            feedback.className = "pim-error";
+          }
+        }
+      });
+    }
+  }());
+
+  window._openPuzzleShareModal = function _openPuzzleShareModal(url) {
     var modal = document.getElementById("puzzle-share-modal");
     if (!modal) return;
     var input = document.getElementById("psm-url-input");
