@@ -1,6 +1,13 @@
 // Guild panel views — cosmetics, manage, browse, create, join requests, perks, challenges.
 // Requires: social/guild.js and social/guild-home.js loaded first.
 
+// ── Preset clan icons ─────────────────────────────────────────────────────────
+const CLAN_PRESET_ICONS = [
+  '⚔️','🛡️','🏹','🔥','❄️','⚡','💎','👑','🐉','🦁',
+  '🐺','🦅','🐍','🌙','☀️','🌊','⛏️','🪓','🗡️','🏆',
+  '💀','🧨','🎯','🌟','🔮','🍀','🦊','🐻','🪖','🎮',
+];
+
 // ── Member card overlay ───────────────────────────────────────────────────────
 function _showMemberCard(content, target, guildId, me, members, guild) {
   const overlay = document.getElementById('guild-member-card-overlay');
@@ -377,7 +384,7 @@ function _renderManageView(content) {
 
 function _buildGuildResultsHTML(guilds) {
   return guilds.map(g => {
-    const isFull = (g.memberCount || 0) >= 30;
+    const isFull = (g.memberCount || 0) >= 50;
     const eloHtml = g.eloRating != null
       ? `<span class="guild-result-elo">⚔ ${g.eloRating} Elo</span>`
       : (g.guildRating != null ? `<span class="guild-result-elo">⚔ ${g.guildRating} pts</span>` : '');
@@ -393,7 +400,7 @@ function _buildGuildResultsHTML(guilds) {
       <span class="guild-result-emblem">${_esc(g.emblem || '⚔️')}</span>
       <div class="guild-result-info">
         <div class="guild-result-name">${_esc(g.name)} <span class="guild-tag">[${_esc(g.tag)}]</span></div>
-        <div class="guild-result-meta">Lv.${g.level || 1} · ${g.memberCount || 0}/30${eloHtml ? ' · ' : ''}${eloHtml}</div>
+        <div class="guild-result-meta">Lv.${g.level || 1} · ${g.memberCount || 0}/50${eloHtml ? ' · ' : ''}${eloHtml}</div>
       </div>
       ${actionHtml}
     </div>`;
@@ -430,7 +437,7 @@ async function _renderBrowseView(content, query) {
   content.innerHTML = `
     <div class="guild-browse">
       <div class="guild-search-row">
-        <input id="guild-search-input" type="text" placeholder="Search guilds..." value="${_esc(query)}" maxlength="32">
+        <input id="guild-search-input" type="text" placeholder="Search clans..." value="${_esc(query)}" maxlength="32">
         <button id="guild-search-btn">🔍</button>
       </div>
       <div class="guild-browse-filters">
@@ -454,8 +461,17 @@ async function _renderBrowseView(content, query) {
       <div id="guild-search-results" class="guild-search-results">
         <div class="guild-loading">Searching...</div>
       </div>
+      <div class="clan-join-code-section">
+        <div class="clan-join-code-label">🔗 Join by Invite Code</div>
+        <div class="guild-search-row">
+          <input id="clan-invite-code-input" type="text" placeholder="Enter clan tag (e.g. VOID)" maxlength="4" style="text-transform:uppercase">
+          <button id="clan-join-code-btn">Join</button>
+        </div>
+        <div id="clan-join-code-status" class="guild-status-msg"></div>
+      </div>
       <div class="guild-actions">
-        <button id="guild-create-switch-btn" class="guild-secondary-btn">＋ Create Guild</button>
+        <button id="guild-create-switch-btn" class="guild-secondary-btn">＋ Create Clan</button>
+        <button id="clan-rankings-btn" class="guild-secondary-btn">🏆 Clan Rankings</button>
       </div>
     </div>`;
 
@@ -470,6 +486,43 @@ async function _renderBrowseView(content, query) {
   document.getElementById('guild-create-switch-btn').addEventListener('click', () => {
     _guildView = 'create';
     _renderCreateView(content);
+  });
+  document.getElementById('clan-rankings-btn').addEventListener('click', () => {
+    _renderClanRankings(content);
+  });
+
+  // Join by invite code (clan tag)
+  const codeInput = document.getElementById('clan-invite-code-input');
+  codeInput.addEventListener('input', function() {
+    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  });
+  document.getElementById('clan-join-code-btn').addEventListener('click', async () => {
+    const tag = codeInput.value.trim().toUpperCase();
+    const statusEl = document.getElementById('clan-join-code-status');
+    if (!tag) { statusEl.textContent = 'Enter a clan tag.'; return; }
+    statusEl.textContent = 'Looking up clan...';
+    const res = await apiBrowseGuilds(tag);
+    if (!res.ok) { statusEl.textContent = 'Error looking up clan.'; return; }
+    const guilds = Array.isArray(res.data) ? res.data : (res.data.guilds || []);
+    const match = guilds.find(g => (g.tag || '').toUpperCase() === tag);
+    if (!match) { statusEl.textContent = `No clan found with tag [${tag}].`; return; }
+    if (match.isPrivate) { statusEl.textContent = 'That clan is invite-only.'; return; }
+    const isFull = (match.memberCount || 0) >= 50;
+    if (isFull) { statusEl.textContent = 'That clan is full (50 members).'; return; }
+    statusEl.textContent = `Joining ${match.name}...`;
+    const joinRes = await apiRequestToJoin(match.id);
+    if (joinRes.ok) {
+      if (joinRes.data && joinRes.data.guild) {
+        _saveMyGuildId(joinRes.data.guild.id);
+        _myGuild = { guild: joinRes.data.guild, members: joinRes.data.members };
+        _showGuildJoinedToast(joinRes.data.guild.name);
+        _renderGuildPanel();
+      } else {
+        statusEl.textContent = '✓ Join request sent!';
+      }
+    } else {
+      statusEl.textContent = joinRes.data.error || 'Failed to join clan.';
+    }
   });
 
   _doSearch(query);
@@ -491,12 +544,63 @@ async function _renderBrowseView(content, query) {
     }
     const guilds = Array.isArray(res.data) ? res.data : (res.data.guilds || []);
     if (!guilds.length) {
-      resultsEl.innerHTML = '<div class="guild-empty">No guilds found. Try adjusting your filters.</div>';
+      resultsEl.innerHTML = '<div class="guild-empty">No clans found. Try adjusting your filters.</div>';
       return;
     }
     resultsEl.innerHTML = _buildGuildResultsHTML(guilds);
     _bindJoinButtons(resultsEl, () => _renderGuildPanel());
   }
+}
+
+// ── Clan Rankings ─────────────────────────────────────────────────────────────
+async function _renderClanRankings(content) {
+  content.innerHTML = `
+    <div class="guild-browse">
+      <div class="guild-section-title">🏆 CLAN RANKINGS</div>
+      <div id="clan-rankings-list" class="guild-search-results">
+        <div class="guild-loading">Loading rankings...</div>
+      </div>
+      <div class="guild-actions">
+        <button id="clan-rankings-back-btn" class="guild-secondary-btn">← Back</button>
+      </div>
+    </div>`;
+
+  document.getElementById('clan-rankings-back-btn').addEventListener('click', () => {
+    _renderBrowseView(content, '');
+  });
+
+  const listEl = document.getElementById('clan-rankings-list');
+  const res = await apiBrowseGuilds('');
+  if (!res.ok) {
+    listEl.innerHTML = `<div class="guild-error">Failed to load rankings.</div>`;
+    return;
+  }
+  const guilds = Array.isArray(res.data) ? res.data : (res.data.guilds || []);
+  if (!guilds.length) {
+    listEl.innerHTML = '<div class="guild-empty">No clans found.</div>';
+    return;
+  }
+
+  // Sort by totalXP descending, fallback to guildRating / eloRating
+  const ranked = [...guilds].sort((a, b) => {
+    const scoreA = (a.totalXP || a.guildXP || a.guildRating || a.eloRating || 0);
+    const scoreB = (b.totalXP || b.guildXP || b.guildRating || b.eloRating || 0);
+    return scoreB - scoreA;
+  });
+
+  listEl.innerHTML = ranked.map((g, i) => {
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+    const score = g.totalXP || g.guildXP || g.guildRating || g.eloRating || 0;
+    const scoreLabel = g.eloRating != null && !g.totalXP ? `${score} Elo` : `${_fmtXP(score)} XP`;
+    return `<div class="guild-result-card clan-ranking-row">
+      <span class="clan-rank-medal">${medal}</span>
+      <span class="guild-result-emblem">${_esc(g.emblem || '⚔️')}</span>
+      <div class="guild-result-info">
+        <div class="guild-result-name">${_esc(g.name)} <span class="guild-tag">[${_esc(g.tag)}]</span></div>
+        <div class="guild-result-meta">Lv.${g.level || 1} · ${g.memberCount || 0}/50 members · ${scoreLabel}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── Browse tab (in-guild view) ────────────────────────────────────────────────
@@ -567,7 +671,7 @@ async function _renderBrowseTab(container) {
       const eloHtml = g.eloRating != null
         ? `<span class="guild-result-elo">⚔ ${g.eloRating} Elo</span>`
         : (g.guildRating != null ? `<span class="guild-result-elo">⚔ ${g.guildRating} pts</span>` : '');
-      const isFull = (g.memberCount || 0) >= 30;
+      const isFull = (g.memberCount || 0) >= 50;
       let badge;
       if (g.isPrivate) badge = `<span class="guild-private-badge">Invite only</span>`;
       else if (isFull)  badge = `<span class="guild-private-badge">Full</span>`;
@@ -576,7 +680,7 @@ async function _renderBrowseTab(container) {
         <span class="guild-result-emblem">${_esc(g.emblem || '⚔️')}</span>
         <div class="guild-result-info">
           <div class="guild-result-name">${_esc(g.name)} <span class="guild-tag">[${_esc(g.tag)}]</span></div>
-          <div class="guild-result-meta">Lv.${g.level || 1} · ${g.memberCount || 0}/30${eloHtml ? ' · ' : ''}${eloHtml}</div>
+          <div class="guild-result-meta">Lv.${g.level || 1} · ${g.memberCount || 0}/50${eloHtml ? ' · ' : ''}${eloHtml}</div>
         </div>
         ${badge}
       </div>`;
@@ -587,26 +691,32 @@ async function _renderBrowseTab(container) {
 // ── Create view ───────────────────────────────────────────────────────────────
 function _renderCreateView(content) {
   _guildView = 'create';
+  let _selectedIcon = '⚔️';
+
+  const iconGridHTML = CLAN_PRESET_ICONS.map((icon, i) =>
+    `<button class="clan-icon-btn${i === 0 ? ' clan-icon-btn--selected' : ''}" data-icon="${icon}" title="${icon}">${icon}</button>`
+  ).join('');
+
   content.innerHTML = `
     <div class="guild-create">
-      <div class="guild-create-title">CREATE GUILD</div>
+      <div class="guild-create-title">CREATE CLAN</div>
       <div class="guild-form-row">
-        <label>Name <span class="guild-hint">(2–32 chars)</span></label>
-        <input id="gc-name" type="text" maxlength="32" placeholder="Void Miners">
+        <label>Name <span class="guild-hint">(3–20 chars)</span></label>
+        <input id="gc-name" type="text" maxlength="20" placeholder="Void Miners">
       </div>
       <div class="guild-form-row">
-        <label>Tag <span class="guild-hint">(3–5 alphanumeric)</span></label>
-        <input id="gc-tag" type="text" maxlength="5" placeholder="VOID" style="text-transform:uppercase">
+        <label>Tag <span class="guild-hint">(2–4 alphanumeric)</span></label>
+        <input id="gc-tag" type="text" maxlength="4" placeholder="VOID" style="text-transform:uppercase">
       </div>
       <div class="guild-form-row">
         <label>Description <span class="guild-hint">(optional, ≤256)</span></label>
         <textarea id="gc-desc" maxlength="256" rows="2" placeholder="We mine the void..."></textarea>
       </div>
+      <div class="guild-form-row">
+        <label>Clan Icon</label>
+        <div class="clan-icon-grid" id="gc-icon-grid">${iconGridHTML}</div>
+      </div>
       <div class="guild-form-row guild-form-inline">
-        <div class="guild-form-col">
-          <label>Emblem</label>
-          <input id="gc-emblem" type="text" maxlength="4" value="⚔️" style="font-size:18px;width:54px;text-align:center">
-        </div>
         <div class="guild-form-col">
           <label>Banner</label>
           <input id="gc-banner" type="color" value="#1e40af" style="width:54px;height:32px;cursor:pointer">
@@ -618,10 +728,19 @@ function _renderCreateView(content) {
       </div>
       <div id="gc-error" class="guild-status-msg"></div>
       <div class="guild-actions">
-        <button id="gc-submit-btn" class="guild-primary-btn">Create Guild</button>
+        <button id="gc-submit-btn" class="guild-primary-btn">Create Clan</button>
         <button id="gc-back-btn" class="guild-secondary-btn">← Browse</button>
       </div>
     </div>`;
+
+  // Icon grid selection
+  document.getElementById('gc-icon-grid').addEventListener('click', e => {
+    const btn = e.target.closest('.clan-icon-btn');
+    if (!btn) return;
+    document.querySelectorAll('.clan-icon-btn').forEach(b => b.classList.remove('clan-icon-btn--selected'));
+    btn.classList.add('clan-icon-btn--selected');
+    _selectedIcon = btn.dataset.icon;
+  });
 
   document.getElementById('gc-tag').addEventListener('input', function() {
     this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -636,13 +755,13 @@ function _renderCreateView(content) {
     const name = document.getElementById('gc-name').value.trim();
     const tag = document.getElementById('gc-tag').value.trim().toUpperCase();
     const desc = document.getElementById('gc-desc').value.trim();
-    const emblem = document.getElementById('gc-emblem').value.trim() || '⚔️';
+    const emblem = _selectedIcon;
     const banner = document.getElementById('gc-banner').value;
     const isPrivate = document.getElementById('gc-private').checked;
     const errEl = document.getElementById('gc-error');
 
-    if (name.length < 2) { errEl.textContent = 'Name must be at least 2 characters.'; return; }
-    if (!/^[A-Z0-9]{3,5}$/.test(tag)) { errEl.textContent = 'Tag must be 3–5 uppercase alphanumeric.'; return; }
+    if (name.length < 3 || name.length > 20) { errEl.textContent = 'Name must be 3–20 characters.'; return; }
+    if (!/^[A-Z0-9]{2,4}$/.test(tag)) { errEl.textContent = 'Tag must be 2–4 uppercase alphanumeric.'; return; }
 
     const btn = document.getElementById('gc-submit-btn');
     btn.disabled = true;
@@ -656,7 +775,7 @@ function _renderCreateView(content) {
       _guildView = 'home';
       _renderHomeView(content);
     } else {
-      errEl.textContent = res.data.error || 'Failed to create guild.';
+      errEl.textContent = res.data.error || 'Failed to create clan.';
       btn.disabled = false;
     }
   });
@@ -873,7 +992,7 @@ function _showNextInviteToast() {
   document.getElementById('git-guild-name').textContent =
     `${invite.guildName} [${invite.guildTag}]`;
   document.getElementById('git-guild-meta').textContent =
-    `Lv.${invite.guildLevel} · ${invite.guildMemberCount}/30 members`;
+    `Lv.${invite.guildLevel} · ${invite.guildMemberCount}/50 members`;
   document.getElementById('git-inviter').textContent = `Invited by: ${invite.inviterId}`;
 
   toast.style.display = 'flex';

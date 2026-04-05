@@ -87,7 +87,7 @@ function _renderHomeView(content) {
         <span class="guild-emblem${(guild.level || 1) >= 20 ? ' guild-emblem--legendary' : ''}">${_esc(guild.emblem || '⚔️')}</span>
         <div class="guild-banner-info">
           <div class="guild-name-tag">${_esc(guild.name)} <span class="guild-tag">[${_esc(guild.tag)}]</span></div>
-          <div class="guild-meta">Lv.${guild.level} · ${guild.memberCount}/30${guild.isPrivate ? ' · 🔒' : ''}</div>
+          <div class="guild-meta">Lv.${guild.level} · ${guild.memberCount}/50${guild.isPrivate ? ' · 🔒' : ''}</div>
           <div class="guild-xp-bar" title="${guild.xp} XP · ${xpPct}% to Lv.${guild.level + 1}">
             <div class="guild-xp-fill" style="width:${xpPct}%"></div>
           </div>
@@ -110,7 +110,7 @@ function _renderHomeView(content) {
         <button class="guild-tab-btn" id="guild-tab-browse">🔍 Browse</button>
       </div>
       <div id="guild-tab-panel-roster">
-        <div class="guild-section-title">MEMBERS (${guild.memberCount}/30)</div>
+        <div class="guild-section-title">MEMBERS (${guild.memberCount}/50)</div>
         <div id="guild-members-list" class="guild-members-list">${memberRows}</div>
       </div>
       <div id="guild-tab-panel-leaderboard" style="display:none">

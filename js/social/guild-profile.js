@@ -68,7 +68,7 @@
     var losses      = (idx && idx.losses)      || (guild.losses)      || 0;
     var draws       = (idx && idx.draws)       || (guild.draws)       || 0;
     var memberCount = guild.memberCount        || 0;
-    var slotsOpen   = Math.max(0, 30 - memberCount);
+    var slotsOpen   = Math.max(0, 50 - memberCount);
 
     // Rating
     ctx.fillStyle = '#888888';
@@ -94,7 +94,7 @@
     // Members
     ctx.fillStyle = '#ffffff';
     ctx.font = '20px monospace';
-    ctx.fillText(memberCount + '/30 members  \u00b7  ' + slotsOpen + ' slots open', 360, 350);
+    ctx.fillText(memberCount + '/50 members  \u00b7  ' + slotsOpen + ' slots open', 360, 350);
 
     // Description
     var desc = (guild.description || '').slice(0, 80);
@@ -267,7 +267,7 @@
 
       // Stats row
       '<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">',
-      _statBox(String(mCount) + '/30', 'MEMBERS', '#fff'),
+      _statBox(String(mCount) + '/50', 'MEMBERS', '#fff'),
       _statBox(String(slots), 'OPEN SLOTS', bc),
       _statBox(String(rating), 'RATING', bc),
       _statBox(wins + 'W  ' + losses + 'L  ' + draws + 'D', 'SEASON', '#fff'),
