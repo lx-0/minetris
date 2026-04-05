@@ -40,6 +40,7 @@ function _saveAudioSettings() {
   try {
     localStorage.setItem(AUDIO_SETTINGS_KEY, JSON.stringify(_audioSettings));
   } catch (_) {}
+  if (typeof onAutoSync === 'function') onAutoSync();
 }
 
 function _syncSliders() {
@@ -306,6 +307,7 @@ function _saveTheme() {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, activeTheme);
   } catch (_) {}
+  if (typeof onAutoSync === 'function') onAutoSync();
 }
 
 /** Return true if the given theme key is currently unlocked. */
@@ -940,6 +942,182 @@ function _initTransferProgressSection() {
   });
 }
 
+// ── Cloud Sync UI ─────────────────────────────────────────────────────────────
+
+function _showCloudFeedback(msg, color) {
+  const el = document.getElementById("cloud-sync-status");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color  = color || "#7f7";
+  clearTimeout(el._fbTimer);
+  el._fbTimer = setTimeout(function() { el.textContent = ""; }, 4000);
+}
+
+function _hideCloudPreview() {
+  const el = document.getElementById("cloud-sync-preview");
+  if (el) el.style.display = "none";
+  if (typeof cancelCloudImport === "function") cancelCloudImport();
+}
+
+function _showCloudPreview(preview, savedAt, hasConflict) {
+  const previewArea = document.getElementById("cloud-sync-preview");
+  if (!previewArea) return;
+  const previewText = document.getElementById("cloud-sync-preview-text");
+  if (previewText) {
+    const dateStr = savedAt ? " (saved " + new Date(savedAt).toLocaleString() + ")" : "";
+    previewText.textContent = preview + dateStr;
+  }
+  const conflictWarn = document.getElementById("cloud-sync-conflict-warn");
+  if (conflictWarn) conflictWarn.style.display = hasConflict ? "" : "none";
+  previewArea.style.display = "";
+}
+
+async function _showSyncCode() {
+  const row = document.getElementById("cloud-sync-code-row");
+  if (!row) return;
+  let code = typeof _getCachedSyncCode === "function" ? _getCachedSyncCode() : null;
+  if (!code && typeof getCloudSyncCode === "function") {
+    code = await getCloudSyncCode();
+  }
+  if (code) {
+    const display = document.getElementById("cloud-sync-code-display");
+    if (display) display.textContent = code;
+    row.style.display = "";
+    // Show delete row too once we have a cloud presence.
+    const delRow = document.getElementById("cloud-sync-delete-row");
+    if (delRow) delRow.style.display = "";
+  }
+}
+
+function _initCloudSyncSection() {
+  _hideCloudPreview();
+
+  const saveBtn = document.getElementById("cloud-sync-save-btn");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", async function() {
+      saveBtn.disabled = true;
+      _showCloudFeedback("Saving to cloud…", "#aaa");
+      const result = await cloudSave();
+      saveBtn.disabled = false;
+      if (result.ok) {
+        _showCloudFeedback("Saved to cloud!", "#7f7");
+        _showSyncCode();
+      } else {
+        _showCloudFeedback("Save failed: " + result.error, "#f77");
+      }
+    });
+  }
+
+  const loadBtn = document.getElementById("cloud-sync-load-btn");
+  if (loadBtn) {
+    loadBtn.addEventListener("click", async function() {
+      loadBtn.disabled = true;
+      _hideCloudPreview();
+      _showCloudFeedback("Loading from cloud…", "#aaa");
+      const result = await cloudLoad();
+      loadBtn.disabled = false;
+      if (result.ok) {
+        _showCloudFeedback("", "");
+        _showCloudPreview(result.preview, result.savedAt, false);
+      } else if (result.error === "conflict") {
+        _showCloudFeedback("", "");
+        _showCloudPreview(
+          "Cloud save from " + new Date(result.cloudSavedAt).toLocaleString(),
+          result.cloudSavedAt,
+          true
+        );
+      } else {
+        _showCloudFeedback("Load failed: " + result.error, "#f77");
+      }
+    });
+  }
+
+  const confirmBtn = document.getElementById("cloud-sync-confirm-btn");
+  if (confirmBtn) confirmBtn.addEventListener("click", function() {
+    _hideCloudPreview();
+    if (typeof applyCloudImport === "function") applyCloudImport();
+  });
+
+  const cancelBtn = document.getElementById("cloud-sync-cancel-btn");
+  if (cancelBtn) cancelBtn.addEventListener("click", function() {
+    _hideCloudPreview();
+    _showCloudFeedback("Cancelled.", "#aaa");
+  });
+
+  const copyCodeBtn = document.getElementById("cloud-sync-copy-code-btn");
+  if (copyCodeBtn) {
+    copyCodeBtn.addEventListener("click", function() {
+      const display = document.getElementById("cloud-sync-code-display");
+      const code = display ? display.textContent : "";
+      if (!code) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(function() {
+          _showCloudFeedback("Sync code copied!", "#7f7");
+        });
+      } else {
+        _showCloudFeedback("Code: " + code, "#7f7");
+      }
+    });
+  }
+
+  const linkBtn = document.getElementById("cloud-sync-link-btn");
+  if (linkBtn) {
+    linkBtn.addEventListener("click", async function() {
+      const input = document.getElementById("cloud-sync-code-input");
+      const code = input ? input.value.trim().toUpperCase() : "";
+      if (!code) { _showCloudFeedback("Enter a sync code first.", "#f77"); return; }
+      linkBtn.disabled = true;
+      _hideCloudPreview();
+      _showCloudFeedback("Looking up sync code…", "#aaa");
+      const result = await cloudLoadFromCode(code);
+      linkBtn.disabled = false;
+      if (result.ok) {
+        _showCloudFeedback("", "");
+        _showCloudPreview(result.preview, result.savedAt, false);
+      } else if (result.error === "conflict") {
+        _showCloudFeedback("", "");
+        _showCloudPreview(
+          "Cloud save from " + new Date(result.cloudSavedAt).toLocaleString(),
+          result.cloudSavedAt,
+          true
+        );
+      } else {
+        _showCloudFeedback("Link failed: " + result.error, "#f77");
+      }
+    });
+  }
+
+  const deleteBtn = document.getElementById("cloud-sync-delete-btn");
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", async function() {
+      if (!confirm("Delete your cloud save? This cannot be undone.")) return;
+      deleteBtn.disabled = true;
+      const result = await cloudDeleteData();
+      deleteBtn.disabled = false;
+      if (result.ok) {
+        _showCloudFeedback("Cloud data deleted.", "#aaa");
+        const delRow = document.getElementById("cloud-sync-delete-row");
+        if (delRow) delRow.style.display = "none";
+        const codeRow = document.getElementById("cloud-sync-code-row");
+        if (codeRow) codeRow.style.display = "none";
+      } else {
+        _showCloudFeedback("Delete failed: " + result.error, "#f77");
+      }
+    });
+  }
+
+  // Show sync code if already have one.
+  const existingCode = typeof _getCachedSyncCode === "function" ? _getCachedSyncCode() : null;
+  if (existingCode) {
+    const display = document.getElementById("cloud-sync-code-display");
+    if (display) display.textContent = existingCode;
+    const codeRow = document.getElementById("cloud-sync-code-row");
+    if (codeRow) codeRow.style.display = "";
+    const delRow = document.getElementById("cloud-sync-delete-row");
+    if (delRow) delRow.style.display = "";
+  }
+}
+
 /** Called once during init() — loads persisted settings and wires sliders. */
 function initSettings() {
   _loadAudioSettings();
@@ -1171,6 +1349,8 @@ function initSettings() {
 
   _initControlsTab();
   _initTransferProgressSection();
+  _initCloudSyncSection();
+  if (typeof initCloudSync === 'function') initCloudSync();
   if (typeof initThemeEditor === 'function') initThemeEditor();
 
   // Escape closes the settings overlay

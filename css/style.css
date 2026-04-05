@@ -18076,6 +18076,50 @@ button:focus-visible {
   color: #0f0;
 }
 
+/* ── Cloud Sync ──────────────────────────────────────────────────────────────── */
+.cloud-sync-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.cloud-sync-btns .settings-link-btn {
+  flex: 1;
+}
+.cloud-sync-code-badge {
+  display: inline-block;
+  font-family: monospace;
+  font-size: 1.15em;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  color: #7ff;
+  background: rgba(0,200,255,0.08);
+  border: 1px solid #0cf4;
+  border-radius: 4px;
+  padding: 1px 8px;
+  vertical-align: middle;
+}
+.cloud-sync-code-input {
+  background: #111;
+  border: 1px solid #0cf8;
+  border-radius: 4px;
+  color: #7ff;
+  font-family: monospace;
+  font-size: 1em;
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  text-transform: uppercase;
+  width: 7em;
+  outline: none;
+}
+.cloud-sync-code-input:focus {
+  border-color: #0cf;
+  box-shadow: 0 0 4px #0cf6;
+}
+#cloud-sync-status {
+  font-size: 0.82em;
+  min-height: 1.2em;
+}
 
 /* ── Replay system ──────────────────────────────────────────────────────────── */
 

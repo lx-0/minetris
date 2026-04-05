@@ -4152,6 +4152,115 @@ function _getFriendsPresenceStub(env) {
   return env.FRIENDS_PRESENCE.get(env.FRIENDS_PRESENCE.idFromName('global'));
 }
 
+// ── Cloud Sync handlers ───────────────────────────────────────────────────────
+
+const SYNC_MAX_BYTES = 500 * 1024; // 500 KB
+const SYNC_CODE_TTL  = 86400 * 365; // 1 year
+
+/** Generate a random 6-char alphanumeric code. */
+function _genSyncCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+/**
+ * PUT /api/sync/:playerId
+ * Body: { data: <base64-string>, savedAt: <ISO> }
+ * Stores up to 500 KB of player data keyed by playerId.
+ */
+async function handleSyncPut(playerId, request, env) {
+  if (!playerId || playerId.length > 128) return jsonResponse({ error: 'Invalid playerId' }, 400);
+  let body;
+  try { body = await request.json(); } catch (_) { return jsonResponse({ error: 'Invalid JSON' }, 400); }
+  const data    = body.data    || '';
+  const savedAt = body.savedAt || new Date().toISOString();
+  if (typeof data !== 'string') return jsonResponse({ error: 'data must be a string' }, 400);
+  if (data.length > SYNC_MAX_BYTES) return jsonResponse({ error: 'Data exceeds 500 KB limit' }, 413);
+  const payload = JSON.stringify({ data, savedAt });
+  await env.LEADERBOARD_KV.put(`sync:player:${playerId}`, payload, { expirationTtl: SYNC_CODE_TTL });
+  return jsonResponse({ ok: true, savedAt });
+}
+
+/**
+ * GET /api/sync/:playerId
+ * Returns { data, savedAt } or { found: false }.
+ */
+async function handleSyncGet(playerId, env) {
+  if (!playerId || playerId.length > 128) return jsonResponse({ error: 'Invalid playerId' }, 400);
+  const raw = await env.LEADERBOARD_KV.get(`sync:player:${playerId}`);
+  if (!raw) return jsonResponse({ found: false });
+  try {
+    const obj = JSON.parse(raw);
+    return jsonResponse({ found: true, data: obj.data, savedAt: obj.savedAt });
+  } catch (_) { return jsonResponse({ found: false }); }
+}
+
+/**
+ * DELETE /api/sync/:playerId
+ * Deletes player cloud data. Also removes any sync code pointing to this player.
+ */
+async function handleSyncDelete(playerId, request, env) {
+  if (!playerId || playerId.length > 128) return jsonResponse({ error: 'Invalid playerId' }, 400);
+  // Best-effort: delete code mapping too if body contains it.
+  try {
+    const body = await request.json();
+    if (body.syncCode) {
+      const code = (body.syncCode || '').toString().toUpperCase().replace(/\s/g, '');
+      if (/^[A-Z0-9]{6}$/.test(code)) {
+        await env.LEADERBOARD_KV.delete(`sync:code:${code}`);
+      }
+    }
+  } catch (_) {}
+  await env.LEADERBOARD_KV.delete(`sync:player:${playerId}`);
+  return jsonResponse({ ok: true });
+}
+
+/**
+ * POST /api/sync/code
+ * Body: { playerId }
+ * Creates (or returns existing) 6-char sync code for a playerId.
+ */
+async function handleSyncCodeCreate(request, env) {
+  let body;
+  try { body = await request.json(); } catch (_) { return jsonResponse({ error: 'Invalid JSON' }, 400); }
+  const playerId = (body.playerId || '').toString().trim();
+  if (!playerId || playerId.length > 128) return jsonResponse({ error: 'Invalid playerId' }, 400);
+  // Check if player already has a code.
+  const existingRaw = await env.LEADERBOARD_KV.get(`sync:playercode:${playerId}`);
+  if (existingRaw) {
+    const existing = JSON.parse(existingRaw);
+    return jsonResponse({ ok: true, syncCode: existing.syncCode, playerId });
+  }
+  // Generate unique code.
+  let code = '';
+  for (let attempts = 0; attempts < 10; attempts++) {
+    const candidate = _genSyncCode();
+    const taken = await env.LEADERBOARD_KV.get(`sync:code:${candidate}`);
+    if (!taken) { code = candidate; break; }
+  }
+  if (!code) return jsonResponse({ error: 'Could not generate unique code' }, 500);
+  await env.LEADERBOARD_KV.put(`sync:code:${code}`, JSON.stringify({ playerId, createdAt: new Date().toISOString() }), { expirationTtl: SYNC_CODE_TTL });
+  await env.LEADERBOARD_KV.put(`sync:playercode:${playerId}`, JSON.stringify({ syncCode: code, createdAt: new Date().toISOString() }), { expirationTtl: SYNC_CODE_TTL });
+  return jsonResponse({ ok: true, syncCode: code, playerId });
+}
+
+/**
+ * GET /api/sync/code/:code
+ * Returns the playerId associated with a sync code.
+ */
+async function handleSyncCodeLookup(code, env) {
+  const code2 = (code || '').toUpperCase().replace(/\s/g, '');
+  if (!/^[A-Z0-9]{6}$/.test(code2)) return jsonResponse({ error: 'Invalid sync code' }, 400);
+  const raw = await env.LEADERBOARD_KV.get(`sync:code:${code2}`);
+  if (!raw) return jsonResponse({ found: false });
+  try {
+    const obj = JSON.parse(raw);
+    return jsonResponse({ found: true, playerId: obj.playerId });
+  } catch (_) { return jsonResponse({ found: false }); }
+}
+
 // ── Friend REST handlers ──────────────────────────────────────────────────────
 
 /**
@@ -7479,6 +7588,22 @@ export default {
     } else if (method === 'GET' && /^\/api\/friends\/lookup\/[A-Z0-9]{6}$/.test(url.pathname)) {
       const code = url.pathname.split('/').pop();
       response = await handleFriendsLookup(code, env);
+
+    // ── Cloud Sync ─────────────────────────────────────────────────────────────
+    } else if (method === 'POST' && url.pathname === '/api/sync/code') {
+      response = await handleSyncCodeCreate(request, env);
+    } else if (method === 'GET' && /^\/api\/sync\/code\/[A-Z0-9]{6}$/.test(url.pathname)) {
+      const code = url.pathname.split('/').pop();
+      response = await handleSyncCodeLookup(code, env);
+    } else if (method === 'PUT' && /^\/api\/sync\/[^/]+$/.test(url.pathname)) {
+      const playerId = url.pathname.replace('/api/sync/', '');
+      response = await handleSyncPut(playerId, request, env);
+    } else if (method === 'GET' && /^\/api\/sync\/[^/]+$/.test(url.pathname)) {
+      const playerId = url.pathname.replace('/api/sync/', '');
+      response = await handleSyncGet(playerId, env);
+    } else if (method === 'DELETE' && /^\/api\/sync\/[^/]+$/.test(url.pathname)) {
+      const playerId = url.pathname.replace('/api/sync/', '');
+      response = await handleSyncDelete(playerId, request, env);
 
     } else {
       response = jsonResponse({ error: 'Not found' }, 404);

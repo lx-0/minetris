@@ -46,6 +46,7 @@ function saveLifetimeStats(stats) {
   try {
     localStorage.setItem(STATS_KEY, JSON.stringify(stats));
   } catch (_) {}
+  if (typeof onAutoSync === 'function') onAutoSync();
 }
 
 /**

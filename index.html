@@ -1475,6 +1475,39 @@
             </div>
           </div>
           <div id="transfer-feedback" class="settings-hint transfer-feedback" style="display:none"></div>
+
+          <!-- Cloud Sync -->
+          <div class="settings-section-divider"></div>
+          <div class="settings-label settings-label-section">&#9729; Cloud Sync</div>
+          <div class="settings-hint">Sync your saves automatically across devices</div>
+          <div id="cloud-sync-status" class="settings-hint" style="min-height:1.2em"></div>
+          <div class="cloud-sync-btns">
+            <button id="cloud-sync-save-btn" class="settings-link-btn">&#8593; Save to Cloud</button>
+            <button id="cloud-sync-load-btn" class="settings-link-btn">&#8595; Load from Cloud</button>
+          </div>
+          <div id="cloud-sync-code-row" style="margin-top:6px;display:none">
+            <span class="settings-hint">Your sync code: </span>
+            <span id="cloud-sync-code-display" class="cloud-sync-code-badge"></span>
+            <button id="cloud-sync-copy-code-btn" class="settings-link-btn" style="margin-left:6px;padding:2px 8px;font-size:0.8em">Copy</button>
+          </div>
+          <div style="margin-top:6px">
+            <input id="cloud-sync-code-input" type="text" maxlength="6" placeholder="Enter sync code" class="cloud-sync-code-input" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <button id="cloud-sync-link-btn" class="settings-link-btn" style="margin-left:4px">&#128279; Link Device</button>
+          </div>
+          <!-- Cloud load preview -->
+          <div id="cloud-sync-preview" class="transfer-import-preview" style="display:none">
+            <div id="cloud-sync-preview-text" class="transfer-import-preview-text"></div>
+            <div id="cloud-sync-conflict-warn" class="transfer-import-preview-warn" style="display:none">&#9888; Local save is newer than cloud. Cloud data may be older.</div>
+            <div class="transfer-import-preview-warn">&#9888; Existing local progress will be overwritten.</div>
+            <div class="transfer-import-preview-actions">
+              <button id="cloud-sync-confirm-btn" class="settings-link-btn transfer-import-confirm-btn">&#10003; Apply Cloud Save</button>
+              <button id="cloud-sync-cancel-btn" class="settings-link-btn transfer-import-cancel-btn">&#10007; Cancel</button>
+            </div>
+          </div>
+          <!-- Delete cloud data -->
+          <div id="cloud-sync-delete-row" style="margin-top:6px;display:none">
+            <button id="cloud-sync-delete-btn" class="settings-link-btn" style="color:#f88">&#128465; Delete Cloud Data</button>
+          </div>
           </div><!-- end #settings-pane-general -->
 
           <!-- Pane: Controls (keybindings) -->
@@ -2820,6 +2853,7 @@
     <script src="js/social/community-goals.js"></script>
     <script src="js/events/seasonal-events.js"></script>
     <script src="js/ui/theme-editor.js"></script>
+    <script src="js/cloud/sync.js"></script>
     <script>
       // Initialize community goals ticker after all modules have loaded
       document.addEventListener('DOMContentLoaded', function() {

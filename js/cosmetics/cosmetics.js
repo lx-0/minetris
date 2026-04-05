@@ -461,6 +461,7 @@ function _saveUnlockedCosmetics(ids) {
   try {
     localStorage.setItem(COSMETICS_UNLOCKED_KEY, JSON.stringify(ids));
   } catch (_) {}
+  if (typeof onAutoSync === 'function') onAutoSync();
 }
 
 // Public wrappers used by seasonal-events.js to grant time-limited cosmetics.
