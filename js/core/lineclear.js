@@ -235,6 +235,9 @@ function checkLineClear(newBlocks) {
   // Achievement: Combo Starter, Combo King
   if (typeof achOnComboUpdate === "function") achOnComboUpdate(comboCount);
 
+  // Combo SFX: escalating chimes on consecutive clears
+  if (typeof playComboSound === 'function') playComboSound(comboCount);
+
   // Coach mark: first combo
   if (typeof coachMarkCombo === "function") coachMarkCombo(comboCount);
 
@@ -676,6 +679,8 @@ function _lcDetonate() {
   }
 
   // 10. T-spin / Perfect Clear — firework burst ─────────────────────────────
+  // T-spin: play enchantment SFX
+  if (_lcIsTSpin && typeof playTSpinSound === 'function') playTSpinSound();
   // Spawn a radial burst of festive fragments around the board center.
   if (_lcIsTSpin || _lcPerfectClear) {
     const _fwCount  = _lcPerfectClear ? 48 : 24;

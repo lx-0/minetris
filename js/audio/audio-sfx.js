@@ -118,16 +118,45 @@ function playGameOverJingle() {
   }
 }
 
-/** Rising arpeggio when lines are cleared — warm, piano-like, C418-inspired. */
+/**
+ * Line clear: Minecraft anvil strike + glass break shatter.
+ * Anvil hit scales with number of lines; glass break layered on top.
+ * @param {number} numLines  1–4 lines cleared
+ */
 function playLineClearSound(numLines) {
-  if (!audioReady || !clearSynth) return;
+  if (!audioReady) return;
   const now = Tone.now();
-  // Pentatonic-friendly voicings — warmer than straight major arpeggio
-  const notes = ["A3", "C4", "E4", "G4", "A4", "C5"];
-  const count = Math.min(numLines + 2, notes.length);
-  for (let i = 0; i < count; i++) {
-    // Wider spacing (140ms) for a more deliberate, melodic feel
-    clearSynth.triggerAttackRelease(notes[i], "8n", now + i * 0.14);
+  // Anvil strike — metallic clang, pitch lower for more lines (heavier hit)
+  if (anvilSynth) {
+    const anvilPitch = numLines >= 4 ? 'A1' : numLines === 3 ? 'C2' : numLines === 2 ? 'E2' : 'G2';
+    const anvilVol = -5 - (4 - numLines) * 2; // louder for more lines
+    anvilSynth.volume.value = anvilVol;
+    try { anvilSynth.triggerAttackRelease(anvilPitch, '8n', now); } catch (_e) {}
+    // Secondary metallic overtone
+    if (numLines >= 2) {
+      anvilSynth.volume.value = anvilVol - 6;
+      try { anvilSynth.triggerAttackRelease(anvilPitch === 'A1' ? 'A2' : 'E3', '16n', now + 0.06); } catch (_e) {}
+    }
+    anvilSynth.volume.value = anvilVol; // restore
+  }
+  // Glass break — noise burst, louder for more lines
+  if (glassBreakSynth) {
+    const glassVol = -14 + numLines * 2;
+    glassBreakSynth.volume.value = Math.min(glassVol, -6);
+    try { glassBreakSynth.triggerAttackRelease('32n', now + 0.08); } catch (_e) {}
+    // For Tetris (4 lines): second shard burst
+    if (numLines >= 4) {
+      try { glassBreakSynth.triggerAttackRelease('32n', now + 0.18); } catch (_e) {}
+    }
+  }
+  // Subtle rising tone layer for 3-4 line clears (satisfying sweep)
+  if (clearSynth && numLines >= 3) {
+    const sweepNotes = numLines >= 4
+      ? ['A3', 'C4', 'E4', 'A4', 'C5', 'E5']
+      : ['A3', 'C4', 'E4', 'A4'];
+    sweepNotes.forEach((note, i) => {
+      try { clearSynth.triggerAttackRelease(note, '16n', now + 0.1 + i * 0.06); } catch (_e) {}
+    });
   }
 }
 
@@ -211,17 +240,20 @@ function playEarthquakeCrumble() {
 
 // ── Event stingers ─────────────────────────────────────────────────────────
 
-/** Short ascending phrase on level up — warm, hopeful, 4-note motif. */
+/**
+ * Level up: Minecraft XP orb collect sound — a rapid ascending burst of
+ * bubbly sine pings that mimics the distinctive XP pickup chime cascade.
+ */
 function playLevelUpStinger() {
   if (!audioReady || !levelUpSynth) return;
   const now = Tone.now();
-  // Quick ascending Am pentatonic motif — bright but not harsh
-  const notes = ['A4', 'C5', 'E5', 'A5'];
-  for (let i = 0; i < notes.length; i++) {
-    try {
-      levelUpSynth.triggerAttackRelease(notes[i], '8n', now + i * 0.12, 0.4 + i * 0.1);
-    } catch (_e) {}
-  }
+  // XP orbs: rapid-fire ascending pentatonic notes, staggered like orbs collecting
+  const xpNotes = ['E5','G5','A5','C6','E6','G6','A6','C7'];
+  xpNotes.forEach((note, i) => {
+    const t = now + i * 0.055;
+    const vel = 0.5 + i * 0.05;
+    try { levelUpSynth.triggerAttackRelease(note, '32n', t, Math.min(vel, 0.9)); } catch (_e) {}
+  });
 }
 
 /** Gentle awe chord on biome discovery — open voicing, sustained wash. */
@@ -316,6 +348,107 @@ function playEntropyDissolve() {
   entropyDissolveSynth.triggerAttackRelease("B5",  "4n", t + 0.06);
 }
 
+// ── Minecraft-themed game-action SFX ─────────────────────────────────────────
+
+/**
+ * Set the stereo pan position for spatial SFX based on board X coordinate.
+ * boardX: world X of the action (-WORLD_SIZE/2 to +WORLD_SIZE/2)
+ * panRange: half-width to map to ±1 pan (defaults to 5 blocks)
+ */
+function _setSfxPan(boardX, panRange) {
+  if (!sfxPanner) return;
+  var range = panRange || 5;
+  var pan = Math.max(-1, Math.min(1, boardX / range));
+  try { sfxPanner.pan.value = pan; } catch (_e) {}
+}
+
+/** Piece nudge/rotate click — short mechanical tick. */
+function playRotateSound() {
+  if (!audioReady || !rotateClickSynth) return;
+  var pitches = ['C5', 'D5', 'E5'];
+  try {
+    rotateClickSynth.triggerAttackRelease(_pick(pitches), '64n', Tone.now());
+  } catch (_e) {}
+}
+
+/**
+ * Combo chimes — escalating pitched chimes that get higher and louder with combo count.
+ * @param {number} n   current combo count (1 = no sound, 2+ = escalate)
+ */
+function playComboSound(n) {
+  if (!audioReady || !comboChimeSynth || n < 2) return;
+  const now = Tone.now();
+  // Each combo tier adds a higher-pitched chord + higher volume
+  const COMBO_CHORDS = [
+    [],                              // 1 — no sound
+    ['C5', 'E5'],                    // 2
+    ['E5', 'G5', 'B5'],             // 3
+    ['G5', 'B5', 'D6'],             // 4
+    ['B5', 'D6', 'F#6', 'A6'],     // 5+
+  ];
+  const tier = Math.min(n - 1, 4);
+  const chord = COMBO_CHORDS[tier];
+  const vel = 0.4 + tier * 0.12;
+  const baseVol = -10 + tier * 2;  // louder for higher combos
+  comboChimeSynth.volume.value = Math.min(baseVol, -2);
+  chord.forEach((note, i) => {
+    try { comboChimeSynth.triggerAttackRelease(note, '8n', now + i * 0.04, vel); } catch (_e) {}
+  });
+}
+
+/**
+ * T-spin enchantment sound — shimmering rapid arpeggio like an enchanting table.
+ */
+function playTSpinSound() {
+  if (!audioReady || !tspinEnchantSynth) return;
+  const now = Tone.now();
+  // Rapid upward shimmer: enchantment table-style arpeggio
+  const notes = ['E5','G#5','B5','E6','G#6','B6','E7'];
+  notes.forEach((note, i) => {
+    const vel = 0.3 + i * 0.08;
+    try { tspinEnchantSynth.triggerAttackRelease(note, '16n', now + i * 0.04, Math.min(vel, 0.8)); } catch (_e) {}
+  });
+}
+
+/**
+ * Hard drop / heavy landing impact — deep thud with spatial panning.
+ * @param {number} [boardX]  piece center X for stereo placement
+ * @param {number} [intensity] 0–1 scale for how hard the drop was
+ */
+function playHardDropSound(boardX, intensity) {
+  if (!audioReady || !hardDropSynth) return;
+  _setSfxPan(boardX || 0);
+  var vol = -4 - (1 - (intensity || 0.8)) * 6;
+  hardDropSynth.volume.value = Math.max(vol, -10);
+  try { hardDropSynth.triggerAttackRelease('C1', '16n', Tone.now()); } catch (_e) {}
+  // Rumble follow-through
+  if (rumbleSynth) {
+    try { rumbleSynth.triggerAttackRelease('E1', '32n', Tone.now() + 0.05); } catch (_e) {}
+  }
+}
+
+/**
+ * Hold piece / power-up activation — chest creak sound.
+ */
+function playHoldSound() {
+  if (!audioReady || !holdChestSynth) return;
+  const now = Tone.now();
+  // Pink noise burst (chest creak)
+  try { holdChestSynth.triggerAttackRelease('16n', now); } catch (_e) {}
+  // Short metallic ping for the latch
+  if (blockPlaceSynth) {
+    try { blockPlaceSynth.triggerAttackRelease('G5', '32n', now + 0.05); } catch (_e) {}
+  }
+}
+
+/**
+ * Menu navigation click — short UI button sound.
+ */
+function playMenuClickSound() {
+  if (!audioReady || !menuClickSynth) return;
+  try { menuClickSynth.triggerAttackRelease('G5', '64n', Tone.now()); } catch (_e) {}
+}
+
 // ── Volume settings ───────────────────────────────────────────────────────────
 
 /**
@@ -339,6 +472,11 @@ function applyAudioSettings(master, sfx, music) {
     Tone.Destination.volume.value = master > 0
       ? 20 * Math.log10(master / 100)
       : -100;
+  }
+
+  // Tone.js SFX gain bus: SFX slider controls all SFX synths independently of music
+  if (typeof sfxGain !== 'undefined' && sfxGain) {
+    sfxGain.gain.rampTo(sfx / 100, 0.05);
   }
 
   // Ambient music gain (relative within Tone, controlled by music slider)

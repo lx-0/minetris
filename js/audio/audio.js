@@ -29,8 +29,19 @@ let blockHitSynth       = null;   // Tone.js layer for block hits (musical pitch
 let blockBreakSynth     = null;   // Tone.js layer for block breaks
 let blockPlaceSynth     = null;   // tonal click for satisfying placement
 let _placeReverb        = null;   // dedicated reverb for placement sound
-let levelUpSynth        = null;   // stinger synth for level-up events
+let levelUpSynth        = null;   // stinger synth for level-up events (XP orb)
 let biomeDiscoverSynth  = null;   // stinger synth for new biome discovery
+// ── Minecraft-themed SFX synths ─────────────────────────────────────────────
+let sfxGain             = null;   // master gain for Tone.js SFX (independent of music)
+let sfxPanner           = null;   // stereo panner for spatial board-based SFX
+let rotateClickSynth    = null;   // piece nudge/rotation click
+let comboChimeSynth     = null;   // escalating chimes on combo
+let tspinEnchantSynth   = null;   // enchantment shimmer on T-spin
+let hardDropSynth       = null;   // heavy impact on hard landing
+let holdChestSynth      = null;   // chest creak on hold/power-up
+let menuClickSynth      = null;   // UI button click sound
+let anvilSynth          = null;   // metallic clang for line clear
+let glassBreakSynth     = null;   // glass shatter noise for line clear
 let masterCompressor = null;
 let masterReverb = null;
 let masterLimiter = null;
@@ -108,50 +119,56 @@ function initAudio() {
     masterLimiter    = new Tone.Limiter(-1);
     masterCompressor.chain(masterReverb, masterLimiter, Tone.Destination);
 
+    // SFX gain bus — sits between SFX synths and masterCompressor.
+    // Controlled by the SFX volume slider, independently of the music slider.
+    sfxGain   = new Tone.Gain(1.0).connect(masterCompressor);
+    // Stereo panner for spatial SFX — repositioned per sound call based on board X.
+    sfxPanner = new Tone.Panner(0).connect(sfxGain);
+
     // Line-clear arpeggio — warm sine with piano-like envelope (C418 warmth)
     clearSynth = new Tone.Synth({
       oscillator: { type: "sine" },
       envelope: { attack: 0.015, decay: 0.5, sustain: 0.08, release: 1.0 },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     clearSynth.volume.value = -8;
 
     rumbleSynth = new Tone.MembraneSynth({
       pitchDecay: 0.15,
       octaves: 4,
       envelope: { attack: 0.005, decay: 0.25, sustain: 0.5, release: 0.2 },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     rumbleSynth.volume.value = -3;
 
     // Game-over — soft sine with piano-like decay for melancholic descent
     gameOverSynth = new Tone.Synth({
       oscillator: { type: "sine" },
       envelope: { attack: 0.03, decay: 0.7, sustain: 0.05, release: 1.2 },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     gameOverSynth.volume.value = -10;
 
     // Sawtooth stab for Piece Storm per-spawn swoosh
     stormSwooshSynth = new Tone.Synth({
       oscillator: { type: "sawtooth" },
       envelope: { attack: 0.005, decay: 0.09, sustain: 0.0, release: 0.06 },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     stormSwooshSynth.volume.value = -18;
 
     // Golden Hour angelic chime — sine for warmth, longer sustain for glow
     goldenChimeSynth = new Tone.Synth({
       oscillator: { type: "sine" },
       envelope: { attack: 0.02, decay: 0.6, sustain: 0.25, release: 1.5 },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     goldenChimeSynth.volume.value = -12;
 
     // Golden Hour fanfare — warm sine with piano-like sustain
     goldenFanfareSynth = new Tone.Synth({
       oscillator: { type: "sine" },
       envelope: { attack: 0.03, decay: 0.5, sustain: 0.35, release: 1.0 },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     goldenFanfareSynth.volume.value = -10;
 
     // Creeper hiss — filtered white noise with gain ramp, connected through its own gain node
-    _creeperHissGain = new Tone.Gain(0).connect(masterCompressor);
+    _creeperHissGain = new Tone.Gain(0).connect(sfxGain);
     creeperHissSynth = new Tone.NoiseSynth({
       noise: { type: "pink" },
       envelope: { attack: 0.3, decay: 0, sustain: 1.0, release: 0.1 },
@@ -163,18 +180,18 @@ function initAudio() {
       pitchDecay: 0.2,
       octaves: 5,
       envelope: { attack: 0.001, decay: 0.4, sustain: 0.0, release: 0.3 },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     creeperBoomSynth.volume.value = -2;
 
     // Crumble crackle — short burst of white noise for cracking stone
     crumbleCrackleSynth = new Tone.NoiseSynth({
       noise: { type: "white" },
       envelope: { attack: 0.001, decay: 0.08, sustain: 0.0, release: 0.04 },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     crumbleCrackleSynth.volume.value = -14;
 
     // Magma sizzle — filtered pink noise for hissing sizzle
-    _magmaSizzleGain = new Tone.Gain(0.7).connect(masterCompressor);
+    _magmaSizzleGain = new Tone.Gain(0.7).connect(sfxGain);
     magmaSizzleSynth = new Tone.NoiseSynth({
       noise: { type: "pink" },
       envelope: { attack: 0.01, decay: 0.25, sustain: 0.0, release: 0.15 },
@@ -185,18 +202,17 @@ function initAudio() {
     voidHumSynth = new Tone.Synth({
       oscillator: { type: "sine" },
       envelope: { attack: 0.05, decay: 0.4, sustain: 0.1, release: 0.6 },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     voidHumSynth.volume.value = -16;
 
     // Entropy dissolve — ethereal crystalline shimmer on block decay
-    // Two-oscillator approach: high-frequency triangle + slow AM shimmer
     entropyDissolveSynth = new Tone.PolySynth(Tone.Synth, {
       maxPolyphony: 3,
       options: {
         oscillator: { type: 'triangle' },
         envelope: { attack: 0.02, decay: 0.5, sustain: 0.05, release: 0.9 },
       },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     entropyDissolveSynth.volume.value = -13;
 
     // ── Enhanced SFX synths ────────────────────────────────────────────────
@@ -204,35 +220,35 @@ function initAudio() {
     blockHitSynth = new Tone.Synth({
       oscillator: { type: 'sine' },
       envelope: { attack: 0.003, decay: 0.12, sustain: 0.0, release: 0.08 },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     blockHitSynth.volume.value = -20;
 
     // Block break layer — triangle burst with longer release for shatter feel
     blockBreakSynth = new Tone.Synth({
       oscillator: { type: 'triangle' },
       envelope: { attack: 0.001, decay: 0.2, sustain: 0.0, release: 0.3 },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     blockBreakSynth.volume.value = -16;
 
     // Placement tonal click — sine with dedicated reverb tail for satisfaction
     _placeReverb = new Tone.Reverb({ decay: 1.8, wet: 0.45 });
-    _placeReverb.connect(masterCompressor);
+    _placeReverb.connect(sfxGain);
     blockPlaceSynth = new Tone.Synth({
       oscillator: { type: 'sine' },
       envelope: { attack: 0.002, decay: 0.08, sustain: 0.0, release: 0.4 },
     }).connect(_placeReverb);
     blockPlaceSynth.volume.value = -14;
 
-    // Level-up stinger — warm sine PolySynth for short ascending phrase
+    // Level-up stinger — XP orb bubbly ascending phrase (Minecraft-style)
     levelUpSynth = new Tone.PolySynth(Tone.Synth, {
-      maxPolyphony: 4,
+      maxPolyphony: 8,
       voice: Tone.Synth,
       options: {
         oscillator: { type: 'sine' },
-        envelope: { attack: 0.02, decay: 0.4, sustain: 0.15, release: 0.8 },
+        envelope: { attack: 0.005, decay: 0.18, sustain: 0.0, release: 0.25 },
       },
-    }).connect(masterCompressor);
-    levelUpSynth.volume.value = -10;
+    }).connect(sfxGain);
+    levelUpSynth.volume.value = -8;
 
     // Biome discovery stinger — triangle with long reverb for wonder/awe
     biomeDiscoverSynth = new Tone.PolySynth(Tone.Synth, {
@@ -242,8 +258,76 @@ function initAudio() {
         oscillator: { type: 'triangle' },
         envelope: { attack: 0.05, decay: 0.6, sustain: 0.2, release: 1.5 },
       },
-    }).connect(masterCompressor);
+    }).connect(sfxGain);
     biomeDiscoverSynth.volume.value = -10;
+
+    // ── Minecraft-themed SFX synths ─────────────────────────────────────────
+
+    // Rotate click — short sawtooth tick for piece nudge/rotation
+    rotateClickSynth = new Tone.Synth({
+      oscillator: { type: 'square' },
+      envelope: { attack: 0.001, decay: 0.04, sustain: 0.0, release: 0.03 },
+    }).connect(sfxGain);
+    rotateClickSynth.volume.value = -22;
+
+    // Combo chimes — PolySynth for escalating pitch chimes on combos
+    comboChimeSynth = new Tone.PolySynth(Tone.Synth, {
+      maxPolyphony: 6,
+      voice: Tone.Synth,
+      options: {
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.01, decay: 0.35, sustain: 0.1, release: 0.6 },
+      },
+    }).connect(sfxGain);
+    comboChimeSynth.volume.value = -10;
+
+    // T-spin enchantment — shimmering PolySynth arpeggio (like enchanting table)
+    tspinEnchantSynth = new Tone.PolySynth(Tone.Synth, {
+      maxPolyphony: 6,
+      voice: Tone.Synth,
+      options: {
+        oscillator: { type: 'sine' },
+        envelope: { attack: 0.02, decay: 0.3, sustain: 0.05, release: 0.5 },
+      },
+    }).connect(sfxGain);
+    tspinEnchantSynth.volume.value = -9;
+
+    // Hard drop impact — deep membrane thud for landing
+    hardDropSynth = new Tone.MembraneSynth({
+      pitchDecay: 0.08,
+      octaves: 5,
+      envelope: { attack: 0.001, decay: 0.18, sustain: 0.0, release: 0.15 },
+    }).connect(sfxPanner);  // routed through spatial panner
+    hardDropSynth.volume.value = -4;
+
+    // Hold chest sound — filtered noise creak for chest open/close
+    holdChestSynth = new Tone.NoiseSynth({
+      noise: { type: 'pink' },
+      envelope: { attack: 0.02, decay: 0.12, sustain: 0.0, release: 0.1 },
+    }).connect(sfxGain);
+    holdChestSynth.volume.value = -18;
+
+    // Menu click — very short sine blip for UI navigation
+    menuClickSynth = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.001, decay: 0.035, sustain: 0.0, release: 0.02 },
+    }).connect(sfxGain);
+    menuClickSynth.volume.value = -24;
+
+    // Anvil strike — metallic membrane for line-clear impact
+    anvilSynth = new Tone.MembraneSynth({
+      pitchDecay: 0.06,
+      octaves: 6,
+      envelope: { attack: 0.001, decay: 0.3, sustain: 0.0, release: 0.2 },
+    }).connect(sfxGain);
+    anvilSynth.volume.value = -5;
+
+    // Glass break — high-pass white noise burst for line-clear shatter
+    glassBreakSynth = new Tone.NoiseSynth({
+      noise: { type: 'white' },
+      envelope: { attack: 0.001, decay: 0.15, sustain: 0.0, release: 0.1 },
+    }).connect(sfxGain);
+    glassBreakSynth.volume.value = -14;
 
     _initBgMusic();
     _initEnvironmentalAudio();

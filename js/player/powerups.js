@@ -209,6 +209,8 @@ function activateEquippedPowerup() {
   if (!equippedPowerUpType) return;
   const bank = loadPowerUpBank();
   if ((bank[equippedPowerUpType] || 0) <= 0) return;
+  // Hold/chest sound on power-up activation
+  if (typeof playHoldSound === 'function') playHoldSound();
 
   // Consume one from the bank
   bank[equippedPowerUpType]--;

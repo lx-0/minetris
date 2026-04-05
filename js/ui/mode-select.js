@@ -953,6 +953,19 @@
   }
 })();
 
+// ── Menu click sounds — delegated listener on mode-select panel ───────────────
+(function _initModeSelectSfx() {
+  document.addEventListener('click', function (e) {
+    var modeSelectEl = document.getElementById('mode-select');
+    if (!modeSelectEl || modeSelectEl.style.display === 'none') return;
+    // Play click sound on button or mode-card interactions
+    if (e.target.closest('button') || e.target.closest('.mode-card:not(.mode-card-locked)') ||
+        e.target.closest('.mode-tab-btn')) {
+      if (typeof playMenuClickSound === 'function') playMenuClickSound();
+    }
+  }, true); // capture to play before the click action fires
+})();
+
 // ── Keyboard navigation for mode-select screen ───────────────────────────────
 (function _initModeSelectKeyboard() {
   function _getNavigableCards() {
@@ -986,6 +999,7 @@
         // No card focused — focus first
         e.preventDefault();
         cards[0].focus();
+        if (typeof playMenuClickSound === 'function') playMenuClickSound();
         return;
       }
       e.preventDefault();
@@ -996,6 +1010,7 @@
         next = (idx - 1 + cards.length) % cards.length;
       }
       cards[next].focus();
+      if (typeof playMenuClickSound === 'function') playMenuClickSound();
       return;
     }
 
@@ -1004,6 +1019,7 @@
       var focused = document.activeElement;
       if (focused && focused.classList.contains('mode-card')) {
         e.preventDefault();
+        if (typeof playMenuClickSound === 'function') playMenuClickSound();
         focused.click();
       }
     }

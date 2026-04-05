@@ -535,6 +535,8 @@ function applyNudge(dx, dz) {
   piece.userData.nudgeOffsetX = newOffsetX;
   piece.userData.nudgeOffsetZ = newOffsetZ;
 
+  // Rotate/nudge click sound
+  if (typeof playRotateSound === 'function') playRotateSound();
   // Start cooldown and emissive pulse
   nudgeCooldown = NUDGE_COOLDOWN_SECS;
   piece.userData.nudgePulseEnd = clock.getElapsedTime() + NUDGE_EMISSIVE_PULSE_SECS;
@@ -697,6 +699,13 @@ function updateFallingPieces(delta) {
 
     checkAndApplyPlayerPush(pieceToLand);
     playPlaceSound();
+    // Hard drop impact sound — spatial pan based on piece X position
+    if (typeof playHardDropSound === 'function') {
+      const _hdPx = pieceToLand.position.x;
+      const _hdBlocks = pieceToLand.children.length;
+      const _hdIntensity = Math.min(0.5 + (_hdBlocks / 4) * 0.4 + (lastDifficultyTier || 0) * 0.04, 1.0);
+      playHardDropSound(_hdPx, _hdIntensity);
+    }
     // Haptic feedback on piece lock for touch devices.
     if (typeof mobileOverridesActive !== 'undefined' && mobileOverridesActive) {
       try { if (navigator.vibrate) navigator.vibrate(20); } catch (_) {}
