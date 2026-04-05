@@ -127,6 +127,22 @@ function animate() {
         var _speedMult = (typeof difficultyMultiplier !== 'undefined') ? difficultyMultiplier : 1.0;
         updateMusicTempo(_heightRatio, _speedMult);
       }
+
+      // ── Danger edge glow — red pulse on top edge when stack is high ──────────
+      var _dangerEl = document.getElementById("board-danger-overlay");
+      if (_dangerEl && typeof boardGlowIntensity !== 'undefined') {
+        var _dangerZoneStart = GAME_OVER_HEIGHT - 4;
+        var _maxH = getMaxBlockHeight();
+        if (boardGlowIntensity <= 0 || isGameOver) {
+          _dangerEl.className = '';
+        } else if (_maxH >= _dangerZoneStart) {
+          var _dangerFill = Math.min((_maxH - _dangerZoneStart) / 4, 1.0);
+          _dangerEl.className = _dangerFill >= 0.5 ? 'danger-high' : 'danger-low';
+          _dangerEl.style.opacity = String(Math.min(boardGlowIntensity, 1.0));
+        } else {
+          _dangerEl.className = '';
+        }
+      }
     }
 
     // Tick ice bridge slow timer

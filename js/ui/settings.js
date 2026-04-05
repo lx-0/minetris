@@ -15,6 +15,7 @@ const THEME_SCORE_UNLOCKS_KEY    = "mineCtris_themeScoreUnlocks";
 const MOBILE_DIFFICULTY_KEY = "mineCtris_mobileDifficulty";
 const DYNAMIC_MUSIC_KEY     = "mineCtris_dynamicMusic";
 const FONT_SIZE_KEY         = "mineCtris_uiFontSize";
+const GLOW_INTENSITY_KEY    = "mineCtris_glowIntensity";
 
 // Global: true = apply 20% speed reduction on mobile. Default ON for touch devices.
 let mobileDifficultyEnabled = false;
@@ -89,6 +90,45 @@ function applyReducedMotion(enabled) {
   reducedMotionEnabled = enabled;
   try {
     localStorage.setItem(REDUCED_MOTION_KEY, String(enabled));
+  } catch (_) {}
+}
+
+// ── Board edge glow intensity ─────────────────────────────────────────────────
+// Values: 'off'=0, 'low'=0.5, 'medium'=1.0, 'high'=1.5. Default: 'medium'.
+// Global boardGlowIntensity is defined in lineclear.js.
+
+function _glowLabelToIntensity(label) {
+  return label === 'off' ? 0 : label === 'low' ? 0.5 : label === 'high' ? 1.5 : 1.0;
+}
+
+function _loadGlowIntensity() {
+  try {
+    const raw = localStorage.getItem(GLOW_INTENSITY_KEY);
+    const label = (raw === 'off' || raw === 'low' || raw === 'medium' || raw === 'high') ? raw : 'medium';
+    if (typeof boardGlowIntensity !== 'undefined') {
+      boardGlowIntensity = _glowLabelToIntensity(label);
+    }
+    // Reflect off-state on body for CSS hide rule
+    document.body.classList.toggle('board-glow-off', label === 'off');
+    // Sync OS prefers-reduced-motion: if user hasn't saved a pref, default off
+    if (raw === null) {
+      try {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          if (typeof boardGlowIntensity !== 'undefined') boardGlowIntensity = 0;
+          document.body.classList.add('board-glow-off');
+        }
+      } catch (_) {}
+    }
+  } catch (_) {}
+}
+
+function applyGlowIntensity(label) {
+  if (typeof boardGlowIntensity !== 'undefined') {
+    boardGlowIntensity = _glowLabelToIntensity(label);
+  }
+  document.body.classList.toggle('board-glow-off', label === 'off');
+  try {
+    localStorage.setItem(GLOW_INTENSITY_KEY, label);
   } catch (_) {}
 }
 
@@ -1124,6 +1164,7 @@ function initSettings() {
   applyAudioSettings(_audioSettings.master, _audioSettings.sfx, _audioSettings.music);
   _loadDynamicMusic();
   _loadReducedMotion();
+  _loadGlowIntensity();
   // Auto-enable reduced motion if the OS requests it (only when user has no saved pref)
   if (!localStorage.getItem(REDUCED_MOTION_KEY)) {
     try {
@@ -1247,6 +1288,20 @@ function initSettings() {
     rmToggle.checked = reducedMotionEnabled;
     rmToggle.addEventListener("change", function() {
       applyReducedMotion(this.checked);
+    });
+  }
+
+  // Wire glow intensity select
+  const glowSelect = document.getElementById("glow-intensity-select");
+  if (glowSelect) {
+    try {
+      const saved = localStorage.getItem(GLOW_INTENSITY_KEY);
+      if (saved === 'off' || saved === 'low' || saved === 'medium' || saved === 'high') {
+        glowSelect.value = saved;
+      }
+    } catch (_) {}
+    glowSelect.addEventListener("change", function () {
+      applyGlowIntensity(this.value);
     });
   }
 

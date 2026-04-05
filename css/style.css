@@ -459,20 +459,88 @@ body {
   animation: combo-bounce 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-/* ── Board glow (combo active) ── */
+/* ── Board glow — combo + line-clear effects (JS-driven each frame) ── */
 #board-glow-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
   border-radius: 4px;
-  box-shadow: inset 0 0 0 3px transparent;
-  transition: box-shadow 0.25s ease-out;
   z-index: 2;
 }
-#board-glow-overlay.combo-glow-1 { box-shadow: inset 0 0 18px 4px rgba(255,224,128,0.45); }
-#board-glow-overlay.combo-glow-2 { box-shadow: inset 0 0 28px 7px rgba(255,215,0,0.55);  }
-#board-glow-overlay.combo-glow-3 { box-shadow: inset 0 0 38px 10px rgba(255,80,0,0.60); }
-#board-glow-overlay.combo-glow-4 { box-shadow: inset 0 0 52px 14px rgba(180,0,255,0.65); }
+
+/* ── Danger glow overlay — pulsing red on top edge ── */
+#board-danger-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 4px;
+  z-index: 2;
+  display: none;
+}
+#board-danger-overlay.danger-low {
+  display: block;
+  animation: board-danger-pulse 1s ease-in-out infinite;
+  box-shadow: inset 0 -15px 25px -8px rgba(255,40,40,0.4);
+}
+#board-danger-overlay.danger-high {
+  display: block;
+  animation: board-danger-pulse 0.65s ease-in-out infinite;
+  box-shadow: inset 0 -22px 35px -8px rgba(255,40,40,0.65);
+}
+@keyframes board-danger-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 1.0; }
+}
+
+/* ── Power-up flash overlay — one-shot edge glow on activation ── */
+#board-powerup-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 4px;
+  z-index: 3;
+  display: none;
+}
+#board-powerup-overlay.powerup-glow-active {
+  display: block;
+}
+#board-powerup-overlay.powerup-glow-blue {
+  display: block;
+  animation: board-powerup-blue 0.5s ease-out forwards;
+}
+#board-powerup-overlay.powerup-glow-green {
+  display: block;
+  animation: board-powerup-green 0.5s ease-out forwards;
+}
+#board-powerup-overlay.powerup-glow-gold {
+  display: block;
+  animation: board-powerup-gold 0.5s ease-out forwards;
+}
+#board-powerup-overlay.powerup-glow-red {
+  display: block;
+  animation: board-powerup-red 0.5s ease-out forwards;
+}
+@keyframes board-powerup-blue {
+  0%   { box-shadow: inset 0 0 50px 15px rgba(64,180,255,0.85); }
+  100% { box-shadow: inset 0 0 0   0   rgba(64,180,255,0); }
+}
+@keyframes board-powerup-green {
+  0%   { box-shadow: inset 0 0 50px 15px rgba(80,220,100,0.85); }
+  100% { box-shadow: inset 0 0 0   0   rgba(80,220,100,0); }
+}
+@keyframes board-powerup-gold {
+  0%   { box-shadow: inset 0 0 50px 15px rgba(255,215,0,0.85); }
+  100% { box-shadow: inset 0 0 0   0   rgba(255,215,0,0); }
+}
+@keyframes board-powerup-red {
+  0%   { box-shadow: inset 0 0 50px 15px rgba(255,80,80,0.85); }
+  100% { box-shadow: inset 0 0 0   0   rgba(255,80,80,0); }
+}
+
+/* Intensity: off — hide all glow overlays */
+body.board-glow-off #board-glow-overlay,
+body.board-glow-off #board-danger-overlay,
+body.board-glow-off #board-powerup-overlay { display: none !important; }
 
 /* ── Combo particle canvas ── */
 #combo-particle-canvas {
@@ -1327,6 +1395,18 @@ body {
   align-items: center;
   gap: 14px;
   width: 100%;
+}
+.settings-select {
+  flex: 1;
+  background: #222;
+  color: #0f0;
+  border: 1px solid #0f0;
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  cursor: pointer;
+  outline: none;
 }
 .settings-label {
   font-family: "Press Start 2P", cursive;

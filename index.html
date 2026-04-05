@@ -556,6 +556,8 @@
 
       <div id="renderer-container"></div>
       <div id="board-glow-overlay"></div>
+      <div id="board-danger-overlay"></div>
+      <div id="board-powerup-overlay"></div>
       <canvas id="combo-particle-canvas"></canvas>
       <div id="crosshair"></div>
 
@@ -1346,6 +1348,17 @@
             </label>
           </div>
           <div class="settings-hint" data-i18n="settings.reduced_motion_hint">Disables camera shake, screen flash, and chromatic aberration</div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-row">
+            <label class="settings-label" for="glow-intensity-select">Board Edge Glow</label>
+            <select id="glow-intensity-select" class="settings-select">
+              <option value="off">Off</option>
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="settings-hint">Dynamic borders that react to line clears, combos, danger, and power-ups</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
             <label class="settings-label settings-label-toggle" for="high-contrast-toggle" data-i18n="settings.high_contrast">High Contrast</label>

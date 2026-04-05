@@ -182,15 +182,70 @@ function _lcResizeParticleCanvas() {
   cvs.height = rc.clientHeight || window.innerHeight;
 }
 
-// ─── Board glow (combo active) ────────────────────────────────────────────────
-function _lcUpdateBoardGlow(combo) {
+// ─── Board edge glow controller ───────────────────────────────────────────────
+// boardGlowIntensity: 0=off, 0.5=low, 1.0=medium, 1.5=high (set by settings)
+var boardGlowIntensity = 1.0;
+
+// Line-clear flash state
+var _lcLineClearGlowAge      = -1;    // -1 = inactive
+var _lcLineClearGlowDuration = 0.40;  // 400ms fade
+var _lcLineClearGlowBlur     = 15;    // px
+var _lcLineClearGlowSpread   = 4;     // px
+
+/** Kick off a transient line-clear edge flash. Called when lines are cleared. */
+function _lcTriggerLineClearGlow(numLines) {
+  _lcLineClearGlowAge    = 0;
+  _lcLineClearGlowBlur   = numLines >= 4 ? 30 : numLines >= 2 ? 22 : 15;
+  _lcLineClearGlowSpread = numLines >= 4 ? 8  : numLines >= 2 ? 5  : 3;
+}
+
+/**
+ * Applies combined box-shadow to board-glow-overlay each frame.
+ * Handles: line-clear flash (all edges, cyan) + combo (L+R edges, warm).
+ * Call from updateLineClear() every frame.
+ */
+function _applyBoardGlow() {
   const el = document.getElementById("board-glow-overlay");
   if (!el) return;
-  el.className = combo >= 10 ? "combo-glow-4"
-               : combo >= 5  ? "combo-glow-3"
-               : combo >= 3  ? "combo-glow-2"
-               : combo >= 2  ? "combo-glow-1"
-               : "";
+
+  const _rm = (typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled);
+  const intensity = _rm ? 0 : boardGlowIntensity;
+
+  if (intensity <= 0) {
+    el.style.boxShadow = 'none';
+    return;
+  }
+
+  const f = Math.min(intensity, 1.5);
+  const shadows = [];
+
+  // ── Line-clear flash: all edges, cyan/white, fades over 400ms ─────────────
+  if (_lcLineClearGlowAge >= 0) {
+    const t     = Math.max(0, 1 - _lcLineClearGlowAge / _lcLineClearGlowDuration);
+    const alpha = (t * 0.9 * Math.min(f, 1.0)).toFixed(3);
+    shadows.push(`inset 0 0 ${_lcLineClearGlowBlur}px ${_lcLineClearGlowSpread}px rgba(180,240,255,${alpha})`);
+  }
+
+  // ── Combo glow: left + right edges, warm orange→red ───────────────────────
+  if ((typeof comboCount !== 'undefined') && comboCount >= 2) {
+    const comboT  = Math.min((comboCount - 2) / 8, 1.0);
+    const blur    = Math.round(20 + comboT * 30);
+    const spread  = Math.round(4  + comboT * 8);
+    const g       = Math.round(140 - comboT * 140);  // orange (140) → red (0)
+    const alpha   = (Math.min(0.35 + comboT * 0.30, 0.65) * Math.min(f, 1.0)).toFixed(3);
+    const color   = `rgba(255,${g},0,${alpha})`;
+    // Left + right directional inset shadows
+    shadows.push(`inset  ${blur}px 0 ${blur}px -${blur / 2}px ${color}`);
+    shadows.push(`inset -${blur}px 0 ${blur}px -${blur / 2}px ${color}`);
+  }
+
+  el.style.boxShadow = shadows.length ? shadows.join(', ') : 'none';
+}
+
+/** Legacy wrapper kept for call-sites that pass combo directly (combo reset path). */
+function _lcUpdateBoardGlow(combo) {
+  // State is now driven by _applyBoardGlow() each frame; combo is read from global.
+  // This no-op wrapper prevents any remaining callers from breaking.
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -499,8 +554,8 @@ function checkLineClear(newBlocks) {
       }
     }
 
-    // Board glow — update regardless of reduced motion (it's a subtle border effect)
-    _lcUpdateBoardGlow(comboCount);
+    // Trigger line-clear edge flash
+    _lcTriggerLineClearGlow(completeLevels.length);
   }
 }
 
@@ -534,6 +589,15 @@ function updateLineClear(delta) {
 
   // 2-D combo particle burst update
   _lcUpdateComboBurst(delta);
+
+  // Tick line-clear flash age and apply combined board glow each frame
+  if (_lcLineClearGlowAge >= 0) {
+    _lcLineClearGlowAge += delta;
+    if (_lcLineClearGlowAge >= _lcLineClearGlowDuration) {
+      _lcLineClearGlowAge = -1;
+    }
+  }
+  _applyBoardGlow();
 
   // ── Camera jolt (upward impulse, decays over ~120 ms) ──────────────────────
   if (_lcJoltAge >= 0) {

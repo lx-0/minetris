@@ -96,6 +96,38 @@ function activateIceBridge() {
 }
 
 /**
+ * Trigger a 500ms colored glow on all board edges for the given power-up type.
+ * Gold = row-bomb/fortress/counter, Blue = slow-down/magnet/time-freeze, Green = shield, Red = sabotage.
+ */
+function _triggerBoardEdgeGlow(type) {
+  if (typeof boardGlowIntensity === 'undefined' || boardGlowIntensity <= 0) return;
+  const el = document.getElementById("board-powerup-overlay");
+  if (!el) return;
+  const colorMap = {
+    'row-bomb':   'gold',
+    'fortress':   'gold',
+    'counter':    'gold',
+    'slow-down':  'blue',
+    'magnet':     'blue',
+    'time-freeze':'blue',
+    'shield':     'green',
+    'sabotage':   'red',
+  };
+  const colorClass = 'powerup-glow-' + (colorMap[type] || 'gold');
+  el.className = '';
+  el.style.display = 'none';
+  void el.offsetWidth;
+  el.style.opacity = String(Math.min(boardGlowIntensity, 1.0));
+  el.className = colorClass;
+  el.style.display = 'block';
+  el.addEventListener('animationend', function onEnd() {
+    el.style.display = 'none';
+    el.className = '';
+    el.removeEventListener('animationend', onEnd);
+  }, { once: true });
+}
+
+/**
  * Trigger a one-shot activation flash for the given power-up type.
  * @param {"row-bomb"|"slow-down"|"shield"|"magnet"|"time-freeze"} type
  */
@@ -113,6 +145,8 @@ function _triggerPowerupFlash(type) {
     el.className = "";
     el.removeEventListener("animationend", onEnd);
   }, { once: true });
+  // Also flash the board edges with a color-matched glow
+  _triggerBoardEdgeGlow(type);
 }
 
 /**
