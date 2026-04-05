@@ -302,6 +302,34 @@ function init() {
     })();
     // ── End local 1v1 setup ───────────────────────────────────────────────────
 
+    // ── VS AI mode card ───────────────────────────────────────────────────────
+    (function () {
+      var vsAiCard = document.getElementById('mode-card-vs_ai');
+      if (vsAiCard && typeof vsAI !== 'undefined') {
+        function _openVsAI(e) {
+          e.stopPropagation();
+          hideModeSelect();
+          vsAI.start();
+        }
+        vsAiCard.addEventListener('click', _openVsAI);
+        vsAiCard.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') _openVsAI(e);
+        });
+        // Populate win/loss personal best
+        var pbEl = document.getElementById('mode-pb-vs_ai');
+        if (pbEl) {
+          try {
+            var st = loadLifetimeStats();
+            var pm = st.perMode && st.perMode['vs_ai'];
+            if (pm && pm.games > 0) {
+              pbEl.textContent = pm.wins + 'W / ' + pm.losses + 'L (' + pm.games + ' played)';
+            }
+          } catch (_) {}
+        }
+      }
+    })();
+    // ── End VS AI setup ───────────────────────────────────────────────────────
+
     // Survival: Reset World button + confirmation dialog
     const survivalResetBtn = document.getElementById("survival-reset-btn");
     const survivalResetConfirm = document.getElementById("survival-reset-confirm");

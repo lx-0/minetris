@@ -500,6 +500,12 @@
                   <div class="mode-card-name">Local 1v1</div>
                   <div class="mode-card-desc">Split-screen couch battle. Two players, one device. No internet needed.</div>
                 </div>
+                <div class="mode-card mode-card-vs-ai" id="mode-card-vs_ai" data-mode="vs_ai" tabindex="0" role="button" aria-label="VS AI — Play against a bot with adjustable difficulty. Easy, Medium, or Hard.">
+                  <div class="mode-card-icon">&#129302;</div>
+                  <div class="mode-card-name">VS AI</div>
+                  <div class="mode-card-desc">Challenge the bot. Pick Easy, Medium, or Hard. No second player needed.</div>
+                  <div class="mode-card-pb" id="mode-pb-vs_ai"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -2567,6 +2573,11 @@
       <button id="lm-settings-btn" style="position:absolute;top:10px;right:14px;z-index:9050;background:rgba(0,0,0,0.55);border:1px solid #4ade80;color:#4ade80;font-family:'Press Start 2P',monospace;font-size:0.45em;padding:5px 10px;cursor:pointer;letter-spacing:1px;">&#9881; KEYS</button>
     </div>
 
+    <!-- VS AI overlay — full-screen canvas, player vs AI bot -->
+    <div id="vs-ai-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:#0d1117;flex-direction:column;align-items:stretch;">
+      <canvas id="vs-ai-canvas" style="display:block;width:100%;height:100%;flex:1 1 auto;"></canvas>
+    </div>
+
     <!-- Tournament overlay — shown when Tournament mode card is clicked -->
     <div id="tournament-overlay" style="display:none;">
       <div id="tournament-inner">
@@ -2775,6 +2786,7 @@
     <script src="js/rendering/parallax-background.js"></script>
         <script src="js/main.js"></script>
     <script src="js/local-multi/local-multi.js"></script>
+    <script src="js/ai/ai-opponent.js"></script>
     <script src="js/social/community-goals.js"></script>
     <script src="js/events/seasonal-events.js"></script>
     <script src="js/ui/theme-editor.js"></script>

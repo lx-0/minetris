@@ -105,7 +105,7 @@
       // Render World Card stats panel
       if (typeof renderWorldCard === "function") renderWorldCard();
       // Apply highlight to the specified mode card
-      ["classic", "sprint", "blitz", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi"].forEach(function (mode) {
+      ["classic", "sprint", "blitz", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai"].forEach(function (mode) {
         const cardEl = document.getElementById("mode-card-" + mode);
         if (cardEl) {
           if (mode === highlightMode) {
