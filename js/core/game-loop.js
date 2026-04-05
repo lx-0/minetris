@@ -18,6 +18,12 @@ function animate() {
 
   const time = performance.now();
   const rawDelta = clock.getDelta();
+
+  // ── Process held nudge keys (DAS/ARR) at the very first moment of this frame
+  // to minimise input-to-render latency (target < 16 ms at 60 fps).
+  if (typeof processDasInputs === 'function' && !isGameOver && !isPaused) {
+    processDasInputs(rawDelta * 1000);
+  }
   // Cap delta to prevent timer skips after pause/tab-away (THREE.Clock accumulates real time)
   let delta = Math.min(rawDelta, 0.1);
   // Scale simulation time for replay speed control (2x / 4x fast-forward); freeze when paused.

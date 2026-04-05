@@ -320,6 +320,16 @@ function _renderPerfOverlay(currentFps) {
     : '--';
   const fpsColor = currentFps >= 55 ? '#00ff44' : currentFps >= 30 ? '#ffcc00' : '#ff4444';
 
+  // Input latency (from DAS/ARR module, -1 if no sample yet).
+  let inputLatStr = '--';
+  if (typeof getInputLatencyMs === 'function') {
+    const _il = getInputLatencyMs();
+    if (_il >= 0) {
+      const _ilColor = _il < 16 ? '#00ff44' : _il < 33 ? '#ffcc00' : '#ff4444';
+      inputLatStr = '<span style="color:' + _ilColor + '">' + _il.toFixed(1) + 'ms</span>';
+    }
+  }
+
   _perfOverlayStats.innerHTML =
     '<span style="color:#9af;font-weight:bold">PERF MONITOR</span>' +
     '  <span style="color:#555;font-size:10px">togglePerfOverlay()</span><br>' +
@@ -330,7 +340,8 @@ function _renderPerfOverlay(currentFps) {
     '  Load <b>' + loadStr + '</b><br>' +
     'Mem <b>' + memStr + '</b>' +
     '  Draws <b>' + drawStr + '</b><br>' +
-    'Quality <span style="color:#7df">' + graphicsQualityTier + '</span>';
+    'Quality <span style="color:#7df">' + graphicsQualityTier + '</span>' +
+    '  Input lag ' + inputLatStr;
 
   // Draw FPS history graph
   if (_perfGraphCtx && _perfFpsHistory.length > 1) {

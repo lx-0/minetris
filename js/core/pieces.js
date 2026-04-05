@@ -400,6 +400,8 @@ function spawnFallingPiece() {
   }
   createPieceShadow(piece3D);
   createPieceTrail(piece3D);
+  // Apply any buffered nudge input that was queued during the previous piece's lock delay.
+  if (typeof flushNudgeBuffer === 'function') flushNudgeBuffer();
 }
 
 function applyRandomRotation(piece) {
@@ -512,12 +514,14 @@ function spawnNudgeSwoosh(center, dx, dz, colorIndex) {
 
 /**
  * Nudge the piece closest to the ground by (dx, dz) blocks on the X/Z axes.
- * Called from key handlers (Q/E/Z/X).
+ * Rate limiting is handled by the DAS/ARR module (input-das.js); this function
+ * no longer enforces a cooldown so that DAS/ARR can fire at arbitrary rates.
+ *
+ * @returns {boolean} true if the piece moved, false if blocked by boundary.
  */
 function applyNudge(dx, dz) {
-  if (nudgeCooldown > 0) return;
   const piece = getNudgeTargetPiece();
-  if (!piece) return;
+  if (!piece) return false;
 
   // Mirror modifier: flip left/right controls
   if (typeof endlessMirrorActive !== 'undefined' && endlessMirrorActive) dx = -dx;
@@ -526,14 +530,14 @@ function applyNudge(dx, dz) {
   const newOffsetZ = piece.userData.nudgeOffsetZ + dz;
 
   // Enforce per-axis cumulative limit
-  if (dx !== 0 && Math.abs(newOffsetX) > NUDGE_MAX_OFFSET) return;
-  if (dz !== 0 && Math.abs(newOffsetZ) > NUDGE_MAX_OFFSET) return;
+  if (dx !== 0 && Math.abs(newOffsetX) > NUDGE_MAX_OFFSET) return false;
+  if (dz !== 0 && Math.abs(newOffsetZ) > NUDGE_MAX_OFFSET) return false;
 
   // World boundary guard (1-block buffer inside world edge)
   const newX = piece.position.x + dx * BLOCK_SIZE;
   const newZ = piece.position.z + dz * BLOCK_SIZE;
-  if (Math.abs(newX) > WORLD_SIZE / 2 - BLOCK_SIZE) return;
-  if (Math.abs(newZ) > WORLD_SIZE / 2 - BLOCK_SIZE) return;
+  if (Math.abs(newX) > WORLD_SIZE / 2 - BLOCK_SIZE) return false;
+  if (Math.abs(newZ) > WORLD_SIZE / 2 - BLOCK_SIZE) return false;
 
   // Apply the nudge
   piece.position.x = newX;
@@ -545,7 +549,7 @@ function applyNudge(dx, dz) {
   if (typeof playRotateSound === 'function') playRotateSound();
   if (typeof tutorialNotify === "function") tutorialNotify("nudge");
   if (typeof tutorialTip === "function") tutorialTip("firstNudge");
-  // Start cooldown and emissive pulse
+  // Emissive pulse (visual feedback); nudgeCooldown kept for legacy UI-hint compat.
   nudgeCooldown = NUDGE_COOLDOWN_SECS;
   piece.userData.nudgePulseEnd = clock.getElapsedTime() + NUDGE_EMISSIVE_PULSE_SECS;
 
@@ -560,6 +564,7 @@ function applyNudge(dx, dz) {
     center.divideScalar(piece.children.length);
     spawnNudgeSwoosh(center, dx, dz, piece.userData.colorIndex);
   }
+  return true;
 }
 
 function updateFallingPieces(delta) {

@@ -134,7 +134,8 @@ function onKeyDown(event) {
       break;
     case "ShiftLeft":
     case "ShiftRight":
-      if (isEditorMode) moveDown = true;
+      if (isEditorMode) { moveDown = true; break; }
+      if (typeof dasKeyDown === 'function') dasKeyDown('softDrop');
       break;
     case "Digit1":
     case "Digit2":
@@ -174,7 +175,7 @@ function onKeyDown(event) {
         coopTrade.rejectIncomingOffer();
         break;
       }
-      applyNudge(-1, 0);
+      if (typeof dasKeyDown === 'function') dasKeyDown('q');
       break;
     case "KeyE":
       // Cave mouth interaction: open tier select when standing near the cave entrance
@@ -187,7 +188,7 @@ function onKeyDown(event) {
         coopTrade.acceptIncomingOffer();
         break;
       }
-      applyNudge(1, 0);
+      if (typeof dasKeyDown === 'function') dasKeyDown('e');
       break;
     case "KeyZ":
       if (isCoopMode && typeof coopEmote !== 'undefined') {
@@ -198,14 +199,14 @@ function onKeyDown(event) {
         if (typeof undoPracticePlacement === "function") undoPracticePlacement();
         break;
       }
-      applyNudge(0, -1);
+      if (typeof dasKeyDown === 'function') dasKeyDown('z');
       break;
     case "KeyX":
       if (isCoopMode && typeof coopEmote !== 'undefined') {
         coopEmote.sendEmote('point');
         break;
       }
-      applyNudge(0, 1);
+      if (typeof dasKeyDown === 'function') dasKeyDown('x');
       break;
     case "KeyV":
       if (isCoopMode && typeof coopEmote !== 'undefined') {
@@ -289,6 +290,19 @@ function onKeyUp(event) {
     case "ShiftLeft":
     case "ShiftRight":
       moveDown = false;
+      if (typeof dasKeyUp === 'function') dasKeyUp('softDrop');
+      break;
+    case "KeyQ":
+      if (typeof dasKeyUp === 'function') dasKeyUp('q');
+      break;
+    case "KeyE":
+      if (typeof dasKeyUp === 'function') dasKeyUp('e');
+      break;
+    case "KeyZ":
+      if (typeof dasKeyUp === 'function') dasKeyUp('z');
+      break;
+    case "KeyX":
+      if (typeof dasKeyUp === 'function') dasKeyUp('x');
       break;
     case "KeyF":
       if (isPuzzleMode && typeof setThinkMode === "function") setThinkMode(false);

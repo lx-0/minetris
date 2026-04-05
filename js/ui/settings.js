@@ -592,6 +592,33 @@ function _onKeybindCapture(e) {
   _syncKeybindTable();
 }
 
+// ── DAS / ARR settings UI ──────────────────────────────────────────────────────
+
+function _initDasSettingsUI() {
+  const container = document.getElementById('das-settings-container');
+  if (!container) return;
+  const settings = typeof getInputDasSettings === 'function' ? getInputDasSettings() : { dasMs: 170, arrMs: 50, softDropMs: 50 };
+
+  function _wireSlider(id, valId, settingKey, min, max, current) {
+    const slider = document.getElementById(id);
+    const label  = document.getElementById(valId);
+    if (!slider || !label) return;
+    slider.min   = min;
+    slider.max   = max;
+    slider.value = current;
+    label.textContent = (settingKey === 'arrMs' && current === 0) ? '0 (instant)' : current + 'ms';
+    slider.addEventListener('input', function () {
+      const v = parseInt(this.value, 10);
+      if (typeof setInputDasSetting === 'function') setInputDasSetting(settingKey, v);
+      label.textContent = (settingKey === 'arrMs' && v === 0) ? '0 (instant)' : v + 'ms';
+    });
+  }
+
+  _wireSlider('das-slider',          'das-slider-val',          'dasMs',      50,  300, settings.dasMs);
+  _wireSlider('arr-slider',          'arr-slider-val',          'arrMs',      0,   100, settings.arrMs);
+  _wireSlider('soft-drop-slider',    'soft-drop-slider-val',    'softDropMs', 10,  100, settings.softDropMs);
+}
+
 function _initControlsTab() {
   // Initialise gamepad support (safe no-op if API absent).
   if (typeof initGamepad === 'function') initGamepad();
@@ -647,6 +674,9 @@ function _initControlsTab() {
 
   // Global key capture listener (only active when listening for a rebind).
   document.addEventListener("keydown", _onKeybindCapture, true);
+
+  // Initialise DAS/ARR sliders in the controls pane.
+  _initDasSettingsUI();
 }
 
 // ── Mobile difficulty ──────────────────────────────────────────────────────────

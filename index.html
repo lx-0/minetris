@@ -1498,6 +1498,31 @@
             <div class="keybind-display-row"><span class="keybind-action-label">Camera Look</span><span class="keybind-key-badge">Mouse Move</span></div>
             <div class="keybind-display-row"><span class="keybind-action-label">Select Block</span><span class="keybind-key-badge">1–9 / Scroll</span></div>
             <div class="settings-section-divider" style="margin-top:10px"></div>
+
+            <!-- DAS / ARR / Soft Drop tuning -->
+            <div class="settings-label settings-label-section">Piece Nudge Timing</div>
+            <div class="settings-hint" style="margin-bottom:6px">
+              Hold Q/E/Z/X to nudge a piece repeatedly. DAS = delay before repeat starts.
+              ARR = repeat interval (0 = instant teleport to edge). Shift = soft drop.
+            </div>
+            <div id="das-settings-container">
+              <div class="settings-row">
+                <label class="settings-label" for="das-slider">DAS</label>
+                <input type="range" id="das-slider" class="vol-slider" min="50" max="300" value="170" aria-label="DAS delay in milliseconds">
+                <span class="vol-val" id="das-slider-val">170ms</span>
+              </div>
+              <div class="settings-row">
+                <label class="settings-label" for="arr-slider">ARR</label>
+                <input type="range" id="arr-slider" class="vol-slider" min="0" max="100" value="50" aria-label="ARR repeat rate in milliseconds">
+                <span class="vol-val" id="arr-slider-val">50ms</span>
+              </div>
+              <div class="settings-row">
+                <label class="settings-label" for="soft-drop-slider">Soft drop</label>
+                <input type="range" id="soft-drop-slider" class="vol-slider" min="10" max="100" value="50" aria-label="Soft drop speed in milliseconds">
+                <span class="vol-val" id="soft-drop-slider-val">50ms</span>
+              </div>
+            </div>
+            <div class="settings-section-divider" style="margin-top:10px"></div>
             <div class="settings-label settings-label-section">Gamepad</div>
             <div id="gamepad-status-text" class="settings-hint" style="color:#aaa">&#10060; No gamepad detected &#8212; plug in a controller and press any button.</div>
             <div class="settings-hint" style="margin-top:6px">Default gamepad layout (Standard / Xbox):</div>
@@ -2683,6 +2708,7 @@
     <script src="js/world/mining.js"></script>
     <script src="js/world/hazard-blocks.js"></script>
     <script src="js/player/keybindings.js"></script>
+    <script src="js/player/input-das.js"></script>
     <script src="js/player/gamepad.js"></script>
     <script src="js/player/player.js"></script>
     <script src="js/rendering/sky.js"></script>

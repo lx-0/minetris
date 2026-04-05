@@ -109,6 +109,7 @@ function resetGame() {
   nudgeCooldown = 0;
   const nudgeHintEl = document.getElementById("nudge-hint");
   if (nudgeHintEl) nudgeHintEl.style.display = "none";
+  if (typeof resetDasState === 'function') resetDasState();
 
   // Reset sprint state
   isSprintMode      = false;
