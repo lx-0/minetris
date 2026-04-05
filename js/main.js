@@ -560,6 +560,9 @@ function init() {
       }
       // Show equipped power-up HUD badge if applicable
       updatePowerupHUD();
+
+      // Seasonal events: inject special board rules (e.g. Nether Invasion lava blocks)
+      if (!isPaused && typeof onSeasonalGameStart === 'function') onSeasonalGameStart();
     });
 
     controls.addEventListener("unlock", function () {

@@ -17262,6 +17262,155 @@ body.biome-ice #inventory-hud { border-color: #4499dd; }
   padding: 16px 0;
 }
 
+/* ── Banner button row (rewards / leaderboard / history) ── */
+.se-banner-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* ── Event Leaderboard panel ── */
+.se-lb-panel > *,
+.se-history-panel > * {
+  background: linear-gradient(160deg, rgba(30,0,50,0.97) 0%, rgba(10,0,20,0.98) 100%);
+  border: 1px solid rgba(136,0,220,0.5);
+  border-radius: 8px;
+  padding: 20px;
+  min-width: 320px;
+  max-width: 480px;
+  font-family: "Press Start 2P", cursive;
+  color: #ddd;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.se-lb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 10px;
+  color: #cc88ff;
+}
+.se-lb-subtitle {
+  font-size: 6px;
+  color: #888;
+  margin-bottom: 12px;
+}
+.se-lb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.se-lb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(136,0,220,0.08);
+  border: 1px solid rgba(136,0,220,0.2);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 7px;
+}
+.se-lb-rank {
+  font-size: 8px;
+  font-weight: bold;
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.se-lb-name {
+  flex: 1;
+  color: #eeccff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.se-lb-score {
+  color: #ffdd88;
+  font-size: 8px;
+  flex-shrink: 0;
+}
+.se-lb-date {
+  color: #666;
+  font-size: 5px;
+  flex-shrink: 0;
+}
+.se-lb-empty {
+  font-size: 7px;
+  color: #666;
+  text-align: center;
+  padding: 16px 0;
+  line-height: 1.8;
+}
+
+/* ── Event History panel ── */
+.se-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.se-history-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  padding: 10px 12px;
+}
+.se-history-row.se-history-done {
+  border-color: rgba(100,220,100,0.3);
+  background: rgba(50,150,50,0.08);
+}
+.se-history-row.se-history-active {
+  border-color: rgba(255,180,0,0.5);
+  background: rgba(80,50,0,0.15);
+}
+.se-history-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.se-history-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.se-history-name {
+  font-size: 9px;
+  font-weight: bold;
+}
+.se-history-dates {
+  font-size: 6px;
+  color: #888;
+}
+.se-history-badge {
+  display: inline-block;
+  font-size: 5px;
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+.se-history-badge-live {
+  background: rgba(255,180,0,0.25);
+  color: #ffcc44;
+  border: 1px solid rgba(255,180,0,0.4);
+}
+.se-history-badge-done {
+  background: rgba(50,200,80,0.2);
+  color: #66ee88;
+  border: 1px solid rgba(50,200,80,0.4);
+}
+.se-history-progress {
+  font-size: 6px;
+  color: #aaa;
+}
+.se-history-reward {
+  font-size: 6px;
+  color: #cc88ff;
+}
+
 /* ── Depths discovery prompt ── */
 #depths-discovery-prompt {
   display: none;

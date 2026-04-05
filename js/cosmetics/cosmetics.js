@@ -312,6 +312,20 @@ const COSMETIC_REGISTRY = [
     description:     'A delicate pink border for Spring Festival champions.',
   },
 
+  // ── Seasonal Event Cosmetics — "Nether Invasion" (2026) ─────────────────
+  // Earned by reaching 15,000 points in a single game during the Nether Invasion event.
+  {
+    id:              'seasonal_nether_crown',
+    category:        'title',
+    name:            'Nether Crown',
+    rarity:          'seasonal',
+    unlockCondition: { type: 'seasonal', eventId: 'nether_invasion_2026' },
+    assets:          { displayText: 'Nether Crown', nameColor: '#ff4500' },
+    icon:            '👑',
+    timeLimited:     true,
+    description:     'Claimed by survivors of the Nether Invasion 2026.',
+  },
+
   // ── Infinite Depths — Free Progression Milestone Cosmetics ───────────────
   //
   // FREE / PREMIUM COSMETIC BOUNDARY (design rule):

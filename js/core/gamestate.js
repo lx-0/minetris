@@ -299,6 +299,9 @@ function triggerGameOver() {
       `<div><span class="go-label">TIME SURVIVED</span><br>${mm}:${ss}</div>`;
   }
 
+  // Seasonal events: record final score for event leaderboard and score-based challenges
+  if (typeof onSeasonalGameEnd === 'function') onSeasonalGameEnd(state.score);
+
   // Record lifetime stats
   submitLifetimeStats({
     score: state.score,

@@ -30,5 +30,36 @@
         }
       ]
     }
+  },
+  {
+    "id": "nether_invasion_2026",
+    "name": "Nether Invasion",
+    "narrativeBlurb": "The Nether bleeds through! Lava floods the board. Survive the invasion and claim the Nether Crown.",
+    "icon": "🔥",
+    "startDate": "2026-04-05",
+    "endDate": "2026-04-30",
+    "theme": {
+      "blockColorOverride": "#ff4400",
+      "blockColorOverride2": "#cc2200",
+      "blockColorOverride3": "#ff6622",
+      "particleEffect": "fire",
+      "bannerAccent": "#ff4500",
+      "hudAccent": "#ff6b35"
+    },
+    "specialRules": {
+      "lavaBoardBlocks": 8
+    },
+    "challenge": {
+      "id": "nether_score_15000",
+      "description": "Reach 15,000 points in a single game during the Nether Invasion",
+      "target": 15000,
+      "metric": "score",
+      "rewards": [
+        {
+          "cosmeticId": "seasonal_nether_crown",
+          "label": "Nether Crown title"
+        }
+      ]
+    }
   }
 ]
