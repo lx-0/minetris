@@ -283,6 +283,10 @@ function checkLevelUp(oldXP, newXP) {
     _showLevelUpToast(lvl);
     // Metrics: log each level-up
     if (typeof metricsLevelUp === 'function') metricsLevelUp(lvl);
+    // Screen reader: announce level up
+    if (typeof announceToScreenReader === 'function') {
+      announceToScreenReader('Level up! You are now level ' + lvl);
+    }
   }
 
   // Check milestone skin unlocks

@@ -182,6 +182,13 @@ function triggerGameOver() {
   if (isGameOver) return;
   isGameOver = true;
   gameTimerRunning = false;
+  // Screen reader: announce game over with final score
+  if (typeof announceToScreenReader === 'function') {
+    announceToScreenReader(
+      'Game over. Final score: ' + score + '. Lines cleared: ' + linesCleared + '.',
+      'assertive'
+    );
+  }
   if (typeof clearSaveState === "function") clearSaveState();
   // Finish replay recording (save to localStorage, detect personal best)
   if (typeof replayFinishRecording === 'function') {

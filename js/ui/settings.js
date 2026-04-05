@@ -9,6 +9,7 @@ const TRANSFER_LAST_EXPORT_KEY = "mineCtris_lastExportTime";
 const AUDIO_SETTINGS_KEY    = "mineCtris_audioSettings";
 const COLORBLIND_KEY        = "mineCtris_colorblindMode";
 const REDUCED_MOTION_KEY    = "mineCtris_reducedMotion";
+const HIGH_CONTRAST_KEY     = "mineCtris_highContrast";
 const THEME_STORAGE_KEY     = "mineCtris_theme";
 const MOBILE_DIFFICULTY_KEY = "mineCtris_mobileDifficulty";
 const DYNAMIC_MUSIC_KEY     = "mineCtris_dynamicMusic";
@@ -86,6 +87,50 @@ function applyReducedMotion(enabled) {
   try {
     localStorage.setItem(REDUCED_MOTION_KEY, String(enabled));
   } catch (_) {}
+}
+
+// ── High contrast mode ────────────────────────────────────────────────────────
+
+function _loadHighContrast() {
+  try {
+    const raw = localStorage.getItem(HIGH_CONTRAST_KEY);
+    if (raw !== null) highContrastEnabled = (raw === 'true');
+  } catch (_) {}
+  _applyHighContrastClass();
+}
+
+function applyHighContrast(enabled) {
+  highContrastEnabled = enabled;
+  _applyHighContrastClass();
+  try {
+    localStorage.setItem(HIGH_CONTRAST_KEY, String(enabled));
+  } catch (_) {}
+}
+
+function _applyHighContrastClass() {
+  if (highContrastEnabled) {
+    document.body.classList.add('hc-mode');
+  } else {
+    document.body.classList.remove('hc-mode');
+  }
+}
+
+// ── Screen reader announcer ───────────────────────────────────────────────────
+
+/**
+ * Announce a message to assistive technologies via the SR live region.
+ * @param {string} msg - The message to read aloud.
+ * @param {'polite'|'assertive'} [priority='polite'] - Interruption level.
+ */
+function announceToScreenReader(msg, priority) {
+  const el = document.getElementById('sr-announcer');
+  if (!el) return;
+  // Swap politeness if needed
+  const p = priority === 'assertive' ? 'assertive' : 'polite';
+  el.setAttribute('aria-live', p);
+  // Clear then set forces re-announcement even if text is the same
+  el.textContent = '';
+  requestAnimationFrame(function() { el.textContent = msg; });
 }
 
 // ── Colorblind mode ───────────────────────────────────────────────────────────
@@ -459,6 +504,8 @@ function _initControlsTab() {
     const isControls = (tab === "controls");
     if (tabGeneral)  tabGeneral.classList.toggle("settings-tab-active",  !isControls);
     if (tabControls) tabControls.classList.toggle("settings-tab-active", isControls);
+    if (tabGeneral)  tabGeneral.setAttribute("aria-selected",  String(!isControls));
+    if (tabControls) tabControls.setAttribute("aria-selected", String(isControls));
     if (paneGeneral)  paneGeneral.style.display  = isControls ? "none" : "";
     if (paneControls) paneControls.style.display = isControls ? ""     : "none";
     // Refresh gamepad status whenever the Controls tab is shown.
@@ -767,7 +814,16 @@ function initSettings() {
   applyAudioSettings(_audioSettings.master, _audioSettings.sfx, _audioSettings.music);
   _loadDynamicMusic();
   _loadReducedMotion();
+  // Auto-enable reduced motion if the OS requests it (only when user has no saved pref)
+  if (!localStorage.getItem(REDUCED_MOTION_KEY)) {
+    try {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        reducedMotionEnabled = true;
+      }
+    } catch (_) {}
+  }
   _loadColorblindMode();
+  _loadHighContrast();
   _loadTheme();
   if (typeof initGraphicsQuality === 'function') initGraphicsQuality();
   // Apply persisted theme body class without triggering a material swap on init
@@ -868,6 +924,14 @@ function initSettings() {
     rmToggle.checked = reducedMotionEnabled;
     rmToggle.addEventListener("change", function() {
       applyReducedMotion(this.checked);
+    });
+  }
+
+  const hcToggle = document.getElementById("high-contrast-toggle");
+  if (hcToggle) {
+    hcToggle.checked = highContrastEnabled;
+    hcToggle.addEventListener("change", function() {
+      applyHighContrast(this.checked);
     });
   }
 
@@ -989,6 +1053,8 @@ function openSettings(onClose) {
   if (cbToggle) cbToggle.checked = colorblindMode;
   const rmToggleSync = document.getElementById("reduced-motion-toggle");
   if (rmToggleSync) rmToggleSync.checked = reducedMotionEnabled;
+  const hcToggleSync = document.getElementById("high-contrast-toggle");
+  if (hcToggleSync) hcToggleSync.checked = highContrastEnabled;
   const weatherToggleSync = document.getElementById("weather-effects-toggle");
   if (weatherToggleSync) weatherToggleSync.checked = (typeof isWeatherEnabled === 'function') ? isWeatherEnabled() : true;
   const samToggleSync = document.getElementById("show-all-modes-toggle");
@@ -1008,8 +1074,8 @@ function openSettings(onClose) {
   const tabControls  = document.getElementById("settings-tab-controls");
   if (paneGeneral)  paneGeneral.style.display  = "";
   if (paneControls) paneControls.style.display = "none";
-  if (tabGeneral)   tabGeneral.classList.add("settings-tab-active");
-  if (tabControls)  tabControls.classList.remove("settings-tab-active");
+  if (tabGeneral)   { tabGeneral.classList.add("settings-tab-active"); tabGeneral.setAttribute("aria-selected", "true"); }
+  if (tabControls)  { tabControls.classList.remove("settings-tab-active"); tabControls.setAttribute("aria-selected", "false"); }
   const overlay = document.getElementById("settings-overlay");
   if (overlay) overlay.style.display = "flex";
 

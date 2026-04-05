@@ -18962,3 +18962,116 @@ button:focus-visible {
   .showcase-top-achs { flex-direction: column; }
   #showcase-card { padding: 16px; }
 }
+
+/* ── Accessibility: visually hidden (screen reader only) ─────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Accessibility: prefers-reduced-motion ───────────────────────────────────── */
+/* Suppress CSS animations when the OS preference is set and no JS override exists */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Accessibility: high contrast mode ───────────────────────────────────────── */
+/* Applied via body.hc-mode when the in-game toggle is on */
+body.hc-mode {
+  --hc-text: #ffffff;
+  --hc-bg: #000000;
+  --hc-accent: #ffff00;
+  --hc-border: #ffffff;
+}
+
+body.hc-mode #menu-secondary,
+body.hc-mode #settings-panel,
+body.hc-mode #notif-panel,
+body.hc-mode #friends-panel,
+body.hc-mode #profile-panel,
+body.hc-mode #lb-panel {
+  background: #000 !important;
+  border: 2px solid #fff !important;
+  color: #fff !important;
+}
+
+body.hc-mode .settings-label,
+body.hc-mode .settings-hint,
+body.hc-mode .friends-label,
+body.hc-mode #friends-my-code,
+body.hc-mode .mode-card-name,
+body.hc-mode .mode-card-desc,
+body.hc-mode .lb-entry-name,
+body.hc-mode .lb-entry-score,
+body.hc-mode #profile-page-title,
+body.hc-mode #settings-title {
+  color: #fff !important;
+  text-shadow: none !important;
+}
+
+body.hc-mode .mode-card {
+  background: #000 !important;
+  border: 2px solid #fff !important;
+  color: #fff !important;
+}
+
+body.hc-mode .mode-card:focus-visible,
+body.hc-mode button:focus-visible,
+body.hc-mode :focus-visible {
+  outline: 3px solid #ff0 !important;
+  outline-offset: 2px !important;
+}
+
+body.hc-mode .settings-tab {
+  background: #000 !important;
+  color: #fff !important;
+  border: 1px solid #fff !important;
+}
+
+body.hc-mode .settings-tab-active,
+body.hc-mode .settings-tab:hover {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+body.hc-mode .cb-toggle-slider {
+  background: #555 !important;
+  border: 1px solid #fff !important;
+}
+
+body.hc-mode input[type="checkbox"]:checked + .cb-toggle-slider {
+  background: #ff0 !important;
+}
+
+body.hc-mode .vol-slider {
+  accent-color: #ff0;
+}
+
+body.hc-mode button {
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+body.hc-mode #menu-title {
+  color: #fff !important;
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000 !important;
+  -webkit-text-stroke: 1px #000 !important;
+}
+
+body.hc-mode .notif-item {
+  background: #111 !important;
+  border: 1px solid #fff !important;
+  color: #fff !important;
+}

@@ -456,6 +456,11 @@ function init() {
       }
       crosshair.style.display = "block";
       if (scoreEl) scoreEl.style.display = "block";
+      // Screen reader: announce game start
+      if (typeof announceToScreenReader === 'function') {
+        const modeName = (typeof getActiveModeName === 'function') ? getActiveModeName() : 'Classic';
+        announceToScreenReader('Game started. ' + modeName + ' mode. Good luck!');
+      }
       if (nextPiecesEl) nextPiecesEl.style.display = "block";
       gameTimerRunning = true;
       // Metrics: log session start

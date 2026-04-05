@@ -205,6 +205,14 @@ function checkLineClear(newBlocks) {
   // Seasonal events: track challenge progress
   if (typeof onSeasonalLineClear === "function") onSeasonalLineClear(completeLevels.length);
 
+  // Screen reader: announce line clear count
+  if (typeof announceToScreenReader === "function") {
+    const n = completeLevels.length;
+    const labels = ["", "Single", "Double", "Triple", "Tetris"];
+    const label = n >= 1 && n <= 4 ? labels[n] : n + " lines";
+    announceToScreenReader(label + " — " + linesCleared + " lines cleared total");
+  }
+
   // Sprint: end the game when 40 lines are cleared
   if (isSprintMode && linesCleared >= SPRINT_LINE_TARGET &&
       typeof triggerSprintComplete === "function") {

@@ -677,6 +677,9 @@
       <!-- Earthquake: mining bonus HUD notification (shown for full event duration) -->
       <div id="earthquake-hud" style="display:none;">⚡ Earthquake! Mining ×2</div>
 
+      <!-- Screen reader announcer — visually hidden live region for assistive tech -->
+      <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
       <!-- Event Announcement: full-screen dramatic card shown at event start -->
       <div id="event-announcement" style="display:none;" aria-live="assertive">
         <div id="event-announcement-card">
@@ -1051,7 +1054,7 @@
         <div id="profile-panel">
           <div id="profile-page-title">PROFILE</div>
           <div id="profile-page-body"></div>
-          <button id="profile-close-btn">Close</button>
+          <button id="profile-close-btn" aria-label="Close profile">Close</button>
         </div>
       </div>
 
@@ -1160,26 +1163,26 @@
         <div id="settings-panel">
           <div id="settings-title">SETTINGS</div>
           <!-- Tab navigation -->
-          <div id="settings-tabs">
-            <button id="settings-tab-general" class="settings-tab settings-tab-active">General</button>
-            <button id="settings-tab-controls" class="settings-tab">Controls</button>
+          <div id="settings-tabs" role="tablist" aria-label="Settings sections">
+            <button id="settings-tab-general" class="settings-tab settings-tab-active" role="tab" aria-selected="true" aria-controls="settings-pane-general">General</button>
+            <button id="settings-tab-controls" class="settings-tab" role="tab" aria-selected="false" aria-controls="settings-pane-controls">Controls</button>
           </div>
           <!-- Pane: General -->
-          <div id="settings-pane-general">
+          <div id="settings-pane-general" role="tabpanel" aria-labelledby="settings-tab-general">
           <div class="settings-row">
             <label class="settings-label">Master</label>
-            <input type="range" id="vol-master" class="vol-slider" min="0" max="100" value="80">
-            <span class="vol-val" id="vol-master-val">80</span>
+            <input type="range" id="vol-master" class="vol-slider" min="0" max="100" value="80" aria-label="Master volume" aria-valuetext="80%">
+            <span class="vol-val" id="vol-master-val" aria-hidden="true">80</span>
           </div>
           <div class="settings-row">
             <label class="settings-label">SFX</label>
-            <input type="range" id="vol-sfx" class="vol-slider" min="0" max="100" value="100">
-            <span class="vol-val" id="vol-sfx-val">100</span>
+            <input type="range" id="vol-sfx" class="vol-slider" min="0" max="100" value="100" aria-label="SFX volume" aria-valuetext="100%">
+            <span class="vol-val" id="vol-sfx-val" aria-hidden="true">100</span>
           </div>
           <div class="settings-row">
             <label class="settings-label">Music</label>
-            <input type="range" id="vol-music" class="vol-slider" min="0" max="100" value="60">
-            <span class="vol-val" id="vol-music-val">60</span>
+            <input type="range" id="vol-music" class="vol-slider" min="0" max="100" value="60" aria-label="Music volume" aria-valuetext="60%">
+            <span class="vol-val" id="vol-music-val" aria-hidden="true">60</span>
           </div>
           <div class="settings-row settings-row-toggle">
             <label class="settings-label settings-label-toggle" for="dynamic-music-toggle">Dynamic Music</label>
@@ -1207,6 +1210,15 @@
             </label>
           </div>
           <div class="settings-hint">Disables camera shake, screen flash, and chromatic aberration</div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="high-contrast-toggle">High Contrast</label>
+            <label class="cb-toggle-switch">
+              <input type="checkbox" id="high-contrast-toggle">
+              <span class="cb-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-hint">White text, block outlines, and increased UI contrast for low-vision users</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
             <label class="settings-label settings-label-toggle" for="weather-effects-toggle">Weather Effects</label>
@@ -1352,7 +1364,7 @@
           </div><!-- end #settings-pane-general -->
 
           <!-- Pane: Controls (keybindings) -->
-          <div id="settings-pane-controls" style="display:none">
+          <div id="settings-pane-controls" role="tabpanel" aria-labelledby="settings-tab-controls" style="display:none">
             <div class="settings-label settings-label-section">Presets</div>
             <div id="keybind-presets">
               <button id="kb-preset-default" class="kb-preset-btn">Default</button>
@@ -1452,12 +1464,12 @@
           <div id="friends-my-code-row">
             <span class="friends-label">Your code:</span>
             <span id="friends-my-code" class="friends-code-display">&#8230;</span>
-            <button id="friends-copy-code-btn" class="friends-copy-btn">Copy</button>
+            <button id="friends-copy-code-btn" class="friends-copy-btn" aria-label="Copy your friend code">Copy</button>
           </div>
           <div id="friends-count-row">
             <span class="friends-label">Friends:</span>
-            <span id="friends-count">0 / 50</span>
-            <button id="friends-add-tab-btn" class="friends-add-tab-btn">+ Add Friend</button>
+            <span id="friends-count" aria-live="polite">0 / 50</span>
+            <button id="friends-add-tab-btn" class="friends-add-tab-btn" aria-label="Add a friend">+ Add Friend</button>
           </div>
 
           <!-- List view -->
@@ -1470,12 +1482,12 @@
           <div id="friends-add-view" style="display:none;">
             <div class="friends-add-form">
               <label class="friends-label">Friend Code</label>
-              <input id="friends-add-input" type="text" maxlength="6" placeholder="ABC123" autocomplete="off" spellcheck="false" />
-              <label class="friends-label">Nickname (optional)</label>
-              <input id="friends-add-name-input" type="text" maxlength="24" placeholder="Display name" autocomplete="off" />
+              <input id="friends-add-input" type="text" maxlength="6" placeholder="ABC123" autocomplete="off" spellcheck="false" aria-label="Friend code (6 characters)" />
+              <label class="friends-label" for="friends-add-name-input">Nickname (optional)</label>
+              <input id="friends-add-name-input" type="text" maxlength="24" placeholder="Display name" autocomplete="off" aria-label="Nickname for this friend (optional)" />
               <div class="friends-add-actions">
-                <button id="friends-add-confirm-btn" class="friends-add-confirm-btn">Add</button>
-                <button id="friends-add-back-btn" class="friends-add-back-btn">Back</button>
+                <button id="friends-add-confirm-btn" class="friends-add-confirm-btn" aria-label="Confirm add friend">Add</button>
+                <button id="friends-add-back-btn" class="friends-add-back-btn" aria-label="Go back to friends list">Back</button>
               </div>
               <div id="friends-add-status" class="friends-status-msg"></div>
             </div>

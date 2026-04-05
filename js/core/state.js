@@ -274,6 +274,8 @@ const BLITZ_FIXED_MULTIPLIER   = Math.pow(1.1, 4); // ≈ 1.4641 (same as Sprint
 let colorblindMode = false;
 // true = suppresses camera shake, screen flash, and chromatic aberration.
 let reducedMotionEnabled = false;
+// true = high-contrast mode: white text, outlined blocks, increased UI contrast.
+let highContrastEnabled = false;
 
 // ── Visual theme ──────────────────────────────────────────────────────────────
 // "classic" = default Minecraft-inspired palette (always unlocked).
