@@ -2320,6 +2320,30 @@ body.board-glow-off #board-powerup-overlay { display: none !important; }
   min-height: 1.2em;
   text-shadow: 0 0 6px rgba(255, 255, 0, 0.5);
 }
+/* Gravity mode selector buttons inside the Practice card */
+.grav-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.40em;
+  padding: 3px 6px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(100,200,255,0.25);
+  border-radius: 4px;
+  color: #aac;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  line-height: 1.4;
+}
+.grav-btn:hover {
+  background: rgba(100,200,255,0.18);
+  color: #7df;
+  border-color: rgba(100,200,255,0.55);
+}
+.grav-btn.grav-btn-active {
+  background: rgba(100,200,255,0.22);
+  color: #7df;
+  border-color: rgba(100,200,255,0.7);
+  text-shadow: 0 0 6px rgba(100,200,255,0.6);
+}
 .mode-card-coming {
   font-family: "Press Start 2P", cursive;
   font-size: 0.42em;

@@ -1001,6 +1001,18 @@
   var practiceCardEl = document.getElementById("mode-card-practice");
   if (!practiceCardEl) return;
 
+  // ── Gravity selector ───────────────────────────────────────────────────────
+  var gravBtns = practiceCardEl.querySelectorAll('.grav-btn');
+  gravBtns.forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var dir = btn.getAttribute('data-grav');
+      if (typeof gravityDirection !== 'undefined') gravityDirection = dir;
+      gravBtns.forEach(function (b) { b.classList.remove('grav-btn-active'); });
+      btn.classList.add('grav-btn-active');
+    });
+  });
+
   practiceCardEl.addEventListener("click", function () {
     isPracticeMode       = true;
     isDailyChallenge     = false;
@@ -1011,6 +1023,18 @@
     // Show practice badge in HUD
     var practiceBadgeEl = document.getElementById("practice-badge");
     if (practiceBadgeEl) practiceBadgeEl.style.display = "block";
+    // Show gravity indicator if non-default direction is selected
+    var gravIndicatorEl = document.getElementById("gravity-indicator");
+    if (gravIndicatorEl) {
+      var _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+      if (_grav !== 'down') {
+        var _labels = { up: '↑ UP GRAVITY', left: '← LEFT GRAVITY', right: '→ RIGHT GRAVITY' };
+        gravIndicatorEl.textContent = _labels[_grav] || '';
+        gravIndicatorEl.style.display = 'block';
+      } else {
+        gravIndicatorEl.style.display = 'none';
+      }
+    }
     try { localStorage.setItem("mineCtris_lastMode", "practice"); } catch (_) {}
     if (typeof metricsModePlayed === 'function') metricsModePlayed('practice');
     hideModeSelect();

@@ -1,25 +1,44 @@
 // Landing shadow/ghost preview for falling pieces.
-// Requires: state.js (shadowsGroup, worldGroup, fallingPieces),
+// Requires: state.js (shadowsGroup, worldGroup, fallingPieces, gravityDirection),
 //           config.js (BLOCK_SIZE, COLORS, SHADOW_APPEAR_DIST)
 
 const _shadowRaycaster = new THREE.Raycaster();
 const _shadowDownDir = new THREE.Vector3(0, -1, 0);
 const _shadowWP = new THREE.Vector3();
 
+/** Returns the cast direction vector for the current gravity mode. */
+function _getShadowCastDir() {
+  const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+  switch (_grav) {
+    case 'up':    return new THREE.Vector3(0, +1, 0);
+    case 'left':  return new THREE.Vector3(-1, 0, 0);
+    case 'right': return new THREE.Vector3(+1, 0, 0);
+    default:      return new THREE.Vector3(0, -1, 0);
+  }
+}
+
 /**
  * Create flat semi-transparent ghost meshes for a newly spawned piece and
  * attach them to shadowsGroup.  Called once per piece at spawn time.
+ * The thin axis of each ghost slab faces the gravity direction.
  */
 function createPieceShadow(piece) {
   const color = COLORS[piece.userData.colorIndex] || 0xffffff;
   const shadowGroup = new THREE.Group();
+  const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+  const thin = BLOCK_SIZE * 0.08;
+  const wide = BLOCK_SIZE * 0.9;
+
+  // Build geometry with thin axis aligned to gravity direction
+  let geoW, geoH, geoD;
+  if (_grav === 'left' || _grav === 'right') {
+    geoW = thin; geoH = wide; geoD = wide;  // thin on X axis
+  } else {
+    geoW = wide; geoH = thin; geoD = wide;  // thin on Y axis (default)
+  }
 
   piece.children.forEach(() => {
-    const geo = new THREE.BoxGeometry(
-      BLOCK_SIZE * 0.9,
-      BLOCK_SIZE * 0.08,
-      BLOCK_SIZE * 0.9
-    );
+    const geo = new THREE.BoxGeometry(geoW, geoH, geoD);
     const mat = new THREE.MeshBasicMaterial({
       color: color,
       transparent: true,
@@ -35,58 +54,90 @@ function createPieceShadow(piece) {
 
 /**
  * Update shadow positions every frame.  Called from updateFallingPieces()
- * after the piece has moved.
+ * after the piece has moved.  Casts in the active gravity direction.
  */
 function updatePieceShadow(piece) {
   const shadowGroup = piece.userData.shadowGroup;
   if (!shadowGroup) return;
 
-  const targets = worldGroup.children; // includes ground plane and landed blocks
+  const targets = worldGroup.children;
+  const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+  const castDir = _getShadowCastDir();
 
-  // Gather world positions and surface hit for each block in one pass.
+  // Gather world positions and landing surface for each block in one pass.
   const blockData = piece.children.map((block) => {
     block.getWorldPosition(_shadowWP);
     const wp = _shadowWP.clone();
-
-    _shadowRaycaster.set(wp, _shadowDownDir);
+    _shadowRaycaster.set(wp, castDir);
     const hits = _shadowRaycaster.intersectObjects(targets, false);
-
-    // Default to ground plane at y = 0 (block center lands at BLOCK_SIZE/2).
-    const surfaceY = hits.length > 0 ? hits[0].point.y : 0;
-    return { wp, surfaceY };
+    let surfaceVal;  // the coordinate of the landing surface along the gravity axis
+    if (hits.length > 0) {
+      switch (_grav) {
+        case 'up':    surfaceVal = hits[0].point.y; break;
+        case 'left':  surfaceVal = hits[0].point.x; break;
+        case 'right': surfaceVal = hits[0].point.x; break;
+        default:      surfaceVal = hits[0].point.y; break;
+      }
+    } else {
+      // Default to hard boundary when no hit
+      switch (_grav) {
+        case 'up':    surfaceVal = GAME_OVER_HEIGHT; break;
+        case 'left':  surfaceVal = -GAME_OVER_HEIGHT; break;
+        case 'right': surfaceVal = GAME_OVER_HEIGHT; break;
+        default:      surfaceVal = 0; break;
+      }
+    }
+    return { wp, surfaceVal };
   });
 
-  // The piece stops when the *first* block hits a surface, which is the block
-  // that needs the smallest downward shift.  landingDeltaY is the piece-level
-  // Y offset needed (negative = still falling).
-  let landingDeltaY = -Infinity;
-  blockData.forEach(({ wp, surfaceY }) => {
-    const deltaY = surfaceY + BLOCK_SIZE / 2 - wp.y;
-    if (deltaY > landingDeltaY) landingDeltaY = deltaY;
+  // Find the closest landing surface across all blocks (piece stops at first contact).
+  // delta = signed shift needed to rest the block face against the surface.
+  let landingDelta = -Infinity;
+  blockData.forEach(({ wp, surfaceVal }) => {
+    let delta;
+    switch (_grav) {
+      case 'up':    delta = surfaceVal - BLOCK_SIZE / 2 - wp.y; break;  // block top → surface
+      case 'left':  delta = surfaceVal + BLOCK_SIZE / 2 - wp.x; break;  // block left → surface
+      case 'right': delta = surfaceVal - BLOCK_SIZE / 2 - wp.x; break;  // block right → surface
+      default:      delta = surfaceVal + BLOCK_SIZE / 2 - wp.y; break;  // block bottom → surface
+    }
+    if (delta > landingDelta) landingDelta = delta;
   });
 
-  const distToLanding = -landingDeltaY; // positive distance still to fall
+  // distToLanding is always a positive "remaining distance to travel".
+  const distToLanding = Math.abs(landingDelta);
 
-  // Hide shadow when too far away or already landed.
-  if (distToLanding > SHADOW_APPEAR_DIST || distToLanding <= 0) {
+  if (distToLanding > SHADOW_APPEAR_DIST || distToLanding <= 0.01) {
     shadowGroup.visible = false;
     return;
   }
 
   shadowGroup.visible = true;
 
-  // Fade in as the piece approaches: opacity ranges 0.08 → 0.40 (0.65 on mobile).
   const t = 1 - distToLanding / SHADOW_APPEAR_DIST;
   const _opMax = (typeof mobileOverridesActive !== 'undefined' && mobileOverridesActive
     && typeof MOBILE_OVERRIDES !== 'undefined')
     ? MOBILE_OVERRIDES.ghostOpacityMax : 0.40;
   const opacity = 0.08 + t * (_opMax - 0.08);
 
-  blockData.forEach(({ wp, surfaceY }, i) => {
+  blockData.forEach(({ wp, surfaceVal }, i) => {
     if (i >= shadowGroup.children.length) return;
     const shadowMesh = shadowGroup.children[i];
-    // Place shadow flat on the surface directly below this block.
-    shadowMesh.position.set(wp.x, surfaceY + 0.05, wp.z);
+    // Place ghost slab flush against the landing surface.
+    switch (_grav) {
+      case 'up':
+        shadowMesh.position.set(wp.x, surfaceVal - 0.05, wp.z);
+        break;
+      case 'left':
+        shadowMesh.position.set(surfaceVal + 0.05, wp.y, wp.z);
+        break;
+      case 'right':
+        shadowMesh.position.set(surfaceVal - 0.05, wp.y, wp.z);
+        break;
+      default:
+        shadowMesh.position.set(wp.x, surfaceVal + 0.05, wp.z);
+        break;
+    }
     shadowMesh.material.opacity = opacity;
   });
 }

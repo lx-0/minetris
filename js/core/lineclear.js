@@ -264,16 +264,25 @@ function checkLineClear(newBlocks) {
   const _tSpinType = (typeof lastPieceTSpin !== 'undefined') ? lastPieceTSpin : '';
   if (typeof lastPieceTSpin !== 'undefined') lastPieceTSpin = '';
 
-  const ySet = new Set();
-  newBlocks.forEach((b) => { if (b.userData.gridPos) ySet.add(b.userData.gridPos.y); });
+  // Collect the slab keys touched by the newly landed blocks.
+  // Slab key = Y level for down/up gravity; X level for left/right gravity.
+  const slabSet = new Set();
+  newBlocks.forEach((b) => {
+    if (!b.userData.gridPos) return;
+    const gp = b.userData.gridPos;
+    const sk = (typeof getOccupancySlabKey === 'function')
+      ? getOccupancySlabKey(gp.x, gp.y, gp.z)
+      : gp.y;
+    slabSet.add(sk);
+  });
 
   const completeLevels = [];
-  ySet.forEach((gy) => {
-    const layer = gridOccupancy.get(gy);
+  slabSet.forEach((sk) => {
+    const layer = gridOccupancy.get(sk);
     const _cellsNeeded = typeof getLineClearCellsNeeded === 'function'
       ? getLineClearCellsNeeded()
       : LINE_CLEAR_CELLS_NEEDED;
-    if (layer && layer.size >= _cellsNeeded) completeLevels.push(gy);
+    if (layer && layer.size >= _cellsNeeded) completeLevels.push(sk);
   });
 
   if (!completeLevels.length) {
@@ -747,10 +756,18 @@ function updateLineClear(delta) {
     const acc = -_LC_K * sb.offset - _LC_D * sb.vel;
     sb.vel    += acc * delta;
     sb.offset += sb.vel * delta;
-    sb.mesh.position.y = sb.targetY + sb.offset;
+    if (sb.targetX !== null && sb.targetX !== undefined) {
+      sb.mesh.position.x = sb.targetX + sb.offset;
+    } else {
+      sb.mesh.position.y = sb.targetY + sb.offset;
+    }
     sb.mesh.userData.boundingBox = null;  // keep bbox fresh during spring motion
     if (Math.abs(sb.offset) < 0.005 && Math.abs(sb.vel) < 0.005) {
-      sb.mesh.position.y = sb.targetY;
+      if (sb.targetX !== null && sb.targetX !== undefined) {
+        sb.mesh.position.x = sb.targetX;
+      } else {
+        sb.mesh.position.y = sb.targetY;
+      }
       _lcSpringBlks.splice(i, 1);
     }
   }
@@ -833,9 +850,11 @@ function _lcDetonate() {
   const _ringColor  = (_biomeTheme && _biomeTheme.ringColor  != null) ? _biomeTheme.ringColor  : dominantColor;
   const _lightColor = (_biomeTheme && _biomeTheme.lightColor != null) ? _biomeTheme.lightColor : dominantColor;
 
-  // Cleared Y levels in world space
-  const clearedYs = lineClearPendingYs;
-  const worldYs   = clearedYs.map((gy) => gy * BLOCK_SIZE);
+  // Cleared slab levels in world space (Y levels for down/up; X levels for left/right)
+  const clearedYs = lineClearPendingYs;  // variable name kept for compat; holds slab keys
+  const _gravDet = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+  const _isSideway = (_gravDet === 'left' || _gravDet === 'right');
+  const worldYs   = clearedYs.map((sk) => sk * BLOCK_SIZE);
   const midWorldY = worldYs.reduce((a, b) => a + b, 0) / worldYs.length;
 
   // 1. Spawn fragments ──────────────────────────────────────────────────────
@@ -903,49 +922,86 @@ function _lcDetonate() {
     checkPuzzleConditions();
   }
 
-  // 3. Apply gravity to blocks above, with spring bounce ────────────────────
+  // 3. Apply gravity to blocks on the spawn-side of cleared slabs, with spring bounce ──
+  const _grav2 = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
   const toShift = [];
   worldGroup.children.forEach((obj) => {
     if (obj.name !== "landed_block" || !obj.userData.gridPos) return;
-    const origY = obj.userData.gridPos.y;
-    const drop  = clearedYs.filter((y) => y < origY).length;
-    if (drop) toShift.push({ obj, origY, drop });
+    const gp = obj.userData.gridPos;
+    const origSlab = (typeof getOccupancySlabKey === 'function')
+      ? getOccupancySlabKey(gp.x, gp.y, gp.z)
+      : gp.y;
+    // For 'down'/'left': blocks above cleared slabs (larger key) fall toward smaller keys.
+    // For 'up'/'right': blocks below cleared slabs (smaller key) shift toward larger keys.
+    let drop;
+    if (_grav2 === 'down' || _grav2 === 'left') {
+      drop = clearedYs.filter((s) => s < origSlab).length;
+    } else {
+      drop = clearedYs.filter((s) => s > origSlab).length;
+    }
+    if (drop) toShift.push({ obj, gp, origSlab, drop });
   });
-  toShift.forEach(({ obj, origY, drop }) => {
-    const newY     = origY - drop;
-    const targetWY = newY * BLOCK_SIZE;
-    const key = obj.userData.gridPos.x + "," + obj.userData.gridPos.z;
-    const old = gridOccupancy.get(origY);
-    if (old) { old.delete(key); if (!old.size) gridOccupancy.delete(origY); }
-    if (!gridOccupancy.has(newY)) gridOccupancy.set(newY, new Set());
-    gridOccupancy.get(newY).add(key);
-    obj.userData.gridPos.y = newY;
-    obj.userData.boundingBox = null;
-    // Start the block above its target — spring will pull it down with a bounce
-    obj.position.y = targetWY + drop * BLOCK_SIZE;
-    _lcSpringBlks.push({ mesh: obj, targetY: targetWY, offset: drop * BLOCK_SIZE, vel: 0 });
+  toShift.forEach(({ obj, gp, origSlab, drop }) => {
+    const withinKey = (typeof getOccupancyWithinKey === 'function')
+      ? getOccupancyWithinKey(gp.x, gp.y, gp.z)
+      : (gp.x + ',' + gp.z);
+    const old = gridOccupancy.get(origSlab);
+    if (old) { old.delete(withinKey); if (!old.size) gridOccupancy.delete(origSlab); }
+
+    if (_grav2 === 'left' || _grav2 === 'right') {
+      // Sideways gravity: shift X slab
+      const newSlab = (_grav2 === 'left') ? origSlab - drop : origSlab + drop;
+      const targetWX = newSlab * BLOCK_SIZE;
+      if (!gridOccupancy.has(newSlab)) gridOccupancy.set(newSlab, new Set());
+      gridOccupancy.get(newSlab).add(gp.y + ',' + gp.z);
+      gp.x = newSlab;
+      obj.userData.boundingBox = null;
+      const displacement = (_grav2 === 'left') ? drop * BLOCK_SIZE : -drop * BLOCK_SIZE;
+      obj.position.x = targetWX + displacement;
+      _lcSpringBlks.push({ mesh: obj, targetY: null, targetX: targetWX, offset: displacement, vel: 0 });
+    } else {
+      // Vertical gravity (down/up): shift Y slab
+      const newSlab = (_grav2 === 'down') ? origSlab - drop : origSlab + drop;
+      const targetWY = newSlab * BLOCK_SIZE;
+      if (!gridOccupancy.has(newSlab)) gridOccupancy.set(newSlab, new Set());
+      gridOccupancy.get(newSlab).add(gp.x + ',' + gp.z);
+      gp.y = newSlab;
+      obj.userData.boundingBox = null;
+      const displacement = (_grav2 === 'down') ? drop * BLOCK_SIZE : -drop * BLOCK_SIZE;
+      obj.position.y = targetWY + displacement;
+      _lcSpringBlks.push({ mesh: obj, targetY: targetWY, targetX: null, offset: displacement, vel: 0 });
+    }
   });
 
   // 4. Shockwave rings ──────────────────────────────────────────────────────
   for (let r = 0; r < numRings; r++) {
-    const ringY = midWorldY + (r - (numRings - 1) / 2) * BLOCK_SIZE;
-    // First ring: biome ring color (or block color); additional rings are white
+    const slabOffset = (r - (numRings - 1) / 2) * BLOCK_SIZE;
     const ringColor = (r === 0) ? _ringColor : 0xffffff;
     const ringGeo   = new THREE.TorusGeometry(_LC_RING_RADIUS, 0.25, 8, 64);
     const ringMat   = new THREE.MeshBasicMaterial({
       color: ringColor, transparent: true, opacity: 1.0, side: THREE.DoubleSide,
     });
     const ringMesh  = new THREE.Mesh(ringGeo, ringMat);
-    ringMesh.rotation.x = Math.PI / 2;  // lie flat in XZ plane
-    ringMesh.position.set(0, ringY, 0);
-    ringMesh.scale.set(0.01, 1, 0.01);   // starts near-zero, expands via update
+    if (_isSideway) {
+      // Ring faces YZ plane for sideways line clears
+      ringMesh.rotation.y = Math.PI / 2;
+      ringMesh.position.set(midWorldY + slabOffset, 0, 0);
+    } else {
+      ringMesh.rotation.x = Math.PI / 2;  // lie flat in XZ plane
+      ringMesh.position.set(0, midWorldY + slabOffset, 0);
+    }
+    ringMesh.scale.set(0.01, 1, 0.01);
     scene.add(ringMesh);
     _lcRings.push({ mesh: ringMesh, age: 0 });
   }
 
   // 5. Point light flash at cleared level ───────────────────────────────────
   const ptLight = new THREE.PointLight(new THREE.Color(_lightColor), 5.0, 25);
-  ptLight.position.set(0, midWorldY, 0);
+  if (_isSideway) {
+    ptLight.position.set(midWorldY, 0, 0);
+  } else {
+    ptLight.position.set(0, midWorldY, 0);
+  }
   scene.add(ptLight);
   _lcLights.push({ light: ptLight, age: 0, initialIntensity: 5.0 });
 

@@ -402,6 +402,16 @@
                   <div class="mode-card-icon">&#127979;</div>
                   <div class="mode-card-name">Practice</div>
                   <div class="mode-card-desc">Skill builder. Undo placements, set speed, no scoring.</div>
+                  <!-- Gravity mode selector — visible inside the Practice card -->
+                  <div id="gravity-selector" style="margin-top:6px;pointer-events:auto;" onclick="event.stopPropagation()">
+                    <div style="font-size:0.55rem;color:#aaa;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.07em;">Gravity</div>
+                    <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+                      <button class="grav-btn grav-btn-active" data-grav="down"  title="Normal — pieces fall down">&#8595; Down</button>
+                      <button class="grav-btn"                 data-grav="up"    title="Upward — pieces fall up">&#8593; Up</button>
+                      <button class="grav-btn"                 data-grav="left"  title="Leftward — pieces fall left">&#8592; Left</button>
+                      <button class="grav-btn"                 data-grav="right" title="Rightward — pieces fall right">&#8594; Right</button>
+                    </div>
+                  </div>
                   <div class="mode-card-pb" id="mode-pb-practice"></div>
                 </div>
                 <div class="mode-card mode-card-zen" id="mode-card-zen" data-mode="zen" tabindex="0" role="button" aria-label="Zen mode — Relaxing play with no time pressure, ambient visuals, and meditation timer">
@@ -658,6 +668,9 @@
 
       <!-- Practice mode badge (shown during practice runs) -->
       <div id="practice-badge" style="display:none;">&#127979; Practice — not scored</div>
+
+      <!-- Gravity direction indicator (shown in Practice mode when gravity != 'down') -->
+      <div id="gravity-indicator" style="display:none;position:fixed;top:54px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.55);color:#7df;font-size:13px;font-family:monospace;padding:4px 12px;border-radius:6px;pointer-events:none;z-index:900;letter-spacing:0.05em;border:1px solid rgba(100,200,255,0.3);"></div>
 
       <!-- Zen mode badge (shown during zen sessions) -->
       <div id="zen-badge" style="display:none;">&#129666; Zen</div>

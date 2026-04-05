@@ -154,13 +154,39 @@ function getGameState() {
   };
 }
 
-/** Return the highest occupied Y level, or 0 if world is empty. */
+/**
+ * Return the "stack height" — how far the block pile has grown toward the
+ * game-over boundary — for the current gravity direction.
+ * For 'down': highest Y (normal).
+ * For 'up':   distance from ceiling to lowest Y (GAME_OVER_HEIGHT - minY).
+ * For 'left': max X key (how far right the stack extends from left wall).
+ * For 'right': distance from right wall to leftmost X (GAME_OVER_HEIGHT - |minX|).
+ */
 function getMaxBlockHeight() {
-  let maxY = 0;
-  for (const gy of gridOccupancy.keys()) {
-    if (gy > maxY) maxY = gy;
+  const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+  if (gridOccupancy.size === 0) return 0;
+  switch (_grav) {
+    case 'up': {
+      let minY = Infinity;
+      for (const sk of gridOccupancy.keys()) { if (sk < minY) minY = sk; }
+      return minY === Infinity ? 0 : Math.max(0, GAME_OVER_HEIGHT - minY);
+    }
+    case 'left': {
+      let maxX = -Infinity;
+      for (const sk of gridOccupancy.keys()) { if (sk > maxX) maxX = sk; }
+      return maxX === -Infinity ? 0 : Math.max(0, maxX + GAME_OVER_HEIGHT);
+    }
+    case 'right': {
+      let minX = Infinity;
+      for (const sk of gridOccupancy.keys()) { if (sk < minX) minX = sk; }
+      return minX === Infinity ? 0 : Math.max(0, GAME_OVER_HEIGHT - minX);
+    }
+    default: { // 'down'
+      let maxY = 0;
+      for (const gy of gridOccupancy.keys()) { if (gy > maxY) maxY = gy; }
+      return maxY;
+    }
   }
-  return maxY;
 }
 
 /** Show/hide the danger overlay based on current max block height. */

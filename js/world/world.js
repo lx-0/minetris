@@ -1,5 +1,5 @@
 // World helpers — grid occupancy tracking and block mesh creation.
-// Requires: state.js (gridOccupancy), config.js (BLOCK_SIZE)
+// Requires: state.js (gridOccupancy, gravityDirection), config.js (BLOCK_SIZE)
 
 function snapGrid(v) {
   return Math.round(v);
@@ -10,6 +10,29 @@ function snapGridY(v) {
   return Math.floor(v) + 0.5;
 }
 
+/**
+ * Returns the gridOccupancy slab key for the given grid position based on
+ * the active gravity direction.
+ * - 'down'/'up':   slab = Y (rows perpendicular to Y axis)
+ * - 'left'/'right': slab = X (columns perpendicular to X axis)
+ */
+function getOccupancySlabKey(gx, gy, gz) {
+  const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+  return (_grav === 'left' || _grav === 'right') ? snapGrid(gx) : gy;
+}
+
+/**
+ * Returns the within-slab cell key string for a grid position.
+ * - 'down'/'up':    "x,z"
+ * - 'left'/'right': "y,z"
+ */
+function getOccupancyWithinKey(gx, gy, gz) {
+  const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+  return (_grav === 'left' || _grav === 'right')
+    ? (gy + ',' + gz)
+    : (gx + ',' + gz);
+}
+
 /** Register a landed block in the grid occupancy map. */
 function registerBlock(block) {
   const wp = new THREE.Vector3();
@@ -18,8 +41,10 @@ function registerBlock(block) {
   const gy = snapGridY(wp.y);
   const gz = snapGrid(wp.z);
   block.userData.gridPos = { x: gx, y: gy, z: gz };
-  if (!gridOccupancy.has(gy)) gridOccupancy.set(gy, new Set());
-  gridOccupancy.get(gy).add(gx + "," + gz);
+  const slabKey   = getOccupancySlabKey(gx, gy, gz);
+  const withinKey = getOccupancyWithinKey(gx, gy, gz);
+  if (!gridOccupancy.has(slabKey)) gridOccupancy.set(slabKey, new Set());
+  gridOccupancy.get(slabKey).add(withinKey);
 
   const mat = block.userData.materialType;
   if (mat === 'lava' || mat === 'gold' || mat === 'ice') {
@@ -33,10 +58,12 @@ function registerBlock(block) {
 function unregisterBlock(block) {
   const gp = block.userData.gridPos;
   if (!gp) return;
-  const layer = gridOccupancy.get(gp.y);
+  const slabKey   = getOccupancySlabKey(gp.x, gp.y, gp.z);
+  const withinKey = getOccupancyWithinKey(gp.x, gp.y, gp.z);
+  const layer = gridOccupancy.get(slabKey);
   if (layer) {
-    layer.delete(gp.x + "," + gp.z);
-    if (!layer.size) gridOccupancy.delete(gp.y);
+    layer.delete(withinKey);
+    if (!layer.size) gridOccupancy.delete(slabKey);
   }
 
   const mat = block.userData.materialType;

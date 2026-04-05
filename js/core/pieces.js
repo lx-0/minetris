@@ -336,8 +336,7 @@ function spawnFallingPiece() {
       _cpSpawnZ = Math.round((_rng() - 0.5) * 9);
     }
     const piece3D = createPiece3D(SHAPES[cp.index], cp.index);
-    piece3D.position.set(_cpSpawnX, WORLD_SIZE * 0.6, _cpSpawnZ);
-    piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult, 0);
+    _applyGravitySpawn(piece3D, _cpSpawnX, _cpSpawnZ, (GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult);
     piece3D.userData.colorIndex = cp.index;
     piece3D.userData.timeSinceRotation = 0;
     piece3D.userData.rotationInterval = cp.rotationInterval;
@@ -368,8 +367,7 @@ function spawnFallingPiece() {
     const rp = typeof replayGetNextPiece === 'function' ? replayGetNextPiece() : null;
     if (!rp) return; // no more recorded pieces — replay is winding down
     const piece3D = createPiece3D(rp.shape, rp.index);
-    piece3D.position.set(rp.spawnX, WORLD_SIZE * 0.6, rp.spawnZ);
-    piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult, 0);
+    _applyGravitySpawn(piece3D, rp.spawnX, rp.spawnZ, (GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult);
     piece3D.userData.colorIndex = rp.index;
     piece3D.userData.timeSinceRotation = 0;
     piece3D.userData.rotationInterval = rp.rotationInterval;
@@ -393,9 +391,7 @@ function spawnFallingPiece() {
     const piece3D = createPiece3D(next.shape, next.index);
     const spawnX = (_rng() - 0.5) * (WORLD_SIZE * 0.8);
     const spawnZ = (_rng() - 0.5) * (WORLD_SIZE * 0.8);
-    const spawnY = WORLD_SIZE * 0.6;
-    piece3D.position.set(spawnX, spawnY, spawnZ);
-    piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult, 0);
+    _applyGravitySpawn(piece3D, spawnX, spawnZ, (GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult);
     piece3D.userData.colorIndex = next.index;
     piece3D.userData.timeSinceRotation = 0;
     piece3D.userData.rotationInterval =
@@ -420,9 +416,7 @@ function spawnFallingPiece() {
       const piece3D = createPiece3D(next.shape, next.index);
       const spawnX = (_rng() - 0.5) * (WORLD_SIZE * 0.8);
       const spawnZ = (_rng() - 0.5) * (WORLD_SIZE * 0.8);
-      const spawnY = WORLD_SIZE * 0.6;
-      piece3D.position.set(spawnX, spawnY, spawnZ);
-      piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult, 0);
+      _applyGravitySpawn(piece3D, spawnX, spawnZ, (GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult);
       piece3D.userData.colorIndex = next.index;
       piece3D.userData.timeSinceRotation = 0;
       piece3D.userData.rotationInterval =
@@ -451,9 +445,7 @@ function spawnFallingPiece() {
   const _spawnRange = WORLD_SIZE * 0.8;
   const spawnX = (_rng() - 0.5) * _spawnRange;
   const spawnZ = (_rng() - 0.5) * _spawnRange;
-  const spawnY = WORLD_SIZE * 0.6;
-  piece3D.position.set(spawnX, spawnY, spawnZ);
-  piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult, 0);
+  _applyGravitySpawn(piece3D, spawnX, spawnZ, (GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult);
   piece3D.userData.colorIndex = index;
   piece3D.userData.timeSinceRotation = 0;
   piece3D.userData.rotationInterval =
@@ -495,6 +487,58 @@ function applyRandomRotation(piece) {
   if (axis === 0) piece.rotateX(angle);
   else if (axis === 1) piece.rotateY(angle);
   else piece.rotateZ(angle);
+}
+
+// ── Gravity helpers ───────────────────────────────────────────────────────────
+
+/**
+ * Apply gravity-direction-aware spawn position and initial velocity to a piece.
+ * spawnA and spawnB are the two random spread coordinates (the axes perpendicular
+ * to the gravity axis). speed is the scalar fall speed (always positive).
+ */
+function _applyGravitySpawn(piece3D, spawnA, spawnB, speed) {
+  const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+  switch (_grav) {
+    case 'up':
+      // Spawn below, fall upward toward ceiling at GAME_OVER_HEIGHT
+      piece3D.position.set(spawnA, -(WORLD_SIZE * 0.4), spawnB);
+      piece3D.userData.velocity = new THREE.Vector3(0, speed, 0);
+      break;
+    case 'left':
+      // Spawn at right edge, fall leftward; Y fixed near ground level
+      piece3D.position.set(WORLD_SIZE * 0.55, BLOCK_SIZE * 2, spawnA);
+      piece3D.userData.velocity = new THREE.Vector3(-speed, 0, 0);
+      break;
+    case 'right':
+      // Spawn at left edge, fall rightward
+      piece3D.position.set(-(WORLD_SIZE * 0.55), BLOCK_SIZE * 2, spawnA);
+      piece3D.userData.velocity = new THREE.Vector3(speed, 0, 0);
+      break;
+    default: // 'down'
+      piece3D.position.set(spawnA, WORLD_SIZE * 0.6, spawnB);
+      piece3D.userData.velocity = new THREE.Vector3(0, -speed, 0);
+      break;
+  }
+}
+
+/** Get the "extremal" world-position value for landing distance calculation. */
+function _getPieceGravityExtreme(piece) {
+  const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+  const tv = new THREE.Vector3();
+  let extreme = (_grav === 'down') ? Infinity
+              : (_grav === 'up')   ? -Infinity
+              : (_grav === 'left') ? Infinity
+              : -Infinity; // 'right'
+  piece.children.forEach((block) => {
+    block.getWorldPosition(tv);
+    switch (_grav) {
+      case 'down':  if (tv.y < extreme) extreme = tv.y; break;
+      case 'up':    if (tv.y > extreme) extreme = tv.y; break;
+      case 'left':  if (tv.x < extreme) extreme = tv.x; break;
+      case 'right': if (tv.x > extreme) extreme = tv.x; break;
+    }
+  });
+  return extreme;
 }
 
 /**
@@ -591,25 +635,37 @@ function checkAndApplyPlayerPush(piece) {
   screenShakeStart = clock.getElapsedTime();
 }
 
-/** Returns the falling piece with the lowest point, if it's within the nudge activation zone. */
+/** Returns the falling piece closest to its landing wall, if within nudge activation zone. */
 function getNudgeTargetPiece() {
+  const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
   let closestPiece = null;
-  let closestLowest = Infinity;
+  let closestExtreme = (_grav === 'down' || _grav === 'left') ? Infinity : -Infinity;
   const _tv = new THREE.Vector3();
   fallingPieces.forEach((piece) => {
-    let lowestY = Infinity;
+    let extreme = (_grav === 'down' || _grav === 'left') ? Infinity : -Infinity;
     piece.children.forEach((block) => {
       block.getWorldPosition(_tv);
-      if (_tv.y < lowestY) lowestY = _tv.y;
+      switch (_grav) {
+        case 'down':  if (_tv.y < extreme) extreme = _tv.y; break;
+        case 'up':    if (_tv.y > extreme) extreme = _tv.y; break;
+        case 'left':  if (_tv.x < extreme) extreme = _tv.x; break;
+        case 'right': if (_tv.x > extreme) extreme = _tv.x; break;
+      }
     });
-    if (lowestY < closestLowest) {
-      closestLowest = lowestY;
-      closestPiece = piece;
-    }
+    const closer = (_grav === 'down' || _grav === 'left')
+      ? (extreme < closestExtreme)
+      : (extreme > closestExtreme);
+    if (closer) { closestExtreme = extreme; closestPiece = piece; }
   });
-  // Activate when bottom face is within NUDGE_PROXIMITY_BLOCKS blocks of ground (Y=0)
-  const heightAboveGround = closestLowest - BLOCK_SIZE / 2;
-  if (closestPiece && heightAboveGround <= NUDGE_PROXIMITY_BLOCKS * BLOCK_SIZE) {
+  // Activate within NUDGE_PROXIMITY_BLOCKS of the landing boundary
+  let distToWall;
+  switch (_grav) {
+    case 'down':  distToWall = closestExtreme - BLOCK_SIZE / 2; break;  // above ground=0
+    case 'up':    distToWall = GAME_OVER_HEIGHT - closestExtreme; break; // below ceiling
+    case 'left':  distToWall = closestExtreme + GAME_OVER_HEIGHT; break; // right of left wall
+    case 'right': distToWall = GAME_OVER_HEIGHT - closestExtreme; break; // left of right wall
+  }
+  if (closestPiece && distToWall <= NUDGE_PROXIMITY_BLOCKS * BLOCK_SIZE) {
     return closestPiece;
   }
   return null;
@@ -756,23 +812,33 @@ function updateFallingPieces(delta) {
         _rng() * (MAX_ROTATION_INTERVAL - MIN_ROTATION_INTERVAL) +
         MIN_ROTATION_INTERVAL;
     }
+    // ── Position update: use full velocity vector (handles all gravity directions) ──
+    piece.position.x += piece.userData.velocity.x * effectiveDelta;
     piece.position.y += piece.userData.velocity.y * effectiveDelta;
     updatePieceShadow(piece);
-    let lowestPoint = Infinity;
+
+    // ── Find extremal block position along the gravity axis ───────────────────
+    const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+    let gravExtreme = (_grav === 'down' || _grav === 'left') ? Infinity : -Infinity;
     piece.children.forEach((block) => {
       block.getWorldPosition(
         (block.userData.tempVec =
           block.userData.tempVec || new THREE.Vector3())
       );
-      lowestPoint = Math.min(lowestPoint, block.userData.tempVec.y);
+      switch (_grav) {
+        case 'down':  if (block.userData.tempVec.y < gravExtreme) gravExtreme = block.userData.tempVec.y; break;
+        case 'up':    if (block.userData.tempVec.y > gravExtreme) gravExtreme = block.userData.tempVec.y; break;
+        case 'left':  if (block.userData.tempVec.x < gravExtreme) gravExtreme = block.userData.tempVec.x; break;
+        case 'right': if (block.userData.tempVec.x > gravExtreme) gravExtreme = block.userData.tempVec.x; break;
+      }
     });
+
     let landed = false;
-    // Land on surface blocks and any underground blocks with meshes in worldGroup.
-    // No hard floor at Y=0.5 — pieces can fall through mined shafts underground.
+    // ── Collision with worldGroup static blocks ───────────────────────────────
     piece.children.forEach((block) => {
       if (landed) return;
       block.getWorldPosition(block.userData.tempVec);
-      const blockBottomY = block.userData.tempVec.y - BLOCK_SIZE / 2;
+      const bwp = block.userData.tempVec;
       worldGroup.children.forEach((staticObj) => {
         if (landed || staticObj.name === "ground") return;
         const staticBox = (staticObj.userData.boundingBox =
@@ -781,24 +847,51 @@ function updateFallingPieces(delta) {
         const fallingBlockWorldBox = (block.userData.worldBox =
           block.userData.worldBox || new THREE.Box3());
         fallingBlockWorldBox.setFromCenterAndSize(
-          block.userData.tempVec,
+          bwp,
           (block.userData.sizeVec =
             block.userData.sizeVec ||
             new THREE.Vector3(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
         );
-        if (fallingBlockWorldBox.intersectsBox(staticBox)) {
-          if (blockBottomY <= staticBox.max.y + 0.01) {
-            piece.position.y +=
-              staticBox.max.y +
-              BLOCK_SIZE / 2 -
-              block.userData.tempVec.y;
-            landed = true;
+        if (!fallingBlockWorldBox.intersectsBox(staticBox)) return;
+        switch (_grav) {
+          case 'down': {
+            const blockBottomY = bwp.y - BLOCK_SIZE / 2;
+            if (blockBottomY <= staticBox.max.y + 0.01) {
+              piece.position.y += staticBox.max.y + BLOCK_SIZE / 2 - bwp.y;
+              landed = true;
+            }
+            break;
+          }
+          case 'up': {
+            const blockTopY = bwp.y + BLOCK_SIZE / 2;
+            if (blockTopY >= staticBox.min.y - 0.01) {
+              piece.position.y -= (blockTopY - staticBox.min.y);
+              landed = true;
+            }
+            break;
+          }
+          case 'left': {
+            const blockLeftX = bwp.x - BLOCK_SIZE / 2;
+            if (blockLeftX <= staticBox.max.x + 0.01) {
+              piece.position.x += staticBox.max.x + BLOCK_SIZE / 2 - bwp.x;
+              landed = true;
+            }
+            break;
+          }
+          case 'right': {
+            const blockRightX = bwp.x + BLOCK_SIZE / 2;
+            if (blockRightX >= staticBox.min.x - 0.01) {
+              piece.position.x -= (blockRightX - staticBox.min.x);
+              landed = true;
+            }
+            break;
           }
         }
       });
     });
-    // Direct underground grid check: catches solid blocks without meshes (unexposed cells).
-    if (!landed && typeof ugWorldToIndex === 'function' && typeof ugInBounds === 'function' &&
+    // ── Direct underground grid check (down gravity only) ─────────────────────
+    if (!landed && _grav === 'down' &&
+        typeof ugWorldToIndex === 'function' && typeof ugInBounds === 'function' &&
         typeof undergroundGrid !== 'undefined' && undergroundGrid) {
       piece.children.forEach((block) => {
         if (landed) return;
@@ -807,10 +900,9 @@ function updateFallingPieces(delta) {
         const by = block.userData.tempVec.y;
         const bz = block.userData.tempVec.z;
         const blockBottomY = by - BLOCK_SIZE / 2;
-        // Check the underground cell at the block's bottom face position.
         const idx = ugWorldToIndex(bx, blockBottomY, bz);
         if (ugInBounds(idx.xi, idx.zi, idx.yi) && undergroundGrid[idx.xi][idx.zi][idx.yi] !== null) {
-          const solidTopY = 1.0 - idx.yi;  // top of solid block: (0.5 - yi) + 0.5
+          const solidTopY = 1.0 - idx.yi;
           if (blockBottomY <= solidTopY + 0.01) {
             piece.position.y += solidTopY + BLOCK_SIZE / 2 - by;
             landed = true;
@@ -818,10 +910,38 @@ function updateFallingPieces(delta) {
         }
       });
     }
-    // Safety bedrock floor — catches pieces that reach below the underground grid.
-    if (!landed && lowestPoint <= -30.0) {
-      piece.position.y += -30.0 - lowestPoint;
-      landed = true;
+    // ── Hard boundary checks for each gravity direction ───────────────────────
+    if (!landed) {
+      switch (_grav) {
+        case 'down':
+          // Bedrock floor at Y = -30
+          if (gravExtreme <= -30.0) {
+            piece.position.y += -30.0 - gravExtreme;
+            landed = true;
+          }
+          break;
+        case 'up':
+          // Ceiling at Y = GAME_OVER_HEIGHT (pieces land here first, stack downward)
+          if (gravExtreme >= GAME_OVER_HEIGHT) {
+            piece.position.y -= (gravExtreme - GAME_OVER_HEIGHT);
+            landed = true;
+          }
+          break;
+        case 'left':
+          // Left wall at X = -GAME_OVER_HEIGHT
+          if (gravExtreme <= -GAME_OVER_HEIGHT) {
+            piece.position.x += (-GAME_OVER_HEIGHT - gravExtreme);
+            landed = true;
+          }
+          break;
+        case 'right':
+          // Right wall at X = +GAME_OVER_HEIGHT
+          if (gravExtreme >= GAME_OVER_HEIGHT) {
+            piece.position.x -= (gravExtreme - GAME_OVER_HEIGHT);
+            landed = true;
+          }
+          break;
+      }
     }
     if (landed) {
       if (_lockDelaySecs > 0) {

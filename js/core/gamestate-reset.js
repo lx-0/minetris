@@ -329,6 +329,15 @@ function resetGame() {
   if (practiceCompleteEl) practiceCompleteEl.style.display = "none";
   const practiceBadgeEl = document.getElementById("practice-badge");
   if (practiceBadgeEl) practiceBadgeEl.style.display = "none";
+  // Reset gravity direction and hide indicator
+  gravityDirection = 'down';
+  const gravIndicatorEl = document.getElementById("gravity-indicator");
+  if (gravIndicatorEl) gravIndicatorEl.style.display = "none";
+  // Reset gravity selector buttons to 'down' active
+  const gravBtnsReset = document.querySelectorAll('.grav-btn');
+  gravBtnsReset.forEach(function (b) {
+    b.classList.toggle('grav-btn-active', b.getAttribute('data-grav') === 'down');
+  });
 
   // Reset zen mode state
   isZenMode = false;

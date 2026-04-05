@@ -517,6 +517,14 @@ let customPieceSequence      = { mode: "random", pieces: [] };
 // Used to show "Edit Puzzle" on the completion overlay.
 let customPlayFromEditor     = false;
 
+// ── Gravity mode ──────────────────────────────────────────────────────────────
+// Active gravity direction for falling pieces (Practice mode only).
+// 'down'  = normal Tetris (pieces fall toward Y=0 ground) — default.
+// 'up'    = pieces spawn below and fall upward toward a ceiling.
+// 'left'  = pieces spawn at right edge and fall left.
+// 'right' = pieces spawn at left edge and fall right.
+let gravityDirection = 'down'; // 'down' | 'up' | 'left' | 'right'
+
 // ── Practice mode state ───────────────────────────────────────────────────────
 // isPracticeMode: true while a Practice session is active.
 // practiceUndoEnabled: whether undo (Z key) is on for this session.
