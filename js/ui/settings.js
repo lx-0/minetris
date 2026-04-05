@@ -3,7 +3,7 @@
 //           world.js (createBlockMesh), shaders.js (createBlockMaterialColorblind),
 //           achievements.js (loadAchievements)
 
-const GAME_VERSION = "3.7";
+const GAME_VERSION = "3.8";
 const TRANSFER_LAST_EXPORT_KEY = "mineCtris_lastExportTime";
 
 const AUDIO_SETTINGS_KEY    = "mineCtris_audioSettings";
