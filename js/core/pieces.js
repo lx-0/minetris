@@ -235,8 +235,17 @@ function spawnFallingPiece() {
     if (typeof coop !== 'undefined' && coop.isHost && coopPieceQueue.length < 2) {
       coop.send({ type: 'piece_request' });
     }
+    // Wide board: each player's pieces spawn in their own half.
+    // Override the server-provided spawnX with a half-specific position.
+    let _cpSpawnX = cp.spawnX;
+    let _cpSpawnZ = cp.spawnZ;
+    if (isCoopWideBoard && typeof coopBoardSpawnX === 'function') {
+      _cpSpawnX = coopBoardSpawnX(typeof coop !== 'undefined' && coop.isHost);
+      // Constrain Z to board rows: -4 … +5 → range 9, center 0.5
+      _cpSpawnZ = Math.round((_rng() - 0.5) * 9);
+    }
     const piece3D = createPiece3D(SHAPES[cp.index], cp.index);
-    piece3D.position.set(cp.spawnX, WORLD_SIZE * 0.6, cp.spawnZ);
+    piece3D.position.set(_cpSpawnX, WORLD_SIZE * 0.6, _cpSpawnZ);
     piece3D.userData.velocity = new THREE.Vector3(0, -(GRAVITY / 4) * difficultyMultiplier * _fallMult, 0);
     piece3D.userData.colorIndex = cp.index;
     piece3D.userData.timeSinceRotation = 0;

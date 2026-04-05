@@ -9311,6 +9311,18 @@ body.sandstorm-active [data-ghost-piece] {
   line-height: 1;
 }
 
+/* Quick-chat keys (G/H/T) — distinct cyan tint to separate from emoji emotes */
+.coop-chat-key {
+  border-color: rgba(100, 200, 255, 0.4);
+  background: rgba(0, 30, 50, 0.70);
+}
+.coop-chat-key .coop-emote-key-icon {
+  font-size: 9px;
+  font-family: "Press Start 2P", monospace;
+  color: #a0e8ff;
+  white-space: nowrap;
+}
+
 /* ── Battle FX overlays ─────────────────────────────────────────────────────── */
 
 /* Incoming attack — red vignette flash at screen edges */

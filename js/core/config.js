@@ -591,6 +591,16 @@ const COLOR_TO_INDEX = {};
 // Co-op crafting discount multiplier — applied to recipe input quantities >= 4.
 const COOP_CRAFT_DISCOUNT = 0.8;
 
+// Co-op wide board: 16 columns × 10 rows = 160 cells per layer.
+// X range: -7 to +8 (inclusive). Left half (host): -7..0. Right half (guest): 1..8.
+const COOP_BOARD_X_MIN        = -7;
+const COOP_BOARD_X_MAX        =  8;   // inclusive → 16 columns
+const COOP_BOARD_COLS         = 16;
+const COOP_BOARD_CELLS_NEEDED = 160;  // 16 × 10
+const COOP_BOARD_HOST_X_MAX   =  0;   // right edge of host's half (inclusive)
+const COOP_BOARD_GUEST_X_MIN  =  1;   // left edge of guest's half (inclusive)
+const COOP_BOARD_HALF_SPAWN   = (WORLD_SIZE * 0.8) * (8 / 40); // ≈ 8 units half-range
+
 // Co-op difficulty settings: fall speed baseline multiplier and score multiplier.
 const COOP_DIFFICULTY_SETTINGS = {
   casual:    { fallMult: 1.0, scoreMult: 1.2, label: 'Just vibing' },

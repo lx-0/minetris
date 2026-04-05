@@ -289,6 +289,7 @@ function _initCoopHandlers() {
 
       function _startCoopGame() {
         isCoopMode = true;
+        isCoopWideBoard = true;
         isDailyChallenge = false;
         if (typeof metricsModePlayed === 'function') metricsModePlayed('coop');
         // isDailyCoopChallenge is set BEFORE calling _startCoopGame; preserve it here
@@ -296,7 +297,9 @@ function _initCoopHandlers() {
         coopPieceQueue.length = 0;
         applyWorldModifierHUD();
         _initCoopHUD();
-        camera.position.set(0, PLAYER_HEIGHT, 0);
+        // Host starts centre-left of their half; centre divider is at X = 0.5.
+        camera.position.set(-3.5, PLAYER_HEIGHT, 0.5);
+        if (typeof coopBoardShowDivider === 'function') coopBoardShowDivider();
         if (typeof coopAvatar !== 'undefined') coopAvatar.init('Partner');
         if (typeof coopTrade !== 'undefined') coopTrade.showFirstRunHint();
         if (typeof coopEmote !== 'undefined') coopEmote.showHud(true);
@@ -444,13 +447,15 @@ function _initCoopHandlers() {
           // Apply difficulty sent by host
           if (msg && msg.difficulty) _applyCoopDifficulty(msg.difficulty);
           isCoopMode = true;
+          isCoopWideBoard = true;
           isDailyChallenge = false;
           isDailyCoopChallenge = !!(msg && msg.isDaily);
           gameRng = isDailyCoopChallenge ? getDailyPrng() : null;
           coopPieceQueue.length = 0;
           _initCoopHUD();
-          // Guest spawns 3 blocks away from host, both facing +Z
-          camera.position.set(3, PLAYER_HEIGHT, 0);
+          // Guest starts centre-right of their half (X = 1 to 8 → centre at 4.5).
+          camera.position.set(4.5, PLAYER_HEIGHT, 0.5);
+          if (typeof coopBoardShowDivider === 'function') coopBoardShowDivider();
           if (typeof coopAvatar !== 'undefined') coopAvatar.init('Partner');
           if (typeof coopTrade !== 'undefined') coopTrade.showFirstRunHint();
           if (typeof coopEmote !== 'undefined') coopEmote.showHud(true);
@@ -478,6 +483,12 @@ function _initCoopHandlers() {
         if (typeof coopEmote !== 'undefined') coopEmote.receiveEmote(data);
       });
 
+      // ── Incoming quick-chat from partner ──
+      coop.on('quick_chat', function (data) {
+        if (!isCoopMode) return;
+        if (typeof coopEmote !== 'undefined') coopEmote.receiveQuickChat(data);
+      });
+
       // ── Destroy avatar when partner disconnects ──
       coop.on('partner_left', function () {
         if (typeof coopAvatar !== 'undefined') coopAvatar.destroy();
@@ -486,6 +497,7 @@ function _initCoopHandlers() {
       coop.on('disconnected', function () {
         if (typeof coopAvatar !== 'undefined') coopAvatar.destroy();
         if (typeof coopEmote !== 'undefined') { coopEmote.reset(); coopEmote.showHud(false); }
+        if (typeof coopBoardHideDivider === 'function') coopBoardHideDivider();
       });
 
       // ── Incoming world-state mutations from partner ──

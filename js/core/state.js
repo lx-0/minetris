@@ -183,6 +183,8 @@ let lastPieceTSpin = false;
 // ── Co-op mode state ──────────────────────────────────────────────────────────
 // true while a co-op session is active; suppresses local random piece generation.
 let isCoopMode = false;
+// true while co-op uses the 16-column shared wide board.
+let isCoopWideBoard = false;
 // true while the co-op trade offer panel is open (suppresses pause on pointer unlock).
 let coopTradePanelOpen = false;
 // Last received partner world position (updated from 'pos' messages; used for proximity checks).

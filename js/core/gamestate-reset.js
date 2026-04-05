@@ -133,6 +133,8 @@ function resetGame() {
 
   // Reset co-op mode state
   isCoopMode = false;
+  isCoopWideBoard = false;
+  if (typeof coopBoardHideDivider === 'function') coopBoardHideDivider();
   coopPieceQueue.length = 0;
   _coopPosBroadcastLastTime = 0;
   _coopPosLastSent = null;

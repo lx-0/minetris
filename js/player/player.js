@@ -208,6 +208,21 @@ function onKeyDown(event) {
         coopEmote.sendEmote('alert');
       }
       break;
+    case "KeyG":
+      if (isCoopMode && typeof coopEmote !== 'undefined') {
+        coopEmote.sendQuickChat('nice');
+      }
+      break;
+    case "KeyH":
+      if (isCoopMode && typeof coopEmote !== 'undefined') {
+        coopEmote.sendQuickChat('help');
+      }
+      break;
+    case "KeyT":
+      if (isCoopMode && typeof coopEmote !== 'undefined') {
+        coopEmote.sendQuickChat('ready');
+      }
+      break;
     case "KeyR":
       // Practice mode: instant restart with same configuration
       if (isPracticeMode && typeof resetGame === "function") {
