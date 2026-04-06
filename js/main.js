@@ -555,6 +555,8 @@ function init() {
       }
       crosshair.style.display = "block";
       if (scoreEl) scoreEl.style.display = "block";
+      const _ssBtn = document.getElementById('screenshot-btn');
+      if (_ssBtn) _ssBtn.style.display = 'block';
       // Screen reader: announce game start
       if (typeof announceToScreenReader === 'function') {
         const modeName = (typeof getActiveModeName === 'function') ? getActiveModeName() : 'Classic';
@@ -1082,6 +1084,9 @@ function init() {
 
   // Wire share modal close + copy + publish buttons
   _initShareModal();
+
+  // Wire in-game screenshot button
+  if (typeof Share !== 'undefined') Share.initScreenshotBtn();
 
   // Editor "Save to Library" button
   const editorSaveBtn = document.getElementById("editor-save-btn");

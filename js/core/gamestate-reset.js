@@ -471,6 +471,9 @@ function resetGame() {
   if (gameOverEl) gameOverEl.style.display = "none";
   const pauseScreenEl = document.getElementById("pause-screen");
   if (pauseScreenEl) pauseScreenEl.style.display = "none";
+  // Hide screenshot button (re-shown when pointer lock acquired on next game start)
+  const _ssBtnReset = document.getElementById('screenshot-btn');
+  if (_ssBtnReset) _ssBtnReset.style.display = 'none';
 
   updateScoreHUD();
 

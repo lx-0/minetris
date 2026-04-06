@@ -285,6 +285,9 @@ function triggerGameOver() {
   if (isGameOver) return;
   isGameOver = true;
   gameTimerRunning = false;
+  // Hide screenshot button once game ends
+  const _ssBtnGO = document.getElementById('screenshot-btn');
+  if (_ssBtnGO) _ssBtnGO.style.display = 'none';
   // Flush any notifications that were buffered during gameplay
   if (typeof notifFlushQueued === 'function') notifFlushQueued();
   // Screen reader: announce game over with final score
@@ -757,12 +760,8 @@ function triggerGameOver() {
         shareUrl += "&sname=" + encodeURIComponent(displayName);
       }
 
-      // Build rich share text: "I scored X in MineCtris Mode! Can you beat me? [link]"
+      // Build rich share text
       const MAX_URL = 2000;
-      const shareText = "I scored " + state.score.toLocaleString() +
-        " in MineCtris " + modeLine + "! Can you beat me?\n" +
-        (shareUrl.length <= MAX_URL ? shareUrl
-          : baseUrl);
       const copyContent = shareUrl.length <= MAX_URL
         ? "I scored " + state.score.toLocaleString() + " in MineCtris " + modeLine + "! Can you beat me?\n" + shareUrl
         : "MINETRIS\n" + modeLine + " \u2014 Score: " + state.score.toLocaleString() + " | Lines: " + state.linesCleared + " | Survived: " + mm + ":" + ss;
@@ -771,22 +770,43 @@ function triggerGameOver() {
       const oldWrap = document.getElementById("go-share-fallback-wrap");
       if (oldWrap) oldWrap.remove();
 
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(copyContent).then(function () {
-          if (typeof onMissionScoreShared === "function") onMissionScoreShared();
-          if (shareFeedback) {
-            shareFeedback.textContent = "Copied!";
-            shareFeedback.classList.add("visible");
-            clearTimeout(shareFeedback._fadeTimer);
-            shareFeedback._fadeTimer = setTimeout(function () {
-              shareFeedback.classList.remove("visible");
-            }, 1500);
+      // On mobile/supported browsers, use Web Share API first
+      const _scoreCanvas = document.getElementById('go-score-card-canvas');
+      if (navigator.share && typeof Share !== 'undefined') {
+        Share.shareViaWebAPI({
+          text: copyContent,
+          url: shareUrl.length <= MAX_URL ? shareUrl : baseUrl,
+          canvas: _scoreCanvas || null,
+        }).then(function (shared) {
+          if (shared) {
+            if (typeof onMissionScoreShared === "function") onMissionScoreShared();
+          } else {
+            _fallbackCopyShare(copyContent, shareUrl, baseUrl, MAX_URL);
           }
-        }).catch(function () {
-          showShareFallback(copyContent, shareBtn);
         });
-      } else {
-        showShareFallback(copyContent, shareBtn);
+        return;
+      }
+
+      _fallbackCopyShare(copyContent, shareUrl, baseUrl, MAX_URL);
+
+      function _fallbackCopyShare(content, sUrl, bUrl, maxUrl) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(content).then(function () {
+            if (typeof onMissionScoreShared === "function") onMissionScoreShared();
+            if (shareFeedback) {
+              shareFeedback.textContent = "Copied!";
+              shareFeedback.classList.add("visible");
+              clearTimeout(shareFeedback._fadeTimer);
+              shareFeedback._fadeTimer = setTimeout(function () {
+                shareFeedback.classList.remove("visible");
+              }, 1500);
+            }
+          }).catch(function () {
+            showShareFallback(content, shareBtn);
+          });
+        } else {
+          showShareFallback(content, shareBtn);
+        }
       }
     };
   }
@@ -883,6 +903,8 @@ function triggerGameOver() {
           dailyNumber:  isDailyChallenge && typeof getDailyNumber === 'function' ? getDailyNumber() : null,
         });
         _scWrap.style.display = 'flex';
+        // Add Twitter + Copy Image buttons after card is rendered
+        if (typeof Share !== 'undefined') Share.initGameOverExtras();
       };
       if (document.fonts && document.fonts.ready) {
         document.fonts.ready.then(_renderCard);
