@@ -146,8 +146,16 @@ async function fetchSeasonConfig() {
     if (_seasonConfig && _seasonConfig.seasonId) {
       applySeasonRatingResetIfNeeded(_seasonConfig.seasonId);
     }
+    // Also apply client-side monthly soft-reset (fallback for gaps between server seasons)
+    if (typeof applyMonthlyRatingResetIfNeeded === 'function') {
+      applyMonthlyRatingResetIfNeeded();
+    }
     return _seasonConfig;
   } catch (_) {
+    // Even on network failure, apply the monthly soft-reset client-side
+    if (typeof applyMonthlyRatingResetIfNeeded === 'function') {
+      applyMonthlyRatingResetIfNeeded();
+    }
     _seasonConfig = null;
     return null;
   }

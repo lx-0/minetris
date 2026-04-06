@@ -4522,12 +4522,11 @@ tr.dgo-top10-me .dgo-top10-score { color: #0cf; }
   letter-spacing: 0.5px;
   vertical-align: middle;
 }
-.battle-rank-wood      { color: #a07850; background: rgba(160,120,80,0.15);  border: 1px solid #a07850; }
-.battle-rank-stone     { color: #a0a0a0; background: rgba(160,160,160,0.15); border: 1px solid #a0a0a0; }
-.battle-rank-iron      { color: #b0c8d0; background: rgba(176,200,208,0.15); border: 1px solid #b0c8d0; }
+.battle-rank-bronze    { color: #cd7f32; background: rgba(205,127,50,0.15);  border: 1px solid #cd7f32; }
+.battle-rank-silver    { color: #c0c0c0; background: rgba(192,192,192,0.15); border: 1px solid #c0c0c0; }
 .battle-rank-gold      { color: #ffd700; background: rgba(255,215,0,0.15);   border: 1px solid #ffd700; }
+.battle-rank-platinum  { color: #a0c4ff; background: rgba(160,196,255,0.15); border: 1px solid #a0c4ff; }
 .battle-rank-diamond   { color: #44ddff; background: rgba(68,221,255,0.15);  border: 1px solid #44ddff; }
-.battle-rank-netherite { color: #cc88ff; background: rgba(204,136,255,0.15); border: 1px solid #cc88ff; }
 .battle-rank-placement { color: #ffaa33; background: rgba(255,170,51,0.15);  border: 1px solid #ffaa33; }
 
 /* Ranked match button — primary call-to-action */

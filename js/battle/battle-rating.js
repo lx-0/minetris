@@ -5,14 +5,13 @@ const BATTLE_RATING_KEY           = 'mineCtris_battleRating';
 const BATTLE_RATING_SUBMITTED_KEY = 'mineCtris_battleRatingSubmitted';
 
 // Rank tiers (ordered highest first for lookup)
-// Wood (0-999), Stone (1000-1299), Iron (1300-1599), Gold (1600-1899), Diamond (1900-2199), Netherite (2200+)
+// Bronze (0-999), Silver (1000-1199), Gold (1200-1399), Platinum (1400-1599), Diamond (1600+)
 const BATTLE_RANK_TIERS = [
-  { name: 'Netherite', icon: '\u2736', cls: 'netherite', min: 2200 },
-  { name: 'Diamond',   icon: '\u25C6', cls: 'diamond',   min: 1900 },
-  { name: 'Gold',      icon: '\u2605', cls: 'gold',      min: 1600 },
-  { name: 'Iron',      icon: '\u25A3', cls: 'iron',      min: 1300 },
-  { name: 'Stone',     icon: '\u25A1', cls: 'stone',     min: 1000 },
-  { name: 'Wood',      icon: '\u25CB', cls: 'wood',      min: 0    },
+  { name: 'Diamond',  icon: '\u25C6', cls: 'diamond',  min: 1600 },
+  { name: 'Platinum', icon: '\u2739', cls: 'platinum', min: 1400 },
+  { name: 'Gold',     icon: '\u2605', cls: 'gold',     min: 1200 },
+  { name: 'Silver',   icon: '\u25A1', cls: 'silver',   min: 1000 },
+  { name: 'Bronze',   icon: '\u25CB', cls: 'bronze',   min: 0    },
 ];
 
 // Number of placement matches before rating is revealed
@@ -96,14 +95,15 @@ function updateBattleRating(result, oppRating, ranked) {
   const ratingBefore = data.rating;
   const wasInPlacement = !data.placementDone && (data.rankedCount || 0) < PLACEMENT_MATCH_COUNT;
 
-  // K-factor: 48 during placement (fast calibration), 32 for first 30 matches, 16 thereafter
+  // K-factor: 48 during placement/anti-smurf (fast calibration for new accounts),
+  // 32 for first 30 total matches, 16 thereafter for stable rating.
   let K;
   if (ranked && wasInPlacement) {
-    K = 48;
+    K = 48; // Anti-smurf: new accounts calibrate quickly in placement
   } else if ((data.matchCount || 0) < 30) {
-    K = 32;
+    K = 32; // Early matches: still learning the tier
   } else {
-    K = 16;
+    K = 16; // Established rating: smaller swings
   }
   const opp      = (oppRating != null && !isNaN(oppRating)) ? oppRating : 1000;
   const expected = _eloExpected(data.rating, opp);
@@ -148,7 +148,7 @@ function updateBattleRating(result, oppRating, ranked) {
   if (_isNewHigh && typeof onSeasonMissionRatingHigh === 'function') {
     onSeasonMissionRatingHigh();
   }
-  if (data.rating >= 1500 && typeof onSeasonMissionGoldTierReached === 'function') {
+  if (data.rating >= 1200 && typeof onSeasonMissionGoldTierReached === 'function') {
     onSeasonMissionGoldTierReached();
   }
 
@@ -203,7 +203,7 @@ function applyTournamentWinBonus() {
   if (_isNewHigh && typeof onSeasonMissionRatingHigh === 'function') {
     onSeasonMissionRatingHigh();
   }
-  if (data.rating >= 1500 && typeof onSeasonMissionGoldTierReached === 'function') {
+  if (data.rating >= 1200 && typeof onSeasonMissionGoldTierReached === 'function') {
     onSeasonMissionGoldTierReached();
   }
   return data.rating;
@@ -244,9 +244,9 @@ async function apiSubmitBattleRating(displayName, rating, wins, losses, draws) {
   return resp.json();
 }
 
-/** Fetch the top-20 battle rankings from the Cloudflare Worker. */
+/** Fetch the top-100 battle rankings from the Cloudflare Worker. */
 async function apiFetchBattleLeaderboard() {
-  const resp = await fetch(LEADERBOARD_WORKER_URL + '/api/battle/ratings');
+  const resp = await fetch(LEADERBOARD_WORKER_URL + '/api/battle/ratings?limit=100');
   return resp.json();
 }
 

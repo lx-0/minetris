@@ -186,6 +186,8 @@ function _initBattleHandlers() {
       // ── Register battle state-change handler ──
       battle.on("state_change", function (data) {
         if (data.state === "ready") {
+          // Stop range-expansion display — opponent found
+          if (_rankedQueueExpandTimer) { clearInterval(_rankedQueueExpandTimer); _rankedQueueExpandTimer = null; }
           var readyCodeEl = document.getElementById("battle-ready-code");
           if (readyCodeEl) readyCodeEl.textContent = "Room: " + (data.roomCode || "");
           _battleHostReady  = false;
@@ -283,6 +285,7 @@ function _initBattleHandlers() {
 
       // ── Ranked match button ──
       var _rankedQueueExpandTimer = null;
+      var _rankedQueueStartTime   = 0;
       var battleRankedBtn = document.getElementById("battle-ranked-btn");
       if (battleRankedBtn) {
         battleRankedBtn.addEventListener("click", function () {
@@ -308,17 +311,26 @@ function _initBattleHandlers() {
           }
           var myRating = 1000;
           if (typeof loadBattleRating === 'function') myRating = loadBattleRating().rating;
+
+          // Interval that updates the search-range display every 15 s
+          function _startRangeExpansionDisplay() {
+            if (_rankedQueueExpandTimer) clearInterval(_rankedQueueExpandTimer);
+            _rankedQueueStartTime = Date.now();
+            _rankedQueueExpandTimer = setInterval(function () {
+              if (!rankedStatusEl || rankedStatusEl.style.display === "none") return;
+              var elapsed = Date.now() - _rankedQueueStartTime;
+              var range = typeof getRankedSearchRange === 'function'
+                ? getRankedSearchRange(elapsed)
+                : (200 + Math.floor(elapsed / 15000) * 50);
+              rankedStatusEl.innerHTML = '\u274F Searching within <strong>\u00B1' + range + ' ELO</strong>\u2026';
+            }, RANKED_EXPAND_INTERVAL_MS || 15000);
+          }
+
           battle.rankedMatch(myRating).then(function (data) {
             if (data.waiting) {
               if (roomCodeEl) roomCodeEl.textContent = data.roomCode;
               if (waitingEl) waitingEl.textContent = "\u9696 Ranked queue \u2014 searching for opponent\u2026";
-              // After 30s, indicate range is expanding
-              if (_rankedQueueExpandTimer) clearTimeout(_rankedQueueExpandTimer);
-              _rankedQueueExpandTimer = setTimeout(function () {
-                if (rankedStatusEl && rankedStatusEl.style.display !== "none") {
-                  rankedStatusEl.innerHTML = '\u274F Expanding search range\u2026';
-                }
-              }, 30000);
+              _startRangeExpansionDisplay();
             } else {
               if (roomCodeEl) roomCodeEl.textContent = data.roomCode;
               if (waitingEl) waitingEl.textContent = "\u9696 Found ranked opponent \u2014 connecting\u2026";
@@ -361,7 +373,7 @@ function _initBattleHandlers() {
       var battleCreateCancelBtn = document.getElementById("battle-create-cancel-btn");
       if (battleCreateCancelBtn) {
         battleCreateCancelBtn.addEventListener("click", function () {
-          if (_rankedQueueExpandTimer) { clearTimeout(_rankedQueueExpandTimer); _rankedQueueExpandTimer = null; }
+          if (_rankedQueueExpandTimer) { clearInterval(_rankedQueueExpandTimer); _rankedQueueExpandTimer = null; }
           var copyLinkBtn = document.getElementById("battle-copy-link-btn");
           if (copyLinkBtn) copyLinkBtn.style.display = "";
           closeBattleOverlay();
