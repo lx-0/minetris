@@ -142,6 +142,11 @@ function animate() {
         updateMusicTempo(_heightRatio, _speedMult);
       }
 
+      // Update level-based tempo and pulse layer (BPM = 80 + level*5, capped 160)
+      if (typeof updateMusicLevel === 'function' && typeof lastDifficultyTier !== 'undefined') {
+        updateMusicLevel(lastDifficultyTier + 1);
+      }
+
       // ── Danger edge glow — red pulse on top edge when stack is high ──────────
       var _dangerEl = document.getElementById("board-danger-overlay");
       if (_dangerEl && typeof boardGlowIntensity !== 'undefined') {

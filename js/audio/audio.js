@@ -103,6 +103,11 @@ const _amb = {
   // Dynamic music tempo
   dynamicEnabled: true, // tempo scaling enabled by default
   _lastTempoUpdate: 0,  // throttle tempo updates
+  levelBpm:   80,       // base BPM from current game level (80 + level*5, capped 160)
+  // Rhythmic pulse layer (activates at level 5+)
+  pulse:       null,  // Synth for rhythmic pulse hits
+  pulseGain:   null,  // Gain node controlling pulse volume
+  pulseLoopId: null,  // Tone.Transport scheduled repeat id
 };
 
 function initAudio() {
@@ -453,7 +458,15 @@ function _initBgMusic() {
   }).connect(_amb.kickGain);
   _amb.kick.volume.value = -10;
 
-  Tone.Transport.bpm.value = 72; // slow, contemplative tempo
+  // Rhythmic pulse layer (activates at level 5+) — subtle triangle hi-hat pulse
+  _amb.pulseGain = new Tone.Gain(0).connect(_amb.gain);
+  _amb.pulse = new Tone.Synth({
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.005, decay: 0.08, sustain: 0, release: 0.06 },
+  }).connect(_amb.pulseGain);
+  _amb.pulse.volume.value = -20;
+
+  Tone.Transport.bpm.value = 80; // default tempo (overridden per level)
 }
 
 // ── Dynamic music tempo tiers ────────────────────────────────────────────────
@@ -483,14 +496,15 @@ function updateMusicTempo(stackRatio, speedMult) {
   if (now - _amb._lastTempoUpdate < 500) return;
   _amb._lastTempoUpdate = now;
 
-  var baseBpm = _AMB_TEMPO_BPM[_amb.mood] || 72;
+  // Level-based BPM is the primary driver; mood BPM is a fallback for early game
+  var baseBpm = _amb.levelBpm || _AMB_TEMPO_BPM[_amb.mood] || 80;
 
   if (_amb.dynamicEnabled) {
     // Speed multiplier adds up to 20% more tempo at max speed (3x)
     var speedBoost = 1.0 + Math.min(2.0, speedMult - 1.0) * 0.10;
-    var targetBpm  = Math.round(baseBpm * speedBoost);
+    var targetBpm  = Math.round(Math.min(baseBpm * speedBoost, 160));
   } else {
-    var targetBpm = _AMB_TEMPO_BPM.calm; // static baseline when disabled
+    var targetBpm = 80; // static baseline when disabled
   }
 
   if (Math.abs(Tone.Transport.bpm.value - targetBpm) > 1) {
@@ -737,19 +751,21 @@ function startBgMusic() {
   _amb.phraseCount  = 0;
   _amb.silenceUntil = 0;
   _amb.mood         = 'calm';
+  _amb.levelBpm     = 80;
   _amb.keyIndex     = Math.floor(Math.random() * _AMB_KEYS.length); // random starting key
 
   // Stop/reset transport before (re-)starting
   Tone.Transport.stop();
   Tone.Transport.position = 0;
+  Tone.Transport.bpm.value = 80;
 
   // Schedule the ambient loop — fires every 2 seconds to check if it's time for a new phrase
   _amb.loopId = Tone.Transport.scheduleRepeat(_ambLoop, '2n');
 
   Tone.Transport.start();
 
-  // Fade in over 3 seconds
-  _amb.gain.gain.rampTo(_volMusic / 100, 3);
+  // Fade in over 3 seconds (silenced if music is muted)
+  _amb.gain.gain.rampTo(_musicMuted ? 0 : _volMusic / 100, 3);
 
   // Start environmental soundscapes alongside music
   startEnvironmentalAudio();
@@ -766,6 +782,13 @@ function stopBgMusic() {
     _amb.kickLoopId = null;
   }
   if (_amb.kickGain) _amb.kickGain.gain.cancelScheduledValues(Tone.now());
+
+  // Clean up pulse layer
+  if (_amb.pulseLoopId !== null) {
+    try { Tone.Transport.clear(_amb.pulseLoopId); } catch (_e) {}
+    _amb.pulseLoopId = null;
+  }
+  if (_amb.pulseGain) _amb.pulseGain.gain.cancelScheduledValues(Tone.now());
 
   // 3 second fade out
   _amb.gain.gain.rampTo(0, 3);
@@ -802,15 +825,82 @@ function resetBgMusic() {
     _amb.kickGain.gain.cancelScheduledValues(Tone.now());
     _amb.kickGain.gain.setValueAtTime(0, Tone.now());
   }
+  // Clean up pulse layer
+  if (_amb.pulseLoopId !== null) {
+    try { Tone.Transport.clear(_amb.pulseLoopId); } catch (_e) {}
+    _amb.pulseLoopId = null;
+  }
+  if (_amb.pulseGain) {
+    _amb.pulseGain.gain.cancelScheduledValues(Tone.now());
+    _amb.pulseGain.gain.setValueAtTime(0, Tone.now());
+  }
   Tone.Transport.stop();
   _amb.phraseCount  = 0;
   _amb.silenceUntil = 0;
   _amb.mood         = 'calm';
+  _amb.levelBpm     = 80;
 
   // Reset environmental audio alongside music
   resetEnvironmentalAudio();
 
   // Reset seasonal event audio
   if (typeof resetSeasonalEventAudio === 'function') resetSeasonalEventAudio();
+}
+
+// ── Level-based music tempo ───────────────────────────────────────────────────
+
+/**
+ * Update music tempo and layers based on the current game level.
+ * BPM = 80 + level * 5, capped at 160.
+ * Rhythmic pulse layer activates at level 5+.
+ * @param {number} level  current game level (1-based, e.g. lastDifficultyTier + 1)
+ */
+function updateMusicLevel(level) {
+  if (!bgMusicPlaying || !_amb.gain || typeof Tone === 'undefined') return;
+
+  // Compute and store level-based BPM (used by updateMusicTempo as base)
+  _amb.levelBpm = Math.min(80 + level * 5, 160);
+
+  // Rhythmic pulse layer — activate at level 5+, deactivate below
+  if (level >= 5) {
+    if (_amb.pulseLoopId === null && _amb.pulse && _amb.pulseGain) {
+      _amb.pulseGain.gain.rampTo(0.5, 1.0);
+      _amb.pulseLoopId = Tone.Transport.scheduleRepeat(function(time) {
+        if (!bgMusicPlaying || !_amb.pulse) return;
+        // Higher levels: alternate between two pitches for movement
+        var note = (level >= 10 && _amb.phraseCount % 2 === 0) ? 'A4' : 'E4';
+        try { _amb.pulse.triggerAttackRelease(note, '32n', time, 0.3); } catch (_e) {}
+      }, '8n');
+    }
+  } else {
+    if (_amb.pulseLoopId !== null) {
+      try { Tone.Transport.clear(_amb.pulseLoopId); } catch (_e) {}
+      _amb.pulseLoopId = null;
+    }
+    if (_amb.pulseGain) _amb.pulseGain.gain.rampTo(0, 0.5);
+  }
+}
+
+// ── Music mute toggle ─────────────────────────────────────────────────────────
+
+var _musicMuted = false;
+
+/**
+ * Mute or unmute background music independently of the volume slider.
+ * @param {boolean} muted
+ */
+function setMusicMuted(muted) {
+  _musicMuted = !!muted;
+  if (!_amb.gain) return;
+  if (_musicMuted) {
+    _amb.gain.gain.rampTo(0, 0.3);
+  } else if (bgMusicPlaying) {
+    _amb.gain.gain.rampTo(_volMusic / 100, 0.3);
+  }
+}
+
+/** Returns true if music is currently muted. */
+function isMusicMuted() {
+  return _musicMuted;
 }
 

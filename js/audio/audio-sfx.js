@@ -591,8 +591,9 @@ function applyAudioSettings(master, sfx, music) {
   }
 
   // Ambient music gain (relative within Tone, controlled by music slider)
+  // Respect mute: if music is muted, keep gain at 0 regardless of slider.
   if (_amb.gain && bgMusicPlaying) {
-    _amb.gain.gain.rampTo(music / 100, 0.1);
+    _amb.gain.gain.rampTo(_musicMuted ? 0 : music / 100, 0.1);
   }
 
   // Environmental soundscape gain (tracks music volume at 50%)

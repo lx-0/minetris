@@ -15,6 +15,7 @@ const THEME_SCORE_UNLOCKS_KEY    = "mineCtris_themeScoreUnlocks";
 const MOBILE_DIFFICULTY_KEY = "mineCtris_mobileDifficulty";
 const DYNAMIC_MUSIC_KEY     = "mineCtris_dynamicMusic";
 const SFX_MUTE_KEY          = "mineCtris_sfxMute";
+const MUSIC_MUTE_KEY        = "mineCtris_musicMute";
 const FONT_SIZE_KEY         = "mineCtris_uiFontSize";
 const GLOW_INTENSITY_KEY    = "mineCtris_glowIntensity";
 const LOCK_DELAY_KEY        = "mineCtris_lockDelay";
@@ -115,6 +116,24 @@ function _loadSfxMute() {
 function _saveSfxMute(muted) {
   try {
     localStorage.setItem(SFX_MUTE_KEY, String(muted));
+  } catch (_) {}
+}
+
+// ── Music mute toggle ─────────────────────────────────────────────────────────
+
+function _loadMusicMute() {
+  try {
+    const raw = localStorage.getItem(MUSIC_MUTE_KEY);
+    const muted = raw === "true";
+    if (typeof setMusicMuted === 'function') setMusicMuted(muted);
+    const toggle = document.getElementById("music-mute-toggle");
+    if (toggle) toggle.checked = muted;
+  } catch (_) {}
+}
+
+function _saveMusicMute(muted) {
+  try {
+    localStorage.setItem(MUSIC_MUTE_KEY, String(muted));
   } catch (_) {}
 }
 
@@ -1297,6 +1316,7 @@ function initSettings() {
   _loadAudioSettings();
   applyAudioSettings(_audioSettings.master, _audioSettings.sfx, _audioSettings.music);
   _loadSfxMute();
+  _loadMusicMute();
   _loadDynamicMusic();
   _loadReducedMotion();
   _loadGlowIntensity();
@@ -1350,6 +1370,15 @@ function initSettings() {
       const muted = this.checked;
       _saveSfxMute(muted);
       if (typeof setSfxMuted === 'function') setSfxMuted(muted);
+    });
+  }
+
+  const musicMuteToggle = document.getElementById("music-mute-toggle");
+  if (musicMuteToggle) {
+    musicMuteToggle.addEventListener("change", function () {
+      const muted = this.checked;
+      _saveMusicMute(muted);
+      if (typeof setMusicMuted === 'function') setMusicMuted(muted);
     });
   }
 
