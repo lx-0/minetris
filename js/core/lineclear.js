@@ -680,6 +680,13 @@ function updateLineClear(delta) {
   }
   _applyBoardGlow();
 
+  // ── Slow-motion delta for explosion animations (triple / Tetris) ────────────
+  // Jolt and shake still run at full speed (they are percussive impulses).
+  // Fragments, rings, lights, and spring blocks use the scaled delta.
+  const _vDelta = (lineClearInProgress && typeof lineClearCelebration !== 'undefined')
+    ? lineClearCelebration.scaleDelta(delta)
+    : delta;
+
   // ── Camera jolt (upward impulse, decays over ~120 ms) ──────────────────────
   if (_lcJoltAge >= 0) {
     _lcJoltAge += delta;
@@ -693,7 +700,7 @@ function updateLineClear(delta) {
     }
   }
 
-  // ── Camera shake (Tetris only, 300 ms) ────────────────────────────────────
+  // ── Camera shake (tier-driven duration) ──────────────────────────────────
   if (_lcShakeAge >= 0) {
     _lcShakeAge += delta;
     if (_lcShakeAge < _lcShakeDur) {
@@ -707,27 +714,27 @@ function updateLineClear(delta) {
     }
   }
 
-  // ── Fragments ──────────────────────────────────────────────────────────────
+  // ── Fragments (slow-motion aware) ─────────────────────────────────────────
   for (let i = _lcFragments.length - 1; i >= 0; i--) {
     const f = _lcFragments[i];
-    f.age += delta;
+    f.age += _vDelta;
     if (f.age >= f.maxAge) { _lcRelease(f.entry); _lcFragments.splice(i, 1); continue; }
     const t = f.age / f.maxAge;
-    f.vel.y -= 9.8 * delta;  // gravity
-    f.mesh.position.x += f.vel.x * delta;
-    f.mesh.position.y += f.vel.y * delta;
-    f.mesh.position.z += f.vel.z * delta;
-    f.mesh.rotation.x += f.angVel.x * delta;
-    f.mesh.rotation.y += f.angVel.y * delta;
-    f.mesh.rotation.z += f.angVel.z * delta;
+    f.vel.y -= 9.8 * _vDelta;  // gravity
+    f.mesh.position.x += f.vel.x * _vDelta;
+    f.mesh.position.y += f.vel.y * _vDelta;
+    f.mesh.position.z += f.vel.z * _vDelta;
+    f.mesh.rotation.x += f.angVel.x * _vDelta;
+    f.mesh.rotation.y += f.angVel.y * _vDelta;
+    f.mesh.rotation.z += f.angVel.z * _vDelta;
     f.mesh.material.opacity = Math.max(0, 1 - t);
     f.mesh.material.needsUpdate = true;
   }
 
-  // ── Shockwave rings ────────────────────────────────────────────────────────
+  // ── Shockwave rings (slow-motion aware) ───────────────────────────────────
   for (let i = _lcRings.length - 1; i >= 0; i--) {
     const r = _lcRings[i];
-    r.age += delta;
+    r.age += _vDelta;
     if (r.age >= _LC_RING_LIFE) {
       scene.remove(r.mesh);
       r.mesh.geometry.dispose();
@@ -742,10 +749,10 @@ function updateLineClear(delta) {
     r.mesh.material.needsUpdate = true;
   }
 
-  // ── Point lights ───────────────────────────────────────────────────────────
+  // ── Point lights (slow-motion aware) ──────────────────────────────────────
   for (let i = _lcLights.length - 1; i >= 0; i--) {
     const l = _lcLights[i];
-    l.age += delta;
+    l.age += _vDelta;
     if (l.age >= _LC_LIGHT_LIFE) { scene.remove(l.light); _lcLights.splice(i, 1); continue; }
     l.light.intensity = l.initialIntensity * (1 - l.age / _LC_LIGHT_LIFE);
   }
@@ -820,11 +827,8 @@ function _lcDetonate() {
   const numLines = _lcNumLines;
   if (typeof tcVibrateOnLineClear === 'function') tcVibrateOnLineClear(numLines);
 
-  // Per-clear-type scaling
-  let fragMult = 1.0, numRings = 1, doFlash = false, flashAmt = 0, doShake = false;
-  if      (numLines === 2) { fragMult = 1.5; numRings = 1; }
-  else if (numLines === 3) { fragMult = 2.0; numRings = 2; doFlash = true; flashAmt = 0.45; }
-  else if (numLines >= 4)  { fragMult = 3.0; numRings = 3; doFlash = true; flashAmt = 1.0; doShake = true; }
+  // Ring count per tier (unchanged from original)
+  const numRings = numLines >= 4 ? 3 : numLines >= 3 ? 2 : 1;
 
   // Combo intensity multiplier: each consecutive clear adds 25% more fragments (cap at 3×).
   const _comboIntensityMult = Math.min(1.0 + ((comboCount > 1 ? comboCount - 1 : 0) * 0.25), 3.0);
@@ -832,9 +836,6 @@ function _lcDetonate() {
   // Biome particle theme overrides fragment and ring colors.
   const _biomeTheme = (typeof getBiomeParticleTheme === 'function') ? getBiomeParticleTheme() : null;
   const _biomeIntensity = (_biomeTheme && _biomeTheme.intensity) ? _biomeTheme.intensity : 1.0;
-  fragMult *= _comboIntensityMult * _biomeIntensity;
-
-  const fragsPerBlock = Math.round(8 * fragMult);
 
   // Dominant block color (used as fallback when no biome theme overrides)
   const colorCounts = new Map();
@@ -845,6 +846,24 @@ function _lcDetonate() {
   });
   let dominantColor = 0xffffff, maxCount = 0;
   colorCounts.forEach((cnt, hex) => { if (cnt > maxCount) { maxCount = cnt; dominantColor = hex; } });
+
+  // Activate celebration tier (slow-motion, fanfare, rainbow for perfect clear)
+  if (typeof lineClearCelebration !== 'undefined') {
+    lineClearCelebration.trigger(numLines, dominantColor, _lcPerfectClear);
+  }
+
+  // Per-clear-type scaling — driven by LineClearCelebration when available
+  const _cel = (typeof lineClearCelebration !== 'undefined') ? lineClearCelebration : null;
+  let fragMult  = _cel ? _cel.getFragMult()  : (numLines >= 4 ? 3.0 : numLines >= 3 ? 2.0 : numLines >= 2 ? 1.5 : 1.0);
+  const doFlash = _cel ? _cel.shouldFlash()  : numLines >= 3;
+  const flashAmt= _cel ? _cel.getFlashAmt()  : (numLines >= 4 ? 1.0 : 0.45);
+  const doShake = _cel ? (_cel.getShakeDur() > 0) : numLines >= 4;
+  const shakeDur= _cel ? _cel.getShakeDur()  : 0.30;
+  const _flashColor = _cel ? _cel.getFlashColor(dominantColor) : '#ffffff';
+
+  fragMult *= _comboIntensityMult * _biomeIntensity;
+
+  const fragsPerBlock = Math.round(8 * fragMult);
 
   // Resolve ring and light colors from biome theme or fall back to block color.
   const _ringColor  = (_biomeTheme && _biomeTheme.ringColor  != null) ? _biomeTheme.ringColor  : dominantColor;
@@ -1010,11 +1029,11 @@ function _lcDetonate() {
   // 6. Camera upward jolt ───────────────────────────────────────────────────
   _lcJoltAge = 0;  // update loop skips actual movement when reducedMotion is on
 
-  // 7. Screen flash for triple / Tetris ─────────────────────────────────────
+  // 7. Screen flash — tier-aware color and intensity ────────────────────────
   if (doFlash && !_reducedMotion) {
     const el = document.getElementById("lc-flash-overlay");
     if (el) {
-      el.style.backgroundColor = "#fff";  // restore white in case combo pulse changed it
+      el.style.backgroundColor = _flashColor;
       el.style.transition = "none";
       el.style.opacity = flashAmt;
       void el.offsetHeight;  // force reflow so CSS transition fires from flashAmt
@@ -1030,10 +1049,10 @@ function _lcDetonate() {
     scoreEl.classList.add("score-slam");
   }
 
-  // 9. Extended screen shake for Tetris ─────────────────────────────────────
+  // 9. Screen shake — tier-driven duration (double=slight, triple=medium, tetris=strong)
   if (doShake && !_reducedMotion) {
     _lcShakeAge = 0;
-    _lcShakeDur = 0.30;
+    _lcShakeDur = shakeDur;
   }
 
   // 10. T-spin / Perfect Clear — firework burst ─────────────────────────────

@@ -171,6 +171,29 @@ function playLineClearSound(numLines) {
   }
 }
 
+// ── Tetris celebration fanfare ────────────────────────────────────────────────
+
+/**
+ * Short triumphant arpeggio played on a 4-line (Tetris) clear.
+ * Layered on top of the standard anvil+glass hit sound — fires slightly delayed
+ * so it cuts through as the explosion visual peaks.
+ */
+function playTetrisCelebration() {
+  if (!audioReady || !clearSynth) return;
+  const now = Tone.now() + 0.12;  // slight delay so it doesn't clash with the hit
+  // Ascending C-major triad cascade — bright, triumphant
+  const notes = ['C4', 'E4', 'G4', 'C5', 'E5', 'G5', 'C6'];
+  for (let i = 0; i < notes.length; i++) {
+    const isLast = i === notes.length - 1;
+    const vel = Math.min(0.55 + i * 0.06, 1.0);
+    try { clearSynth.triggerAttackRelease(notes[i], isLast ? '8n' : '16n', now + i * 0.08, vel); } catch (_e) {}
+  }
+  // Bass punch on the final note for weight
+  if (rumbleSynth) {
+    try { rumbleSynth.triggerAttackRelease('C2', '8n', now + (notes.length - 1) * 0.08 + 0.05); } catch (_e) {}
+  }
+}
+
 // ── Piece Storm sounds ────────────────────────────────────────────────────────
 
 /** Deep ominous rumble played when Piece Storm begins. */
