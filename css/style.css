@@ -21615,6 +21615,156 @@ button:focus-visible {
 }
 .profile-showcase-share-btn:hover { background: rgba(255,255,255,0.12); }
 
+/* Profile page — username editing */
+.profile-edit-name-btn,
+.profile-save-name-btn {
+  font-family: "Press Start 2P", monospace, sans-serif;
+  font-size: 10px;
+  background: rgba(0,255,0,0.1);
+  border: 1px solid rgba(0,255,0,0.3);
+  color: #0f0;
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+}
+.profile-edit-name-btn:hover,
+.profile-save-name-btn:hover { background: rgba(0,255,0,0.22); }
+.profile-name-input {
+  font-family: "Press Start 2P", monospace, sans-serif;
+  font-size: 13px;
+  background: #111;
+  border: 1px solid rgba(0,255,0,0.5);
+  color: #0f0;
+  border-radius: 3px;
+  padding: 2px 6px;
+  max-width: 160px;
+}
+
+/* Profile page — stats summary */
+.profile-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 6px 0 8px;
+  border-bottom: 1px solid rgba(0,255,0,0.1);
+}
+.profile-summary-item {
+  text-align: center;
+  padding: 8px 4px;
+  background: rgba(0,255,0,0.04);
+  border: 1px solid rgba(0,255,0,0.1);
+  border-radius: 4px;
+}
+.profile-summary-icon { font-size: 16px; margin-bottom: 3px; }
+.profile-summary-value {
+  font-family: "Press Start 2P", monospace, sans-serif;
+  font-size: 9px;
+  color: #ff0;
+  margin-bottom: 3px;
+}
+.profile-summary-label {
+  font-family: "Press Start 2P", monospace, sans-serif;
+  font-size: 5px;
+  color: rgba(0,255,0,0.5);
+}
+
+/* Profile page — top 6 achievements */
+.profile-ach-count {
+  font-size: 7px;
+  color: rgba(0,255,0,0.5);
+  margin-left: 6px;
+}
+.profile-top-achs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 6px 0 8px;
+}
+.profile-top-ach-card {
+  text-align: center;
+  padding: 8px 4px;
+  background: rgba(255,215,0,0.07);
+  border: 1px solid rgba(255,215,0,0.25);
+  border-radius: 5px;
+  cursor: default;
+}
+.profile-top-ach-icon { font-size: 22px; margin-bottom: 4px; }
+.profile-top-ach-name {
+  font-family: "Press Start 2P", monospace, sans-serif;
+  font-size: 5px;
+  color: #ffd740;
+  word-break: break-word;
+  margin-bottom: 2px;
+}
+.profile-top-ach-date {
+  font-family: monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.3);
+}
+.profile-top-achs-empty {
+  font-family: "Press Start 2P", monospace, sans-serif;
+  font-size: 7px;
+  color: rgba(255,255,255,0.3);
+  padding: 10px 0;
+}
+
+/* Profile page — recent activity */
+.profile-recent-empty {
+  font-family: "Press Start 2P", monospace, sans-serif;
+  font-size: 7px;
+  color: rgba(255,255,255,0.3);
+  padding: 8px 0;
+}
+.profile-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 0 8px;
+  border-bottom: 1px solid rgba(0,255,0,0.1);
+}
+.profile-recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 4px;
+  font-family: "Press Start 2P", monospace, sans-serif;
+  font-size: 7px;
+}
+.profile-recent-mode {
+  min-width: 56px;
+  font-size: 6px;
+  text-transform: uppercase;
+}
+.profile-recent-score { color: #ff0; flex: 1; }
+.profile-recent-lines { color: rgba(0,255,0,0.7); min-width: 28px; }
+.profile-recent-dur { color: rgba(255,255,255,0.5); min-width: 36px; }
+.profile-recent-result {
+  font-size: 6px;
+  text-transform: uppercase;
+  min-width: 36px;
+  color: rgba(255,255,255,0.4);
+}
+.profile-recent-win { color: #4ade80; }
+.profile-recent-loss { color: #f87171; }
+.profile-recent-date {
+  font-size: 6px;
+  color: rgba(255,255,255,0.25);
+  min-width: 64px;
+  text-align: right;
+}
+
+/* Mobile tweaks for new sections */
+@media (max-width: 600px) {
+  .profile-summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .profile-top-achs-grid { grid-template-columns: repeat(2, 1fr); }
+  .profile-recent-item { gap: 6px; font-size: 6px; }
+  .profile-recent-date { display: none; }
+}
+
 /* Featured badge in leaderboard */
 .lb-featured-badge {
   font-size: 1rem;

@@ -48,12 +48,17 @@ function _renderProfileHeader() {
     avatarHtml = '<canvas id="profile-header-avatar" class="profile-header-avatar" width="48" height="48"></canvas>';
   }
 
+  var displayName = typeof loadDisplayName === 'function' ? (loadDisplayName() || 'PLAYER') : 'PLAYER';
+
   var html = '<div class="profile-header' + borderClass + '">';
   html += '<div class="profile-header-inner">';
   if (avatarHtml) html += avatarHtml;
   html += '<div class="profile-header-text">';
   html += '<div class="profile-name-row">';
-  html += '<span class="profile-player-name">PLAYER</span>';
+  html += '<span class="profile-player-name" id="profile-name-display">' + _escProfileHtml(displayName) + '</span>';
+  html += '<button class="profile-edit-name-btn" id="profile-edit-name-btn" title="Edit username">&#9998;</button>';
+  html += '<input class="profile-name-input" id="profile-name-input" maxlength="16" style="display:none" value="' + _escProfileHtml(displayName) + '" />';
+  html += '<button class="profile-save-name-btn" id="profile-save-name-btn" style="display:none">&#10003;</button>';
   if (prestigeStars) html += '<span class="profile-prestige-stars">' + prestigeStars + '</span>';
   html += '</div>';
   if (titleText) {
@@ -921,6 +926,133 @@ function _renderHistoryContent() {
   }
 }
 
+// ── Stats summary ─────────────────────────────────────────────────────────────
+
+function _renderProfileStatsSummary() {
+  var stats = loadLifetimeStats();
+  var gamesPlayed = stats.gamesPlayed || 0;
+  var totalLines = stats.totalLinesCleared || 0;
+
+  // Favorite mode from perMode
+  var favMode = 'Classic';
+  var perMode = stats.perMode || {};
+  var bestGames = 0;
+  Object.keys(perMode).forEach(function (m) {
+    var g = (perMode[m] && perMode[m].games) || 0;
+    if (g > bestGames) { bestGames = g; favMode = m.charAt(0).toUpperCase() + m.slice(1); }
+  });
+
+  // Win rate from battle session history
+  var winRate = '—';
+  if (typeof loadSessionHistory === 'function') {
+    var history = loadSessionHistory();
+    var battleGames = history.filter(function (s) { return s.mode === 'battle'; });
+    if (battleGames.length > 0) {
+      var wins = battleGames.filter(function (s) { return s.result === 'win'; }).length;
+      winRate = Math.round((wins / battleGames.length) * 100) + '%';
+    }
+  }
+
+  var items = [
+    { label: 'GAMES PLAYED', value: gamesPlayed.toLocaleString(), icon: '\uD83C\uDFAE' },
+    { label: 'TOTAL LINES',  value: totalLines.toLocaleString(),  icon: '\uD83D\uDCD0' },
+    { label: 'WIN RATE',     value: winRate,                       icon: '\uD83C\uDFC6' },
+    { label: 'FAV MODE',     value: _escProfileHtml(favMode),     icon: '\u2764\uFE0F' },
+  ];
+
+  var html = '<div class="profile-section-title">STATS SUMMARY</div>';
+  html += '<div class="profile-summary-grid">';
+  for (var i = 0; i < items.length; i++) {
+    html += '<div class="profile-summary-item">';
+    html += '<div class="profile-summary-icon">' + items[i].icon + '</div>';
+    html += '<div class="profile-summary-value">' + items[i].value + '</div>';
+    html += '<div class="profile-summary-label">' + items[i].label + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// ── Top 6 achievements showcase ───────────────────────────────────────────────
+
+function _renderTopAchievementsShowcase() {
+  var unlocked = typeof loadAchievements === 'function' ? loadAchievements() : {};
+  var unlockedCount = Object.keys(unlocked).length;
+  var totalAchs = typeof ACHIEVEMENTS !== 'undefined' ? ACHIEVEMENTS.length : 0;
+
+  // Sort by unlock date desc, take top 6
+  var entries = Object.keys(unlocked).map(function (id) {
+    return { id: id, date: (unlocked[id] && unlocked[id].date) || '0' };
+  });
+  entries.sort(function (a, b) { return b.date.localeCompare(a.date); });
+  var top6 = entries.slice(0, 6).map(function (e) {
+    return typeof ACHIEVEMENTS !== 'undefined'
+      ? ACHIEVEMENTS.find(function (a) { return a.id === e.id; }) || null
+      : null;
+  }).filter(Boolean);
+
+  var html = '<div class="profile-section-title">ACHIEVEMENT SHOWCASE';
+  html += ' <span class="profile-ach-count">' + unlockedCount + ' / ' + totalAchs + '</span></div>';
+
+  if (top6.length === 0) {
+    html += '<div class="profile-top-achs-empty">No achievements yet — play some games!</div>';
+  } else {
+    html += '<div class="profile-top-achs-grid">';
+    for (var i = 0; i < top6.length; i++) {
+      var ach = top6[i];
+      var earnedDate = (unlocked[ach.id] && unlocked[ach.id].date) || '';
+      html += '<div class="profile-top-ach-card" title="' + _escProfileHtml(ach.desc) + (earnedDate ? '\nEarned: ' + earnedDate : '') + '">';
+      html += '<div class="profile-top-ach-icon">' + ach.icon + '</div>';
+      html += '<div class="profile-top-ach-name">' + _escProfileHtml(ach.name) + '</div>';
+      if (earnedDate) html += '<div class="profile-top-ach-date">' + _escProfileHtml(earnedDate) + '</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  html += '<div class="profile-showcase-btns">';
+  html += '<button class="profile-showcase-open-btn" id="profile-showcase-open-btn">\uD83C\uDFC6 View All</button>';
+  html += '<button class="profile-showcase-share-btn" id="profile-showcase-dl-btn">\uD83D\uDCF7 Share Card</button>';
+  html += '</div>';
+
+  return html;
+}
+
+// ── Recent activity (last 5 games) ────────────────────────────────────────────
+
+function _renderRecentActivity() {
+  var history = typeof loadSessionHistory === 'function' ? loadSessionHistory() : [];
+  var recent = history.slice(0, 5);
+
+  var html = '<div class="profile-section-title">RECENT ACTIVITY</div>';
+  if (recent.length === 0) {
+    html += '<div class="profile-recent-empty">No games yet — play something!</div>';
+    return html;
+  }
+
+  html += '<div class="profile-recent-list">';
+  for (var i = 0; i < recent.length; i++) {
+    var s = recent[i];
+    var modeColor = _HISTORY_MODE_COLORS[s.mode] || '#aaa';
+    var mins = Math.floor((s.durationSecs || 0) / 60);
+    var secs = (s.durationSecs || 0) % 60;
+    var durStr = mins + ':' + (secs < 10 ? '0' : '') + secs;
+    var resultClass = s.result === 'win' ? 'profile-recent-win' : (s.result === 'loss' ? 'profile-recent-loss' : '');
+    html += '<div class="profile-recent-item">';
+    html += '<span class="profile-recent-mode" style="color:' + modeColor + '">' + _escProfileHtml(s.mode || '?') + '</span>';
+    html += '<span class="profile-recent-score">' + (s.score || 0).toLocaleString() + '</span>';
+    html += '<span class="profile-recent-lines">' + (s.lines || 0) + 'L</span>';
+    html += '<span class="profile-recent-dur">' + durStr + '</span>';
+    if (s.result) {
+      html += '<span class="profile-recent-result ' + resultClass + '">' + _escProfileHtml(s.result) + '</span>';
+    }
+    html += '<span class="profile-recent-date">' + _escProfileHtml(s.date || '') + '</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
 // ── Main render + open/close ──────────────────────────────────────────────────
 
 var _profileMainTab = 'wardrobe'; // 'wardrobe' | 'history'
@@ -964,9 +1096,11 @@ function renderProfilePage() {
   var html = '';
   html += _renderProfileHeader();
   html += _renderProfileStats();
+  html += _renderProfileStatsSummary();
   html += '<div id="profile-equipped-section">' + _renderEquippedCosmetics() + '</div>';
+  html += _renderTopAchievementsShowcase();
+  html += _renderRecentActivity();
   html += _renderMasteryBadges();
-  html += _renderProfileShowcaseLauncher();
   html += _renderProfileMainTabs();
   html += '<div id="profile-wardrobe-section"' + (_profileMainTab === 'history' ? ' style="display:none"' : '') + '>';
   html += _renderWardrobeTabs();
@@ -981,7 +1115,45 @@ function renderProfilePage() {
     renderAvatarToCanvas(headerAvCanvas, getSelectedAvatar(), getSelectedFrame());
   }
 
-  // Wire showcase launcher buttons
+  // Wire username editing
+  var nameDisplay = body.querySelector('#profile-name-display');
+  var nameInput = body.querySelector('#profile-name-input');
+  var editBtn = body.querySelector('#profile-edit-name-btn');
+  var saveBtn = body.querySelector('#profile-save-name-btn');
+  if (editBtn && nameDisplay && nameInput && saveBtn) {
+    editBtn.addEventListener('click', function () {
+      nameDisplay.style.display = 'none';
+      editBtn.style.display = 'none';
+      nameInput.style.display = '';
+      saveBtn.style.display = '';
+      nameInput.focus();
+      nameInput.select();
+    });
+    function _saveProfileName() {
+      var val = nameInput.value.trim().slice(0, 16);
+      if (val) {
+        if (typeof saveDisplayName === 'function') saveDisplayName(val);
+        else try { localStorage.setItem('mineCtris_displayName', val); } catch (_) {}
+      }
+      nameDisplay.textContent = val || (typeof loadDisplayName === 'function' ? loadDisplayName() : 'PLAYER') || 'PLAYER';
+      nameInput.style.display = 'none';
+      saveBtn.style.display = 'none';
+      nameDisplay.style.display = '';
+      editBtn.style.display = '';
+    }
+    saveBtn.addEventListener('click', _saveProfileName);
+    nameInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') _saveProfileName();
+      if (e.key === 'Escape') {
+        nameInput.style.display = 'none';
+        saveBtn.style.display = 'none';
+        nameDisplay.style.display = '';
+        editBtn.style.display = '';
+      }
+    });
+  }
+
+  // Wire showcase buttons
   var showcaseOpenBtn = body.querySelector('#profile-showcase-open-btn');
   if (showcaseOpenBtn) {
     showcaseOpenBtn.addEventListener('click', function () {
