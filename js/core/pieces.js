@@ -396,6 +396,9 @@ function spawnFallingPiece() {
     piece3D.userData.nudgeOffsetX = 0;
     piece3D.userData.nudgeOffsetZ = 0;
     piece3D.userData.nudgePulseEnd = -1;
+    piece3D.userData.shapeMatrix = SHAPES[cp.index].map(row => row.slice());
+    piece3D.userData.rotState = 0;
+    piece3D.userData.lastRotWasKick = false;
     const r = cp.startRotation;
     if (r.axis === 'x') piece3D.rotateX(r.angle);
     else if (r.axis === 'y') piece3D.rotateY(r.angle);
@@ -427,6 +430,9 @@ function spawnFallingPiece() {
     piece3D.userData.nudgeOffsetX = 0;
     piece3D.userData.nudgeOffsetZ = 0;
     piece3D.userData.nudgePulseEnd = -1;
+    piece3D.userData.shapeMatrix = rp.shape.map(row => row.slice());
+    piece3D.userData.rotState = 0;
+    piece3D.userData.lastRotWasKick = false;
     fallingPiecesGroup.add(piece3D);
     fallingPieces.push(piece3D);
     createPieceShadow(piece3D);
@@ -452,6 +458,9 @@ function spawnFallingPiece() {
     piece3D.userData.nudgeOffsetX = 0;
     piece3D.userData.nudgeOffsetZ = 0;
     piece3D.userData.nudgePulseEnd = -1;
+    piece3D.userData.shapeMatrix = next.shape.map(row => row.slice());
+    piece3D.userData.rotState = 0;
+    piece3D.userData.lastRotWasKick = false;
     fallingPiecesGroup.add(piece3D);
     fallingPieces.push(piece3D);
     createPieceShadow(piece3D);
@@ -477,6 +486,9 @@ function spawnFallingPiece() {
       piece3D.userData.nudgeOffsetX = 0;
       piece3D.userData.nudgeOffsetZ = 0;
       piece3D.userData.nudgePulseEnd = -1;
+      piece3D.userData.shapeMatrix = next.shape.map(row => row.slice());
+      piece3D.userData.rotState = 0;
+      piece3D.userData.lastRotWasKick = false;
       fallingPiecesGroup.add(piece3D);
       fallingPieces.push(piece3D);
       createPieceShadow(piece3D);
@@ -507,6 +519,9 @@ function spawnFallingPiece() {
   piece3D.userData.nudgeOffsetX = 0;
   piece3D.userData.nudgeOffsetZ = 0;
   piece3D.userData.nudgePulseEnd = -1;
+  piece3D.userData.shapeMatrix = shape.map(row => row.slice());
+  piece3D.userData.rotState = 0;
+  piece3D.userData.lastRotWasKick = false;
   // Record this piece spawn for replay
   if (typeof replayRecordPiece === 'function') {
     replayRecordPiece(index, spawnX, spawnZ, piece3D.userData.rotationInterval,
@@ -540,6 +555,168 @@ function applyRandomRotation(piece) {
   if (axis === 0) piece.rotateX(angle);
   else if (axis === 1) piece.rotateY(angle);
   else piece.rotateZ(angle);
+}
+
+// ── SRS wall-kick rotation ────────────────────────────────────────────────────
+//
+// Implements the Tetris Guideline Super Rotation System.
+// Kick offsets are [dx, dy] where +dx = right (+X world), +dy = up (+Y world).
+//
+// Standard pieces (J L S T Z) — indexed by "fromState>toState".
+const _SRS_KICKS_STD = {
+  '0>1': [[ 0, 0],[-1, 0],[-1, 1],[ 0,-2],[-1,-2]],
+  '1>0': [[ 0, 0],[ 1, 0],[ 1,-1],[ 0, 2],[ 1, 2]],
+  '1>2': [[ 0, 0],[ 1, 0],[ 1,-1],[ 0, 2],[ 1, 2]],
+  '2>1': [[ 0, 0],[-1, 0],[-1, 1],[ 0,-2],[-1,-2]],
+  '2>3': [[ 0, 0],[ 1, 0],[ 1, 1],[ 0,-2],[ 1,-2]],
+  '3>2': [[ 0, 0],[-1, 0],[-1,-1],[ 0, 2],[-1, 2]],
+  '3>0': [[ 0, 0],[-1, 0],[-1,-1],[ 0, 2],[-1, 2]],
+  '0>3': [[ 0, 0],[ 1, 0],[ 1, 1],[ 0,-2],[ 1,-2]],
+};
+
+// I-piece kick table — wider offset range.
+const _SRS_KICKS_I = {
+  '0>1': [[ 0, 0],[-2, 0],[ 1, 0],[-2,-1],[ 1, 2]],
+  '1>0': [[ 0, 0],[ 2, 0],[-1, 0],[ 2, 1],[-1,-2]],
+  '1>2': [[ 0, 0],[-1, 0],[ 2, 0],[-1, 2],[ 2,-1]],
+  '2>1': [[ 0, 0],[ 1, 0],[-2, 0],[ 1,-2],[-2, 1]],
+  '2>3': [[ 0, 0],[ 2, 0],[-1, 0],[ 2, 1],[-1,-2]],
+  '3>2': [[ 0, 0],[-2, 0],[ 1, 0],[-2,-1],[ 1, 2]],
+  '3>0': [[ 0, 0],[ 1, 0],[-2, 0],[ 1,-2],[-2, 1]],
+  '0>3': [[ 0, 0],[-1, 0],[ 2, 0],[-1, 2],[ 2,-1]],
+};
+
+/** Rotate a shape matrix 90° clockwise. */
+function _srsRotCW(matrix) {
+  const rows = matrix.length, cols = matrix[0].length;
+  const result = Array.from({ length: cols }, () => new Array(rows).fill(0));
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
+      result[c][rows - 1 - r] = matrix[r][c];
+  return result;
+}
+
+/**
+ * Check whether shape matrix can be placed with its bounding-box centre at
+ * (cx, cy, cz) without colliding with world walls or any static worldGroup block.
+ */
+function _srsPositionValid(matrix, cx, cy, cz) {
+  const rows = matrix.length, cols = matrix[0].length;
+  const pvX  = (cols / 2 - 0.5) * BLOCK_SIZE;
+  const pvY  = (-rows / 2 + 0.5) * BLOCK_SIZE;
+  const halfW = WORLD_SIZE / 2;
+  const BEDROCK_Y = -30;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (!matrix[r][c]) continue;
+      const bx = cx + c * BLOCK_SIZE - pvX;
+      const by = cy - r * BLOCK_SIZE - pvY;
+      const bz = cz;
+
+      // World boundary checks (tighter than NUDGE_MAX to avoid clipping walls).
+      if (Math.abs(bx) >= halfW - BLOCK_SIZE * 0.4) return false;
+      if (Math.abs(bz) >= halfW - BLOCK_SIZE * 0.4) return false;
+      if (by < BEDROCK_Y + BLOCK_SIZE * 0.5) return false;
+
+      // Static-block collision check against worldGroup (landed blocks).
+      const blockBox = new THREE.Box3().setFromCenterAndSize(
+        new THREE.Vector3(bx, by, bz),
+        new THREE.Vector3(BLOCK_SIZE * 0.85, BLOCK_SIZE * 0.85, BLOCK_SIZE * 0.85)
+      );
+      for (const staticObj of worldGroup.children) {
+        if (staticObj.name === 'ground') continue;
+        const sBox = (staticObj.userData.boundingBox =
+          staticObj.userData.boundingBox || new THREE.Box3().setFromObject(staticObj));
+        if (blockBox.intersectsBox(sBox)) return false;
+      }
+    }
+  }
+  return true;
+}
+
+/**
+ * Reposition child-block meshes of a falling piece group to match the given
+ * shape matrix and reset the group quaternion to identity (flat in XY plane).
+ */
+function _applyMatrixToPiece(piece, matrix) {
+  const rows = matrix.length, cols = matrix[0].length;
+  const pvX = (cols / 2 - 0.5) * BLOCK_SIZE;
+  const pvY = (-rows / 2 + 0.5) * BLOCK_SIZE;
+
+  const cells = [];
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
+      if (matrix[r][c]) cells.push([c, r]);
+
+  const meshes = piece.children.filter(ch => ch.isMesh);
+  for (let i = 0; i < Math.min(meshes.length, cells.length); i++) {
+    const [c, r] = cells[i];
+    meshes[i].position.set(
+      c * BLOCK_SIZE - pvX,
+      -r * BLOCK_SIZE - pvY,
+      0
+    );
+  }
+  // Reset any accumulated 3-D tilt so world positions = piece.position + local.
+  piece.quaternion.identity();
+  // Store updated pivot offset for consistency with createPiece3D bookkeeping.
+  piece.userData.pivotOffset = new THREE.Vector3(pvX, pvY, 0);
+}
+
+/**
+ * Attempt to rotate the active falling piece using SRS rotation and kick tables.
+ *
+ * @param {boolean} cw  true = clockwise (E key), false = counter-clockwise (Q key).
+ * @returns {boolean} true if rotation succeeded.
+ */
+function rotatePlayerPiece(cw) {
+  const piece = getNudgeTargetPiece();
+  if (!piece) return false;
+
+  const shapeMatrix = piece.userData.shapeMatrix;
+  if (!shapeMatrix) return false;
+
+  const colorIndex = piece.userData.colorIndex;
+  // O-piece (3) is symmetrical — skip.  Special pieces 8-11 — skip.
+  if (colorIndex === 3 || colorIndex > 7) return false;
+
+  const fromState = piece.userData.rotState || 0;
+  // 1× CW or 3× CW (= 1× CCW).
+  const newMatrix = cw
+    ? _srsRotCW(shapeMatrix)
+    : _srsRotCW(_srsRotCW(_srsRotCW(shapeMatrix)));
+  const toState = cw ? (fromState + 1) % 4 : (fromState + 3) % 4;
+
+  const kickKey = `${fromState}>${toState}`;
+  const kicks   = (colorIndex === 4) ? _SRS_KICKS_I[kickKey] : _SRS_KICKS_STD[kickKey];
+  if (!kicks) return false;
+
+  for (const [kdx, kdy] of kicks) {
+    const tx = piece.position.x + kdx * BLOCK_SIZE;
+    const ty = piece.position.y + kdy * BLOCK_SIZE;
+    if (_srsPositionValid(newMatrix, tx, ty, piece.position.z)) {
+      piece.position.x          = tx;
+      piece.position.y          = ty;
+      piece.userData.shapeMatrix = newMatrix;
+      piece.userData.rotState    = toState;
+      piece.userData.timeSinceRotation = 0;
+      // Flag for downstream T-spin bonus: was this rotation assisted by a kick?
+      piece.userData.lastRotWasKick = (kdx !== 0 || kdy !== 0);
+
+      _applyMatrixToPiece(piece, newMatrix);
+
+      if (typeof updatePieceShadow === 'function') updatePieceShadow(piece);
+
+      if (typeof playRotateSound === 'function') playRotateSound();
+      nudgeCooldown = NUDGE_COOLDOWN_SECS;
+      piece.userData.nudgePulseEnd = clock.getElapsedTime() + NUDGE_EMISSIVE_PULSE_SECS;
+      if (typeof tutorialNotify === 'function') tutorialNotify('rotate');
+      if (typeof tutorialTip   === 'function') tutorialTip('firstNudge');
+      return true;
+    }
+  }
+  return false; // all kick tests failed
 }
 
 // ── Gravity helpers ───────────────────────────────────────────────────────────

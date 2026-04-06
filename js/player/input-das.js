@@ -194,14 +194,21 @@ function _processAxis(keys, activeKey, dtMs) {
 }
 
 /**
- * Fire a single nudge, optionally measuring latency.
- * @returns {boolean} true if the piece actually moved, false if blocked.
+ * Fire a single nudge or rotation, optionally measuring latency.
+ * Q/E keys trigger SRS rotation (rotatePlayerPiece); Z/X keys nudge in depth.
+ * @returns {boolean} true if the action was applied, false if blocked.
  */
 function _fireNudge(key, measureLatency) {
   if (measureLatency && _keydownTs > 0) {
     const now = performance.now();
     if (now - _keydownTs < 200) _inputLatencyMs = now - _keydownTs;
     _keydownTs = 0;
+  }
+
+  // Q/E → SRS rotation (CW for E, CCW for Q).
+  if (key === 'q' || key === 'e') {
+    const cw = key === 'e';
+    return typeof rotatePlayerPiece === 'function' ? rotatePlayerPiece(cw) : false;
   }
 
   const [dx, dz] = _KEY_DELTA[key];

@@ -125,11 +125,11 @@ function _tcOnPress(btnId) {
       break;
 
     case 'tc-rotate-cw':
-      if (typeof applyNudge === 'function') applyNudge(1, 0);
+      if (typeof rotatePlayerPiece === 'function') rotatePlayerPiece(true);
       break;
 
     case 'tc-rotate-ccw':
-      if (typeof applyNudge === 'function') applyNudge(-1, 0);
+      if (typeof rotatePlayerPiece === 'function') rotatePlayerPiece(false);
       break;
 
     case 'tc-hold':
@@ -365,10 +365,10 @@ function _tcGestureTouchEnd(e) {
       _tcVibrate();
       if (peakFingers >= 2) {
         // Two-finger tap → rotate CCW
-        if (typeof applyNudge === 'function') applyNudge(-1, 0);
+        if (typeof rotatePlayerPiece === 'function') rotatePlayerPiece(false);
       } else {
         // Single tap → rotate CW
-        if (typeof applyNudge === 'function') applyNudge(1, 0);
+        if (typeof rotatePlayerPiece === 'function') rotatePlayerPiece(true);
       }
     } else if (dt <= TC_SWIPE_MAX_MS && dist >= TC_SWIPE_MIN_PX) {
       // ── Swipe ─────────────────────────────────────────────────────────────────
