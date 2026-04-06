@@ -731,6 +731,106 @@ function rotatePlayerPiece(cw) {
   return false; // all kick tests failed
 }
 
+/**
+ * Rotate 180° — two successive CW rotations.
+ * Returns true if either rotation succeeded.
+ */
+function rotatePlayerPiece180() {
+  const r1 = rotatePlayerPiece(true);
+  const r2 = rotatePlayerPiece(true);
+  return r1 || r2;
+}
+
+/**
+ * Hard drop: instantly teleport the active falling piece to its landing position
+ * and trigger immediate locking on the next frame.
+ */
+function doHardDrop() {
+  const piece = getNudgeTargetPiece();
+  if (!piece) return;
+  if (typeof isThinkModeActive === 'function' && isThinkModeActive()) return;
+  if (typeof timeFreezeActive !== 'undefined' && timeFreezeActive) return;
+  if (typeof isPuzzleMode !== 'undefined' && isPuzzleMode) return;
+  if (typeof isCustomPuzzleMode !== 'undefined' && isCustomPuzzleMode) return;
+
+  const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
+  const castDir = new THREE.Vector3();
+  switch (_grav) {
+    case 'up':    castDir.set(0, +1, 0); break;
+    case 'left':  castDir.set(-1, 0, 0); break;
+    case 'right': castDir.set(+1, 0, 0); break;
+    default:      castDir.set(0, -1, 0); break;
+  }
+
+  const _hdRaycaster = new THREE.Raycaster();
+  const _hdWP = new THREE.Vector3();
+  const targets = worldGroup ? worldGroup.children : [];
+  const HARD_FLOOR = typeof GAME_OVER_HEIGHT !== 'undefined' ? GAME_OVER_HEIGHT : 30;
+
+  // Compute per-block landing surface, take the max delta (first contact).
+  let landingDelta = -Infinity;
+  piece.children.forEach(function (block) {
+    block.getWorldPosition(_hdWP);
+    _hdRaycaster.set(_hdWP.clone(), castDir);
+    const hits = _hdRaycaster.intersectObjects(targets, false);
+    let surfaceVal;
+    if (hits.length > 0) {
+      switch (_grav) {
+        case 'up':    surfaceVal = hits[0].point.y; break;
+        case 'left':  surfaceVal = hits[0].point.x; break;
+        case 'right': surfaceVal = hits[0].point.x; break;
+        default:      surfaceVal = hits[0].point.y; break;
+      }
+    } else {
+      switch (_grav) {
+        case 'up':    surfaceVal =  HARD_FLOOR; break;
+        case 'left':  surfaceVal = -HARD_FLOOR; break;
+        case 'right': surfaceVal =  HARD_FLOOR; break;
+        default:      surfaceVal = 0; break;
+      }
+    }
+    var delta;
+    switch (_grav) {
+      case 'up':    delta = surfaceVal - BLOCK_SIZE / 2 - _hdWP.y; break;
+      case 'left':  delta = surfaceVal + BLOCK_SIZE / 2 - _hdWP.x; break;
+      case 'right': delta = surfaceVal - BLOCK_SIZE / 2 - _hdWP.x; break;
+      default:      delta = surfaceVal + BLOCK_SIZE / 2 - _hdWP.y; break;
+    }
+    if (delta > landingDelta) landingDelta = delta;
+  });
+
+  if (!isFinite(landingDelta)) return;
+
+  // Teleport piece to landing position.
+  switch (_grav) {
+    case 'down':
+    case 'up':    piece.position.y += landingDelta; break;
+    case 'left':
+    case 'right': piece.position.x += landingDelta; break;
+  }
+
+  // Stop velocity so piece doesn't continue falling past the surface.
+  if (piece.userData.velocity) {
+    piece.userData.velocity.x = 0;
+    piece.userData.velocity.y = 0;
+    piece.userData.velocity.z = 0;
+  }
+
+  // Force immediate lock: set lock-delay to 0 — processed next frame.
+  piece.userData.playerLockDelayRemaining = 0;
+  piece.userData.playerLockDelayTotal     = 0;
+  piece.userData.playerLockDelayResets    = 0;
+  if (piece.userData.lockDelayRemaining !== undefined) {
+    piece.userData.lockDelayRemaining = 0;
+  }
+  delete piece.userData.lockDriftVel;
+
+  if (typeof updatePieceShadow === 'function') updatePieceShadow(piece);
+  if (typeof playHardDropSound === 'function') {
+    playHardDropSound(piece.position.x, 0.8);
+  }
+}
+
 // ── Gravity helpers ───────────────────────────────────────────────────────────
 
 /**

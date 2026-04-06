@@ -289,7 +289,13 @@ function onKeyDown(event) {
       // Practice mode: instant restart with same configuration
       if (isPracticeMode && typeof resetGame === "function") {
         resetGame();
+      } else {
+        if (typeof rotatePlayerPiece180 === 'function') rotatePlayerPiece180();
       }
+      break;
+    case "ControlLeft":
+    case "ControlRight":
+      if (typeof doHardDrop === 'function') doHardDrop();
       break;
     case "KeyF":
       // Co-op trade takes priority (not in puzzle mode)
