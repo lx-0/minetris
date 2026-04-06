@@ -17,9 +17,27 @@ const DYNAMIC_MUSIC_KEY     = "mineCtris_dynamicMusic";
 const FONT_SIZE_KEY         = "mineCtris_uiFontSize";
 const GLOW_INTENSITY_KEY    = "mineCtris_glowIntensity";
 const LOCK_DELAY_KEY        = "mineCtris_lockDelay";
+const BOARD_SIZE_KEY        = "mineCtris_boardSize";
 
 // Lock delay in milliseconds: 200 (fast), 500 (standard), 800 (relaxed). Default 500.
 let playerLockDelayMs = 500;
+
+// Board size: 'classic' (10×20), 'wide' (12×20), 'tall' (10×24). Default 'classic'.
+let playerBoardSize = 'classic';
+
+const BOARD_SIZE_PRESETS = {
+  classic: { cols: 10, rows: 20 },
+  wide:    { cols: 12, rows: 20 },
+  tall:    { cols: 10, rows: 24 },
+};
+
+function getBoardCols() {
+  return (BOARD_SIZE_PRESETS[playerBoardSize] || BOARD_SIZE_PRESETS.classic).cols;
+}
+
+function getBoardRows() {
+  return (BOARD_SIZE_PRESETS[playerBoardSize] || BOARD_SIZE_PRESETS.classic).rows;
+}
 
 // Global: true = apply 20% speed reduction on mobile. Default ON for touch devices.
 let mobileDifficultyEnabled = false;
@@ -150,6 +168,22 @@ function _saveLockDelay(ms) {
   playerLockDelayMs = ms;
   try {
     localStorage.setItem(LOCK_DELAY_KEY, String(ms));
+  } catch (_) {}
+}
+
+// ── Board size ────────────────────────────────────────────────────────────────
+
+function _loadBoardSize() {
+  try {
+    const raw = localStorage.getItem(BOARD_SIZE_KEY);
+    if (raw === 'classic' || raw === 'wide' || raw === 'tall') playerBoardSize = raw;
+  } catch (_) {}
+}
+
+function _saveBoardSize(size) {
+  playerBoardSize = size;
+  try {
+    localStorage.setItem(BOARD_SIZE_KEY, size);
   } catch (_) {}
 }
 
@@ -1197,6 +1231,7 @@ function initSettings() {
   _loadColorblindMode();
   _loadHighContrast();
   _loadLockDelay();
+  _loadBoardSize();
   _loadTheme();
   if (typeof ghostReplayLoadSetting === 'function') ghostReplayLoadSetting();
   if (typeof initGraphicsQuality === 'function') initGraphicsQuality();
@@ -1342,6 +1377,14 @@ function initSettings() {
     lockDelaySelect.value = String(playerLockDelayMs);
     lockDelaySelect.addEventListener("change", function () {
       _saveLockDelay(parseInt(this.value, 10));
+    });
+  }
+
+  const boardSizeSelect = document.getElementById("board-size-select");
+  if (boardSizeSelect) {
+    boardSizeSelect.value = playerBoardSize;
+    boardSizeSelect.addEventListener("change", function () {
+      _saveBoardSize(this.value);
     });
   }
 

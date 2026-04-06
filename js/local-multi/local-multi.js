@@ -7,9 +7,9 @@
 (function () {
   'use strict';
 
-  // ── Board constants ───────────────────────────────────────────────────────────
-  const COLS = 10;
-  const ROWS = 20;
+  // ── Board dimensions — set at match start from settings (getBoardCols/getBoardRows) ─
+  let COLS = 10;
+  let ROWS = 20;
   const VISIBLE_ROWS = 20;
 
   // ── Piece definitions (7-bag) ─────────────────────────────────────────────────
@@ -965,6 +965,10 @@
 
   // ── Public API ────────────────────────────────────────────────────────────────
   function startLocalMulti() {
+    // Apply board size from settings (both players share the same board dimensions)
+    COLS = (typeof getBoardCols === 'function') ? getBoardCols() : 10;
+    ROWS = (typeof getBoardRows === 'function') ? getBoardRows() : 20;
+
     // Load keybindings
     _p1KB = loadKB('mineCtris_keyBindings', KB_DEFAULTS_P1);
     _p2KB = loadKB('mineCtris_keyBindings_p2', KB_DEFAULTS_P2);

@@ -6,9 +6,9 @@
 (function () {
   'use strict';
 
-  // ── Board constants ───────────────────────────────────────────────────────────
-  const COLS = 10;
-  const ROWS = 20;
+  // ── Board dimensions — set at match start from settings (getBoardCols/getBoardRows) ─
+  let COLS = 10;
+  let ROWS = 20;
 
   // ── Piece definitions (7-bag) ─────────────────────────────────────────────────
   const PIECE_DEFS = [
@@ -1092,6 +1092,10 @@
 
   // ── Public API ────────────────────────────────────────────────────────────────
   function startVsAI() {
+    // Apply board size from settings
+    COLS = (typeof getBoardCols === 'function') ? getBoardCols() : 10;
+    ROWS = (typeof getBoardRows === 'function') ? getBoardRows() : 20;
+
     _p1KB  = loadKB('mineCtris_keyBindings', KB_DEFAULTS_P1);
     _p1Rev = buildRev(_p1KB);
 
