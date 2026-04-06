@@ -142,3 +142,42 @@ html, body {
     opacity: 0.75;
   }
 }
+
+/* ── Touch zone overlay ──────────────────────────────────────────────────────── */
+#tc-touch-zones {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 490;
+  display: none;
+}
+
+#tc-touch-zones.tc-zones-visible {
+  display: flex;
+}
+
+.tc-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.tc-zone-left {
+  background: rgba(80, 120, 255, 0.06);
+  border-right: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+.tc-zone-right {
+  background: rgba(255, 160, 80, 0.06);
+}
+
+.tc-zone-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.30);
+  user-select: none;
+  -webkit-user-select: none;
+  letter-spacing: 1px;
+}

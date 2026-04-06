@@ -581,6 +581,16 @@
       <canvas id="combo-particle-canvas"></canvas>
       <div id="crosshair"></div>
 
+      <!-- Touch zone hint overlay (mobile, optional) -->
+      <div id="tc-touch-zones" aria-hidden="true">
+        <div class="tc-zone tc-zone-left">
+          <span class="tc-zone-label">&#x21BA; CCW</span>
+        </div>
+        <div class="tc-zone tc-zone-right">
+          <span class="tc-zone-label">CW &#x21BB;</span>
+        </div>
+      </div>
+
       <!-- Touch controls overlay (mobile) -->
       <div id="touch-controls">
         <!-- D-pad (left side) -->
@@ -1475,6 +1485,25 @@
             </label>
           </div>
           <div class="settings-hint" data-i18n="settings.touch_controls_hint">Virtual D-pad overlay for touch devices</div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-row">
+            <label class="settings-label" for="gesture-sensitivity-select">Gesture Sensitivity</label>
+            <select id="gesture-sensitivity-select" class="settings-select">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="settings-hint">Swipe &amp; tap threshold — Low reduces accidentals, High is most responsive</div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="touch-zones-toggle">Touch Zone Overlay</label>
+            <label class="cb-toggle-switch">
+              <input type="checkbox" id="touch-zones-toggle">
+              <span class="cb-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-hint">Show left/right tap regions on-screen during gameplay</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
             <label class="settings-label settings-label-toggle" for="mobile-difficulty-toggle" data-i18n="settings.mobile_difficulty">Mobile Difficulty</label>

@@ -69,6 +69,7 @@ function _tcUpdateVisibility() {
   if (!el) return;
   const shouldShow = isTouchControlsEnabled() && _tcGameRunning && !_tcKeyboardActive;
   el.classList.toggle('tc-visible', shouldShow);
+  _tcUpdateZonesOverlay();
 }
 
 // ── DAS helpers ───────────────────────────────────────────────────────────────
@@ -261,20 +262,82 @@ function _tcObserveGameState() {
   _tcGameRunning = (blockerEl.style.display === 'none');
 }
 
+// ── Gesture sensitivity ───────────────────────────────────────────────────────
+// Three presets: low (less reactive), medium (default), high (very reactive).
+// Persisted to localStorage; applied to all gesture thresholds.
+
+const TC_SENSITIVITY_KEY = 'mineCtris_gestureSensitivity';
+// null = medium (default)
+let _tcSensitivity = null; // 'low' | 'medium' | 'high' | null
+
+function getTouchSensitivity() {
+  return _tcSensitivity || 'medium';
+}
+
+function setTouchSensitivity(val) {
+  _tcSensitivity = (val === 'medium' || val === null) ? null : val;
+  try {
+    if (!_tcSensitivity) localStorage.removeItem(TC_SENSITIVITY_KEY);
+    else localStorage.setItem(TC_SENSITIVITY_KEY, _tcSensitivity);
+  } catch (_) {}
+}
+
+function _tcLoadSensitivity() {
+  try {
+    const raw = localStorage.getItem(TC_SENSITIVITY_KEY);
+    if (raw === 'low' || raw === 'high') _tcSensitivity = raw;
+  } catch (_) {}
+}
+
+/** Returns threshold values scaled by current sensitivity setting. */
+function _tcThresholds() {
+  const s = getTouchSensitivity();
+  if (s === 'low')  return { swipeMin: 50, tapMax: 8,  tapMs: 180, swipeMs: 350 };
+  if (s === 'high') return { swipeMin: 18, tapMax: 18, tapMs: 250, swipeMs: 500 };
+  /* medium */      return { swipeMin: 30, tapMax: 12, tapMs: 200, swipeMs: 400 };
+}
+
+// ── Touch zones overlay ───────────────────────────────────────────────────────
+// Optional semi-transparent overlay showing the tap regions on the game canvas.
+
+const TC_ZONES_KEY = 'mineCtris_touchZones';
+let _tcZonesEnabled = false;
+
+function isTouchZonesEnabled() { return _tcZonesEnabled; }
+
+function setTouchZonesEnabled(val) {
+  _tcZonesEnabled = !!val;
+  try { localStorage.setItem(TC_ZONES_KEY, String(_tcZonesEnabled)); } catch (_) {}
+  _tcUpdateZonesOverlay();
+}
+
+function _tcLoadZonesSettings() {
+  try {
+    const raw = localStorage.getItem(TC_ZONES_KEY);
+    _tcZonesEnabled = (raw === 'true');
+  } catch (_) {}
+}
+
+function _tcUpdateZonesOverlay() {
+  const el = document.getElementById('tc-touch-zones');
+  if (!el) return;
+  const show = _tcZonesEnabled && isTouchControlsEnabled() && _tcGameRunning && !_tcKeyboardActive;
+  el.classList.toggle('tc-zones-visible', show);
+}
+
 // ── Gesture zone (swipe / tap / long-press on the game canvas) ────────────────
 //
 // Mapped gestures:
-//   Single tap        → rotate CW
-//   Two-finger tap    → rotate CCW
+//   Tap left half     → rotate CCW
+//   Tap right half    → rotate CW
+//   Two-finger tap    → pause
 //   Swipe left/right  → move piece (steps proportional to distance)
 //   Swipe down        → soft drop (live, cancels on lift)
 //   Swipe up          → hard drop
 //   Long press        → activate held/power-up piece
 
-const TC_SWIPE_MIN_PX  = 30;   // min travel to count as a swipe
-const TC_TAP_MAX_PX    = 12;   // max travel to count as a tap
-const TC_TAP_MAX_MS    = 200;  // max duration (ms) for a tap
-const TC_SWIPE_MAX_MS  = 400;  // max duration (ms) for a directional swipe
+/** Long-press duration (ms) to trigger hold-piece / power-up. */
+const TC_LONG_PRESS_MS = 500;
 
 /** Long-press duration (ms) to trigger hold-piece / power-up. */
 const TC_LONG_PRESS_MS = 500;
@@ -302,6 +365,7 @@ function _tcGestureEndSoftDrop() {
 function _tcGestureTouchStart(e) {
   if (e.cancelable) e.preventDefault();
   var nowMs = Date.now();
+  var thresh = _tcThresholds();
   for (var i = 0; i < e.changedTouches.length; i++) {
     (function (id, cx, cy) {
       var longTimer = setTimeout(function () {
@@ -323,6 +387,7 @@ function _tcGestureTouchStart(e) {
 
 function _tcGestureTouchMove(e) {
   if (e.cancelable) e.preventDefault();
+  var thresh = _tcThresholds();
   for (var i = 0; i < e.changedTouches.length; i++) {
     var t = e.changedTouches[i];
     var s = _tcGestureState[t.identifier];
@@ -331,12 +396,12 @@ function _tcGestureTouchMove(e) {
     var dy = t.clientY - s.startY;
     var dist = Math.sqrt(dx * dx + dy * dy);
     // Cancel long-press timer if finger has moved significantly
-    if (dist > TC_TAP_MAX_PX && s.longTimer) {
+    if (dist > thresh.tapMax && s.longTimer) {
       clearTimeout(s.longTimer);
       s.longTimer = null;
     }
     // Begin live soft-drop when dragging downward past the swipe threshold
-    if (dy > TC_SWIPE_MIN_PX && Math.abs(dy) > Math.abs(dx)) {
+    if (dy > thresh.swipeMin && Math.abs(dy) > Math.abs(dx)) {
       _tcGestureStartSoftDrop();
     }
   }
@@ -346,6 +411,7 @@ function _tcGestureTouchEnd(e) {
   if (e.cancelable) e.preventDefault();
   var nowMs = Date.now();
   var peakFingers = _tcGestureMaxFingers;
+  var thresh = _tcThresholds();
   for (var i = 0; i < e.changedTouches.length; i++) {
     var t = e.changedTouches[i];
     var s = _tcGestureState[t.identifier];
@@ -360,17 +426,22 @@ function _tcGestureTouchEnd(e) {
 
     _tcGestureEndSoftDrop();
 
-    if (dt <= TC_TAP_MAX_MS && dist < TC_TAP_MAX_PX) {
+    if (dt <= thresh.tapMs && dist < thresh.tapMax) {
       // ── Tap ──────────────────────────────────────────────────────────────────
       _tcVibrate();
       if (peakFingers >= 2) {
-        // Two-finger tap → rotate CCW
-        if (typeof rotatePlayerPiece === 'function') rotatePlayerPiece(false);
+        // Two-finger tap → pause
+        _tcTogglePause();
       } else {
-        // Single tap → rotate CW
-        if (typeof rotatePlayerPiece === 'function') rotatePlayerPiece(true);
+        // Single tap: left half → rotate CCW, right half → rotate CW
+        var midX = window.innerWidth / 2;
+        if (s.startX < midX) {
+          if (typeof rotatePlayerPiece === 'function') rotatePlayerPiece(false);
+        } else {
+          if (typeof rotatePlayerPiece === 'function') rotatePlayerPiece(true);
+        }
       }
-    } else if (dt <= TC_SWIPE_MAX_MS && dist >= TC_SWIPE_MIN_PX) {
+    } else if (dt <= thresh.swipeMs && dist >= thresh.swipeMin) {
       // ── Swipe ─────────────────────────────────────────────────────────────────
       var absX = Math.abs(dx);
       var absY = Math.abs(dy);
@@ -481,6 +552,8 @@ function tcVibrateOnLineClear(numLines) {
  */
 function initTouchControls() {
   _tcLoadSettings();
+  _tcLoadSensitivity();
+  _tcLoadZonesSettings();
 
   // Activate mobile feel overrides whenever a touch device is present.
   if (_tcIsTouchDevice()) {

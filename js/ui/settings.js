@@ -1493,6 +1493,24 @@ function initSettings() {
     });
   }
 
+  // Wire up gesture sensitivity selector.
+  const sensSel = document.getElementById("gesture-sensitivity-select");
+  if (sensSel) {
+    sensSel.value = (typeof getTouchSensitivity === "function") ? getTouchSensitivity() : "medium";
+    sensSel.addEventListener("change", function() {
+      if (typeof setTouchSensitivity === "function") setTouchSensitivity(this.value);
+    });
+  }
+
+  // Wire up touch zones overlay toggle.
+  const tzToggle = document.getElementById("touch-zones-toggle");
+  if (tzToggle) {
+    tzToggle.checked = (typeof isTouchZonesEnabled === "function") && isTouchZonesEnabled();
+    tzToggle.addEventListener("change", function() {
+      if (typeof setTouchZonesEnabled === "function") setTouchZonesEnabled(this.checked);
+    });
+  }
+
   // Wire up mobile difficulty toggle.
   _loadMobileDifficulty();
   const mdToggle = document.getElementById("mobile-difficulty-toggle");
@@ -1649,6 +1667,10 @@ function openSettings(onClose) {
   if (samToggleSync) samToggleSync.checked = (typeof isShowAllModesEnabled === "function") && isShowAllModesEnabled();
   const tcToggleSync = document.getElementById("touch-controls-toggle");
   if (tcToggleSync) tcToggleSync.checked = (typeof isTouchControlsEnabled === "function") && isTouchControlsEnabled();
+  const sensSelSync = document.getElementById("gesture-sensitivity-select");
+  if (sensSelSync) sensSelSync.value = (typeof getTouchSensitivity === "function") ? getTouchSensitivity() : "medium";
+  const tzToggleSync = document.getElementById("touch-zones-toggle");
+  if (tzToggleSync) tzToggleSync.checked = (typeof isTouchZonesEnabled === "function") && isTouchZonesEnabled();
   _syncThemeButtons();
   if (typeof _syncGraphicsQualityButtons === 'function') _syncGraphicsQualityButtons();
   _syncFontSizeButtons();
