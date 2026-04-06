@@ -2827,6 +2827,52 @@ body.hc-mode .settings-section-heading {
   transition: opacity 0.3s;
 }
 
+/* Daily top-10 leaderboard in game-over results screen */
+#daily-go-top10 {
+  margin: 8px 0 4px;
+  width: 100%;
+}
+.dgo-top10-title {
+  font-size: 8px;
+  color: #0cf;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.dgo-top10-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 7px;
+}
+.dgo-top10-table td {
+  padding: 2px 4px;
+  border-bottom: 1px solid rgba(0,204,255,0.1);
+}
+.dgo-top10-rank {
+  color: #888;
+  width: 20px;
+  text-align: right;
+}
+.dgo-top10-name {
+  color: #cce;
+  padding-left: 6px;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dgo-top10-score {
+  color: #ffd700;
+  text-align: right;
+  min-width: 50px;
+}
+tr.dgo-top10-me td {
+  color: #0cf;
+  font-weight: bold;
+}
+tr.dgo-top10-me .dgo-top10-score { color: #0cf; }
+
 /* Weekly Challenge card — emerald/teal accent */
 .mode-card-weekly {
   border-color: rgba(0, 220, 140, 0.5);

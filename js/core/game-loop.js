@@ -76,13 +76,10 @@ function animate() {
       sprintElapsedMs += delta * 1000;
     }
 
-    // Tick the daily challenge countdown timer (3 minutes)
-    if (isDailyChallenge && dailyTimerActive && !isGameOver) {
-      dailyRemainingMs -= delta * 1000;
-      if (dailyRemainingMs <= 0) {
-        dailyRemainingMs = 0;
-        if (typeof triggerGameOver === "function") triggerGameOver();
-      }
+    // Daily challenge: end the game when 200 lines are cleared
+    if (isDailyChallenge && dailyTimerActive && !isGameOver &&
+        linesCleared >= DAILY_LINE_LIMIT) {
+      if (typeof triggerGameOver === "function") triggerGameOver();
     }
 
     // Tick the combo challenge countdown timer
@@ -301,9 +298,7 @@ function animate() {
         ? Math.ceil(blitzRemainingMs / 1000)
         : isSprintMode
           ? Math.floor(sprintElapsedMs / 1000)
-          : (isDailyChallenge && dailyTimerActive)
-            ? Math.ceil(dailyRemainingMs / 1000)
-            : Math.floor(gameElapsedSeconds);
+          : Math.floor(gameElapsedSeconds);
       if (currentSecond !== lastHudSecond) {
         lastHudSecond = currentSecond;
         updateScoreHUD();

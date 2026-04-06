@@ -250,6 +250,7 @@ function renderDailyBestGameOver(isNewBest) {
     starsHtml +
     streakHtml +
     `<div id="daily-go-rank-row"></div>` +
+    `<div id="daily-go-top10" style="display:none;"></div>` +
     `<button id="daily-go-share-btn">Copy Result</button>` +
     `<div id="daily-go-share-feedback"></div>` +
     `<div id="daily-go-score-card-wrap" style="display:none;margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:6px;">` +
@@ -355,6 +356,44 @@ function updateDailyRankDisplay(rank, total) {
     `<span class="daily-go-sep"> &mdash; </span>` +
     `<span class="daily-go-pct">TOP ${pct}%</span>` +
     `<span class="daily-go-total"> of ${total}</span>`;
+}
+
+/**
+ * Render top-10 leaderboard entries inside the game-over daily section.
+ * @param {Array} entries  Array of { rank, displayName, score, linesCleared }.
+ * @param {string} myName  Player's display name (for highlighting own row).
+ */
+function renderDailyTop10(entries, myName) {
+  const wrap = document.getElementById('daily-go-top10');
+  if (!wrap || !entries || !entries.length) return;
+
+  const top10 = entries.slice(0, 10);
+  const myNameLc = (myName || '').toLowerCase();
+
+  let html = '<div class="dgo-top10-title">Today\'s Top 10</div>' +
+    '<table class="dgo-top10-table"><tbody>';
+
+  top10.forEach(function (e) {
+    const isMe = myNameLc && e.displayName.toLowerCase() === myNameLc;
+    const cls = isMe ? ' class="dgo-top10-me"' : '';
+    html += '<tr' + cls + '>' +
+      '<td class="dgo-top10-rank">' + e.rank + '</td>' +
+      '<td class="dgo-top10-name">' + _escDailyName(e.displayName) + (isMe ? ' \u25c4' : '') + '</td>' +
+      '<td class="dgo-top10-score">' + (e.score || 0).toLocaleString() + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  wrap.style.display = 'block';
+}
+
+/** Minimal HTML-escape for display names in the top-10 table. */
+function _escDailyName(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 // ── Calendar modal ────────────────────────────────────────────────────────────

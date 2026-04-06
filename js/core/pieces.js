@@ -259,6 +259,11 @@ function updateNextPiecesHUD() {
 function updateHoldPanelHUD() {
   if (!holdPanelEl) holdPanelEl = document.getElementById('hold-piece-panel');
   if (!holdPanelEl) return;
+  // Hide hold panel entirely during daily challenge (hold is disabled)
+  if (typeof isDailyChallenge !== 'undefined' && isDailyChallenge) {
+    holdPanelEl.style.display = 'none';
+    return;
+  }
   let html = '<div class="np-label">HOLD</div>';
   if (!holdPiece) {
     html += '<div class="np-pieces-row"><div class="np-piece hp-empty"><div class="np-row"><div class="np-cell np-empty"></div></div></div></div>';
@@ -310,6 +315,7 @@ function updateHoldPanelHUD() {
 function doHoldPiece() {
   if (typeof isPuzzleMode !== 'undefined' && isPuzzleMode) return;
   if (typeof isCustomPuzzleMode !== 'undefined' && isCustomPuzzleMode) return;
+  if (typeof isDailyChallenge !== 'undefined' && isDailyChallenge) return; // hold disabled in daily
   if (typeof holdLocked !== 'undefined' && holdLocked) return;
   if (!fallingPieces || fallingPieces.length === 0) return;
 

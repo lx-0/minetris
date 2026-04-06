@@ -323,10 +323,9 @@ let comboChallengeTotalLines    = 0;      // total lines cleared in this mode
 const COMBO_CHALLENGE_DURATION_MS      = 60000;          // 60 seconds
 const COMBO_CHALLENGE_FIXED_MULTIPLIER = Math.pow(1.1, 4); // ≈ 1.4641 (Level 5, same as Blitz)
 
-// ── Daily challenge countdown timer ──────────────────────────────────────────
-let dailyTimerActive   = false;  // becomes true on first piece drop
-let dailyRemainingMs   = 180000; // milliseconds remaining (counts down)
-const DAILY_DURATION_MS = 180000; // 3 minutes
+// ── Daily challenge line-limit tracker ───────────────────────────────────────
+let dailyTimerActive   = false;  // becomes true on first piece drop (name kept for compat)
+const DAILY_LINE_LIMIT = 200;    // game ends after 200 lines cleared
 
 // ── Accessibility ─────────────────────────────────────────────────────────────
 // Colorblind preset: 'off' | 'deuteranopia' | 'protanopia' | 'tritanopia'.

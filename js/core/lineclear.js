@@ -422,6 +422,12 @@ function checkLineClear(newBlocks) {
     triggerSprintComplete();
   }
 
+  // Daily challenge: end the game when 200 lines are cleared
+  if (isDailyChallenge && linesCleared >= DAILY_LINE_LIMIT &&
+      typeof triggerGameOver === "function") {
+    triggerGameOver();
+  }
+
   // Marathon: advance level based on lines cleared
   if (isMarathonMode && typeof updateMarathonLevel === "function") {
     updateMarathonLevel();

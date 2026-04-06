@@ -99,7 +99,6 @@ function saveGameState() {
     blitzRemainingMs,
     blitzTimerActive,
     blitzBonusActive,
-    dailyRemainingMs,
     dailyTimerActive,
     marathonLevel:       typeof marathonLevel !== 'undefined'      ? marathonLevel      : 1,
     marathonKillScreen:  typeof marathonKillScreen !== 'undefined' ? marathonKillScreen : false,
@@ -178,8 +177,6 @@ function restoreGameState() {
                       ? data.blitzRemainingMs : BLITZ_DURATION_MS;
   blitzTimerActive  = !!data.blitzTimerActive;
   blitzBonusActive  = !!data.blitzBonusActive;
-  dailyRemainingMs  = typeof data.dailyRemainingMs === "number"
-                      ? data.dailyRemainingMs : DAILY_DURATION_MS;
   dailyTimerActive  = !!data.dailyTimerActive;
 
   // ── Marathon state ────────────────────────────────────────────────────────

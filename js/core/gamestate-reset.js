@@ -145,9 +145,8 @@ function resetGame() {
   const sprintCompleteEl = document.getElementById("sprint-complete-screen");
   if (sprintCompleteEl) sprintCompleteEl.style.display = "none";
 
-  // Reset daily timer state
+  // Reset daily state
   dailyTimerActive  = false;
-  dailyRemainingMs  = DAILY_DURATION_MS;
 
   // Reset blitz state
   isBlitzMode       = false;

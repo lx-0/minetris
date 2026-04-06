@@ -59,15 +59,12 @@ function updateScoreHUD() {
   scoreEl.querySelector(".hud-stat:nth-child(2)").textContent =
     "Blocks: " + blocksMined;
   if (isDailyChallenge) {
-    // Daily: show lines and 3-minute countdown
+    // Daily: show lines progress toward 200-line limit
     scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
-      "Lines: " + linesCleared;
-    const dailySecs = Math.max(0, Math.ceil(dailyRemainingMs / 1000));
-    const dm = Math.floor(dailySecs / 60).toString().padStart(2, "0");
-    const ds = (dailySecs % 60).toString().padStart(2, "0");
-    const dailyTimerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
-    dailyTimerEl.textContent = "Time: " + dm + ":" + ds;
-    dailyTimerEl.style.color = dailyRemainingMs <= 30000 ? "#ff4444" : "";
+      "Lines: " + linesCleared + "/" + DAILY_LINE_LIMIT;
+    const dailyLineEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
+    dailyLineEl.textContent = "Daily #" + (typeof getDailyNumber === 'function' ? getDailyNumber() : '');
+    dailyLineEl.style.color = "";
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Daily";
   } else if (isBlitzMode) {
     // Blitz: show lines and countdown timer (gold when bonus active)
@@ -618,6 +615,14 @@ function triggerGameOver() {
             // Update leaderboard submit button to show already submitted
             const lbBtn = document.getElementById('lb-submit-btn');
             if (lbBtn) { lbBtn.textContent = 'Submitted!'; lbBtn.disabled = true; }
+            // Fetch and render today's top-10 in the results screen
+            if (typeof apiFetchLeaderboard === 'function' && typeof renderDailyTop10 === 'function') {
+              apiFetchLeaderboard(_dailyDate || getDailyDateString()).then(function(lbData) {
+                if (lbData && lbData.entries) {
+                  renderDailyTop10(lbData.entries, _lbName);
+                }
+              }).catch(function() {});
+            }
           } else if (typeof initLeaderboardSubmitBtn === 'function') {
             initLeaderboardSubmitBtn(state.score, state.linesCleared);
           }
