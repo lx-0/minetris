@@ -339,9 +339,6 @@ function _tcUpdateZonesOverlay() {
 /** Long-press duration (ms) to trigger hold-piece / power-up. */
 const TC_LONG_PRESS_MS = 500;
 
-/** Long-press duration (ms) to trigger hold-piece / power-up. */
-const TC_LONG_PRESS_MS = 500;
-
 // touchId → { startX, startY, startT, longTimer }
 const _tcGestureState = {};
 // Peak concurrent touch count within the current gesture cycle
