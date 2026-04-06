@@ -1358,6 +1358,7 @@ function init() {
   initTrails();
   initAuras();
   initLandingRingPool();
+  if (typeof ghostReplayInit === 'function') ghostReplayInit();
   initPostProcessing();
 
   // Lava point-light pool — positioned toward closest lava blocks each frame

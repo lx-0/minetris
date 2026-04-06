@@ -1176,6 +1176,7 @@ function initSettings() {
   _loadColorblindMode();
   _loadHighContrast();
   _loadTheme();
+  if (typeof ghostReplayLoadSetting === 'function') ghostReplayLoadSetting();
   if (typeof initGraphicsQuality === 'function') initGraphicsQuality();
   // Apply persisted theme body class without triggering a material swap on init
   // (blocks don't exist yet — createBlockMesh will pick up activeTheme directly).
@@ -1223,6 +1224,15 @@ function initSettings() {
     } catch (_) {}
     showOpponentEmotesToggle.addEventListener("change", function () {
       try { localStorage.setItem('mineCtris_showOpponentEmotes', String(this.checked)); } catch (_) {}
+    });
+  }
+
+  const ghostReplayToggle = document.getElementById("ghost-replay-toggle");
+  if (ghostReplayToggle) {
+    // Sync checkbox to persisted setting
+    if (typeof ghostReplayEnabled !== 'undefined') ghostReplayToggle.checked = ghostReplayEnabled;
+    ghostReplayToggle.addEventListener("change", function () {
+      if (typeof ghostReplayApplySetting === 'function') ghostReplayApplySetting(this.checked);
     });
   }
 

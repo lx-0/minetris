@@ -60,6 +60,12 @@ function animate() {
       replayTick(typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);
     }
 
+    // Tick ghost replay overlay (only during live gameplay, not during replay watch)
+    if (typeof ghostReplayTick === 'function' &&
+        !(typeof isReplayMode !== 'undefined' && isReplayMode)) {
+      ghostReplayTick(delta);
+    }
+
     // Tick endless survival timers (speed escalation + modifier activation)
     if (isEndlessSurvivalMode && typeof tickEndlessSurvival === 'function') {
       tickEndlessSurvival(delta);

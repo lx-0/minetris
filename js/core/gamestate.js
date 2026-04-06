@@ -142,6 +142,8 @@ function updateScoreHUD() {
             ? "Battle L" + (lastDifficultyTier + 1)
             : "Level " + (lastDifficultyTier + 1);
   }
+  // Refresh ghost replay score comparison HUD
+  if (typeof ghostReplayRefreshHud === 'function') ghostReplayRefreshHud();
 }
 
 /** Returns current game stats for use by the Game Over screen. */

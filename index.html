@@ -979,6 +979,11 @@
         <button id="go-main-menu-btn">Main Menu</button>
       </div>
 
+      <!-- Ghost replay score comparison HUD (shown during supported modes when ghost is active) -->
+      <div id="ghost-replay-hud" style="display:none;">
+        <div id="ghost-replay-score"></div>
+      </div>
+
       <!-- Replay controls overlay (visible during playback) -->
       <div id="replay-controls" style="display:none;">
         <span id="replay-controls-label">&#9654; REPLAY</span>
@@ -1346,6 +1351,15 @@
             </label>
           </div>
           <div class="settings-hint">Show emote reactions sent by your opponent or co-op partner</div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="ghost-replay-toggle">Ghost Replay</label>
+            <label class="cb-toggle-switch">
+              <input type="checkbox" id="ghost-replay-toggle">
+              <span class="cb-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-hint">Show your personal best run as a transparent ghost overlay (Classic, Sprint, Blitz, Marathon)</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
             <label class="settings-label settings-label-toggle" for="cb-toggle" data-i18n="settings.colorblind_mode">Colorblind Mode</label>
@@ -2962,6 +2976,7 @@
     <script src="js/player/powerups.js"></script>
     <script src="js/player/ore-crafting.js"></script>
     <script src="js/core/replay.js"></script>
+    <script src="js/core/ghost-replay.js"></script>
     <script src="js/core/game-loop.js"></script>
     <script src="js/rendering/resize.js"></script>
     <script src="js/rendering/parallax-background.js"></script>

@@ -18472,6 +18472,30 @@ button:focus-visible {
   min-height: 1.2em;
 }
 
+/* ── Ghost replay HUD ───────────────────────────────────────────────────────── */
+
+#ghost-replay-hud {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 120;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 5px;
+  padding: 4px 9px;
+  font-family: 'Press Start 2P', monospace, sans-serif;
+  font-size: 0.62em;
+  color: #e0e0e0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.ghost-score-live  { font-weight: bold; }
+.ghost-ahead       { color: #4eff6a; }
+.ghost-behind      { color: #ff5252; }
+.ghost-score-sep   { color: #888; }
+.ghost-score-best  { color: #aaa; }
+
 /* ── Replay system ──────────────────────────────────────────────────────────── */
 
 /* Replay controls overlay (shown during playback) */

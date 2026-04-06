@@ -46,6 +46,9 @@ function replayAutoStart() {
     pieces:  [],
     inputs:  [],
   };
+
+  // Start ghost overlay for supported modes
+  if (typeof ghostReplayStart === 'function') ghostReplayStart(mode);
 }
 
 // ── Recording API ──────────────────────────────────────────────────────────────
@@ -111,6 +114,9 @@ function replayFinishRecording(finalScore, linesCleared, blocksMined, duration) 
     console.warn('[Replay] Save failed:', e);
   }
 
+  // Save as ghost best-replay if it beats the previous best for this mode
+  if (typeof ghostReplaySaveBest === 'function') ghostReplaySaveBest(_replayData);
+
   const result = { isNewPB: isNewPB };
   _replayData = null;
   return result;
@@ -130,6 +136,7 @@ function replayConsumeSubmissionData() {
 function replayOnReset() {
   _replayRecording = false;
   _replayData      = null;
+  if (typeof ghostReplayStop === 'function') ghostReplayStop();
   if (_replayPlaying) {
     isReplayMode            = false;
     _replayPlaying          = false;
