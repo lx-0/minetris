@@ -776,6 +776,9 @@
       <!-- Event End Toast: small notification when an event ends -->
       <div id="event-end-toast" style="display:none;"></div>
 
+      <!-- Finesse fault counter (bottom-left HUD, shown during active gameplay) -->
+      <div id="finesse-hud" style="display:none;"></div>
+
       <!-- Community Goals progress ticker (bottom-left HUD) -->
       <div id="cg-ticker" style="display:none;"></div>
 
@@ -955,6 +958,7 @@
         <div id="survival-go-section" style="display:none;"></div>
         <div id="endless-go-section" style="display:none;"></div>
         <div id="marathon-go-section" style="display:none;"></div>
+        <div id="finesse-go-section" style="display:none;"></div>
         <button id="go-share-btn">Share Score</button>
         <div id="go-share-feedback"></div>
         <div id="go-score-card-wrap" style="display:none;">
@@ -1063,6 +1067,7 @@
         <div id="sprint-complete-time-label">TIME</div>
         <div id="sprint-final-time">00:00.00</div>
         <div id="sprint-personal-best"></div>
+        <div id="sprint-finesse-stats" style="display:none;"></div>
         <div id="sprint-xp-earned" class="xp-earned-display"></div>
         <button id="sprint-play-again-btn">Play Again</button>
         <button id="sprint-main-menu-btn">Main Menu</button>
@@ -2849,6 +2854,7 @@
     <script src="js/core/config.js"></script>
     <script src="js/rendering/shaders.js"></script>
     <script src="js/core/state.js"></script>
+    <script src="js/core/finesse.js"></script>
     <script src="js/audio/audio.js"></script>
     <script src="js/audio/audio-env.js"></script>
     <script src="js/audio/audio-sfx.js"></script>

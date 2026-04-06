@@ -94,6 +94,7 @@ function dasKeyDown(key) {
   if (key === 'softDrop') {
     _softDropHeld = true;
     _activateSoftDrop();
+    if (typeof finesseCountInput === 'function') finesseCountInput();
     return;
   }
   if (!Object.prototype.hasOwnProperty.call(_held, key) || _held[key]) return;
@@ -221,7 +222,9 @@ function _fireNudge(key, measureLatency) {
     _bufDz = dz;
   }
 
-  return typeof applyNudge === 'function' ? (applyNudge(dx, dz) !== false) : false;
+  const _nudgeResult = typeof applyNudge === 'function' ? (applyNudge(dx, dz) !== false) : false;
+  if (_nudgeResult && typeof finesseCountInput === 'function') finesseCountInput();
+  return _nudgeResult;
 }
 
 // ── Soft drop ─────────────────────────────────────────────────────────────────

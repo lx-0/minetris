@@ -341,6 +341,9 @@ function doHoldPiece() {
 }
 
 function spawnFallingPiece() {
+  // Reset per-piece finesse input counter for the incoming piece.
+  if (typeof finesseOnPieceSpawn === 'function') finesseOnPieceSpawn();
+
   // In Sprint mode, start the timer on the very first piece drop
   if (isSprintMode && !sprintTimerActive && !sprintComplete) {
     sprintTimerActive = true;
@@ -713,6 +716,7 @@ function rotatePlayerPiece(cw) {
       piece.userData.nudgePulseEnd = clock.getElapsedTime() + NUDGE_EMISSIVE_PULSE_SECS;
       if (typeof tutorialNotify === 'function') tutorialNotify('rotate');
       if (typeof tutorialTip   === 'function') tutorialTip('firstNudge');
+      if (typeof finesseCountInput === 'function') finesseCountInput();
       return true;
     }
   }
@@ -1273,6 +1277,14 @@ function updateFallingPieces(delta) {
       lastPieceTSpin = (pieceToLand.userData.colorIndex === 1)
         ? _detectTPieceTSpinType(newBlocks)
         : '';
+    }
+    // Finesse: compute faults for this placement.
+    if (typeof finesseOnPieceLand === 'function') {
+      finesseOnPieceLand(
+        pieceToLand.userData.colorIndex,
+        pieceToLand.userData.nudgeOffsetZ || 0,
+        pieceToLand.userData.rotState     || 0
+      );
     }
     fallingPiecesGroup.remove(pieceToLand);
     fallingPieces.splice(index, 1);

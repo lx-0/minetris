@@ -70,6 +70,7 @@ function resetGame() {
   sessionB2BCount = 0;
   if (typeof achResetSession === "function") achResetSession();
   if (typeof resetMissionSession === "function") resetMissionSession();
+  if (typeof finesseReset === "function") finesseReset();
 
   // Reset difficulty
   difficultyMultiplier = 1.0;

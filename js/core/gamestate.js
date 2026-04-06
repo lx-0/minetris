@@ -153,6 +153,11 @@ function getGameState() {
     blocksMined,
     linesCleared,
     elapsedSeconds: gameElapsedSeconds,
+    finesseTotalFaults:       (typeof finesseTotalFaults       !== 'undefined') ? finesseTotalFaults       : 0,
+    finessePercentage:        (typeof finesseGetPercentage     === 'function')  ? finesseGetPercentage()   : 100,
+    finessePerfectPlacements: (typeof finessePerfectPlacements !== 'undefined') ? finessePerfectPlacements : 0,
+    finesseTotalPieces:       (typeof finesseTotalPieces       !== 'undefined') ? finesseTotalPieces       : 0,
+    finesseBestPerfectStreak: (typeof finesseBestPerfectStreak !== 'undefined') ? finesseBestPerfectStreak : 0,
   };
 }
 
@@ -391,6 +396,20 @@ function triggerGameOver() {
         `<div><span class="go-label">LINES CLEARED</span><br>${state.linesCleared}</div>` +
         `<div><span class="go-label">TIME SURVIVED</span><br>${mm}:${ss}</div>`;
     }
+  }
+
+  // Finesse section on game-over screen
+  const finesseGoEl = document.getElementById('finesse-go-section');
+  if (finesseGoEl && state.finesseTotalPieces > 0) {
+    finesseGoEl.innerHTML =
+      '<div class="go-label" style="margin-bottom:4px;">FINESSE</div>' +
+      '<div>Total faults: ' + state.finesseTotalFaults + '</div>' +
+      '<div>Perfect placements: ' + state.finessePerfectPlacements + ' / ' + state.finesseTotalPieces + '</div>' +
+      '<div>Finesse %: ' + state.finessePercentage + '%</div>' +
+      '<div>Best perfect streak: ' + state.finesseBestPerfectStreak + '</div>';
+    finesseGoEl.style.display = 'block';
+  } else if (finesseGoEl) {
+    finesseGoEl.style.display = 'none';
   }
 
   // Seasonal events: record final score for event leaderboard and score-based challenges

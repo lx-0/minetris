@@ -56,6 +56,8 @@ const ACHIEVEMENTS = [
   { id: "crowd_favorite",  name: "Crowd Favorite",  icon: "\u{1F31F}",       desc: "Have 10 or more spectators watch a match you play in a tournament", category: "tournament" },
   // T-spin achievements
   { id: "spin_doctor",     name: "Spin Doctor",     icon: "\u{1F300}",       desc: "Perform 50 T-spins across all games" },
+  // Finesse achievements
+  { id: "perfect_finesse", name: "Perfect Finesse", icon: "\u{1F3AF}",       desc: "Complete Sprint Mode with 0 total faults" },
 ];
 
 // Session counters — reset at the start of each game

@@ -496,6 +496,18 @@ let sessionPerfectClears = 0;
 let sessionTetrises = 0;
 let sessionB2BCount = 0;
 
+// ── Finesse scoring state (reset each game) ───────────────────────────────────
+// finesseTotalFaults:       cumulative extra inputs beyond optimal this session.
+// finessePerfectPlacements: pieces placed with 0 faults.
+// finesseTotalPieces:       total pieces that have landed (denominator for stats).
+// finesseCurrentPerfectStreak: current run of consecutive 0-fault placements.
+// finesseBestPerfectStreak:    session-best run of consecutive 0-fault placements.
+let finesseTotalFaults          = 0;
+let finessePerfectPlacements    = 0;
+let finesseTotalPieces          = 0;
+let finesseCurrentPerfectStreak = 0;
+let finesseBestPerfectStreak    = 0;
+
 // ── Editor mode state ─────────────────────────────────────────────────────────
 // Free-fly no-gravity mode accessible via main menu "Create" or ?editor=1 URL param.
 let isEditorMode = false;

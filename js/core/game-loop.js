@@ -279,6 +279,7 @@ function animate() {
     }
   }
   updateDangerWarning();
+  if (typeof updateFinesseHUDVisibility === 'function') updateFinesseHUDVisibility();
 
   if (controls && controls.isLocked === true && !isGameOver) {
     // Tick puzzle time limit every frame (timed_score mode)

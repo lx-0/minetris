@@ -121,6 +121,12 @@ function triggerSprintComplete() {
   // Achievements: Sprinter, Speed Sprinter
   if (typeof achOnSprintComplete === "function") achOnSprintComplete(finalTimeMs);
 
+  // Finesse achievement: complete Sprint with 0 total faults
+  if (typeof finesseTotalFaults !== 'undefined' && finesseTotalFaults === 0 &&
+      typeof finesseTotalPieces !== 'undefined' && finesseTotalPieces > 0) {
+    if (typeof unlockAchievement === 'function') unlockAchievement('perfect_finesse');
+  }
+
   // Mastery tracking
   if (typeof masteryOnSprintComplete === 'function') masteryOnSprintComplete(finalTimeMs);
 
@@ -139,6 +145,16 @@ function triggerSprintComplete() {
         ? "NEW PERSONAL BEST!"
         : (best ? "Best: " + fmtSprintTime(best.timeMs) : "");
       pbEl.className = isNewBest ? "sprint-new-best" : "sprint-pb-line";
+    }
+
+    // Finesse stats on sprint-complete screen
+    const sprintFinesseEl = document.getElementById('sprint-finesse-stats');
+    if (sprintFinesseEl && typeof finesseTotalPieces !== 'undefined' && finesseTotalPieces > 0) {
+      const _pct = typeof finesseGetPercentage === 'function' ? finesseGetPercentage() : 0;
+      sprintFinesseEl.innerHTML =
+        'Finesse: ' + (typeof finesseTotalFaults !== 'undefined' ? finesseTotalFaults : '?') +
+        ' faults &mdash; ' + _pct + '% perfect';
+      sprintFinesseEl.style.display = 'block';
     }
 
     overlayEl.style.display = "flex";
