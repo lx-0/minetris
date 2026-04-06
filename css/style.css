@@ -1633,6 +1633,26 @@ body.board-glow-off #board-powerup-overlay { display: none !important; }
   flex: 1;
   word-break: break-word;
 }
+/* Toast type accent borders */
+.notif-toast--info        { border-left: 3px solid #60a5fa; }
+.notif-toast--success     { border-left: 3px solid #4ade80; }
+.notif-toast--warning     { border-left: 3px solid #fbbf24; }
+.notif-toast--error       { border-left: 3px solid #f87171; }
+.notif-toast--achievement { border-left: 3px solid #f59e0b; }
+/* Toast dismiss (X) button */
+.notif-toast-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0 0 6px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 1px;
+}
+.notif-toast-close:hover { color: #f87171; }
 
 /* ── Nudge hint ── */
 #nudge-hint {

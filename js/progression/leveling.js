@@ -281,6 +281,10 @@ function checkLevelUp(oldXP, newXP) {
   // Fire a toast for each level gained (usually just one)
   for (let lvl = oldLevel + 1; lvl <= newLevel; lvl++) {
     _showLevelUpToast(lvl);
+    // Notification center entry
+    if (typeof notifPush === 'function') {
+      notifPush('level_up', '⬆️', 'Level up! You reached level ' + lvl);
+    }
     // Metrics: log each level-up
     if (typeof metricsLevelUp === 'function') metricsLevelUp(lvl);
     // Screen reader: announce level up

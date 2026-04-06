@@ -196,6 +196,9 @@ function _initBattleHandlers() {
           _updateBattleReadyIndicators();
           _setupReadyViewModeUI();
           showBattleView("ready");
+          if (typeof notifPush === 'function') {
+            notifPush('opponent_joined', '⚔️', 'Opponent found! Get ready to battle.');
+          }
         } else if (data.state === "disconnected") {
           // If battle result screen is showing, let it handle the return-to-lobby flow
           var resultEl = document.getElementById("battle-result-screen");
@@ -217,6 +220,9 @@ function _initBattleHandlers() {
         }
         if (typeof battleHud !== 'undefined') battleHud.setConnectionStatus('red');
         if (typeof chatEmotes !== 'undefined') chatEmotes.onSessionEnd();
+        if (typeof notifPush === 'function') {
+          notifPush('opponent_left', '🚪', 'Opponent disconnected from the match.');
+        }
       });
 
       // ── Choice view buttons ──
@@ -701,6 +707,11 @@ function _initBattleHandlers() {
         }
         // Incoming attack vignette flash + thud SFX
         if (typeof battleFx !== 'undefined') battleFx.showIncomingAttack(msg.lines || 1);
+        // Notify for significant attacks (≥3 lines)
+        var _attackLines = msg.lines || 1;
+        if (_attackLines >= 3 && typeof notifPush === 'function') {
+          notifPush('garbage_attack', '🗑️', 'Incoming! ' + _attackLines + ' garbage lines incoming.');
+        }
       });
 
       var battleReadyCancelBtn = document.getElementById("battle-ready-cancel-btn");

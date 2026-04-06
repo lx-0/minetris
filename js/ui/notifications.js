@@ -20,6 +20,12 @@ const NOTIF_TYPES = {
   DAILY_CHALLENGE:  'daily_challenge',
   EVENT_STARTED:    'event_started',
   EVENT_ENDING:     'event_ending',
+  LEVEL_UP:         'level_up',
+  RANK_CHANGE:      'rank_change',
+  OPPONENT_JOINED:  'opponent_joined',
+  OPPONENT_LEFT:    'opponent_left',
+  GARBAGE_ATTACK:   'garbage_attack',
+  XP_PASS:          'xp_pass',
 };
 
 // Default settings — all types on
@@ -35,6 +41,12 @@ const NOTIF_DEFAULTS = {
   [NOTIF_TYPES.DAILY_CHALLENGE]: true,
   [NOTIF_TYPES.EVENT_STARTED]:   true,
   [NOTIF_TYPES.EVENT_ENDING]:    true,
+  [NOTIF_TYPES.LEVEL_UP]:        true,
+  [NOTIF_TYPES.RANK_CHANGE]:     true,
+  [NOTIF_TYPES.OPPONENT_JOINED]: true,
+  [NOTIF_TYPES.OPPONENT_LEFT]:   true,
+  [NOTIF_TYPES.GARBAGE_ATTACK]:  true,
+  [NOTIF_TYPES.XP_PASS]:         true,
 };
 
 let _notifSettings = Object.assign({}, NOTIF_DEFAULTS);
@@ -130,9 +142,9 @@ function notifPush(type, icon, message) {
 
   // Show toast — buffer during active gameplay, show immediately otherwise
   if (_notifIsGameplayActive()) {
-    _notifToastBuffer.push({ icon: icon, message: message });
+    _notifToastBuffer.push({ icon: icon, message: message, type: type });
   } else {
-    _notifEnqueueToast(icon, message);
+    _notifEnqueueToast(icon, message, type);
   }
 }
 
@@ -143,31 +155,64 @@ function notifPush(type, icon, message) {
 function notifFlushQueued() {
   const pending = _notifToastBuffer.splice(0);
   pending.forEach(function (item) {
-    _notifEnqueueToast(item.icon, item.message);
+    _notifEnqueueToast(item.icon, item.message, item.type);
   });
 }
 
 // ── Toast system ──────────────────────────────────────────────────────────────
 
+/** Map a semantic notification type to a visual CSS modifier class. */
+function _notifVisualClass(type) {
+  switch (type) {
+    case NOTIF_TYPES.ACHIEVEMENT:
+    case NOTIF_TYPES.PERSONAL_BEST:
+    case NOTIF_TYPES.XP_PASS:
+      return 'notif-toast--achievement';
+    case NOTIF_TYPES.MISSION:
+    case NOTIF_TYPES.LEVEL_UP:
+    case NOTIF_TYPES.RANK_CHANGE:
+      return 'notif-toast--success';
+    case NOTIF_TYPES.OPPONENT_LEFT:
+    case NOTIF_TYPES.GARBAGE_ATTACK:
+      return 'notif-toast--warning';
+    default:
+      return 'notif-toast--info';
+  }
+}
+
+/** Auto-dismiss duration in ms by type. */
+function _notifToastDuration(type) {
+  if (type === NOTIF_TYPES.ACHIEVEMENT || type === NOTIF_TYPES.LEVEL_UP || type === NOTIF_TYPES.PERSONAL_BEST) {
+    return 5000;
+  }
+  return 3000;
+}
+
 /** Add a toast to the visible queue (shows immediately if slot available). */
-function _notifEnqueueToast(icon, message) {
+function _notifEnqueueToast(icon, message, type) {
   if (_notifActiveToasts.length < 3) {
-    _notifShowToast(icon, message);
+    _notifShowToast(icon, message, type);
   } else {
-    _notifToastQueue.push({ icon: icon, message: message });
+    _notifToastQueue.push({ icon: icon, message: message, type: type });
   }
 }
 
 /** Create and display a single toast element. */
-function _notifShowToast(icon, message) {
+function _notifShowToast(icon, message, type) {
   const container = document.getElementById('notif-toast-container');
   if (!container) return;
 
   const el = document.createElement('div');
-  el.className = 'notif-toast';
+  el.className = 'notif-toast ' + _notifVisualClass(type);
   el.innerHTML =
     '<div class="notif-toast-icon">' + _esc(icon) + '</div>' +
-    '<div class="notif-toast-msg">' + _esc(message) + '</div>';
+    '<div class="notif-toast-msg">' + _esc(message) + '</div>' +
+    '<button class="notif-toast-close" title="Dismiss">&#10005;</button>';
+
+  el.querySelector('.notif-toast-close').addEventListener('click', function (e) {
+    e.stopPropagation();
+    _notifRemoveToast(el);
+  });
 
   el.addEventListener('click', function () {
     notifOpen();
@@ -182,10 +227,10 @@ function _notifShowToast(icon, message) {
     el.classList.add('notif-toast-in');
   });
 
-  // Auto-dismiss after 5 seconds
+  // Auto-dismiss based on type
   var _dismissTimer = setTimeout(function () {
     _notifRemoveToast(el);
-  }, 5000);
+  }, _notifToastDuration(type));
   el._dismissTimer = _dismissTimer;
 }
 
@@ -202,7 +247,7 @@ function _notifRemoveToast(el) {
     // Show next waiting toast
     if (_notifToastQueue.length > 0) {
       var next = _notifToastQueue.shift();
-      _notifShowToast(next.icon, next.message);
+      _notifShowToast(next.icon, next.message, next.type);
     }
   }, 320);
 }
@@ -321,6 +366,12 @@ const _NOTIF_TYPE_LABELS = {
   [NOTIF_TYPES.DAILY_CHALLENGE]: 'Daily challenge available',
   [NOTIF_TYPES.EVENT_STARTED]:   'Seasonal event started',
   [NOTIF_TYPES.EVENT_ENDING]:    'Seasonal event ending soon',
+  [NOTIF_TYPES.LEVEL_UP]:        'Level up',
+  [NOTIF_TYPES.RANK_CHANGE]:     'Ranked rating change',
+  [NOTIF_TYPES.OPPONENT_JOINED]: 'Opponent joined',
+  [NOTIF_TYPES.OPPONENT_LEFT]:   'Opponent left',
+  [NOTIF_TYPES.GARBAGE_ATTACK]:  'Incoming garbage attack',
+  [NOTIF_TYPES.XP_PASS]:         'Season pass reward',
 };
 
 function _notifRenderSettings() {

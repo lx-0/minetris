@@ -51,6 +51,13 @@ function triggerBattleResult(result) {
     ? updateBattleRating(result, typeof battleOpponentRating !== 'undefined' ? battleOpponentRating : 1000, typeof battleIsRanked !== 'undefined' ? battleIsRanked : false)
     : null;
 
+  // Rank change notification (ranked matches only)
+  if (_ratingChange && _ratingChange.delta !== 0 && typeof notifPush === 'function') {
+    var _rankSign = _ratingChange.delta > 0 ? '+' : '';
+    var _rankIcon = _ratingChange.delta > 0 ? '📈' : '📉';
+    notifPush('rank_change', _rankIcon, 'Rating ' + _rankSign + _ratingChange.delta + ' → ' + _ratingChange.ratingAfter);
+  }
+
   // Fire battle achievements (win streak already updated by updateBattleRating above)
   if (typeof achOnBattleResult === 'function') {
     achOnBattleResult(result, _myStats.garbageReceived, _myStats.duration);
