@@ -345,6 +345,7 @@ function checkLineClear(newBlocks) {
     sessionTSpins++;
     if (_lcIsMiniTSpin && typeof sessionMiniTSpins !== 'undefined') sessionMiniTSpins++;
     if (typeof achOnTSpin === 'function') achOnTSpin();
+    if (typeof achOnTSpinLines === 'function') achOnTSpinLines(completeLevels.length);
   }
 
   // Boss Battle: deal damage from this line clear
@@ -364,7 +365,10 @@ function checkLineClear(newBlocks) {
     });
     _lcPerfectClear = (_remainingCells === 0);
   }
-  if (_lcPerfectClear) sessionPerfectClears++;
+  if (_lcPerfectClear) {
+    sessionPerfectClears++;
+    if (typeof achOnPerfectClear === 'function') achOnPerfectClear();
+  }
   if (completeLevels.length >= 4) sessionTetrises++;
 
   // Audio: rumble + arpeggio

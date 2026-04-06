@@ -458,6 +458,8 @@ function _showCompletionScreen() {
 
   // Metrics
   if (typeof metricsTutorialComplete === 'function') metricsTutorialComplete();
+  // Achievement: tutorial completed
+  if (typeof achOnTutorialComplete === 'function') achOnTutorialComplete();
 }
 
 function _endTutorial(skipped) {

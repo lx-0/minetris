@@ -102,6 +102,8 @@ function submitLifetimeStats({ score, blocksMined, linesCleared, blocksPlaced, t
   // Check milestones
   _checkMilestones(stats);
   saveLifetimeStats(stats);
+  // Achievement: games played (10 / 50 / 100)
+  if (typeof achOnGamesPlayed === 'function') achOnGamesPlayed();
   return stats;
 }
 

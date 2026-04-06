@@ -56,8 +56,27 @@ const ACHIEVEMENTS = [
   { id: "crowd_favorite",  name: "Crowd Favorite",  icon: "\u{1F31F}",       desc: "Have 10 or more spectators watch a match you play in a tournament", category: "tournament" },
   // T-spin achievements
   { id: "spin_doctor",     name: "Spin Doctor",     icon: "\u{1F300}",       desc: "Perform 50 T-spins across all games" },
+  { id: "tspin_triple",    name: "Spin Master",     icon: "\u{1F32A}\uFE0F", desc: "Perform a T-spin Triple" },
   // Finesse achievements
   { id: "perfect_finesse", name: "Perfect Finesse", icon: "\u{1F3AF}",       desc: "Complete Sprint Mode with 0 total faults" },
+  { id: "first_perfect_clear", name: "Flawless",   icon: "\u2728",          desc: "Clear the board completely with a Perfect Clear" },
+  // Lines milestones
+  { id: "lines_100",  name: "Centurion",  icon: "\u{1F4AF}", desc: "Clear 100 total lines",  progress: { stat: "totalLinesCleared", max: 100 } },
+  { id: "lines_500",  name: "Line Lord",  icon: "\u{1F4C8}", desc: "Clear 500 total lines",  progress: { stat: "totalLinesCleared", max: 500 } },
+  { id: "lines_1000", name: "Millennium", icon: "\u{1F31F}", desc: "Clear 1000 total lines", progress: { stat: "totalLinesCleared", max: 1000 } },
+  // Score milestones
+  { id: "score_50k",  name: "High Roller",    icon: "\u{1F4B0}", desc: "Reach a score of 50,000",  progress: { stat: "bestScore", max: 50000 } },
+  { id: "score_100k", name: "Score Legend",   icon: "\u{1F911}", desc: "Reach a score of 100,000", progress: { stat: "bestScore", max: 100000 } },
+  // Speed
+  { id: "speed_40_2min", name: "Blitz Runner", icon: "\u26A1", desc: "Complete Sprint (40 lines) in under 2 minutes" },
+  // Combo
+  { id: "combo_10", name: "Combo Beast", icon: "\u{1F525}", desc: "Reach a 10x combo" },
+  // Tutorial
+  { id: "tutorial_done", name: "Graduated", icon: "\u{1F393}", desc: "Complete the tutorial" },
+  // Dedication
+  { id: "games_10",  name: "Rookie",   icon: "\u{1F3AE}", desc: "Play 10 games",  progress: { stat: "gamesPlayed", max: 10 } },
+  { id: "games_50",  name: "Regular",  icon: "\u{1F579}\uFE0F", desc: "Play 50 games", progress: { stat: "gamesPlayed", max: 50 } },
+  { id: "games_100", name: "Veteran",  icon: "\u{1F3C5}", desc: "Play 100 games", progress: { stat: "gamesPlayed", max: 100 } },
 ];
 
 // Session counters — reset at the start of each game
@@ -104,6 +123,8 @@ function unlockAchievement(id) {
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   if (ach) {
     _showAchievementToast(ach);
+    // Play unlock SFX
+    if (typeof playAchievementUnlockSfx === 'function') playAchievementUnlockSfx();
     // Grant XP reward if the achievement defines one
     if (ach.xp && ach.xp > 0 && typeof loadLifetimeStats === 'function' && typeof saveLifetimeStats === 'function') {
       var stats = loadLifetimeStats();
@@ -246,6 +267,24 @@ function renderAchievementsPanel() {
     infoEl.appendChild(nameEl);
     infoEl.appendChild(descEl);
 
+    // Progress bar for incremental locked achievements
+    if (!isUnlocked && ach.progress) {
+      const stats = loadLifetimeStats();
+      const current = Math.min(stats[ach.progress.stat] || 0, ach.progress.max);
+      const pct = Math.round((current / ach.progress.max) * 100);
+      const progWrap = document.createElement("div");
+      progWrap.className = "ach-progress-wrap";
+      const progBar = document.createElement("div");
+      progBar.className = "ach-progress-bar";
+      progBar.style.width = pct + "%";
+      const progLabel = document.createElement("div");
+      progLabel.className = "ach-progress-label";
+      progLabel.textContent = current.toLocaleString() + " / " + ach.progress.max.toLocaleString();
+      progWrap.appendChild(progBar);
+      progWrap.appendChild(progLabel);
+      infoEl.appendChild(progWrap);
+    }
+
     const statusEl = document.createElement("div");
     statusEl.className = "ach-card-status";
     statusEl.textContent = isUnlocked ? "\u2714\uFE0F" : "\uD83D\uDD12";
@@ -283,6 +322,15 @@ function updateCoopModeCardAch() {
 function achOnLineClear(count) {
   if (linesCleared >= 1) unlockAchievement("first_responder");
   if (count >= 4)        unlockAchievement("tetramino");
+  // Lifetime lines milestones: combine saved lifetime total with current session lines.
+  const stats = (typeof loadLifetimeStats === 'function') ? loadLifetimeStats() : null;
+  const sessionLines = (typeof linesCleared !== 'undefined') ? linesCleared : 0;
+  const lifetimeLines = stats ? (stats.totalLinesCleared || 0) : 0;
+  // totalLinesCleared in stats excludes the current in-progress session, so add session total.
+  const grandTotal = lifetimeLines + sessionLines;
+  if (grandTotal >= 100)  unlockAchievement("lines_100");
+  if (grandTotal >= 500)  unlockAchievement("lines_500");
+  if (grandTotal >= 1000) unlockAchievement("lines_1000");
 }
 
 /** Call after a T-spin is detected (with or without line clears). */
@@ -294,8 +342,9 @@ function achOnTSpin() {
 
 /** Call after combo count is updated with the new comboCount value. */
 function achOnComboUpdate(count) {
-  if (count >= 2) unlockAchievement("combo_starter"); // 2nd consecutive = 1.5x
-  if (count >= 5) unlockAchievement("combo_king");
+  if (count >= 2)  unlockAchievement("combo_starter"); // 2nd consecutive = 1.5x
+  if (count >= 5)  unlockAchievement("combo_king");
+  if (count >= 10) unlockAchievement("combo_10");
 }
 
 /** Call when difficulty tier increases (tier is 0-based; tier 9 = level 10). */
@@ -361,8 +410,10 @@ function achOnBlitzComplete(finalScore) {
  * Only fires for Classic (not Sprint or Blitz).
  */
 function achOnClassicScore(currentScore) {
-  if (!isSprintMode && !isBlitzMode && currentScore >= 10000) {
-    unlockAchievement("century_club");
+  if (!isSprintMode && !isBlitzMode) {
+    if (currentScore >= 10000)  unlockAchievement("century_club");
+    if (currentScore >= 50000)  unlockAchievement("score_50k");
+    if (currentScore >= 100000) unlockAchievement("score_100k");
   }
 }
 
@@ -507,6 +558,46 @@ function achOnTournamentWon() {
  */
 function achOnSpectatorCountUpdate(count) {
   if (count >= 10) unlockAchievement("crowd_favorite");
+}
+
+// ── New milestone / skill triggers ───────────────────────────────────────────
+
+/**
+ * Call when a T-spin line clear completes; pass the number of lines cleared.
+ * Unlocks Spin Master on a T-spin Triple (3 lines).
+ */
+function achOnTSpinLines(numLines) {
+  if (numLines >= 3) unlockAchievement("tspin_triple");
+}
+
+/** Call when a Perfect Clear is detected during a line clear. */
+function achOnPerfectClear() {
+  unlockAchievement("first_perfect_clear");
+}
+
+/**
+ * Call after submitLifetimeStats increments gamesPlayed.
+ * Reads the already-saved stats to check dedication milestones.
+ */
+function achOnGamesPlayed() {
+  const stats = (typeof loadLifetimeStats === 'function') ? loadLifetimeStats() : null;
+  if (!stats) return;
+  if (stats.gamesPlayed >= 10)  unlockAchievement("games_10");
+  if (stats.gamesPlayed >= 50)  unlockAchievement("games_50");
+  if (stats.gamesPlayed >= 100) unlockAchievement("games_100");
+}
+
+/** Call when the tutorial is completed (not skipped). */
+function achOnTutorialComplete() {
+  unlockAchievement("tutorial_done");
+}
+
+/**
+ * Call at the end of Sprint mode with the final elapsed time in ms.
+ * Unlocks Blitz Runner if 40 lines were cleared in under 2 minutes.
+ */
+function achOnSpeedSprint(timeMs) {
+  if (timeMs < 120000) unlockAchievement("speed_40_2min");
 }
 
 // ── Battle achievement triggers ───────────────────────────────────────────────

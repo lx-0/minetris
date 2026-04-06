@@ -5368,6 +5368,29 @@ tr.dgo-top10-me .dgo-top10-score { color: #0cf; }
   font-size: 14px;
   flex-shrink: 0;
 }
+/* Progress bar for incremental achievements */
+.ach-progress-wrap {
+  margin-top: 5px;
+  position: relative;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ach-progress-bar {
+  height: 100%;
+  background: rgba(255, 215, 0, 0.6);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+.ach-progress-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 5px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 3px;
+  text-align: right;
+}
 #achievements-close-btn {
   font-family: "Press Start 2P", cursive;
   font-size: 11px;

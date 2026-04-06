@@ -118,8 +118,9 @@ function triggerSprintComplete() {
     trySubmitModeScore('sprint', finalTimeMs, linesCleared);
   }
 
-  // Achievements: Sprinter, Speed Sprinter
+  // Achievements: Sprinter, Speed Sprinter, Blitz Runner
   if (typeof achOnSprintComplete === "function") achOnSprintComplete(finalTimeMs);
+  if (typeof achOnSpeedSprint === "function") achOnSpeedSprint(finalTimeMs);
 
   // Finesse achievement: complete Sprint with 0 total faults
   if (typeof finesseTotalFaults !== 'undefined' && finesseTotalFaults === 0 &&

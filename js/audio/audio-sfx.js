@@ -629,3 +629,26 @@ function setSfxMuted(muted) {
 function isSfxMuted() {
   return _sfxMuted;
 }
+
+/**
+ * Achievement unlock fanfare — ascending arpeggio followed by a triumphant chord.
+ * Uses levelUpSynth (orb-like ascent) + goldenChimeSynth (sustaining chord).
+ */
+function playAchievementUnlockSfx() {
+  if (!audioReady) return;
+  const now = Tone.now();
+  // Rapid ascending phrase (XP orb style, slightly slower for weight)
+  if (levelUpSynth) {
+    const ascent = ['C5','E5','G5','C6','E6'];
+    ascent.forEach((note, i) => {
+      try { levelUpSynth.triggerAttackRelease(note, '16n', now + i * 0.07, 0.55 + i * 0.06); } catch (_e) {}
+    });
+  }
+  // Triumphant chord bloom half a second later
+  if (goldenChimeSynth) {
+    const landTime = now + 0.42;
+    ['C6','E6','G6'].forEach((note, i) => {
+      try { goldenChimeSynth.triggerAttackRelease(note, '4n', landTime + i * 0.04, 0.45); } catch (_e) {}
+    });
+  }
+}
