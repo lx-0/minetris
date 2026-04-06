@@ -107,6 +107,18 @@ function animate() {
         if (shouldWarn !== countdownWarningActive) {
           countdownWarningActive = shouldWarn;
           if (typeof updateCountdownStageHUD === 'function') updateCountdownStageHUD();
+          // Trigger edge flash and warning sound when warning starts
+          if (shouldWarn) {
+            const cdFlashEl = document.getElementById('countdown-edge-flash');
+            if (cdFlashEl) {
+              cdFlashEl.classList.remove('cd-stage-flash');
+              cdFlashEl.classList.add('cd-warning-pulse');
+            }
+            if (typeof playCountdownStageWarning === 'function') playCountdownStageWarning();
+          } else {
+            const cdFlashEl = document.getElementById('countdown-edge-flash');
+            if (cdFlashEl) cdFlashEl.classList.remove('cd-warning-pulse');
+          }
         }
 
         // Advance stage when timer hits 30s

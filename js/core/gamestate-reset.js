@@ -174,6 +174,10 @@ function resetGame() {
   if (countdownCompleteEl) countdownCompleteEl.style.display = "none";
   const countdownStageHudEl = document.getElementById("countdown-stage-hud");
   if (countdownStageHudEl) countdownStageHudEl.style.display = "none";
+  const countdownEdgeFlashEl = document.getElementById("countdown-edge-flash");
+  if (countdownEdgeFlashEl) {
+    countdownEdgeFlashEl.classList.remove('cd-warning-pulse', 'cd-stage-flash');
+  }
   // Reset timer HUD color for countdown
   if (scoreEl) {
     const cdTimerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");

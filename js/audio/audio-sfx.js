@@ -635,6 +635,34 @@ function isSfxMuted() {
  * Achievement unlock fanfare — ascending arpeggio followed by a triumphant chord.
  * Uses levelUpSynth (orb-like ascent) + goldenChimeSynth (sustaining chord).
  */
+/**
+ * Countdown mode: 5-second warning before a speed stage increase.
+ * A quick descending two-note ping — attention-grabbing but not disruptive.
+ */
+function playCountdownStageWarning() {
+  if (!audioReady || !levelUpSynth) return;
+  const now = Tone.now();
+  try { levelUpSynth.triggerAttackRelease('A5', '16n', now,       0.55); } catch (_e) {}
+  try { levelUpSynth.triggerAttackRelease('E5', '16n', now + 0.12, 0.45); } catch (_e) {}
+}
+
+/**
+ * Countdown mode: stage advance transition.
+ * Short sharp ascending sting — conveys urgency and acceleration.
+ */
+function playCountdownStageUp() {
+  if (!audioReady) return;
+  const now = Tone.now();
+  if (levelUpSynth) {
+    ['C5','E5','G5','C6'].forEach((note, i) => {
+      try { levelUpSynth.triggerAttackRelease(note, '16n', now + i * 0.06, 0.5 + i * 0.08); } catch (_e) {}
+    });
+  }
+  if (rumbleSynth) {
+    try { rumbleSynth.triggerAttackRelease('C2', '8n', now + 0.05); } catch (_e) {}
+  }
+}
+
 function playAchievementUnlockSfx() {
   if (!audioReady) return;
   const now = Tone.now();

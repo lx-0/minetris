@@ -72,7 +72,7 @@ function triggerCountdownComplete() {
   if (stageHudEl) stageHudEl.style.display = "none";
 
   const timeSurvived = Math.floor(countdownElapsedMs / 1000);
-  const finalScore   = timeSurvived * 100 + linesCleared * 50;
+  const finalScore   = timeSurvived * 10 + linesCleared * 100;
   const stageReached = countdownSpeedStage;
 
   // Record lifetime stats
@@ -183,8 +183,31 @@ function countdownAdvanceStage() {
 
   difficultyMultiplier = getCountdownMultiplier(countdownSpeedStage);
 
+  // Stop edge flash warning, trigger brief golden stage-up flash
+  const cdFlashEl = document.getElementById('countdown-edge-flash');
+  if (cdFlashEl) {
+    cdFlashEl.classList.remove('cd-warning-pulse');
+    cdFlashEl.classList.remove('cd-stage-flash');
+    // Force reflow to restart animation
+    void cdFlashEl.offsetWidth;
+    cdFlashEl.classList.add('cd-stage-flash');
+  }
+
+  // Screen shake on stage advance
+  if (typeof comboShakeActive !== 'undefined') {
+    comboShakeActive  = true;
+    comboShakeStart   = clock.getElapsedTime();
+    comboShakeStrength = Math.min(0.04 + (countdownSpeedStage - 2) * 0.006, 0.12);
+  }
+
+  // Play stage-up sound
+  if (typeof playCountdownStageUp === 'function') playCountdownStageUp();
+
   if (speedUpBannerEl) {
-    speedUpBannerEl.textContent = "⚡ STAGE " + countdownSpeedStage + "! ×" + difficultyMultiplier.toFixed(1);
+    const multStr = countdownSpeedStage >= COUNTDOWN_TOTAL_STAGES
+      ? "20G!"
+      : "×" + difficultyMultiplier.toFixed(1);
+    speedUpBannerEl.textContent = "⚡ STAGE " + countdownSpeedStage + "! " + multStr;
     speedUpBannerEl.style.color = countdownSpeedStage >= 8 ? "#ff4444" : "#ffd700";
     speedUpBannerEl.style.display = "block";
     speedUpBannerTimer = 2.5;

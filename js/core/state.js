@@ -589,11 +589,10 @@ const ZEN_FIXED_MULTIPLIER = 0.35; // ~65% slower than default fall speed
 
 // ── Countdown mode state ──────────────────────────────────────────────────────
 // Survival mode: gravity escalates every 30s through 10 speed stages.
-// Stage 1 = slow (level 1 gravity). Stage 10 = near-instant drop.
-// Timer counts elapsed time survived. Game ends only on game over (no height
-// lose-condition while in countdown mode — speed alone creates the challenge).
-// Score = time_survived_seconds * 100 + linesCleared * 50.
-// Leaderboard ranked by score (time-dominated).
+// Stage 1 = Level 1 gravity. Stage 5 = Level 8. Stage 9 = Level 18. Stage 10 = 20G.
+// Timer counts elapsed time survived. Game ends on normal game over (stack reaches top).
+// Score = time_survived_seconds * 10 + linesCleared * 100.
+// Leaderboard ranked by score (time-dominated with lines as meaningful bonus).
 let isCountdownMode          = false;
 let countdownTimerActive     = false;  // becomes true on first piece drop
 let countdownElapsedMs       = 0;      // milliseconds survived
@@ -605,8 +604,32 @@ let countdownWarningActive   = false;  // true during the 5s warning before a st
 const COUNTDOWN_TOTAL_STAGES   = 10;
 const COUNTDOWN_STAGE_INTERVAL = 30;    // seconds between speed stages
 const COUNTDOWN_WARNING_SECS   = 5;     // warn this many seconds before each stage advance
-// Stage multipliers: Stage 1 = slow, Stage 10 = near-instant
-// Uses pow(1.65, stage-1) * 0.4 to go from ~0.4 (slow) up to ~0.4*1.65^9 ≈ 46× (very fast)
+
+// Per-stage fall-speed multipliers calibrated to spec:
+//   Stage 1:  Level 1  (1.1^0  = 1.000)
+//   Stage 2:  Level 3  (1.1^2  ≈ 1.210)
+//   Stage 3:  Level 5  (1.1^4  ≈ 1.464)
+//   Stage 4:  Level 6  (1.1^5  ≈ 1.611)
+//   Stage 5:  Level 8  (1.1^7  ≈ 1.949)
+//   Stage 6:  Level 10 (1.1^9  ≈ 2.358)
+//   Stage 7:  Level 13 (1.1^12 ≈ 3.138)
+//   Stage 8:  Level 15 (1.1^14 ≈ 3.797)
+//   Stage 9:  Level 18 (1.1^17 ≈ 5.054)
+//   Stage 10: 20G (near-instant, 40× base)
+const COUNTDOWN_STAGE_MULTIPLIERS = [
+  1.000,                         // Stage 1:  Level 1
+  Math.pow(1.1, 2),              // Stage 2:  Level 3  ≈ 1.210
+  Math.pow(1.1, 4),              // Stage 3:  Level 5  ≈ 1.464
+  Math.pow(1.1, 5),              // Stage 4:  Level 6  ≈ 1.611
+  Math.pow(1.1, 7),              // Stage 5:  Level 8  ≈ 1.949
+  Math.pow(1.1, 9),              // Stage 6:  Level 10 ≈ 2.358
+  Math.pow(1.1, 12),             // Stage 7:  Level 13 ≈ 3.138
+  Math.pow(1.1, 14),             // Stage 8:  Level 15 ≈ 3.797
+  Math.pow(1.1, 17),             // Stage 9:  Level 18 ≈ 5.054
+  40.0,                          // Stage 10: 20G (near-instant drop)
+];
+
 function getCountdownMultiplier(stage) {
-  return Math.pow(1.65, stage - 1) * 0.4;
+  const idx = Math.max(0, Math.min(stage - 1, COUNTDOWN_STAGE_MULTIPLIERS.length - 1));
+  return COUNTDOWN_STAGE_MULTIPLIERS[idx];
 }
