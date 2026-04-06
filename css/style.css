@@ -5481,6 +5481,26 @@ body.board-glow-off #board-powerup-overlay { display: none !important; }
   margin-top: 3px;
   flex-wrap: wrap;
 }
+/* Personal best badge — gold star shown next to record values */
+.stats-pb-badge {
+  color: #ffd700;
+  font-size: 9px;
+  margin-right: 4px;
+  text-shadow: 0 0 6px rgba(255,215,0,0.7);
+  display: inline-block;
+}
+/* History entry that is a personal best */
+.stats-history-pb {
+  border-color: rgba(255,215,0,0.55) !important;
+  background: rgba(255,215,0,0.06) !important;
+}
+.stats-history-pb-badge {
+  font-size: 6px;
+  color: #ffd700;
+  text-shadow: 0 0 5px rgba(255,215,0,0.8);
+  margin: 0 4px;
+}
+
 /* Milestones grid */
 .stats-milestones-grid {
   display: grid;

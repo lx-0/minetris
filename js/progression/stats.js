@@ -89,10 +89,14 @@ function submitLifetimeStats({ score, blocksMined, linesCleared, blocksPlaced, t
   // Per-mode stats
   if (mode) {
     if (!stats.perMode) stats.perMode = {};
-    const pm = stats.perMode[mode] || { games: 0, bestScore: 0, totalScore: 0 };
+    const pm = stats.perMode[mode] || { games: 0, bestScore: 0, totalScore: 0, bestLines: 0 };
     pm.games++;
     pm.totalScore += score;
     if (score > pm.bestScore) pm.bestScore = score;
+    if ((linesCleared || 0) > (pm.bestLines || 0)) pm.bestLines = linesCleared || 0;
+    if (mode === 'combo_challenge') {
+      if ((highestComboCount || 0) > (pm.bestComboStreak || 0)) pm.bestComboStreak = highestComboCount || 0;
+    }
     stats.perMode[mode] = pm;
   }
   // Check milestones
@@ -321,6 +325,23 @@ function _statsRow(label, val) {
     '</div>';
 }
 
+/** Build a stats-row with count-up animation for numeric values. */
+function _statsRowNum(label, num) {
+  var n = parseInt(num, 10) || 0;
+  return '<div class="stats-row">' +
+    '<span class="stats-label">' + _escStatsHtml(String(label)) + '</span>' +
+    '<span class="stats-value" data-count="' + n + '">0</span>' +
+    '</div>';
+}
+
+/** Build a stats-row with a gold personal-best badge. */
+function _statsRowPb(label, val) {
+  return '<div class="stats-row">' +
+    '<span class="stats-label">' + _escStatsHtml(String(label)) + '</span>' +
+    '<span class="stats-value"><span class="stats-pb-badge" aria-label="Personal best">\u2605</span>' + _escStatsHtml(String(val)) + '</span>' +
+    '</div>';
+}
+
 /** Build a section header. */
 function _statsSection(title) {
   return '<div class="stats-section-title">' + _escStatsHtml(title) + '</div>';
@@ -330,15 +351,16 @@ function _statsSection(title) {
 
 function _renderTabOverview(stats) {
   var html = _statsSection('OVERVIEW');
-  html += _statsRow('GAMES PLAYED',      stats.gamesPlayed);
-  html += _statsRow('TIME PLAYED',       _fmtTimePlayed(stats.timePlayed));
-  html += _statsRow('TOTAL SCORE',       stats.totalScore);
-  html += _statsRow('BEST SCORE',        stats.bestScore);
-  html += _statsRow('LINES CLEARED',     stats.totalLinesCleared);
-  html += _statsRow('BLOCKS MINED',      stats.totalBlocksMined);
-  html += _statsRow('TOTAL XP',          stats.playerXP || 0);
-  html += _statsRow('PLAYER LEVEL',      typeof getLevelFromXP === 'function' ? getLevelFromXP(stats.playerXP || 0) : 1);
-  html += _statsRow('CURRENT STREAK',    (stats.currentStreak || 0) + ' day' + ((stats.currentStreak || 0) === 1 ? '' : 's'));
+  html += _statsRowNum('GAMES PLAYED',    stats.gamesPlayed);
+  html += _statsRow('TIME PLAYED',        _fmtTimePlayed(stats.timePlayed));
+  html += _statsRowNum('TOTAL SCORE',     stats.totalScore);
+  html += _statsRowNum('BEST SCORE',      stats.bestScore);
+  html += _statsRowNum('LINES CLEARED',   stats.totalLinesCleared);
+  html += _statsRowNum('PIECES PLACED',   stats.totalBlocksPlaced || 0);
+  html += _statsRowNum('BLOCKS MINED',    stats.totalBlocksMined);
+  html += _statsRowNum('TOTAL XP',        stats.playerXP || 0);
+  html += _statsRow('PLAYER LEVEL',       typeof getLevelFromXP === 'function' ? getLevelFromXP(stats.playerXP || 0) : 1);
+  html += _statsRow('CURRENT STREAK',     (stats.currentStreak || 0) + ' day' + ((stats.currentStreak || 0) === 1 ? '' : 's'));
   // Prestige
   if (typeof getPrestigeLevel === 'function') {
     var pLevel = getPrestigeLevel();
@@ -394,10 +416,15 @@ function _renderTabModes(stats) {
     var d = pm[modeKey];
     var label = _MODE_LABELS[modeKey] || modeKey.toUpperCase();
     var avg = d.games > 0 ? Math.round(d.totalScore / d.games) : 0;
+    var isOverallBest = d.bestScore > 0 && d.bestScore >= stats.bestScore;
     html += _statsSection(label.toUpperCase());
-    html += _statsRow('GAMES',      d.games);
-    html += _statsRow('BEST SCORE', d.bestScore);
-    html += _statsRow('AVG SCORE',  avg);
+    html += _statsRow('GAMES', d.games);
+    html += isOverallBest ? _statsRowPb('BEST SCORE', d.bestScore) : _statsRow('BEST SCORE', d.bestScore);
+    html += _statsRow('AVG SCORE', avg);
+    if (d.bestLines > 0) html += _statsRow('BEST LINES', d.bestLines);
+    if (modeKey === 'combo_challenge' && d.bestComboStreak > 0) {
+      html += _statsRow('BEST COMBO STREAK', 'x' + d.bestComboStreak);
+    }
   });
   return html;
 }
@@ -421,11 +448,15 @@ function _renderTabRecords(stats) {
   var comboStr = (stats.highestComboMultiplier || 1.0) === 1.0 ? '1x' : stats.highestComboMultiplier + 'x';
   var sprintBest = typeof loadSprintBest === 'function' ? loadSprintBest() : null;
   var sprintBestStr = sprintBest ? fmtSprintTime(sprintBest.timeMs) : '--';
-  html += _statsRow('BEST SCORE',        stats.bestScore);
-  html += _statsRow('MOST LINES / GAME', stats.mostLinesOneGame || 0);
-  html += _statsRow('BEST COMBO',        comboStr);
-  html += _statsRow('FASTEST SPRINT',    sprintBestStr);
-  html += _statsRow('HIGHEST LEVEL',     stats.highestLevel || 1);
+  var comboBest = typeof loadComboChallengeBest === 'function' ? loadComboChallengeBest() : null;
+  html += _statsRowPb('BEST SCORE',        stats.bestScore);
+  html += _statsRow('MOST LINES / GAME',   stats.mostLinesOneGame || 0);
+  html += _statsRow('BEST COMBO',          comboStr);
+  html += _statsRow('FASTEST SPRINT',      sprintBest ? sprintBestStr : '--');
+  if (comboBest && comboBest.maxStreak > 0) {
+    html += _statsRow('BEST COMBO STREAK', 'x' + comboBest.maxStreak);
+  }
+  html += _statsRow('HIGHEST LEVEL',       stats.highestLevel || 1);
   html += _statsSection('SPECIAL MOVES');
   html += _statsRow('T-SPINS',           stats.totalTSpins || 0);
   html += _statsRow('PERFECT CLEARS',    stats.totalPerfectClears || 0);
@@ -635,14 +666,20 @@ function _renderTabHistory() {
   if (recent.length === 0) {
     return _statsSection('RECENT GAMES') + '<div class="stats-empty">No games recorded yet.</div>';
   }
+  // Build per-mode best scores to detect personal bests in history
+  var lifetimeStats = typeof loadLifetimeStats === 'function' ? loadLifetimeStats() : {};
+  var pm = lifetimeStats.perMode || {};
   var html = _statsSection('RECENT GAMES (last 20)');
   html += '<div class="stats-history-list">';
   recent.forEach(function (e) {
     var dur = e.durationSecs || 0;
     var durStr = dur >= 60 ? Math.floor(dur / 60) + 'm ' + (dur % 60) + 's' : dur + 's';
-    html += '<div class="stats-history-entry">' +
+    var modePb = pm[e.mode];
+    var isPb = modePb && e.score > 0 && e.score >= modePb.bestScore;
+    html += '<div class="stats-history-entry' + (isPb ? ' stats-history-pb' : '') + '">' +
       '<div class="stats-history-header">' +
         '<span class="stats-history-mode">' + _escStatsHtml((_MODE_LABELS[e.mode] || e.mode).toUpperCase()) + '</span>' +
+        (isPb ? '<span class="stats-pb-badge stats-history-pb-badge">\u2605 PB</span>' : '') +
         '<span class="stats-history-date">' + _escStatsHtml(e.date || '') + '</span>' +
       '</div>' +
       '<div class="stats-history-row">' +
@@ -675,6 +712,28 @@ function _switchStatsDashTab(tab) {
   _renderActiveStatsDashTab();
 }
 
+/** Animate all [data-count] elements in the stats content from 0 to target. */
+function _animateCountUp() {
+  var contentEl = document.getElementById('stats-dash-content');
+  if (!contentEl) return;
+  var els = contentEl.querySelectorAll('.stats-value[data-count]');
+  els.forEach(function (el) {
+    var target = parseInt(el.getAttribute('data-count'), 10) || 0;
+    if (target === 0) { el.textContent = '0'; return; }
+    var start = Date.now();
+    var dur = 700;
+    function step() {
+      var t = Math.min((Date.now() - start) / dur, 1);
+      var ease = 1 - Math.pow(1 - t, 3); // ease-out cubic
+      el.textContent = Math.round(ease * target).toLocaleString();
+      if (t < 1) requestAnimationFrame(step);
+      else el.textContent = target.toLocaleString();
+    }
+    el.textContent = '0';
+    requestAnimationFrame(step);
+  });
+}
+
 function _renderActiveStatsDashTab() {
   var contentEl = document.getElementById('stats-dash-content');
   if (!contentEl) return;
@@ -692,6 +751,7 @@ function _renderActiveStatsDashTab() {
     _drawTrendsChart();
   }
   if (_statsDashTab === 'modes') _drawModePieChart();
+  if (_statsDashTab === 'overview') _animateCountUp();
 }
 
 /** Render the full stats dashboard. */
