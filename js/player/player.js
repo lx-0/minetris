@@ -110,7 +110,8 @@ function onKeyDown(event) {
   }
   // Replay: handle speed keys, pause, and Escape; all other input is blocked.
   if (typeof isReplayMode !== 'undefined' && isReplayMode) {
-    if (event.code === 'Digit1' && typeof replaySetSpeed === 'function') replaySetSpeed(1);
+    if (event.code === 'Digit0' && typeof replaySetSpeed === 'function') replaySetSpeed(0.5);
+    else if (event.code === 'Digit1' && typeof replaySetSpeed === 'function') replaySetSpeed(1);
     else if (event.code === 'Digit2' && typeof replaySetSpeed === 'function') replaySetSpeed(2);
     else if (event.code === 'Digit4' && typeof replaySetSpeed === 'function') replaySetSpeed(4);
     else if (event.code === 'Space' && typeof replayTogglePause === 'function') replayTogglePause();

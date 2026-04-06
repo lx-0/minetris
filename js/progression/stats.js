@@ -662,6 +662,34 @@ function _renderTabMilestones(stats) {
 // ── Active tab state ──────────────────────────────────────────────────────────
 let _statsDashTab = 'overview';
 
+/** Find a saved replay matching a session history entry (by mode + score + date). */
+function _findReplayForEntry(entry) {
+  if (typeof replayLoadAll !== 'function') return null;
+  var replays = replayLoadAll();
+  return replays.find(function (r) {
+    return r.mode === entry.mode &&
+           r.score === entry.score &&
+           (r.date || '').slice(0, 10) === entry.date;
+  }) || null;
+}
+
+/** Launch a replay from the stats screen (closes stats overlay first). */
+function _statsLaunchReplay(entryIdx) {
+  var history = typeof loadSessionHistory === 'function' ? loadSessionHistory() : [];
+  var entry = history[entryIdx];
+  if (!entry) return;
+  var replay = _findReplayForEntry(entry);
+  if (!replay) return;
+  if (typeof closeStatsPanel === 'function') closeStatsPanel();
+  if (typeof resetGame === 'function') resetGame();
+  if (typeof replayStartPlayback === 'function') replayStartPlayback(replay, 1);
+  var blockerEl = document.getElementById('blocker');
+  if (blockerEl) blockerEl.style.display = 'none';
+  if (typeof controls !== 'undefined' && controls && typeof controls.lock === 'function') {
+    controls.lock();
+  }
+}
+
 function _renderTabHistory() {
   var history = typeof loadSessionHistory === 'function' ? loadSessionHistory() : [];
   var recent = history.slice(0, 20);
@@ -673,16 +701,18 @@ function _renderTabHistory() {
   var pm = lifetimeStats.perMode || {};
   var html = _statsSection('RECENT GAMES (last 20)');
   html += '<div class="stats-history-list">';
-  recent.forEach(function (e) {
+  recent.forEach(function (e, idx) {
     var dur = e.durationSecs || 0;
     var durStr = dur >= 60 ? Math.floor(dur / 60) + 'm ' + (dur % 60) + 's' : dur + 's';
     var modePb = pm[e.mode];
     var isPb = modePb && e.score > 0 && e.score >= modePb.bestScore;
+    var hasReplay = !!_findReplayForEntry(e);
     html += '<div class="stats-history-entry' + (isPb ? ' stats-history-pb' : '') + '">' +
       '<div class="stats-history-header">' +
         '<span class="stats-history-mode">' + _escStatsHtml((_MODE_LABELS[e.mode] || e.mode).toUpperCase()) + '</span>' +
         (isPb ? '<span class="stats-pb-badge stats-history-pb-badge">\u2605 PB</span>' : '') +
         '<span class="stats-history-date">' + _escStatsHtml(e.date || '') + '</span>' +
+        (hasReplay ? '<button class="stats-history-watch-btn" onclick="_statsLaunchReplay(' + idx + ')">\u25B6 Watch</button>' : '') +
       '</div>' +
       '<div class="stats-history-row">' +
         '<span>Score: ' + _escStatsHtml(String(e.score || 0)) + '</span>' +
