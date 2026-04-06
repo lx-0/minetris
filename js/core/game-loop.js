@@ -93,6 +93,29 @@ function animate() {
       }
     }
 
+    // Tick the countdown mode timer and speed stage escalation
+    if (isCountdownMode && countdownTimerActive && !countdownComplete) {
+      countdownElapsedMs += delta * 1000;
+
+      // Advance stage timer
+      if (countdownSpeedStage < COUNTDOWN_TOTAL_STAGES) {
+        countdownStageTimer += delta;
+        const timeUntilNext = COUNTDOWN_STAGE_INTERVAL - countdownStageTimer;
+
+        // Warning flash at 5 seconds before each stage advance
+        const shouldWarn = timeUntilNext <= COUNTDOWN_WARNING_SECS && timeUntilNext > 0;
+        if (shouldWarn !== countdownWarningActive) {
+          countdownWarningActive = shouldWarn;
+          if (typeof updateCountdownStageHUD === 'function') updateCountdownStageHUD();
+        }
+
+        // Advance stage when timer hits 30s
+        if (countdownStageTimer >= COUNTDOWN_STAGE_INTERVAL) {
+          if (typeof countdownAdvanceStage === 'function') countdownAdvanceStage();
+        }
+      }
+    }
+
     // Tick the blitz countdown timer
     if (isBlitzMode && blitzTimerActive && !blitzComplete) {
       blitzRemainingMs -= delta * 1000;
@@ -305,7 +328,9 @@ function animate() {
         ? Math.ceil(blitzRemainingMs / 1000)
         : isSprintMode
           ? Math.floor(sprintElapsedMs / 1000)
-          : Math.floor(gameElapsedSeconds);
+          : isCountdownMode
+            ? Math.floor(countdownElapsedMs / 1000)
+            : Math.floor(gameElapsedSeconds);
       if (currentSecond !== lastHudSecond) {
         lastHudSecond = currentSecond;
         updateScoreHUD();

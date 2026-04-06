@@ -124,6 +124,18 @@ function updateScoreHUD() {
     ccTimerEl.textContent = "Time: " + ccm + ":" + ccs;
     ccTimerEl.style.color = comboChallengeRemainingMs <= 10000 ? "#ff4444" : "";
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Combo";
+  } else if (isCountdownMode) {
+    // Countdown: show time survived, lines cleared, stage, and mode label
+    const cdSecs = Math.floor(countdownElapsedMs / 1000);
+    const cdm = Math.floor(cdSecs / 60).toString().padStart(2, "0");
+    const cds = (cdSecs % 60).toString().padStart(2, "0");
+    scoreEl.querySelector(".hud-stat:nth-child(2)").textContent = "Blocks: " + blocksMined;
+    scoreEl.querySelector(".hud-stat:nth-child(3)").textContent = "Lines: " + linesCleared;
+    const cdTimerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
+    cdTimerEl.textContent = "Time: " + cdm + ":" + cds;
+    cdTimerEl.style.color = countdownWarningActive ? "#ff4444" : "";
+    scoreEl.querySelector(".hud-stat:nth-child(5)").textContent =
+      "Stage " + countdownSpeedStage + "/" + COUNTDOWN_TOTAL_STAGES;
   } else if (isZenMode) {
     // Zen: show lines, meditation timer (elapsed), and Zen label
     const zenSecs = Math.floor(gameElapsedSeconds);
@@ -324,6 +336,12 @@ function triggerGameOver() {
       });
     }
     if (controls && controls.isLocked) controls.unlock();
+    return;
+  }
+
+  // Countdown mode: show countdown-specific overlay instead of generic game-over
+  if (isCountdownMode) {
+    if (typeof triggerCountdownComplete === 'function') triggerCountdownComplete();
     return;
   }
 

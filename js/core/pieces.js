@@ -364,6 +364,13 @@ function spawnFallingPiece() {
     const ccHudEl = document.getElementById('combo-challenge-hud');
     if (ccHudEl) ccHudEl.style.display = 'flex';
   }
+  // In Countdown mode, start the elapsed timer on the very first piece drop
+  if (isCountdownMode && !countdownTimerActive && !countdownComplete) {
+    countdownTimerActive = true;
+    const stageHudEl = document.getElementById('countdown-stage-hud');
+    if (stageHudEl) stageHudEl.style.display = 'flex';
+    if (typeof updateCountdownStageHUD === 'function') updateCountdownStageHUD();
+  }
   // In Daily challenge, start the 3-minute countdown on the very first piece drop
   if (isDailyChallenge && !dailyTimerActive && !isGameOver) {
     dailyTimerActive = true;

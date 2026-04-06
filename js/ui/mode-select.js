@@ -48,6 +48,18 @@
         const blitzBest = loadBlitzBest();
         blitzPbEl.textContent = blitzBest ? "Best: " + blitzBest.score : "";
       }
+      // Populate Countdown personal best
+      const countdownPbEl = document.getElementById("mode-pb-countdown");
+      if (countdownPbEl && typeof loadCountdownBest === 'function') {
+        const cdBest = loadCountdownBest();
+        if (cdBest) {
+          const cdm = Math.floor(cdBest.timeSecs / 60);
+          const cds = (cdBest.timeSecs % 60).toString().padStart(2, "0");
+          countdownPbEl.textContent = "Best: " + cdm + ":" + cds + " (Stage " + cdBest.stage + ")";
+        } else {
+          countdownPbEl.textContent = "";
+        }
+      }
       // Populate Marathon personal best
       const marathonPbEl = document.getElementById("mode-pb-marathon");
       if (marathonPbEl && typeof loadMarathonBest === 'function') {
@@ -142,7 +154,7 @@
       // Render World Card stats panel
       if (typeof renderWorldCard === "function") renderWorldCard();
       // Apply highlight to the specified mode card
-      ["tutorial", "classic", "sprint", "blitz", "marathon", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai"].forEach(function (mode) {
+      ["tutorial", "classic", "sprint", "blitz", "marathon", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai", "countdown"].forEach(function (mode) {
         const cardEl = document.getElementById("mode-card-" + mode);
         if (cardEl) {
           if (mode === highlightMode) {
@@ -545,6 +557,45 @@
         if (typeof metricsModePlayed === 'function') metricsModePlayed('combo_challenge');
         hideModeSelect();
         requestPointerLock();
+      });
+    }
+
+    // Wire up Countdown mode card
+    const countdownCardEl = document.getElementById("mode-card-countdown");
+    if (countdownCardEl) {
+      countdownCardEl.addEventListener("click", function () {
+        isDailyChallenge         = false;
+        gameRng                  = null;
+        isCountdownMode          = true;
+        countdownElapsedMs       = 0;
+        countdownComplete        = false;
+        countdownSpeedStage      = 1;
+        countdownStageTimer      = 0;
+        countdownWarningActive   = false;
+        // Start at Stage 1 speed (slow, ~0.4× base fall speed)
+        difficultyMultiplier = getCountdownMultiplier(1);
+        lastDifficultyTier   = 0;
+        applyWorldModifierHUD();
+        try { localStorage.setItem("mineCtris_lastMode", "countdown"); } catch (_) {}
+        if (typeof metricsModePlayed === 'function') metricsModePlayed('countdown');
+        hideModeSelect();
+        requestPointerLock();
+      });
+    }
+
+    // Wire up Countdown play-again button
+    const countdownPlayAgainBtn = document.getElementById("countdown-play-again-btn");
+    if (countdownPlayAgainBtn) {
+      countdownPlayAgainBtn.addEventListener("click", function () {
+        resetGame();
+      });
+    }
+
+    // Wire up Countdown main menu button
+    const countdownMainMenuBtn = document.getElementById("countdown-main-menu-btn");
+    if (countdownMainMenuBtn) {
+      countdownMainMenuBtn.addEventListener("click", function () {
+        resetGame();
       });
     }
 

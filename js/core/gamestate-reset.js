@@ -162,6 +162,24 @@ function resetGame() {
     if (timerEl) timerEl.style.color = "";
   }
 
+  // Reset countdown mode state
+  isCountdownMode        = false;
+  countdownTimerActive   = false;
+  countdownElapsedMs     = 0;
+  countdownComplete      = false;
+  countdownSpeedStage    = 1;
+  countdownStageTimer    = 0;
+  countdownWarningActive = false;
+  const countdownCompleteEl = document.getElementById("countdown-complete-screen");
+  if (countdownCompleteEl) countdownCompleteEl.style.display = "none";
+  const countdownStageHudEl = document.getElementById("countdown-stage-hud");
+  if (countdownStageHudEl) countdownStageHudEl.style.display = "none";
+  // Reset timer HUD color for countdown
+  if (scoreEl) {
+    const cdTimerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
+    if (cdTimerEl) cdTimerEl.style.color = "";
+  }
+
   // Reset combo challenge state
   isComboChallenge          = false;
   comboChallengeTimerActive = false;

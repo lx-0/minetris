@@ -1178,8 +1178,9 @@ const _MODE_LB_CONFIG = {
   depths:   { label: 'Depths',    icon: '\u{1F573}\ufe0f', scoreLabel: 'Score',   sortAsc: false },
   ultra:    { label: 'Ultra',     icon: '\u{1F525}',       scoreLabel: 'Score',   sortAsc: false },
   survival: { label: 'Survival',  icon: '\u2764',          scoreLabel: 'Score',   sortAsc: false },
-  daily:    { label: 'Daily',     icon: '\ud83d\udcc5',    scoreLabel: 'Score',   sortAsc: false },
-  puzzle:   { label: 'Puzzle',    icon: '\ud83e\udde9',    scoreLabel: 'Score',   sortAsc: false },
+  daily:     { label: 'Daily',     icon: '\ud83d\udcc5',    scoreLabel: 'Score',   sortAsc: false },
+  puzzle:    { label: 'Puzzle',    icon: '\ud83e\udde9',    scoreLabel: 'Score',   sortAsc: false },
+  countdown: { label: 'Countdown', icon: '\u23f3',          scoreLabel: 'Score',   sortAsc: false },
 };
 
 async function apiSubmitModeScore(displayName, mode, score, linesCleared) {

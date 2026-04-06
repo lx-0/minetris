@@ -469,6 +469,13 @@
                   <div class="mode-card-pb" id="mode-pb-combo_challenge"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="combo_challenge" title="Leaderboard">&#127942;</button>
                 </div>
+                <div class="mode-card mode-card-countdown" id="mode-card-countdown" data-mode="countdown" tabindex="0" role="button" aria-label="Countdown — Survive as gravity accelerates every 30 seconds through 10 speed stages">
+                  <div class="mode-card-icon">&#9203;</div>
+                  <div class="mode-card-name">Countdown</div>
+                  <div class="mode-card-desc">Survive as gravity accelerates every 30s. 10 stages. How long can you last?</div>
+                  <div class="mode-card-pb" id="mode-pb-countdown"></div>
+                  <button class="mode-card-lb-btn" data-lb-tab="countdown" title="Leaderboard">&#127942;</button>
+                </div>
               </div>
             </div>
             <!-- ── ADVENTURE ── -->
@@ -856,6 +863,14 @@
       <!-- Speed-up banner -->
       <div id="speed-up-banner"></div>
 
+      <!-- Countdown mode: stage progress HUD -->
+      <div id="countdown-stage-hud" style="display:none;">
+        <div id="countdown-stage-label">Stage 1/10</div>
+        <div id="countdown-stage-bar">
+          <div id="countdown-stage-bar-fill"></div>
+        </div>
+      </div>
+
       <!-- Danger warning -->
       <div id="danger-overlay"></div>
       <div id="danger-text">&#9888; BLOCKS TOO HIGH! &#9888;</div>
@@ -1040,6 +1055,25 @@
         <div id="bvs-rewards"></div>
         <button id="bvs-play-again-btn">Fight Another Boss</button>
         <button id="bvs-main-menu-btn">Main Menu</button>
+      </div>
+
+      <!-- Countdown complete screen -->
+      <div id="countdown-complete-screen" style="display:none;">
+        <div id="countdown-complete-title">GAME OVER</div>
+        <div id="countdown-complete-subtitle">COUNTDOWN MODE</div>
+        <div id="countdown-results">
+          <div id="countdown-time-label">TIME SURVIVED</div>
+          <div id="countdown-final-time">0:00</div>
+          <div id="countdown-stage-result"></div>
+          <div id="countdown-final-stage">Stage 1/10</div>
+          <div id="countdown-final-lines">0 lines</div>
+          <div id="countdown-score-label">SCORE</div>
+          <div id="countdown-final-score">0</div>
+        </div>
+        <div id="countdown-personal-best"></div>
+        <div id="countdown-xp-earned" class="xp-earned-display"></div>
+        <button id="countdown-play-again-btn">Play Again</button>
+        <button id="countdown-main-menu-btn">Main Menu</button>
       </div>
 
       <!-- Blitz complete screen -->
@@ -3030,6 +3064,7 @@
     <script src="js/modes/blitz.js"></script>
     <script src="js/modes/marathon.js"></script>
     <script src="js/modes/combo-challenge.js"></script>
+    <script src="js/modes/countdown.js"></script>
     <script src="js/modes/practice.js"></script>
     <script src="js/modes/zen.js"></script>
     <script src="js/modes/puzzle.js"></script>

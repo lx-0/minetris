@@ -586,3 +586,27 @@ let practiceUndoHistory = [];
 // Personal best is tracked by longest session time (tiebreak: lines cleared).
 let isZenMode = false;
 const ZEN_FIXED_MULTIPLIER = 0.35; // ~65% slower than default fall speed
+
+// ── Countdown mode state ──────────────────────────────────────────────────────
+// Survival mode: gravity escalates every 30s through 10 speed stages.
+// Stage 1 = slow (level 1 gravity). Stage 10 = near-instant drop.
+// Timer counts elapsed time survived. Game ends only on game over (no height
+// lose-condition while in countdown mode — speed alone creates the challenge).
+// Score = time_survived_seconds * 100 + linesCleared * 50.
+// Leaderboard ranked by score (time-dominated).
+let isCountdownMode          = false;
+let countdownTimerActive     = false;  // becomes true on first piece drop
+let countdownElapsedMs       = 0;      // milliseconds survived
+let countdownComplete        = false;  // true once game-over fires
+let countdownSpeedStage      = 1;      // current stage (1–10)
+let countdownStageTimer      = 0;      // seconds since last stage advance
+let countdownWarningActive   = false;  // true during the 5s warning before a stage change
+
+const COUNTDOWN_TOTAL_STAGES   = 10;
+const COUNTDOWN_STAGE_INTERVAL = 30;    // seconds between speed stages
+const COUNTDOWN_WARNING_SECS   = 5;     // warn this many seconds before each stage advance
+// Stage multipliers: Stage 1 = slow, Stage 10 = near-instant
+// Uses pow(1.65, stage-1) * 0.4 to go from ~0.4 (slow) up to ~0.4*1.65^9 ≈ 46× (very fast)
+function getCountdownMultiplier(stage) {
+  return Math.pow(1.65, stage - 1) * 0.4;
+}
