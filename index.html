@@ -99,7 +99,8 @@
       </div>
     </div>
     <script>
-      // ── Loading screen: progress tracking + rotating tips ────────────────────
+      // ── Loading screen: rotating tips + block animation ──────────────────────
+      // Progress tracking is handled by js/loader.js (stage-based).
       (function() {
         var TIPS = [
           // Controls
@@ -132,7 +133,6 @@
 
         var tipIndex = Math.floor(Math.random() * TIPS.length);
         var tipEl = document.getElementById('loading-tip');
-        var tipInterval = null;
 
         function rotateTip() {
           if (!tipEl) return;
@@ -146,13 +146,11 @@
           }, 350);
         }
 
-        // Set first tip immediately
         if (tipEl) {
           tipEl.textContent = TIPS[tipIndex];
           tipEl.classList.add('tip-in');
         }
-        tipInterval = setInterval(rotateTip, 3000);
-        window.__minetrisTipInterval = tipInterval;
+        window.__minetrisTipInterval = setInterval(rotateTip, 3000);
 
         // Animate block icons in sequence
         var blocks = document.querySelectorAll('.ls-block');
@@ -163,49 +161,10 @@
         }
         cycleBlocks();
         window.__minetrisBlockInterval = setInterval(cycleBlocks, 400);
-
-        // Progress tracking
-        var totalScripts = 0;
-        var loadedScripts = 0;
-        var bar = null;
-        var pct = null;
-
-        function updateProgress() {
-          if (!bar) bar = document.getElementById('loading-bar');
-          if (!pct) pct = document.getElementById('loading-pct');
-          if (!bar || !pct) return;
-          var p = totalScripts > 0 ? Math.round((loadedScripts / totalScripts) * 100) : 0;
-          bar.style.width = p + '%';
-          pct.textContent = (loadedScripts < totalScripts ? p : 100) + '%';
-        }
-
-        var observer = new MutationObserver(function(mutations) {
-          mutations.forEach(function(m) {
-            m.addedNodes.forEach(function(node) {
-              if (node.nodeName === 'SCRIPT' && node.src) {
-                totalScripts++;
-                node.addEventListener('load', function() { loadedScripts++; updateProgress(); });
-                node.addEventListener('error', function() { loadedScripts++; updateProgress(); });
-              }
-            });
-          });
-        });
-        observer.observe(document.documentElement, { childList: true, subtree: true });
-
-        var existing = document.querySelectorAll('script[src]');
-        totalScripts += existing.length;
-        existing.forEach(function(s) {
-          if (s.readyState === 'complete' || s.readyState === 'loaded') {
-            loadedScripts++;
-          } else {
-            s.addEventListener('load', function() { loadedScripts++; updateProgress(); });
-            s.addEventListener('error', function() { loadedScripts++; updateProgress(); });
-          }
-        });
-
-        window.__minetrisLoadingObserver = observer;
       })();
     </script>
+    <!-- Load orchestrator: stage-based progress tracking, minimum display time -->
+    <script src="js/loader.js"></script>
     <noscript>
       <div style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#111;color:#fff;font-family:monospace,sans-serif;text-align:center;padding:2rem;">
         <div>
@@ -3194,6 +3153,7 @@
     <script src="js/rendering/resize.js"></script>
     <script src="js/rendering/parallax-background.js"></script>
     <script src="js/rendering/board-backgrounds.js"></script>
+    <script>if (window.MineLoader) window.MineLoader.setStage('scripts');</script>
         <script src="js/main.js"></script>
     <script src="js/local-multi/local-multi.js"></script>
     <script src="js/ai/ai-opponent.js"></script>

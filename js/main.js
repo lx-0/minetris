@@ -21,6 +21,7 @@ function init() {
   }
 
   initAudio();
+  if (window.MineLoader) window.MineLoader.setStage('audio');
   if (typeof initI18n === 'function') initI18n();
   initSettings();
   if (typeof applyTranslations === 'function') applyTranslations();
@@ -65,6 +66,7 @@ function init() {
   if (typeof _applyRendererSettings === 'function') {
     _applyRendererSettings(graphicsQualityTier);
   }
+  if (window.MineLoader) window.MineLoader.setStage('assets');
 
   initSky();
   // Initialise parallax background (after sky so it can toggle sky mesh visibility)
@@ -1477,12 +1479,21 @@ try {
   init();
   window.__MINETRIS_INIT_DONE = true;
   clearTimeout(window.__MINETRIS_INIT_TIMER);
-  hideLoadingScreen();
+  if (window.MineLoader) {
+    window.MineLoader.setStage('game_ready');
+    window.MineLoader.complete();
+  } else {
+    hideLoadingScreen();
+  }
 } catch (error) {
   console.error("Error during initialization:", error);
   window.__MINETRIS_INIT_DONE = true;
   clearTimeout(window.__MINETRIS_INIT_TIMER);
-  hideLoadingScreen();
+  if (window.MineLoader) {
+    window.MineLoader.complete();
+  } else {
+    hideLoadingScreen();
+  }
   var el = document.createElement('div');
   el.id = 'init-error-screen';
   el.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#111;color:#fff;font-family:monospace,sans-serif;text-align:center;padding:2rem;';
