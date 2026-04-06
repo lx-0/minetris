@@ -1101,8 +1101,8 @@ function applyNudge(dx, dz) {
   piece.userData.nudgeOffsetX = newOffsetX;
   piece.userData.nudgeOffsetZ = newOffsetZ;
 
-  // Rotate/nudge click sound
-  if (typeof playRotateSound === 'function') playRotateSound();
+  // Move click sound (lateral nudge — distinct from rotation click)
+  if (typeof playPieceMoveSound === 'function') playPieceMoveSound();
   if (typeof tutorialNotify === "function") tutorialNotify("nudge");
   if (typeof tutorialTip === "function") tutorialTip("firstNudge");
   // Emissive pulse (visual feedback); nudgeCooldown kept for legacy UI-hint compat.
@@ -1423,6 +1423,8 @@ function updateFallingPieces(delta) {
 
     checkAndApplyPlayerPush(pieceToLand);
     playPlaceSound();
+    // Procedural lock clunk (Tone.js) — layers a clunk on top of the Howler placement sound
+    if (typeof playPieceLockSound === 'function') playPieceLockSound();
     // Hard drop impact sound — spatial pan based on piece X position
     if (typeof playHardDropSound === 'function') {
       const _hdPx = pieceToLand.position.x;

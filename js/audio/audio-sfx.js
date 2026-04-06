@@ -413,6 +413,52 @@ function _setSfxPan(boardX, panRange) {
   try { sfxPanner.pan.value = pan; } catch (_e) {}
 }
 
+/**
+ * Piece lateral move — softer sine click, distinct from rotation.
+ * Throttled: ignores calls within 30ms to avoid DAS spam.
+ */
+let _lastMoveSoundTime = 0;
+function playPieceMoveSound() {
+  if (!audioReady || !moveSynth) return;
+  var now = performance.now();
+  if (now - _lastMoveSoundTime < 30) return;
+  _lastMoveSoundTime = now;
+  var pitches = ['A3', 'B3', 'C4'];
+  try {
+    moveSynth.triggerAttackRelease(_pick(pitches), '64n', Tone.now());
+  } catch (_e) {}
+}
+
+/**
+ * Soft drop activation tick — light high ping when soft drop starts.
+ * Throttled: only fires once per soft-drop activation (100ms gate).
+ */
+let _lastSoftDropSoundTime = 0;
+function playSoftDropSound() {
+  if (!audioReady || !softDropSynth) return;
+  var now = performance.now();
+  if (now - _lastSoftDropSoundTime < 100) return;
+  _lastSoftDropSoundTime = now;
+  try {
+    softDropSynth.triggerAttackRelease('C6', '64n', Tone.now(), 0.4);
+  } catch (_e) {}
+}
+
+/**
+ * Piece lock clunk — membrane thud when piece locks into place.
+ * Lighter than hard drop; distinct from the block-placement Howler sound.
+ */
+function playPieceLockSound() {
+  if (!audioReady || !lockClunkSynth) return;
+  try {
+    lockClunkSynth.triggerAttackRelease('G2', '16n', Tone.now());
+  } catch (_e) {}
+  // Short noise creak layer for tactile weight
+  if (holdChestSynth) {
+    try { holdChestSynth.triggerAttackRelease('32n', Tone.now() + 0.02); } catch (_e) {}
+  }
+}
+
 /** Piece nudge/rotate click — short mechanical tick. */
 function playRotateSound() {
   if (!audioReady || !rotateClickSynth) return;
@@ -538,9 +584,10 @@ function applyAudioSettings(master, sfx, music) {
       : -100;
   }
 
-  // Tone.js SFX gain bus: SFX slider controls all SFX synths independently of music
+  // Tone.js SFX gain bus: SFX slider controls all SFX synths independently of music.
+  // Respect SFX mute — if muted, keep gain at 0 regardless of slider.
   if (typeof sfxGain !== 'undefined' && sfxGain) {
-    sfxGain.gain.rampTo(sfx / 100, 0.05);
+    sfxGain.gain.rampTo(_sfxMuted ? 0 : sfx / 100, 0.05);
   }
 
   // Ambient music gain (relative within Tone, controlled by music slider)
@@ -557,4 +604,28 @@ function applyAudioSettings(master, sfx, music) {
   if (typeof applyEventAudioVolume === 'function') {
     applyEventAudioVolume(music);
   }
+}
+
+// ── SFX mute toggle ────────────────────────────────────────────────────────────
+
+var _sfxMuted = false;
+
+/**
+ * Mute or unmute all SFX (independent of the SFX volume slider).
+ * When muted, sfxGain is silenced; when unmuted, restored to current slider level.
+ * @param {boolean} muted
+ */
+function setSfxMuted(muted) {
+  _sfxMuted = !!muted;
+  if (typeof sfxGain === 'undefined' || !sfxGain) return;
+  if (_sfxMuted) {
+    sfxGain.gain.rampTo(0, 0.05);
+  } else {
+    sfxGain.gain.rampTo(_volSfx / 100, 0.05);
+  }
+}
+
+/** Returns true if SFX is currently muted. */
+function isSfxMuted() {
+  return _sfxMuted;
 }

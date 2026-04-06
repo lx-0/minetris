@@ -14,6 +14,7 @@ const THEME_STORAGE_KEY          = "mineCtris_theme";
 const THEME_SCORE_UNLOCKS_KEY    = "mineCtris_themeScoreUnlocks";
 const MOBILE_DIFFICULTY_KEY = "mineCtris_mobileDifficulty";
 const DYNAMIC_MUSIC_KEY     = "mineCtris_dynamicMusic";
+const SFX_MUTE_KEY          = "mineCtris_sfxMute";
 const FONT_SIZE_KEY         = "mineCtris_uiFontSize";
 const GLOW_INTENSITY_KEY    = "mineCtris_glowIntensity";
 const LOCK_DELAY_KEY        = "mineCtris_lockDelay";
@@ -96,6 +97,24 @@ function _loadDynamicMusic() {
 function _saveDynamicMusic(enabled) {
   try {
     localStorage.setItem(DYNAMIC_MUSIC_KEY, String(enabled));
+  } catch (_) {}
+}
+
+// ── SFX mute toggle ───────────────────────────────────────────────────────────
+
+function _loadSfxMute() {
+  try {
+    const raw = localStorage.getItem(SFX_MUTE_KEY);
+    const muted = raw === "true";
+    if (typeof setSfxMuted === 'function') setSfxMuted(muted);
+    const toggle = document.getElementById("sfx-mute-toggle");
+    if (toggle) toggle.checked = muted;
+  } catch (_) {}
+}
+
+function _saveSfxMute(muted) {
+  try {
+    localStorage.setItem(SFX_MUTE_KEY, String(muted));
   } catch (_) {}
 }
 
@@ -1277,6 +1296,7 @@ function _initCloudSyncSection() {
 function initSettings() {
   _loadAudioSettings();
   applyAudioSettings(_audioSettings.master, _audioSettings.sfx, _audioSettings.music);
+  _loadSfxMute();
   _loadDynamicMusic();
   _loadReducedMotion();
   _loadGlowIntensity();
@@ -1323,6 +1343,15 @@ function initSettings() {
   if (masterSlider) masterSlider.addEventListener("input", makeHandler("master", "vol-master-val"));
   if (sfxSlider)    sfxSlider.addEventListener("input",    makeHandler("sfx",    "vol-sfx-val"));
   if (musicSlider)  musicSlider.addEventListener("input",  makeHandler("music",  "vol-music-val"));
+
+  const sfxMuteToggle = document.getElementById("sfx-mute-toggle");
+  if (sfxMuteToggle) {
+    sfxMuteToggle.addEventListener("change", function () {
+      const muted = this.checked;
+      _saveSfxMute(muted);
+      if (typeof setSfxMuted === 'function') setSfxMuted(muted);
+    });
+  }
 
   const dynamicMusicToggle = document.getElementById("dynamic-music-toggle");
   if (dynamicMusicToggle) {

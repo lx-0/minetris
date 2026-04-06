@@ -43,6 +43,9 @@ let menuClickSynth      = null;   // UI button click sound
 let anvilSynth          = null;   // metallic clang for line clear
 let glassBreakSynth     = null;   // glass shatter noise for line clear
 let notifChimeSynth     = null;   // soft two-note sparkle for notification toasts
+let moveSynth           = null;   // subtle click for piece lateral move
+let softDropSynth       = null;   // short tick for soft drop activation
+let lockClunkSynth      = null;   // deep clunk for piece lock
 let masterCompressor = null;
 let masterReverb = null;
 let masterLimiter = null;
@@ -343,6 +346,28 @@ function initAudio() {
       },
     }).connect(sfxGain);
     notifChimeSynth.volume.value = -14;
+
+    // Piece move click — sine, softer and lower than rotate click
+    moveSynth = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.001, decay: 0.03, sustain: 0.0, release: 0.02 },
+    }).connect(sfxGain);
+    moveSynth.volume.value = -28;
+
+    // Soft drop tick — high sine ping, very brief
+    softDropSynth = new Tone.Synth({
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.001, decay: 0.045, sustain: 0.0, release: 0.02 },
+    }).connect(sfxGain);
+    softDropSynth.volume.value = -26;
+
+    // Piece lock clunk — membrane thud (lighter than hard drop) + noise creak
+    lockClunkSynth = new Tone.MembraneSynth({
+      pitchDecay: 0.05,
+      octaves: 3,
+      envelope: { attack: 0.001, decay: 0.12, sustain: 0.0, release: 0.08 },
+    }).connect(sfxGain);
+    lockClunkSynth.volume.value = -8;
 
     _initBgMusic();
     _initEnvironmentalAudio();

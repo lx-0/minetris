@@ -239,6 +239,7 @@ function _activateSoftDrop() {
   // Velocity to achieve ~1 block per softDropMs.
   const bs = typeof BLOCK_SIZE !== 'undefined' ? BLOCK_SIZE : 1;
   piece.userData.velocity.y = -(bs * 1000 / _dasSettings.softDropMs);
+  if (typeof playSoftDropSound === 'function') playSoftDropSound();
 }
 
 function _deactivateSoftDrop() {
