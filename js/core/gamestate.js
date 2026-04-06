@@ -815,9 +815,22 @@ function triggerGameOver() {
   // Populate replay list on game-over screen
   if (typeof replayInitGameOverUI === 'function') replayInitGameOverUI();
 
-  // Show Game Over overlay
+  // Show Game Over overlay (after cinematic sequence, or immediately if unavailable)
   const gameOverEl = document.getElementById("game-over-screen");
-  if (gameOverEl) gameOverEl.style.display = "flex";
+  const _showGameOverEl = function () {
+    if (gameOverEl) gameOverEl.style.display = "flex";
+  };
+  if (typeof startGameOverSequence === 'function' && !_inExpedition && !isSurvivalMode && !isEndlessSurvivalMode) {
+    const _isPB = _goHsRank === 1;
+    startGameOverSequence(
+      state.score,
+      _isPB,
+      { linesCleared: state.linesCleared, blocksMined: state.blocksMined, timeStr: mm + ':' + ss },
+      _showGameOverEl
+    );
+  } else {
+    _showGameOverEl();
+  }
 
   // Generate score card
   if (typeof ScoreCard !== 'undefined') {

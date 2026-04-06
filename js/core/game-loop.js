@@ -563,6 +563,9 @@ function animate() {
   // Co-op: interpolate remote avatar
   if (typeof coopAvatar !== 'undefined') coopAvatar.tick();
 
+  // Game-over sequence animation update (runs while isGameOver, before render)
+  if (typeof window._goSeqUpdateFn === 'function') window._goSeqUpdateFn(delta);
+
   if (composer) {
     composer.render(delta);
   } else {
