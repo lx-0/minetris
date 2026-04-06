@@ -57,7 +57,7 @@ const SPEED_MOD_CHAOS_MIN   = 0.8;   // chaos: floor multiplier
 const SPEED_MOD_CHAOS_RANGE = 2.7;   // chaos: oscillation amplitude (min + range * |sin|)
 
 // Next-piece preview queue size (how many upcoming pieces to show)
-const NEXT_QUEUE_SIZE = 3;
+const NEXT_QUEUE_SIZE = 5;
 
 // Piece directional nudge constants
 const NUDGE_PROXIMITY_BLOCKS = 10;     // blocks above ground to activate nudge zone

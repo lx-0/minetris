@@ -154,13 +154,13 @@ function _hashDateAC(str) {
 /**
  * Generate the expected piece-index sequence for a seeded daily game.
  * Mirrors pieces.js spawnFallingPiece + initPieceQueue logic exactly:
- *   - NEXT_QUEUE_SIZE = 3 initial fills
+ *   - NEXT_QUEUE_SIZE = 5 initial fills
  *   - Each spawn: 1 refill + spawnX + spawnZ + rotationInterval = 4 rng() calls
  * Standard pool = indices 1-7 (no diamond until level 7; first ~30 pieces are pre-diamond).
  */
 function _dailyPieceSequence(dateStr, count) {
   const rng = _mulberry32(_hashDateAC(dateStr));
-  const QUEUE = 3;
+  const QUEUE = 5;
   const POOL  = 7;
   const pieceIdx = () => Math.floor(rng() * POOL) + 1;
 
