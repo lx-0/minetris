@@ -1682,6 +1682,21 @@
               </div>
             </div>
             <div class="settings-section-divider" style="margin-top:10px"></div>
+
+            <!-- Lock delay tuning -->
+            <div class="settings-label settings-label-section">Lock Delay</div>
+            <div class="settings-hint" style="margin-bottom:6px">
+              How long a piece waits on a surface before locking. Move or rotate to reset the timer (up to 15 resets). Zen mode uses Relaxed; Sprint uses Standard.
+            </div>
+            <div class="settings-row">
+              <label class="settings-label" for="lock-delay-select">Delay</label>
+              <select id="lock-delay-select" class="settings-select">
+                <option value="200">Fast (200ms)</option>
+                <option value="500" selected>Standard (500ms)</option>
+                <option value="800">Relaxed (800ms)</option>
+              </select>
+            </div>
+            <div class="settings-section-divider" style="margin-top:10px"></div>
             <div class="settings-label settings-label-section">Gamepad</div>
             <div id="gamepad-status-text" class="settings-hint" style="color:#aaa">&#10060; No gamepad detected &#8212; plug in a controller and press any button.</div>
             <div class="settings-hint" style="margin-top:6px">Default gamepad layout (Standard / Xbox):</div>

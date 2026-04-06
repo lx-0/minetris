@@ -16,6 +16,10 @@ const MOBILE_DIFFICULTY_KEY = "mineCtris_mobileDifficulty";
 const DYNAMIC_MUSIC_KEY     = "mineCtris_dynamicMusic";
 const FONT_SIZE_KEY         = "mineCtris_uiFontSize";
 const GLOW_INTENSITY_KEY    = "mineCtris_glowIntensity";
+const LOCK_DELAY_KEY        = "mineCtris_lockDelay";
+
+// Lock delay in milliseconds: 200 (fast), 500 (standard), 800 (relaxed). Default 500.
+let playerLockDelayMs = 500;
 
 // Global: true = apply 20% speed reduction on mobile. Default ON for touch devices.
 let mobileDifficultyEnabled = false;
@@ -129,6 +133,23 @@ function applyGlowIntensity(label) {
   document.body.classList.toggle('board-glow-off', label === 'off');
   try {
     localStorage.setItem(GLOW_INTENSITY_KEY, label);
+  } catch (_) {}
+}
+
+// ── Lock delay ────────────────────────────────────────────────────────────────
+
+function _loadLockDelay() {
+  try {
+    const raw = localStorage.getItem(LOCK_DELAY_KEY);
+    const v = parseInt(raw, 10);
+    if (v === 200 || v === 500 || v === 800) playerLockDelayMs = v;
+  } catch (_) {}
+}
+
+function _saveLockDelay(ms) {
+  playerLockDelayMs = ms;
+  try {
+    localStorage.setItem(LOCK_DELAY_KEY, String(ms));
   } catch (_) {}
 }
 
@@ -1175,6 +1196,7 @@ function initSettings() {
   }
   _loadColorblindMode();
   _loadHighContrast();
+  _loadLockDelay();
   _loadTheme();
   if (typeof ghostReplayLoadSetting === 'function') ghostReplayLoadSetting();
   if (typeof initGraphicsQuality === 'function') initGraphicsQuality();
@@ -1312,6 +1334,14 @@ function initSettings() {
     } catch (_) {}
     glowSelect.addEventListener("change", function () {
       applyGlowIntensity(this.value);
+    });
+  }
+
+  const lockDelaySelect = document.getElementById("lock-delay-select");
+  if (lockDelaySelect) {
+    lockDelaySelect.value = String(playerLockDelayMs);
+    lockDelaySelect.addEventListener("change", function () {
+      _saveLockDelay(parseInt(this.value, 10));
     });
   }
 

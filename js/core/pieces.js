@@ -717,6 +717,8 @@ function rotatePlayerPiece(cw) {
       if (typeof tutorialNotify === 'function') tutorialNotify('rotate');
       if (typeof tutorialTip   === 'function') tutorialTip('firstNudge');
       if (typeof finesseCountInput === 'function') finesseCountInput();
+      // Reset player lock delay on successful rotation (up to 15 resets).
+      _tryResetPlayerLockDelay(piece);
       return true;
     }
   }
@@ -992,7 +994,68 @@ function applyNudge(dx, dz) {
     center.divideScalar(piece.children.length);
     spawnNudgeSwoosh(center, dx, dz, piece.userData.colorIndex);
   }
+  // Reset player lock delay on successful move (up to 15 resets).
+  _tryResetPlayerLockDelay(piece);
   return true;
+}
+
+// ── Player lock delay helpers ─────────────────────────────────────────────────
+// Returns the effective lock delay in seconds for the current game mode.
+// Zen = relaxed (0.8 s), Sprint/Battle = standard (0.5 s), else use setting.
+function _getPlayerLockDelaySecs() {
+  if (typeof isZenMode    !== 'undefined' && isZenMode)    return 0.8;
+  if (typeof isSprintMode !== 'undefined' && isSprintMode) return 0.5;
+  if (typeof isBattleMode !== 'undefined' && isBattleMode) return 0.5;
+  const ms = typeof playerLockDelayMs !== 'undefined' ? playerLockDelayMs : 500;
+  return ms / 1000;
+}
+
+// Enable transparent fade on all blocks of a piece at the start of lock delay.
+function _startLockDelayVisual(piece) {
+  piece.children.forEach(function (block) {
+    if (!block.material) return;
+    block.userData._ldOrigTransparent = block.material.transparent;
+    block.userData._ldOrigOpacity     = block.material.opacity;
+    block.material.transparent = true;
+    block.material.needsUpdate  = true;
+  });
+}
+
+// Update block opacity to show countdown (1.0 → 0.35 as time runs out).
+function _updateLockDelayVisual(piece) {
+  const rem   = piece.userData.playerLockDelayRemaining;
+  const total = piece.userData.playerLockDelayTotal;
+  if (rem === undefined || total === undefined || total <= 0) return;
+  const t       = Math.max(0, Math.min(1, rem / total));
+  const opacity = 0.35 + t * 0.65;
+  piece.children.forEach(function (block) {
+    if (!block.material) return;
+    block.material.opacity    = opacity;
+    block.material.needsUpdate = true;
+  });
+}
+
+// Restore original opacity/transparency after lock delay ends or resets.
+function _restoreLockDelayVisual(piece) {
+  piece.children.forEach(function (block) {
+    if (!block.material) return;
+    block.material.transparent = block.userData._ldOrigTransparent !== undefined ? block.userData._ldOrigTransparent : false;
+    block.material.opacity     = block.userData._ldOrigOpacity     !== undefined ? block.userData._ldOrigOpacity     : 1.0;
+    block.material.needsUpdate = true;
+    delete block.userData._ldOrigTransparent;
+    delete block.userData._ldOrigOpacity;
+  });
+}
+
+// Try to reset the player lock delay for the given piece (on move / rotate).
+// Does nothing if no delay is active or the reset cap (15) is reached.
+function _tryResetPlayerLockDelay(piece) {
+  if (piece.userData.playerLockDelayRemaining === undefined) return;
+  const resets = piece.userData.playerLockDelayResets || 0;
+  if (resets >= 15) return;
+  piece.userData.playerLockDelayResets    = resets + 1;
+  piece.userData.playerLockDelayRemaining = piece.userData.playerLockDelayTotal;
+  _updateLockDelayVisual(piece);
 }
 
 function updateFallingPieces(delta) {
@@ -1034,6 +1097,18 @@ function updateFallingPieces(delta) {
         landedPieces.push(i);
       }
       return; // Skip normal fall physics for this piece.
+    }
+
+    // ── Player lock delay: tick countdown, apply visual, lock when expired ────
+    if (piece.userData.playerLockDelayRemaining !== undefined) {
+      piece.userData.playerLockDelayRemaining -= effectiveDelta;
+      _updateLockDelayVisual(piece);
+      updatePieceShadow(piece);
+      if (piece.userData.playerLockDelayRemaining <= 0) {
+        _restoreLockDelayVisual(piece);
+        landedPieces.push(i);
+      }
+      return; // Skip normal fall physics — piece is resting on surface.
     }
 
     piece.userData.timeSinceRotation += delta;
@@ -1191,7 +1266,18 @@ function updateFallingPieces(delta) {
         }
         // Do not add to landedPieces yet — handled in the lock-delay tick above.
       } else {
-        landedPieces.push(i);
+        // Player lock delay: give the player time to move/rotate before locking.
+        const _pld = _getPlayerLockDelaySecs();
+        if (_pld > 0 && piece.userData.playerLockDelayRemaining === undefined) {
+          piece.userData.playerLockDelayRemaining = _pld;
+          piece.userData.playerLockDelayTotal     = _pld;
+          piece.userData.playerLockDelayResets    = 0;
+          _startLockDelayVisual(piece);
+          // Do not add to landedPieces yet — handled in the player-lock-delay tick.
+        } else if (piece.userData.playerLockDelayRemaining === undefined) {
+          landedPieces.push(i);
+        }
+        // If playerLockDelayRemaining is already set, it was already counted; skip.
       }
     }
   });
@@ -1201,6 +1287,10 @@ function updateFallingPieces(delta) {
     // Clean up Ice biome lock-delay state (may be set if delay just expired).
     delete pieceToLand.userData.lockDelayRemaining;
     delete pieceToLand.userData.lockDriftVel;
+    // Clean up player lock-delay state.
+    delete pieceToLand.userData.playerLockDelayRemaining;
+    delete pieceToLand.userData.playerLockDelayTotal;
+    delete pieceToLand.userData.playerLockDelayResets;
 
     checkAndApplyPlayerPush(pieceToLand);
     playPlaceSound();
