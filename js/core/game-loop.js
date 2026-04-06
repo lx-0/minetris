@@ -269,6 +269,7 @@ function animate() {
       if (isBattleMode && typeof battleHud !== 'undefined') battleHud.tick(delta);
       if (isBattleMode && typeof checkBattleScoreRace === 'function') checkBattleScoreRace(delta);
       updateLandingRings(delta);
+      updateSnapAnimations(delta);
       updateTrails(delta, elapsedTime);
       updateAuras(delta, camera);
       updateDifficulty(delta);

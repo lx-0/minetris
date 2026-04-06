@@ -64,6 +64,59 @@ function updateLandingRings(delta) {
   }
 }
 
+// ── Block placement snap animation ───────────────────────────────────────────
+// Each placed block briefly squashes on impact then springs back to full size,
+// with a short upward slide from a slight downward offset. Simulates a crisp
+// "snap into the grid" feel without any persistent visual state.
+const _SNAP_ANIM_DURATION = 0.22;   // seconds
+const _snapAnimActive = [];          // { block, targetY, age }
+
+function spawnSnapAnimation(block) {
+  const targetY = block.position.y;
+  block.position.y = targetY - BLOCK_SIZE * 0.14;
+  block.scale.set(1.18, 0.72, 1.18);
+  _snapAnimActive.push({ block, targetY, age: 0 });
+}
+
+function updateSnapAnimations(delta) {
+  for (let i = _snapAnimActive.length - 1; i >= 0; i--) {
+    const a = _snapAnimActive[i];
+    // Block may have been removed by a line clear — skip and clean up
+    if (!a.block.parent) {
+      _snapAnimActive.splice(i, 1);
+      continue;
+    }
+    a.age += delta;
+    if (a.age >= _SNAP_ANIM_DURATION) {
+      a.block.scale.set(1, 1, 1);
+      a.block.position.y = a.targetY;
+      _snapAnimActive.splice(i, 1);
+      continue;
+    }
+    const t = a.age / _SNAP_ANIM_DURATION;
+
+    // Scale: squash phase → spring overshoot → settle
+    let scaleX, scaleY;
+    if (t < 0.4) {
+      // Recover from squash toward 1.0
+      const p = t / 0.4;
+      scaleX = 1.18 - 0.18 * p;
+      scaleY = 0.72 + 0.28 * p;
+    } else {
+      // Spring with gentle overshoot
+      const p = (t - 0.4) / 0.6;
+      const spring = Math.sin(p * Math.PI * 2.2) * 0.07 * (1 - p);
+      scaleY = 1.0 + spring;
+      scaleX = 1.0 - spring * 0.5;
+    }
+    a.block.scale.set(scaleX, scaleY, scaleX);
+
+    // Slide Y: ease-out cubic from offset to target
+    const ease = 1 - Math.pow(1 - Math.min(t / 0.35, 1), 3);
+    a.block.position.y = a.targetY - BLOCK_SIZE * 0.14 * (1 - ease);
+  }
+}
+
 function createPiece3D(shapeData, colorIndex) {
   const pieceGroup = new THREE.Group();
   const color = COLORS[colorIndex];
@@ -1019,6 +1072,7 @@ function updateFallingPieces(delta) {
       block.position.copy(block.userData.tempVec);
       block.quaternion.copy(block.userData.tempQuat);
       block.name = "landed_block";
+      spawnSnapAnimation(block);
       registerBlock(block);
       // Underground grid: register blocks that land below surface (Y < 0.5)
       if (block.userData.gridPos && block.userData.gridPos.y < 0.5 &&
