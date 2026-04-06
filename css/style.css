@@ -6681,6 +6681,69 @@ body.board-glow-off #board-powerup-overlay { display: none !important; }
   color: #ff6600;
 }
 
+/* ── Piece Skin Selector ── */
+#piece-skin-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.piece-skin-btn {
+  flex: 1 1 calc(25% - 8px);
+  min-width: 72px;
+  font-family: "Press Start 2P", cursive;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #444;
+  border-radius: 6px;
+  padding: 7px 4px;
+  cursor: pointer;
+  color: #aaa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.piece-skin-btn:hover:not(:disabled) {
+  border-color: #888;
+  color: #fff;
+}
+.piece-skin-btn-selected {
+  border-color: #0f0;
+  color: #0f0;
+}
+.piece-skin-btn-locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.piece-skin-swatches {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+.piece-skin-swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+.piece-skin-name {
+  font-size: 6px;
+}
+.piece-skin-sub {
+  font-size: 5px;
+  color: #888;
+}
+.piece-skin-hint {
+  color: #ff6600;
+}
+
 /* ── Graphics Quality selector ── */
 #gfx-quality-selector {
   display: flex;

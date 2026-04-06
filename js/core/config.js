@@ -953,6 +953,92 @@ const BLOCK_SKIN_PALETTES = {
     },
   },
 
+  // ── Static skins — level-gated via piece skin selector ────────────────────
+
+  pixel: {
+    colors: [
+      null,
+      0xcc6633, // 1 → terracotta      (was dirt brown)
+      0x778899, // 2 → slate blue      (was stone grey)
+      0xffdd44, // 3 → pixel gold      (was gold)
+      0x44ccff, // 4 → sky blue        (was ice cyan)
+      0x44bb44, // 5 → leaf green      (was moss green)
+      0xff4422, // 6 → pixel red       (was lava red)
+      0xbb44dd, // 7 → pixel purple    (was crystal purple)
+      0x55aaff, // 8 → pixel blue      (was diamond)
+    ],
+    edgeColor: 0x111111,
+    material: {
+      emissive: 0x000000,
+      emissiveIntensity: 0.0,
+      roughness: 1.0,
+      metalness: 0.0,
+    },
+  },
+
+  crystal: {
+    colors: [
+      null,
+      0xaaddff, // 1 → ice blue        (was dirt brown)
+      0x99ccee, // 2 → pale crystal    (was stone grey)
+      0xeeeeff, // 3 → white crystal   (was gold)
+      0x88eeff, // 4 → aqua crystal    (was ice cyan)
+      0xaaffcc, // 5 → mint crystal    (was moss green)
+      0xffaaee, // 6 → rose crystal    (was lava red)
+      0xeeccff, // 7 → lavender crystal(was crystal purple)
+      0x77ddff, // 8 → deep aqua       (was diamond)
+    ],
+    edgeColor: 0x226688,
+    material: {
+      emissive: 0x112233,
+      emissiveIntensity: 0.2,
+      roughness: 0.05,
+      metalness: 0.7,
+    },
+  },
+
+  obsidian: {
+    colors: [
+      null,
+      0x2a0055, // 1 → deep void purple(was dirt brown)
+      0x1a1a4d, // 2 → midnight blue   (was stone grey)
+      0x4400bb, // 3 → obsidian violet (was gold)
+      0x220088, // 4 → deep indigo     (was ice cyan)
+      0x0d0d2a, // 5 → near black      (was moss green)
+      0x550022, // 6 → dark crimson    (was lava red)
+      0x6600cc, // 7 → deep violet     (was crystal purple)
+      0x3300aa, // 8 → dark blue       (was diamond)
+    ],
+    edgeColor: 0x440088,
+    material: {
+      emissive: 0x220044,
+      emissiveIntensity: 0.45,
+      roughness: 0.1,
+      metalness: 0.8,
+    },
+  },
+
+  diamond_classic: {
+    colors: [
+      null,
+      0x00bbcc, // 1 → teal diamond    (was dirt brown)
+      0x22ccdd, // 2 → bright teal     (was stone grey)
+      0x44ddee, // 3 → aquamarine      (was gold)
+      0x77eeff, // 4 → light aqua      (was ice cyan)
+      0x009baa, // 5 → deep teal       (was moss green)
+      0x55eecc, // 6 → seafoam         (was lava red)
+      0x00ccbb, // 7 → turquoise       (was crystal purple)
+      0x88ffee, // 8 → bright mint     (was diamond)
+    ],
+    edgeColor: 0x004455,
+    material: {
+      emissive: 0x003344,
+      emissiveIntensity: 0.25,
+      roughness: 0.05,
+      metalness: 0.8,
+    },
+  },
+
   // ── Animated skins (frame 0 used as initial color; block-skin-anim.js drives animation) ──
 
   animated_lava: {

@@ -1597,6 +1597,9 @@ function openSettings(onClose) {
   const overlay = document.getElementById("settings-overlay");
   if (overlay) overlay.style.display = "flex";
 
+  // Rebuild piece skin selector (checks unlock state live).
+  _buildPieceSkinSelector();
+
   // Refresh animated skin preview strip.
   if (typeof initAnimatedSkinStrip === 'function') initAnimatedSkinStrip();
 }
@@ -1661,6 +1664,190 @@ function _applyCustomThemeGrid(enabled, color, opacity) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(el.width, y); ctx.stroke();
   }
   ctx.globalAlpha = 1;
+}
+
+// ── Piece Skin Selector ────────────────────────────────────────────────────────
+// Shows all 7 static block skins with color swatches and lock state.
+// Equipping applies immediately to in-progress block meshes.
+
+const _PIECE_SKIN_CATALOG = [
+  {
+    id: 'block_skin_default',
+    name: 'Classic',
+    sub: 'Always unlocked',
+    colors: [0x8b4513, 0x808080, 0xffff00, 0x00ffff, 0x008000, 0xff0000, 0x800080],
+  },
+  {
+    id: 'block_skin_neon',
+    name: 'Neon',
+    sub: 'Level 5',
+    colors: [0x00ff88, 0x00ccff, 0xffff00, 0x00ffff, 0x88ff00, 0xff0066, 0xcc00ff],
+  },
+  {
+    id: 'block_skin_pixel',
+    name: 'Pixel',
+    sub: 'Level 10',
+    colors: [0xcc6633, 0x778899, 0xffdd44, 0x44ccff, 0x44bb44, 0xff4422, 0xbb44dd],
+  },
+  {
+    id: 'block_skin_lava',
+    name: 'Lava',
+    sub: 'Level 15',
+    colors: [0xcc3300, 0xff6600, 0xffcc00, 0xff4400, 0xcc2200, 0xff0000, 0xff8800],
+  },
+  {
+    id: 'block_skin_crystal',
+    name: 'Crystal',
+    sub: 'Level 20',
+    colors: [0xaaddff, 0x99ccee, 0xeeeeff, 0x88eeff, 0xaaffcc, 0xffaaee, 0xeeccff],
+  },
+  {
+    id: 'block_skin_obsidian',
+    name: 'Obsidian',
+    sub: 'Level 25',
+    colors: [0x2a0055, 0x1a1a4d, 0x4400bb, 0x220088, 0x0d0d2a, 0x550022, 0x6600cc],
+  },
+  {
+    id: 'block_skin_diamond_classic',
+    name: 'Diamond',
+    sub: 'Level 35',
+    colors: [0x00bbcc, 0x22ccdd, 0x44ddee, 0x77eeff, 0x009baa, 0x55eecc, 0x00ccbb],
+  },
+];
+
+function _isSkinUnlocked(skinId) {
+  if (skinId === 'block_skin_default') return true;
+  // Run processUnlocks so newly reached levels are reflected.
+  if (typeof processUnlocks === 'function') processUnlocks();
+  if (typeof isCosmeticUnlocked === 'function') return isCosmeticUnlocked(skinId);
+  // Fallback: live condition check.
+  if (typeof getCosmeticById === 'function' && typeof checkUnlockCondition === 'function') {
+    var cos = getCosmeticById(skinId);
+    if (cos) return checkUnlockCondition(cos);
+  }
+  return false;
+}
+
+function _buildPieceSkinSelector() {
+  var container = document.getElementById('piece-skin-selector');
+  if (!container) return;
+
+  var html = '';
+  _PIECE_SKIN_CATALOG.forEach(function(skin) {
+    var unlocked = _isSkinUnlocked(skin.id);
+    var lockedClass = unlocked ? '' : ' piece-skin-btn-locked';
+    html += '<button id="piece-skin-btn-' + skin.id + '" class="piece-skin-btn' + lockedClass + '"' +
+      (unlocked ? '' : ' disabled') + ' data-skin-id="' + skin.id + '" title="' + skin.name + '">';
+    html += '<div class="piece-skin-swatches">';
+    skin.colors.forEach(function(c) {
+      html += '<span class="piece-skin-swatch" style="background:#' + c.toString(16).padStart(6, '0') + '"></span>';
+    });
+    html += '</div>';
+    html += '<span class="piece-skin-name">' + skin.name + '</span>';
+    html += '<span class="piece-skin-sub' + (unlocked ? '' : ' piece-skin-hint') + '">';
+    html += (unlocked ? '' : '\uD83D\uDD12 ') + skin.sub;
+    html += '</span>';
+    html += '</button>';
+  });
+  container.innerHTML = html;
+
+  // Wire click handlers on unlocked buttons.
+  var btns = container.querySelectorAll('.piece-skin-btn:not(.piece-skin-btn-locked)');
+  btns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      applyBlockSkin(btn.getAttribute('data-skin-id'));
+    });
+  });
+
+  _syncPieceSkinButtons();
+}
+
+function _syncPieceSkinButtons() {
+  var equippedId = 'block_skin_default';
+  if (typeof getEquipped === 'function') {
+    var eq = getEquipped('block_skin');
+    if (eq && !(eq.assets && eq.assets.animated)) equippedId = eq.id;
+  }
+  _PIECE_SKIN_CATALOG.forEach(function(skin) {
+    var btn = document.getElementById('piece-skin-btn-' + skin.id);
+    if (!btn) return;
+    btn.classList.toggle('piece-skin-btn-selected', equippedId === skin.id);
+  });
+}
+
+/**
+ * Equip a piece skin by cosmetic id, apply its palette to all live block meshes,
+ * and refresh the HUD and skin selector UI.
+ * @param {string} cosmeticId  e.g. 'block_skin_neon' or 'block_skin_default'
+ */
+function applyBlockSkin(cosmeticId) {
+  var themeKey = null;
+  if (cosmeticId && cosmeticId !== 'block_skin_default' && typeof getCosmeticById === 'function') {
+    var cos = getCosmeticById(cosmeticId);
+    if (cos && cos.assets && cos.assets.themeKey && !cos.assets.animated) {
+      themeKey = cos.assets.themeKey;
+    }
+  }
+
+  // Update global state.
+  activeBlockSkin = themeKey;
+
+  // Persist via cosmetics system.
+  if (!cosmeticId || cosmeticId === 'block_skin_default') {
+    if (typeof unequipCosmetic === 'function') unequipCosmetic('block_skin');
+    // Delegate to applyTheme to restore theme/classic materials.
+    if (typeof applyTheme === 'function') {
+      applyTheme(activeTheme);
+    } else if (typeof updateNextPiecesHUD === 'function') {
+      updateNextPiecesHUD();
+    }
+  } else {
+    if (typeof equipCosmetic === 'function') equipCosmetic(cosmeticId);
+
+    // Swap materials on all live block meshes to the skin palette.
+    if (!colorblindMode) {
+      var skinDef = (themeKey && typeof BLOCK_SKIN_PALETTES !== 'undefined') ? BLOCK_SKIN_PALETTES[themeKey] : null;
+      if (skinDef) {
+        var groups = [];
+        if (typeof worldGroup !== 'undefined' && worldGroup) groups.push(worldGroup);
+        if (typeof fallingPiecesGroup !== 'undefined' && fallingPiecesGroup) groups.push(fallingPiecesGroup);
+        groups.forEach(function(group) {
+          group.traverse(function(obj) {
+            if (!obj.userData || !obj.userData.isBlock) return;
+            var canonHex = obj.userData.canonicalColor;
+            if (canonHex === undefined) return;
+            var targetColor = canonHex;
+            if (typeof COLOR_TO_INDEX !== 'undefined') {
+              var idx = COLOR_TO_INDEX[canonHex];
+              if (idx !== undefined && skinDef.colors[idx] != null) {
+                targetColor = skinDef.colors[idx];
+              }
+            }
+            if (typeof createBlockMaterial === 'function') {
+              var newMat = createBlockMaterial(targetColor);
+              if (skinDef.material) {
+                var m = skinDef.material;
+                if (typeof THREE !== 'undefined' && m.emissive !== undefined) {
+                  newMat.emissive = new THREE.Color(m.emissive);
+                }
+                if (m.emissiveIntensity !== undefined) newMat.emissiveIntensity = m.emissiveIntensity;
+                if (m.roughness !== undefined) newMat.roughness = m.roughness;
+                if (m.metalness !== undefined) newMat.metalness = m.metalness;
+                newMat.needsUpdate = true;
+              }
+              obj.material = newMat;
+              obj.userData.originalColor = newMat.color.clone();
+            }
+          });
+        });
+      }
+    }
+
+    if (typeof updateNextPiecesHUD === 'function') updateNextPiecesHUD();
+  }
+
+  if (typeof onAutoSync === 'function') onAutoSync();
+  _syncPieceSkinButtons();
 }
 
 /** Hide the settings overlay and invoke the close callback if any. */
