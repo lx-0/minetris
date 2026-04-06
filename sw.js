@@ -1,6 +1,6 @@
 // MINETRIS Service Worker
 // Cache version — bump this string to trigger an update toast in the game
-const CACHE_VERSION = 'minetris-v4.2';
+const CACHE_VERSION = 'minetris-v4.3';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -60,6 +60,7 @@ const STATIC_ASSETS = [
   './js/rendering/graphics-quality.js',
   './js/rendering/shaders.js',
   './js/rendering/shadows.js',
+  './js/rendering/board-backgrounds.js',
   './js/rendering/sky.js',
   './js/rendering/postprocessing.js',
   './js/rendering/aura.js',
@@ -111,6 +112,7 @@ const STATIC_ASSETS = [
   './js/ui/shareland.js',
   './js/ui/profile-page.js',
   './js/ui/theme-editor.js',
+  './js/ui/mini-game.js',
   // JS — social
   './js/social/community.js',
   './js/social/community-goals.js',
