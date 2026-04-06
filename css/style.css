@@ -22040,3 +22040,47 @@ body.hc-mode .lang-btn-active { background: #ff0 !important; color: #000 !import
   .mg-cell { width: 44px; height: 44px; }
   .mg-ld-cell { width: 22px; height: 22px; }
 }
+
+/* ── Tutorial mode card ── */
+
+.mode-card-tutorial {
+  border-color: rgba(255, 214, 0, 0.5);
+  box-shadow: 0 0 14px rgba(255, 214, 0, 0.12);
+}
+.mode-card-tutorial .mode-card-name {
+  color: #ffd700;
+  text-shadow: 0 0 6px rgba(255, 214, 0, 0.6);
+}
+.mode-card-tutorial .mode-card-desc {
+  color: rgba(255, 214, 0, 0.75);
+}
+.mode-card-tutorial .mode-card-pb {
+  font-size: 0.42rem;
+  color: rgba(255, 214, 0, 0.6);
+}
+.mode-card-tutorial:hover {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 22px rgba(255, 214, 0, 0.35) !important;
+}
+/* Pulsing highlight for first-time players */
+.mode-card-tutorial.mode-card-tutorial-new {
+  border-color: #ffd700;
+  box-shadow: 0 0 0 2px rgba(255, 214, 0, 0.4), 0 0 20px rgba(255, 214, 0, 0.25);
+  animation: tutorial-card-pulse 2s ease-in-out infinite;
+}
+@keyframes tutorial-card-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(255, 214, 0, 0.4), 0 0 20px rgba(255, 214, 0, 0.2); }
+  50%       { box-shadow: 0 0 0 3px rgba(255, 214, 0, 0.7), 0 0 30px rgba(255, 214, 0, 0.4); }
+}
+/* Completed state — softer, greyed out slightly */
+.mode-card-tutorial.mode-card-tutorial-done {
+  border-color: rgba(100, 180, 100, 0.4);
+  box-shadow: 0 0 10px rgba(100, 180, 100, 0.08);
+}
+.mode-card-tutorial.mode-card-tutorial-done .mode-card-name {
+  color: #80c880;
+  text-shadow: none;
+}
+.mode-card-tutorial.mode-card-tutorial-done .mode-card-pb {
+  color: #80c880;
+}

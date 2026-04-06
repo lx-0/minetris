@@ -4,6 +4,23 @@
     function showModeSelect(highlightMode) {
       const modeSelectEl = document.getElementById("mode-select");
       if (!modeSelectEl) return;
+      // Populate Tutorial card state
+      (function () {
+        var tutCard = document.getElementById('mode-card-tutorial');
+        var tutPbEl = document.getElementById('mode-pb-tutorial');
+        if (!tutCard) return;
+        var done = false;
+        try { done = localStorage.getItem('mineCtris_tutorialDone') === '1'; } catch (_) {}
+        if (done) {
+          tutCard.classList.add('mode-card-tutorial-done');
+          tutCard.classList.remove('mode-card-tutorial-new');
+          if (tutPbEl) tutPbEl.textContent = '\u2713 Completed \u2014 click to replay';
+        } else {
+          tutCard.classList.remove('mode-card-tutorial-done');
+          tutCard.classList.add('mode-card-tutorial-new');
+          if (tutPbEl) tutPbEl.textContent = 'Start here \u2014 new player guide';
+        }
+      })();
       // Update co-op achievement count on mode card
       if (typeof updateCoopModeCardAch === 'function') updateCoopModeCardAch();
       // Populate Classic personal best
@@ -125,7 +142,7 @@
       // Render World Card stats panel
       if (typeof renderWorldCard === "function") renderWorldCard();
       // Apply highlight to the specified mode card
-      ["classic", "sprint", "blitz", "marathon", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai"].forEach(function (mode) {
+      ["tutorial", "classic", "sprint", "blitz", "marathon", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai"].forEach(function (mode) {
         const cardEl = document.getElementById("mode-card-" + mode);
         if (cardEl) {
           if (mode === highlightMode) {
@@ -1092,6 +1109,24 @@
       if (typeof resetGame === "function") resetGame();
     });
   }
+})();
+
+// ── Tutorial mode card ────────────────────────────────────────────────────────
+(function _initTutorialCard() {
+  var tutorialCardEl = document.getElementById('mode-card-tutorial');
+  if (!tutorialCardEl) return;
+
+  tutorialCardEl.addEventListener('click', function () {
+    // Reset tutorial progress so it plays from step 1
+    try { localStorage.removeItem('mineCtris_tutorialDone'); } catch (_) {}
+    try { localStorage.removeItem('mineCtris_tutorialProgress'); } catch (_) {}
+    isDailyChallenge = false;
+    gameRng = null;
+    try { localStorage.setItem('mineCtris_lastMode', 'classic'); } catch (_) {}
+    if (typeof metricsModePlayed === 'function') metricsModePlayed('tutorial');
+    hideModeSelect();
+    requestPointerLock();
+  });
 })();
 
 // ── Menu click sounds — delegated listener on mode-select panel ───────────────
