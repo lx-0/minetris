@@ -510,6 +510,43 @@
       });
     }
 
+    // Wire up Combo Challenge mode card
+    const ccCardEl = document.getElementById("mode-card-combo_challenge");
+    if (ccCardEl) {
+      ccCardEl.addEventListener("click", function () {
+        isDailyChallenge              = false;
+        gameRng                       = null;
+        isComboChallenge              = true;
+        comboChallengeRemainingMs     = COMBO_CHALLENGE_DURATION_MS;
+        comboChallengeStreak          = 0;
+        comboChallengeMaxStreak       = 0;
+        comboChallengeTotalLines      = 0;
+        difficultyMultiplier          = COMBO_CHALLENGE_FIXED_MULTIPLIER;
+        lastDifficultyTier            = 4; // Level 5 display
+        applyWorldModifierHUD();
+        try { localStorage.setItem("mineCtris_lastMode", "combo_challenge"); } catch (_) {}
+        if (typeof metricsModePlayed === 'function') metricsModePlayed('combo_challenge');
+        hideModeSelect();
+        requestPointerLock();
+      });
+    }
+
+    // Wire up Combo Challenge play-again button
+    const ccPlayAgainBtn = document.getElementById("cc-play-again-btn");
+    if (ccPlayAgainBtn) {
+      ccPlayAgainBtn.addEventListener("click", function () {
+        resetGame();
+      });
+    }
+
+    // Wire up Combo Challenge main menu button
+    const ccMainMenuBtn = document.getElementById("cc-main-menu-btn");
+    if (ccMainMenuBtn) {
+      ccMainMenuBtn.addEventListener("click", function () {
+        resetGame();
+      });
+    }
+
     const dailyCardEl = document.getElementById("mode-card-daily");
     if (dailyCardEl) {
       dailyCardEl.addEventListener("click", function (e) {

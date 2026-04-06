@@ -85,6 +85,15 @@ function animate() {
       }
     }
 
+    // Tick the combo challenge countdown timer
+    if (isComboChallenge && comboChallengeTimerActive && !comboChallengeComplete) {
+      comboChallengeRemainingMs -= delta * 1000;
+      if (comboChallengeRemainingMs <= 0) {
+        comboChallengeRemainingMs = 0;
+        if (typeof triggerComboChallengeComplete === 'function') triggerComboChallengeComplete();
+      }
+    }
+
     // Tick the blitz countdown timer
     if (isBlitzMode && blitzTimerActive && !blitzComplete) {
       blitzRemainingMs -= delta * 1000;

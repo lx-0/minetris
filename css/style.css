@@ -947,6 +947,129 @@ body.board-glow-off #board-powerup-overlay { display: none !important; }
 }
 #blitz-main-menu-btn:hover { background: #c0f; color: #fff; }
 
+/* ── Combo Challenge HUD overlay ── */
+#combo-challenge-hud {
+  position: absolute;
+  top: 38%;
+  right: 12px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 60;
+  gap: 4px;
+}
+#cc-streak-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+#cc-streak-count {
+  font-family: "Press Start 2P", cursive;
+  font-size: 18px;
+  color: #ff8800;
+  text-shadow: 2px 2px #662200, 0 0 10px currentColor;
+  white-space: nowrap;
+  animation: combo-bounce 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+#cc-streak-count.cc-streak-active {
+  color: #ffd700;
+  text-shadow: 2px 2px #664400, 0 0 14px currentColor;
+}
+#cc-multiplier {
+  font-family: "Press Start 2P", cursive;
+  font-size: 14px;
+  color: #aaaaaa;
+  text-shadow: none;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+@keyframes cc-break-flash {
+  0%   { color: #ff4444; text-shadow: 0 0 12px #ff4444; }
+  100% { color: #555555; text-shadow: none; }
+}
+
+/* ── Combo Challenge complete screen ── */
+#combo-challenge-complete-screen {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 200;
+}
+#cc-complete-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 1.8em;
+  color: #ff8800;
+  text-shadow: 3px 3px #662200, 0 0 20px #ffd700;
+  margin-bottom: 28px;
+}
+#cc-complete-score-label {
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: rgba(255, 136, 0, 0.55);
+  letter-spacing: 4px;
+  margin-bottom: 6px;
+}
+#cc-final-score {
+  font-family: "Press Start 2P", cursive;
+  font-size: 2.6em;
+  color: #fff;
+  text-shadow: 2px 2px #662200;
+  margin-bottom: 20px;
+}
+#cc-personal-best {
+  font-family: "Press Start 2P", cursive;
+  font-size: 11px;
+  margin-bottom: 24px;
+}
+#cc-personal-best.cc-new-best {
+  color: #ffd700;
+  text-shadow: 0 0 12px #ffd700;
+}
+#cc-personal-best.cc-pb-line {
+  color: rgba(255, 255, 255, 0.55);
+}
+#cc-stats {
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+#cc-play-again-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 12px;
+  color: #000;
+  background: #ff8800;
+  border: none;
+  padding: 14px 28px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+  margin-bottom: 10px;
+}
+#cc-play-again-btn:hover { background: #ffd700; }
+#cc-main-menu-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 12px;
+  color: #000;
+  background: #0f0;
+  border: none;
+  padding: 14px 28px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+#cc-main-menu-btn:hover { background: #c0f; color: #fff; }
+
 /* ── Crafting panel ── */
 #crafting-panel {
   position: absolute;

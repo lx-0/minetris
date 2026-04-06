@@ -450,6 +450,13 @@
                   <div class="mode-card-desc">30 puzzles across 3 tiers. Daily puzzle every day.</div>
                   <div class="mode-card-pb" id="mode-pb-puzzle"></div>
                 </div>
+                <div class="mode-card mode-card-combo_challenge" id="mode-card-combo_challenge" data-mode="combo_challenge" tabindex="0" role="button" aria-label="Combo Challenge — Chain line clears for massive multipliers! 60 seconds on the clock.">
+                  <div class="mode-card-icon">&#128293;</div>
+                  <div class="mode-card-name">Combo Challenge</div>
+                  <div class="mode-card-desc">Chain line clears for massive multipliers! 60 seconds on the clock.</div>
+                  <div class="mode-card-pb" id="mode-pb-combo_challenge"></div>
+                  <button class="mode-card-lb-btn" data-lb-tab="combo_challenge" title="Leaderboard">&#127942;</button>
+                </div>
               </div>
             </div>
             <!-- ── ADVENTURE ── -->
@@ -817,6 +824,12 @@
 
       <!-- Combo multiplier banner -->
       <div id="combo-banner"></div>
+      <!-- Combo Challenge HUD overlay — shown only during Combo Challenge mode -->
+      <div id="combo-challenge-hud" style="display:none;">
+        <div id="cc-streak-label">COMBO</div>
+        <div id="cc-streak-count">x0</div>
+        <div id="cc-multiplier">1.0x</div>
+      </div>
 
       <!-- Speed-up banner -->
       <div id="speed-up-banner"></div>
@@ -1016,6 +1029,22 @@
         <div id="blitz-xp-earned" class="xp-earned-display"></div>
         <button id="blitz-play-again-btn">Play Again</button>
         <button id="blitz-main-menu-btn">Main Menu</button>
+      </div>
+
+      <!-- Combo Challenge complete screen -->
+      <div id="combo-challenge-complete-screen" style="display:none;">
+        <div id="cc-complete-title">COMBO CHALLENGE!</div>
+        <div id="cc-complete-score-label">FINAL SCORE</div>
+        <div id="cc-final-score">0</div>
+        <div id="cc-personal-best"></div>
+        <div id="cc-stats">
+          <div id="cc-stat-max-streak"></div>
+          <div id="cc-stat-total-lines"></div>
+          <div id="cc-stat-avg-combo"></div>
+        </div>
+        <div id="cc-xp-earned" class="xp-earned-display"></div>
+        <button id="cc-play-again-btn">Play Again</button>
+        <button id="cc-main-menu-btn">Main Menu</button>
       </div>
 
       <!-- Puzzle select screen -->
@@ -2907,6 +2936,7 @@
     <script src="js/modes/sprint.js"></script>
     <script src="js/modes/blitz.js"></script>
     <script src="js/modes/marathon.js"></script>
+    <script src="js/modes/combo-challenge.js"></script>
     <script src="js/modes/practice.js"></script>
     <script src="js/modes/zen.js"></script>
     <script src="js/modes/puzzle.js"></script>

@@ -163,6 +163,19 @@ function resetGame() {
     if (timerEl) timerEl.style.color = "";
   }
 
+  // Reset combo challenge state
+  isComboChallenge          = false;
+  comboChallengeTimerActive = false;
+  comboChallengeRemainingMs = COMBO_CHALLENGE_DURATION_MS;
+  comboChallengeComplete    = false;
+  comboChallengeStreak      = 0;
+  comboChallengeMaxStreak   = 0;
+  comboChallengeTotalLines  = 0;
+  const ccCompleteEl = document.getElementById("combo-challenge-complete-screen");
+  if (ccCompleteEl) ccCompleteEl.style.display = "none";
+  const ccHudEl = document.getElementById("combo-challenge-hud");
+  if (ccHudEl) ccHudEl.style.display = "none";
+
   // Reset co-op mode state
   isCoopMode = false;
   isCoopWideBoard = false;

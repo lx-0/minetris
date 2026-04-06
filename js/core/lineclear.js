@@ -302,6 +302,11 @@ function checkLineClear(newBlocks) {
       }
       if (typeof achOnTSpin === 'function') achOnTSpin();
     }
+    // Combo Challenge: piece locked without clearing any line — reset streak
+    if (typeof isComboChallenge !== 'undefined' && isComboChallenge &&
+        typeof comboChallengeOnNoLineClear === 'function') {
+      comboChallengeOnNoLineClear();
+    }
     return;
   }
 
@@ -477,6 +482,12 @@ function checkLineClear(newBlocks) {
   } else {
     baseScore = LINE_SCORES[Math.min(completeLevels.length, 4)];
   }
+  // Combo Challenge: use streak-based scoring instead of the standard formula
+  if (typeof isComboChallenge !== 'undefined' && isComboChallenge &&
+      typeof comboChallengeOnLineClear === 'function') {
+    comboChallengeOnLineClear(completeLevels.length);
+    _lcPerfectClearBonus = 0;
+  } else {
   const _lcComputedScore = Math.round(baseScore * _b2bMult * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult);
   addScore(_lcComputedScore);
 
@@ -491,6 +502,7 @@ function checkLineClear(newBlocks) {
   } else {
     _lcPerfectClearBonus = 0;
   }
+  } // end of non-combo-challenge scoring block
 
   // Co-op: broadcast line-clear event so partner can score if local detection didn't fire
   if (isCoopMode && typeof coop !== 'undefined' && coop.state === CoopState.IN_GAME) {

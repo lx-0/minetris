@@ -114,6 +114,19 @@ function updateScoreHUD() {
       "Time: " + sm + ":" + ss;
     scoreEl.querySelector(".hud-stat:nth-child(4)").style.color = "";
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Sprint";
+  } else if (isComboChallenge) {
+    // Combo Challenge: streak in slot 2, lines in slot 3, countdown in slot 4
+    const ccSecs = Math.max(0, Math.ceil(comboChallengeRemainingMs / 1000));
+    const ccm = Math.floor(ccSecs / 60).toString().padStart(2, "0");
+    const ccs = (ccSecs % 60).toString().padStart(2, "0");
+    scoreEl.querySelector(".hud-stat:nth-child(2)").textContent =
+      comboChallengeStreak > 0 ? "Streak: x" + comboChallengeStreak : "Streak: —";
+    scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
+      "Lines: " + comboChallengeTotalLines;
+    const ccTimerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
+    ccTimerEl.textContent = "Time: " + ccm + ":" + ccs;
+    ccTimerEl.style.color = comboChallengeRemainingMs <= 10000 ? "#ff4444" : "";
+    scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Combo";
   } else if (isZenMode) {
     // Zen: show lines, meditation timer (elapsed), and Zen label
     const zenSecs = Math.floor(gameElapsedSeconds);

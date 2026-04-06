@@ -309,6 +309,20 @@ const BLITZ_BONUS_THRESHOLD_MS = 30000;  // final 30 seconds
 const BLITZ_BONUS_MULTIPLIER   = 2.0;
 const BLITZ_FIXED_MULTIPLIER   = Math.pow(1.1, 4); // ≈ 1.4641 (same as Sprint)
 
+// ── Combo Challenge state ─────────────────────────────────────────────────────
+// Target: chain consecutive line clears to build multipliers. 60-second countdown.
+// Fixed fall speed = Level 5. Streak resets if a piece locks without clearing a line.
+// Score per clear = lines × (1 + streak × 0.5), multiplier capped at 10×.
+let isComboChallenge            = false;
+let comboChallengeTimerActive   = false;  // becomes true on first piece drop
+let comboChallengeRemainingMs   = 60000;  // milliseconds remaining (counts down)
+let comboChallengeComplete      = false;
+let comboChallengeStreak        = 0;      // consecutive line-clearing pieces
+let comboChallengeMaxStreak     = 0;      // highest streak reached this session
+let comboChallengeTotalLines    = 0;      // total lines cleared in this mode
+const COMBO_CHALLENGE_DURATION_MS      = 60000;          // 60 seconds
+const COMBO_CHALLENGE_FIXED_MULTIPLIER = Math.pow(1.1, 4); // ≈ 1.4641 (Level 5, same as Blitz)
+
 // ── Daily challenge countdown timer ──────────────────────────────────────────
 let dailyTimerActive   = false;  // becomes true on first piece drop
 let dailyRemainingMs   = 180000; // milliseconds remaining (counts down)

@@ -352,6 +352,12 @@ function spawnFallingPiece() {
   if (isBlitzMode && !blitzTimerActive && !blitzComplete) {
     blitzTimerActive = true;
   }
+  // In Combo Challenge, start the countdown on the very first piece drop
+  if (isComboChallenge && !comboChallengeTimerActive && !comboChallengeComplete) {
+    comboChallengeTimerActive = true;
+    const ccHudEl = document.getElementById('combo-challenge-hud');
+    if (ccHudEl) ccHudEl.style.display = 'flex';
+  }
   // In Daily challenge, start the 3-minute countdown on the very first piece drop
   if (isDailyChallenge && !dailyTimerActive && !isGameOver) {
     dailyTimerActive = true;
