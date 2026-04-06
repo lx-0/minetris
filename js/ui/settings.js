@@ -1295,6 +1295,7 @@ function initSettings() {
   _loadTheme();
   if (typeof ghostReplayLoadSetting === 'function') ghostReplayLoadSetting();
   if (typeof initGraphicsQuality === 'function') initGraphicsQuality();
+  if (typeof initInputDisplay === 'function') initInputDisplay();
   // Apply persisted theme body class without triggering a material swap on init
   // (blocks don't exist yet — createBlockMesh will pick up activeTheme directly).
   document.body.classList.toggle("theme-nether",    activeTheme === "nether");
@@ -1350,6 +1351,16 @@ function initSettings() {
     if (typeof ghostReplayEnabled !== 'undefined') ghostReplayToggle.checked = ghostReplayEnabled;
     ghostReplayToggle.addEventListener("change", function () {
       if (typeof ghostReplayApplySetting === 'function') ghostReplayApplySetting(this.checked);
+    });
+  }
+
+  const inputDisplayToggle = document.getElementById("input-display-toggle");
+  if (inputDisplayToggle) {
+    if (typeof inputDisplayEnabled !== 'undefined') inputDisplayToggle.checked = inputDisplayEnabled;
+    inputDisplayToggle.addEventListener("change", function () {
+      if (inputDisplayEnabled !== this.checked && typeof toggleInputDisplay === 'function') {
+        toggleInputDisplay();
+      }
     });
   }
 

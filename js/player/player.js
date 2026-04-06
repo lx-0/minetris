@@ -103,6 +103,11 @@ function onKeyDown(event) {
     if (typeof resetGame === "function") resetGame();
     return;
   }
+  // F2: toggle input display overlay (works at any time including game-over / replay).
+  if (event.code === 'F2') {
+    if (typeof toggleInputDisplay === 'function') toggleInputDisplay();
+    return;
+  }
   // Replay: handle speed keys, pause, and Escape; all other input is blocked.
   if (typeof isReplayMode !== 'undefined' && isReplayMode) {
     if (event.code === 'Digit1' && typeof replaySetSpeed === 'function') replaySetSpeed(1);
@@ -158,6 +163,8 @@ function onKeyDown(event) {
     replayRecordInput('keydown', event.code,
       typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);
   }
+  // Input display overlay — notify of raw key press.
+  if (typeof inputDisplayKeyEvent === 'function') inputDisplayKeyEvent(event.code, true);
   // Translate the physical key code to its canonical default so existing
   // switch/case logic works unchanged after a rebind.
   const _keyCode = _resolveKeyCode(event.code);
@@ -335,6 +342,8 @@ function onKeyUp(event) {
     replayRecordInput('keyup', event.code,
       typeof gameElapsedSeconds !== 'undefined' ? gameElapsedSeconds : 0);
   }
+  // Input display overlay — notify of key release.
+  if (typeof inputDisplayKeyEvent === 'function') inputDisplayKeyEvent(event.code, false);
   const _keyCode = _resolveKeyCode(event.code);
   switch (_keyCode) {
     case "KeyC":

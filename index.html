@@ -1485,6 +1485,15 @@
           </div>
           <div class="settings-hint" data-i18n="settings.mobile_difficulty_hint">Reduce piece speed by 20% on touch — ON by default for touch devices</div>
           <div class="settings-section-divider"></div>
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="input-display-toggle">Input Display</label>
+            <label class="cb-toggle-switch">
+              <input type="checkbox" id="input-display-toggle">
+              <span class="cb-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-hint">Show real-time key presses as an overlay (bottom-left). Toggle with F2.</div>
+          <div class="settings-section-divider"></div>
           <div class="settings-label settings-label-section" data-i18n="settings.leaderboard_name">Leaderboard Name</div>
           <div id="settings-displayname-row" class="settings-row">
             <input type="text" id="settings-displayname-input" maxlength="16" autocomplete="off" spellcheck="false" placeholder="YourName">
@@ -2976,6 +2985,7 @@
     <script src="js/ui/coach-marks.js"></script>
     <script src="js/rendering/graphics-quality.js"></script>
     <script src="js/ui/settings.js"></script>
+    <script src="js/ui/input-display.js"></script>
     <script src="js/data/metrics.js"></script>
     <script src="js/progression/season.js"></script>
     <script src="js/progression/season-recap.js"></script>
