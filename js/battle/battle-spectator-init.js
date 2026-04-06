@@ -17,6 +17,12 @@ function _initBattleSpectator() {
       var _hostMaxHeight  = 0;
       var _guestMaxHeight = 0;
 
+      // Garbage meters: track pending incoming lines per player
+      var _hostGarbagePending  = 0;
+      var _guestGarbagePending = 0;
+      var _GARBAGE_DRAIN_INTERVAL = null;
+      var _GARBAGE_MAX_DISPLAY    = 10; // full bar at 10 lines
+
       var _SPEC_PU_DEFS = {
         row_bomb:   { icon: '\uD83D\uDCA3', name: 'Row Bomb' },
         slow_down:  { icon: '\u23F1',       name: 'Slow Down' },
@@ -411,8 +417,30 @@ function _initBattleSpectator() {
         }
       }
 
+      function _updateSpectatorGarbageMeter(player) {
+        var pending = player === 'host' ? _hostGarbagePending : _guestGarbagePending;
+        var meterId = 'spectator-' + player + '-garbage';
+        var fillId  = meterId + '-fill';
+        var countId = meterId + '-count';
+        var meter = document.getElementById(meterId);
+        var fill  = document.getElementById(fillId);
+        var count = document.getElementById(countId);
+        if (!meter) return;
+        if (pending <= 0) {
+          meter.style.display = 'none';
+          return;
+        }
+        meter.style.display = '';
+        var pct = Math.min(100, (pending / _GARBAGE_MAX_DISPLAY) * 100);
+        if (fill) {
+          fill.style.width = pct + '%';
+          fill.style.background = pending >= _GARBAGE_MAX_DISPLAY ? '#cc2200' : '#ff6a00';
+        }
+        if (count) count.textContent = pending + ' row' + (pending !== 1 ? 's' : '');
+      }
+
       function _onSpectatorBattleAttack(msg) {
-        // Garbage was sent — flash the recipient's board
+        // Garbage was sent — flash the recipient's board and update their meter
         var attacker = msg.fromPlayer || 'host';
         var recipient = attacker === 'host' ? 'guest' : 'host';
         var lines = msg.lines || 0;
@@ -421,6 +449,13 @@ function _initBattleSpectator() {
         var recipientLabel = _specPlayerLabel(recipient);
         var lineWord = lines === 1 ? 'row' : 'rows';
         _specTickerAdd(attackerLabel + ' sent ' + lines + ' garbage ' + lineWord + ' \u2192 ' + recipientLabel, attacker);
+        // Update recipient's garbage meter
+        if (recipient === 'host') {
+          _hostGarbagePending += lines;
+        } else {
+          _guestGarbagePending += lines;
+        }
+        _updateSpectatorGarbageMeter(recipient);
       }
 
       function _onSpectatorBattlePowerup(msg) {
@@ -805,6 +840,18 @@ function _initBattleSpectator() {
         _hostMaxHeight  = 0;
         _guestMaxHeight = 0;
         _updateAutoFollow();
+        // Reset garbage meters
+        _hostGarbagePending  = 0;
+        _guestGarbagePending = 0;
+        _updateSpectatorGarbageMeter('host');
+        _updateSpectatorGarbageMeter('guest');
+        if (_GARBAGE_DRAIN_INTERVAL) { clearInterval(_GARBAGE_DRAIN_INTERVAL); }
+        // Drain 1 pending garbage row every 1.5s (approximate delivery cadence)
+        _GARBAGE_DRAIN_INTERVAL = setInterval(function () {
+          var changed = false;
+          if (_hostGarbagePending > 0)  { _hostGarbagePending--;  changed = true; _updateSpectatorGarbageMeter('host'); }
+          if (_guestGarbagePending > 0) { _guestGarbagePending--; changed = true; _updateSpectatorGarbageMeter('guest'); }
+        }, 1500);
         // Reset hype state
         _hypeLevel = 0;
         _hypeElectric = false;
@@ -837,6 +884,7 @@ function _initBattleSpectator() {
       _closeSpectatorOverlay = function () {
         _stopHypeDecay();
         if (_hypeElectricTimer) { clearTimeout(_hypeElectricTimer); _hypeElectricTimer = null; }
+        if (_GARBAGE_DRAIN_INTERVAL) { clearInterval(_GARBAGE_DRAIN_INTERVAL); _GARBAGE_DRAIN_INTERVAL = null; }
         battle.off('spectator_welcome',  _onSpectatorWelcomeEnhanced);
         battle.off('spectator_reaction', _onSpectatorReaction);
         battle.off('spectator_chat',     _onSpectatorChat);

@@ -2662,6 +2662,16 @@
               <span>Pieces: <strong id="spectator-host-pieces">—</strong></span>
               <span>APM: <strong id="spectator-host-apm">—</strong></span>
             </div>
+            <!-- Garbage meter -->
+            <div id="spectator-host-garbage" style="display:none;margin-top:5px;width:100%;">
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.72em;color:#ff6a00;margin-bottom:2px;">
+                <span>&#9660; INCOMING GARBAGE</span>
+                <span id="spectator-host-garbage-count" style="font-weight:bold;"></span>
+              </div>
+              <div style="background:rgba(255,255,255,0.1);height:4px;border-radius:2px;width:100%;">
+                <div id="spectator-host-garbage-fill" style="height:100%;border-radius:2px;background:#ff6a00;width:0%;transition:width 0.4s;"></div>
+              </div>
+            </div>
           </div>
 
           <!-- VS divider -->
@@ -2685,6 +2695,16 @@
               <span>Lines: <strong id="spectator-guest-lines">—</strong></span>
               <span>Pieces: <strong id="spectator-guest-pieces">—</strong></span>
               <span>APM: <strong id="spectator-guest-apm">—</strong></span>
+            </div>
+            <!-- Garbage meter -->
+            <div id="spectator-guest-garbage" style="display:none;margin-top:5px;width:100%;">
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.72em;color:#ff6a00;margin-bottom:2px;">
+                <span>&#9660; INCOMING GARBAGE</span>
+                <span id="spectator-guest-garbage-count" style="font-weight:bold;"></span>
+              </div>
+              <div style="background:rgba(255,255,255,0.1);height:4px;border-radius:2px;width:100%;">
+                <div id="spectator-guest-garbage-fill" style="height:100%;border-radius:2px;background:#ff6a00;width:0%;transition:width 0.4s;"></div>
+              </div>
             </div>
           </div>
 
@@ -2722,10 +2742,11 @@
             <div id="spec-chat-spectator-names" style="opacity:0.6;font-size:0.85em;"></div>
           </div>
           <div id="spec-chat-messages"></div>
-          <div id="spec-chat-input-row">
+          <div id="spec-chat-input-row" style="display:none;">
             <input id="spec-chat-input" type="text" maxlength="100" placeholder="Say something…" autocomplete="off" />
             <button id="spec-chat-send">&#10148;</button>
           </div>
+          <div id="spec-chat-readonly-notice" style="font-size:0.72em;opacity:0.5;padding:4px 6px;text-align:center;">Chat is read-only for spectators</div>
         </div>
 
       </div>
