@@ -211,8 +211,8 @@ function updateNextPiecesHUD() {
   let html = '<div class="np-label">NEXT</div><div class="np-pieces-row">';
   pieceQueue.forEach(({ index, shape }) => {
     let palette;
-    if (colorblindMode && COLORBLIND_COLORS[index] !== null) {
-      palette = COLORBLIND_COLORS[index];
+    if (colorblindMode && getCBColors(index) !== null && getCBColors(index) !== undefined) {
+      palette = getCBColors(index);
     } else if (activeBlockSkin && BLOCK_SKIN_PALETTES[activeBlockSkin]) {
       const skinDef = BLOCK_SKIN_PALETTES[activeBlockSkin];
       palette = (skinDef.colors[index] !== null) ? skinDef.colors[index] : COLORS[index];
@@ -267,8 +267,8 @@ function updateHoldPanelHUD() {
   }
   const { index, shape } = holdPiece;
   let palette;
-  if (typeof colorblindMode !== 'undefined' && colorblindMode && typeof COLORBLIND_COLORS !== 'undefined' && COLORBLIND_COLORS[index] !== null) {
-    palette = COLORBLIND_COLORS[index];
+  if (typeof colorblindMode !== 'undefined' && colorblindMode && typeof getCBColors === 'function' && getCBColors(index) !== null && getCBColors(index) !== undefined) {
+    palette = getCBColors(index);
   } else if (typeof activeBlockSkin !== 'undefined' && activeBlockSkin && typeof BLOCK_SKIN_PALETTES !== 'undefined' && BLOCK_SKIN_PALETTES[activeBlockSkin]) {
     const skinDef = BLOCK_SKIN_PALETTES[activeBlockSkin];
     palette = (skinDef.colors[index] !== null) ? skinDef.colors[index] : COLORS[index];
@@ -538,6 +538,23 @@ function spawnFallingPiece() {
   }
   fallingPiecesGroup.add(piece3D);
   fallingPieces.push(piece3D);
+  // Screen reader: announce the newly spawned piece type.
+  if (typeof announceToScreenReader === 'function' && typeof PIECE_NAMES !== 'undefined') {
+    const _pName = PIECE_NAMES[index] || ('piece ' + index);
+    announceToScreenReader(_pName + ' piece');
+  }
+  // High contrast: apply emissive boost to the new piece.
+  if (typeof highContrastEnabled !== 'undefined' && highContrastEnabled) {
+    piece3D.children.forEach(function(block) {
+      if (block.userData && block.userData.isBlock && block.material && block.material.emissive) {
+        block.userData._hcSavedEmissive = block.material.emissive.clone();
+        block.userData._hcSavedEmissiveIntensity = block.material.emissiveIntensity || 1.0;
+        block.material.emissive.setRGB(0.5, 0.5, 0.5);
+        block.material.emissiveIntensity = 1.5;
+        block.material.needsUpdate = true;
+      }
+    });
+  }
   // Apply freeze glow immediately if Time Freeze is active when this piece spawns
   if (timeFreezeActive) {
     piece3D.children.forEach(function (block) {

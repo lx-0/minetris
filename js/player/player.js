@@ -313,6 +313,17 @@ function onKeyDown(event) {
     case "KeyG":
       if (typeof activateIceBridge === "function") activateIceBridge();
       break;
+    case "KeyI":
+      // Announce current score to screen readers on demand.
+      if (typeof announceToScreenReader === 'function' && typeof score !== 'undefined') {
+        var _lvl = (typeof level !== 'undefined') ? level : null;
+        var _lines = (typeof linesCleared !== 'undefined') ? linesCleared : null;
+        var _msg = 'Score: ' + score;
+        if (_lvl !== null)   _msg += '. Level: ' + _lvl;
+        if (_lines !== null) _msg += '. Lines: ' + _lines;
+        announceToScreenReader(_msg, 'assertive');
+      }
+      break;
   }
 }
 

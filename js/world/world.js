@@ -117,13 +117,19 @@ function createBlockMesh(color) {
     _effectiveSkin = activePerPieceTypeSkins[_sIdx];
   }
 
+  // In high contrast mode, brighten the edge overlay so block borders are clearly visible.
+  if (highContrastEnabled) {
+    lineMaterial.color.setHex(0xffffff);
+  }
+
   // Choose material: colorblind-safe takes priority, then block skin, then theme, then standard.
   let material;
   let _skinOverrides = null; // block skin material overrides (if any)
   if (colorblindMode) {
     const cbIdx = COLOR_TO_INDEX[canonicalHex];
-    if (cbIdx !== undefined && COLORBLIND_COLORS[cbIdx] !== null) {
-      material = createBlockMaterialColorblind(COLORBLIND_COLORS[cbIdx], COLORBLIND_PATTERNS[cbIdx]);
+    const cbColor = getCBColors(cbIdx);
+    if (cbIdx !== undefined && cbColor !== null && cbColor !== undefined) {
+      material = createBlockMaterialColorblind(cbColor, getCBPatterns(cbIdx));
     } else {
       material = createBlockMaterial(color);
     }

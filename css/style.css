@@ -1653,6 +1653,21 @@ body.board-glow-off #board-powerup-overlay { display: none !important; }
 }
 #settings-close-btn:hover { background: #ff0; }
 
+/* ── Settings section heading ── */
+.settings-section-heading {
+  width: 100%;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+  padding: 10px 0 4px;
+  user-select: none;
+}
+body.hc-mode .settings-section-heading {
+  color: #ff0 !important;
+}
+
 /* ── Colorblind toggle row ── */
 .settings-section-divider {
   width: 100%;
@@ -21316,6 +21331,31 @@ body.hc-mode .notif-item {
   background: #111 !important;
   border: 1px solid #fff !important;
   color: #fff !important;
+}
+
+/* HC: score / HUD overlay text — pure white on dark background for 7:1+ ratio */
+body.hc-mode #score-display,
+body.hc-mode #level-display,
+body.hc-mode #lines-display,
+body.hc-mode .hud-label,
+body.hc-mode .hud-val {
+  color: #fff !important;
+  text-shadow: 1px 1px 0 #000, -1px -1px 0 #000 !important;
+}
+
+/* HC: keybind table */
+body.hc-mode .keybind-row { color: #fff !important; }
+body.hc-mode .keybind-key-badge {
+  background: #222 !important;
+  color: #ff0 !important;
+  border: 1px solid #ff0 !important;
+}
+
+/* HC: select elements */
+body.hc-mode .settings-select {
+  background: #000 !important;
+  color: #fff !important;
+  border: 1px solid #fff !important;
 }
 
 /* ── Parallax biome backgrounds ─────────────────────────────────────────────── */

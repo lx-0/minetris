@@ -200,6 +200,7 @@ function _loadHighContrast() {
 function applyHighContrast(enabled) {
   highContrastEnabled = enabled;
   _applyHighContrastClass();
+  _applyHighContrast3D(enabled);
   try {
     localStorage.setItem(HIGH_CONTRAST_KEY, String(enabled));
   } catch (_) {}
@@ -210,6 +211,49 @@ function _applyHighContrastClass() {
     document.body.classList.add('hc-mode');
   } else {
     document.body.classList.remove('hc-mode');
+  }
+}
+
+/**
+ * Apply or remove 3D high-contrast effects on existing block meshes:
+ * - White block edge outlines on all landed blocks
+ * - Bright emissive boost on the active falling piece(s)
+ */
+function _applyHighContrast3D(enabled) {
+  // Update edge mesh color on all existing landed blocks.
+  if (typeof worldGroup !== 'undefined' && worldGroup) {
+    worldGroup.traverse(function(obj) {
+      if (!obj.userData || !obj.userData.isBlock) return;
+      obj.children.forEach(function(child) {
+        if (child.isLineSegments && child.material) {
+          child.material.color.setHex(enabled ? 0xffffff : 0x000000);
+          child.material.needsUpdate = true;
+        }
+      });
+    });
+  }
+  // Boost emissive on active falling pieces to make them clearly stand out.
+  if (typeof fallingPiecesGroup !== 'undefined' && fallingPiecesGroup) {
+    fallingPiecesGroup.traverse(function(obj) {
+      if (!obj.userData || !obj.userData.isBlock) return;
+      if (obj.material && obj.material.emissive) {
+        if (enabled) {
+          obj.userData._hcSavedEmissive = obj.material.emissive.clone();
+          obj.userData._hcSavedEmissiveIntensity = obj.material.emissiveIntensity || 1.0;
+          obj.material.emissive.setRGB(0.5, 0.5, 0.5);
+          obj.material.emissiveIntensity = 1.5;
+        } else {
+          if (obj.userData._hcSavedEmissive) {
+            obj.material.emissive.copy(obj.userData._hcSavedEmissive);
+            obj.material.emissiveIntensity = obj.userData._hcSavedEmissiveIntensity || 1.0;
+          } else {
+            obj.material.emissive.setRGB(0, 0, 0);
+            obj.material.emissiveIntensity = 1.0;
+          }
+        }
+        obj.material.needsUpdate = true;
+      }
+    });
   }
 }
 
@@ -269,23 +313,38 @@ function _syncFontSizeButtons(size) {
 function _loadColorblindMode() {
   try {
     const raw = localStorage.getItem(COLORBLIND_KEY);
-    if (raw !== null) colorblindMode = (raw === "true");
+    if (raw === null) return;
+    // Backward compat: old saves stored "true"/"false" booleans → treat "true" as deuteranopia.
+    if (raw === 'true')  { colorblindPreset = 'deuteranopia'; colorblindMode = true; return; }
+    if (raw === 'false') { colorblindPreset = 'off';          colorblindMode = false; return; }
+    if (raw === 'deuteranopia' || raw === 'protanopia' || raw === 'tritanopia') {
+      colorblindPreset = raw;
+      colorblindMode = true;
+    } else if (raw === 'off') {
+      colorblindPreset = 'off';
+      colorblindMode = false;
+    }
   } catch (_) {}
 }
 
 function _saveColorblindMode() {
   try {
-    localStorage.setItem(COLORBLIND_KEY, String(colorblindMode));
+    localStorage.setItem(COLORBLIND_KEY, colorblindPreset);
   } catch (_) {}
 }
 
 /**
  * Apply colorblind mode globally: swap materials on all existing block meshes
  * and refresh the next-piece preview.
+ * @param {string} preset - 'off' | 'deuteranopia' | 'protanopia' | 'tritanopia'
  */
-function applyColorblindMode(enabled) {
-  colorblindMode = enabled;
+function applyColorblindMode(preset) {
+  colorblindPreset = (preset === 'deuteranopia' || preset === 'protanopia' || preset === 'tritanopia')
+    ? preset : 'off';
+  colorblindMode = (colorblindPreset !== 'off');
   _saveColorblindMode();
+
+  const enabled = colorblindMode;
 
   // Update all existing block meshes in the world and falling groups.
   [worldGroup, fallingPiecesGroup].forEach(function(group) {
@@ -298,8 +357,9 @@ function applyColorblindMode(enabled) {
       let newMat;
       if (enabled) {
         const cbIdx = COLOR_TO_INDEX[canonHex];
-        if (cbIdx !== undefined && COLORBLIND_COLORS[cbIdx] !== null) {
-          newMat = createBlockMaterialColorblind(COLORBLIND_COLORS[cbIdx], COLORBLIND_PATTERNS[cbIdx]);
+        const cbColor = getCBColors(cbIdx);
+        if (cbIdx !== undefined && cbColor !== null && cbColor !== undefined) {
+          newMat = createBlockMaterialColorblind(cbColor, getCBPatterns(cbIdx));
         } else {
           newMat = createBlockMaterial(canonHex);
         }
@@ -324,9 +384,9 @@ function applyColorblindMode(enabled) {
   // Refresh next-pieces HUD colors.
   if (typeof updateNextPiecesHUD === 'function') updateNextPiecesHUD();
 
-  // Sync toggle checkbox visual state.
-  const toggle = document.getElementById("cb-toggle");
-  if (toggle) toggle.checked = enabled;
+  // Sync select element visual state.
+  const sel = document.getElementById("cb-mode-select");
+  if (sel) sel.value = colorblindPreset;
 }
 
 // ── Theme system ───────────────────────────────────────────────────────────────
@@ -1342,11 +1402,11 @@ function initSettings() {
     });
   }
 
-  const cbToggle = document.getElementById("cb-toggle");
-  if (cbToggle) {
-    cbToggle.checked = colorblindMode;
-    cbToggle.addEventListener("change", function() {
-      applyColorblindMode(this.checked);
+  const cbModeSelect = document.getElementById("cb-mode-select");
+  if (cbModeSelect) {
+    cbModeSelect.value = colorblindPreset;
+    cbModeSelect.addEventListener("change", function() {
+      applyColorblindMode(this.value);
     });
   }
 
@@ -1566,8 +1626,8 @@ function _syncDisplayNameField() {
 function openSettings(onClose) {
   _settingsCloseCallback = onClose || null;
   _syncSliders();
-  const cbToggle = document.getElementById("cb-toggle");
-  if (cbToggle) cbToggle.checked = colorblindMode;
+  const cbModeSelect = document.getElementById("cb-mode-select");
+  if (cbModeSelect) cbModeSelect.value = colorblindPreset;
   const rmToggleSync = document.getElementById("reduced-motion-toggle");
   if (rmToggleSync) rmToggleSync.checked = reducedMotionEnabled;
   const hcToggleSync = document.getElementById("high-contrast-toggle");

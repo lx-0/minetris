@@ -196,6 +196,64 @@ const COLORBLIND_PATTERNS = [
   0, // dark violet  - solid (obsidian — puzzle use)
 ];
 
+// Human-readable piece names for screen reader announcements (index maps 1:1 with SHAPES).
+const PIECE_NAMES = [
+  '',           // 0 unused
+  'T',          // 1 T-piece
+  'L',          // 2 L-piece
+  'O',          // 3 O-piece
+  'I',          // 4 I-piece
+  'S',          // 5 S-piece
+  'Z',          // 6 Z-piece
+  'J',          // 7 J-piece
+  'Diamond',    // 8 Diamond (rare)
+  'Crumble',    // 9 Crumble hazard
+  'Magma',      // 10 Magma hazard
+  'Void',       // 11 Void hazard
+];
+
+// Protanopia-safe palette (protanopia: no red cones, red/dark-green confusion).
+// Uses blue/yellow/orange/cyan/pink family to maximise piece distinction.
+const PROTANOPIA_COLORS = [
+  null,
+  0xf0e442, // 1 → yellow            (T — was dirt brown)
+  0x0072b2, // 2 → azure blue        (L — was stone grey)
+  0xe69f00, // 3 → amber orange      (O — was gold yellow)
+  0x56b4e9, // 4 → sky blue          (I — was ice cyan)
+  0x009e73, // 5 → teal green        (S — was moss green)
+  0xd55e00, // 6 → vermillion        (Z — was lava red)
+  0xcc79a7, // 7 → pink              (J — was crystal purple)
+  0x0056b3, // 8 → deep blue         (Diamond)
+  0xddb54a, // 9 → muted amber       (crumble hazard)
+  0xc46a00, // 10 → dark amber       (magma hazard)
+  0x884499, // 11 → medium purple    (void hazard)
+  0x66bb33, // 12 → lime green       (soft moss)
+  0x665522, // 13 → dark tan         (hardened moss)
+  0x22aa88, // 14 → seafoam          (vine)
+  0x220044, // 15 → very dark purple (obsidian)
+];
+
+// Tritanopia-safe palette (tritanopia: no blue cones, blue/green and yellow/pink confusion).
+// Uses red/orange/pink/green/grey family to maximise piece distinction.
+const TRITANOPIA_COLORS = [
+  null,
+  0xee3333, // 1 → coral red         (T — was dirt brown)
+  0x888888, // 2 → medium grey       (L — was stone grey)
+  0xff8800, // 3 → bright orange     (O — was gold yellow)
+  0xff3399, // 4 → hot pink          (I — was ice cyan)
+  0x228822, // 5 → dark green        (S — was moss green)
+  0xaa0000, // 6 → deep red          (Z — was lava red)
+  0x664411, // 7 → dark brown        (J — was crystal purple)
+  0x005588, // 8 → dark navy         (Diamond)
+  0xcc8833, // 9 → tan               (crumble hazard)
+  0xff5511, // 10 → red-orange       (magma hazard)
+  0x550055, // 11 → dark purple      (void hazard)
+  0x44aa22, // 12 → medium green     (soft moss)
+  0x443322, // 13 → dark olive       (hardened moss)
+  0x006633, // 14 → dark teal        (vine)
+  0x111111, // 15 → near-black       (obsidian)
+];
+
 // Nether theme palette — dark stone, molten lava emphasis, crimson/obsidian tones.
 // Index maps 1:1 with COLORS. canonicalColor (Classic hex) is always preserved.
 const NETHER_COLORS = [

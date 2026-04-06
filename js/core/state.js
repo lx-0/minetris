@@ -329,12 +329,34 @@ let dailyRemainingMs   = 180000; // milliseconds remaining (counts down)
 const DAILY_DURATION_MS = 180000; // 3 minutes
 
 // ── Accessibility ─────────────────────────────────────────────────────────────
-// true = deuteranopia-safe palette + surface patterns are used for block rendering.
-let colorblindMode = false;
+// Colorblind preset: 'off' | 'deuteranopia' | 'protanopia' | 'tritanopia'.
+// colorblindMode mirrors (preset !== 'off') for backward compatibility with rendering code.
+let colorblindPreset = 'off';
+let colorblindMode = false;   // derived: (colorblindPreset !== 'off')
 // true = suppresses camera shake, screen flash, and chromatic aberration.
 let reducedMotionEnabled = false;
 // true = high-contrast mode: white text, outlined blocks, increased UI contrast.
 let highContrastEnabled = false;
+
+/**
+ * Return the CVD-safe color for a given block color index under the current preset.
+ * Falls back to the deuteranopia palette when the preset is 'deuteranopia' or unknown.
+ * Returns null when the index has no CVD mapping.
+ */
+function getCBColors(index) {
+  if (colorblindPreset === 'protanopia') return PROTANOPIA_COLORS[index];
+  if (colorblindPreset === 'tritanopia') return TRITANOPIA_COLORS[index];
+  return COLORBLIND_COLORS[index]; // deuteranopia (default)
+}
+
+/**
+ * Return the surface pattern index for a given block color index.
+ * Patterns are the same across all presets — they further distinguish pieces
+ * by shape, not color, so they work regardless of the deficiency type.
+ */
+function getCBPatterns(index) {
+  return COLORBLIND_PATTERNS[index];
+}
 
 // ── Visual theme ──────────────────────────────────────────────────────────────
 // "classic" = default Minecraft-inspired palette (always unlocked).

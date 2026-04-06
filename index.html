@@ -1395,24 +1395,6 @@
           </div>
           <div class="settings-hint">Show your personal best run as a transparent ghost overlay (Classic, Sprint, Blitz, Marathon)</div>
           <div class="settings-section-divider"></div>
-          <div class="settings-row settings-row-toggle">
-            <label class="settings-label settings-label-toggle" for="cb-toggle" data-i18n="settings.colorblind_mode">Colorblind Mode</label>
-            <label class="cb-toggle-switch">
-              <input type="checkbox" id="cb-toggle">
-              <span class="cb-toggle-slider"></span>
-            </label>
-          </div>
-          <div class="settings-hint" data-i18n="settings.colorblind_hint">Deuteranopia-safe palette + surface patterns</div>
-          <div class="settings-section-divider"></div>
-          <div class="settings-row settings-row-toggle">
-            <label class="settings-label settings-label-toggle" for="reduced-motion-toggle" data-i18n="settings.reduced_motion">Reduced Motion</label>
-            <label class="cb-toggle-switch">
-              <input type="checkbox" id="reduced-motion-toggle">
-              <span class="cb-toggle-slider"></span>
-            </label>
-          </div>
-          <div class="settings-hint" data-i18n="settings.reduced_motion_hint">Disables camera shake, screen flash, and chromatic aberration</div>
-          <div class="settings-section-divider"></div>
           <div class="settings-row">
             <label class="settings-label" for="glow-intensity-select">Board Edge Glow</label>
             <select id="glow-intensity-select" class="settings-select">
@@ -1423,6 +1405,21 @@
             </select>
           </div>
           <div class="settings-hint">Dynamic borders that react to line clears, combos, danger, and power-ups</div>
+
+          <!-- ── Accessibility section ──────────────────────────────────── -->
+          <div class="settings-section-divider"></div>
+          <div class="settings-section-heading" role="heading" aria-level="3">Accessibility</div>
+
+          <div class="settings-row">
+            <label class="settings-label" for="cb-mode-select" data-i18n="settings.colorblind_mode">Colorblind Mode</label>
+            <select id="cb-mode-select" class="settings-select" aria-label="Colorblind mode preset">
+              <option value="off">Off</option>
+              <option value="deuteranopia">Deuteranopia</option>
+              <option value="protanopia">Protanopia</option>
+              <option value="tritanopia">Tritanopia</option>
+            </select>
+          </div>
+          <div class="settings-hint" data-i18n="settings.colorblind_hint">CVD-safe palette + surface patterns — distinguishes pieces without relying on color alone</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
             <label class="settings-label settings-label-toggle" for="high-contrast-toggle" data-i18n="settings.high_contrast">High Contrast</label>
@@ -1431,7 +1428,16 @@
               <span class="cb-toggle-slider"></span>
             </label>
           </div>
-          <div class="settings-hint" data-i18n="settings.high_contrast_hint">White text, block outlines, and increased UI contrast for low-vision users</div>
+          <div class="settings-hint" data-i18n="settings.high_contrast_hint">White block outlines, brighter active piece, ghost piece outline, and increased UI contrast (WCAG AAA)</div>
+          <div class="settings-section-divider"></div>
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="reduced-motion-toggle" data-i18n="settings.reduced_motion">Reduced Motion</label>
+            <label class="cb-toggle-switch">
+              <input type="checkbox" id="reduced-motion-toggle">
+              <span class="cb-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-hint" data-i18n="settings.reduced_motion_hint">Disables camera shake, screen flash, and chromatic aberration</div>
           <div class="settings-section-divider"></div>
           <div class="settings-row settings-row-toggle">
             <label class="settings-label settings-label-toggle" data-i18n="settings.ui_font_size">UI Font Size</label>

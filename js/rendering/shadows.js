@@ -21,6 +21,10 @@ function _getShadowCastDir() {
  * Create flat semi-transparent ghost meshes for a newly spawned piece and
  * attach them to shadowsGroup.  Called once per piece at spawn time.
  * The thin axis of each ghost slab faces the gravity direction.
+ *
+ * Each shadow slot holds:
+ *   - slot.fill  — translucent MeshBasicMaterial slab (normal mode)
+ *   - slot.edges — EdgesGeometry LineSegments (high contrast mode)
  */
 function createPieceShadow(piece) {
   const color = COLORS[piece.userData.colorIndex] || 0xffffff;
@@ -37,15 +41,38 @@ function createPieceShadow(piece) {
     geoW = wide; geoH = thin; geoD = wide;  // thin on Y axis (default)
   }
 
+  const _hc = (typeof highContrastEnabled !== 'undefined') && highContrastEnabled;
+
   piece.children.forEach(() => {
     const geo = new THREE.BoxGeometry(geoW, geoH, geoD);
-    const mat = new THREE.MeshBasicMaterial({
+
+    // Fill mesh (used in normal mode)
+    const fillMat = new THREE.MeshBasicMaterial({
       color: color,
       transparent: true,
       opacity: 0,
       depthWrite: false,
     });
-    shadowGroup.add(new THREE.Mesh(geo, mat));
+    const fillMesh = new THREE.Mesh(geo, fillMat);
+    fillMesh.visible = !_hc;
+
+    // Edge outline (used in high contrast mode) — bright white dashed-style lines
+    const edgesGeo = new THREE.EdgesGeometry(geo);
+    const edgesMat = new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    const edgesMesh = new THREE.LineSegments(edgesGeo, edgesMat);
+    edgesMesh.visible = _hc;
+
+    // Group fill + edges together in one slot object
+    const slot = new THREE.Group();
+    slot.userData.isShadowSlot = true;
+    slot.add(fillMesh);
+    slot.add(edgesMesh);
+    shadowGroup.add(slot);
   });
 
   shadowsGroup.add(shadowGroup);
@@ -119,26 +146,34 @@ function updatePieceShadow(piece) {
     && typeof MOBILE_OVERRIDES !== 'undefined')
     ? MOBILE_OVERRIDES.ghostOpacityMax : 0.40;
   const opacity = 0.08 + t * (_opMax - 0.08);
+  const _hc = (typeof highContrastEnabled !== 'undefined') && highContrastEnabled;
+  // HC opacity is higher so the outline is clearly visible
+  const hcOpacity = 0.3 + t * 0.7;
 
   blockData.forEach(({ wp, surfaceVal }, i) => {
     if (i >= shadowGroup.children.length) return;
-    const shadowMesh = shadowGroup.children[i];
-    // Place ghost slab flush against the landing surface.
+    const slot = shadowGroup.children[i];
+    if (!slot) return;
+    const fillMesh  = slot.children[0];
+    const edgesMesh = slot.children[1];
+
+    // Place the slot flush against the landing surface.
     switch (_grav) {
-      case 'up':
-        shadowMesh.position.set(wp.x, surfaceVal - 0.05, wp.z);
-        break;
-      case 'left':
-        shadowMesh.position.set(surfaceVal + 0.05, wp.y, wp.z);
-        break;
-      case 'right':
-        shadowMesh.position.set(surfaceVal - 0.05, wp.y, wp.z);
-        break;
-      default:
-        shadowMesh.position.set(wp.x, surfaceVal + 0.05, wp.z);
-        break;
+      case 'up':    slot.position.set(wp.x, surfaceVal - 0.05, wp.z); break;
+      case 'left':  slot.position.set(surfaceVal + 0.05, wp.y, wp.z); break;
+      case 'right': slot.position.set(surfaceVal - 0.05, wp.y, wp.z); break;
+      default:      slot.position.set(wp.x, surfaceVal + 0.05, wp.z); break;
     }
-    shadowMesh.material.opacity = opacity;
+
+    // Toggle fill / edge visibility based on high contrast mode.
+    if (fillMesh) {
+      fillMesh.visible = !_hc;
+      if (fillMesh.material) fillMesh.material.opacity = opacity;
+    }
+    if (edgesMesh) {
+      edgesMesh.visible = _hc;
+      if (edgesMesh.material) edgesMesh.material.opacity = hcOpacity;
+    }
   });
 }
 
@@ -149,9 +184,11 @@ function removePieceShadow(piece) {
   const shadowGroup = piece.userData.shadowGroup;
   if (!shadowGroup) return;
   shadowsGroup.remove(shadowGroup);
-  shadowGroup.children.forEach((m) => {
-    m.geometry.dispose();
-    m.material.dispose();
+  shadowGroup.children.forEach((slot) => {
+    slot.children.forEach((m) => {
+      if (m.geometry) m.geometry.dispose();
+      if (m.material) m.material.dispose();
+    });
   });
   piece.userData.shadowGroup = null;
 }
