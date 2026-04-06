@@ -683,6 +683,10 @@ function _initBattleHandlers() {
         if (typeof queueGarbage === 'function') {
           queueGarbage(msg.lines || 1, msg.gapSeed || 1);
         }
+        // Update garbage meter to reflect new pending total
+        if (typeof battleHud !== 'undefined' && typeof battleHud.updateGarbageMeter === 'function') {
+          battleHud.updateGarbageMeter((typeof getPendingGarbageLines === 'function') ? getPendingGarbageLines() : (msg.lines || 1));
+        }
         // Incoming attack vignette flash + thud SFX
         if (typeof battleFx !== 'undefined') battleFx.showIncomingAttack(msg.lines || 1);
       });

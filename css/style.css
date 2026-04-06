@@ -4775,6 +4775,75 @@ tr.dgo-top10-me .dgo-top10-score { color: #0cf; }
   100% { opacity: 0.0; }
 }
 
+/* ── Battle garbage meter — left side of board ──────────────────────────────── */
+/* Shows pending incoming garbage lines as a vertical bar with count label.      */
+#battle-garbage-meter {
+  position: fixed;
+  left: calc(50% - 140px);   /* left edge of the 3D board area */
+  top: 50%;
+  transform: translateX(-100%) translateY(-50%);
+  width: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  font-family: "Press Start 2P", cursive;
+}
+
+/* Track (background) */
+#battle-garbage-meter::before {
+  content: '';
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 120px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+}
+
+/* Fill bar (height driven by JS) */
+#battle-garbage-meter-fill {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 0;
+  max-height: 120px;
+  border-radius: 3px;
+  background: linear-gradient(to top, #ff4400, #ff9900);
+  box-shadow: 0 0 6px rgba(255, 100, 0, 0.7);
+  transition: height 0.15s ease-out, background 0.3s;
+}
+
+/* Line count label */
+#battle-garbage-meter-count {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 6px;
+  color: #ff6633;
+  text-shadow: 0 0 4px rgba(255,80,0,0.9), 1px 1px 2px #000;
+  min-width: 18px;
+  text-align: center;
+}
+
+@keyframes garbage-meter-pulse {
+  0%   { opacity: 0.8; }
+  50%  { opacity: 1.0; }
+  100% { opacity: 0.8; }
+}
+
+#battle-garbage-meter.danger #battle-garbage-meter-fill {
+  background: linear-gradient(to top, #ff0000, #ff4400);
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.9);
+  animation: garbage-meter-pulse 0.4s ease-in-out infinite;
+}
+
 /* Reset World button inside the survival card */
 .survival-reset-btn {
   font-family: "Press Start 2P", cursive;

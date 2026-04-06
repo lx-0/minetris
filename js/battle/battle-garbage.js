@@ -15,28 +15,69 @@ let _garbageQueue = [];
 
 const GARBAGE_DELAY_SECS = 0.5;
 
-// ── Garbage scaling table ─────────────────────────────────────────────────────
-// Maps linesCleared (1–4) to base garbage rows sent (Guideline Tetris rules).
-const _BASE_GARBAGE = [0, 1, 2, 4, 6]; // index 0 unused
+// ── Garbage scaling tables ─────────────────────────────────────────────────────
+// Standard clears (index = lines cleared, 0-based for single–tetris)
+const _BASE_GARBAGE    = [0, 0, 1, 2, 4];  // single=0, double=1, triple=2, tetris=4
+// T-spin clears (index = lines cleared: 0=zero-line tspin, 1=single, 2=double, 3=triple)
+const _TSPIN_GARBAGE   = [0, 2, 4, 6];
+// Perfect-clear bonus (overrides all other values)
+const PERFECT_CLEAR_GARBAGE = 10;
 
 /**
  * Calculate how many garbage rows to send for a line-clear attack.
- * @param {number}  linesCleared  Number of lines cleared this piece (1–4).
- * @param {number}  comboCount    Consecutive-clear counter (1 = first, no bonus).
- * @param {boolean} isBackToBack  True if previous clear was also a Tetris (4-line).
- * @returns {number} Total garbage rows to send (≥ 1).
+ * @param {number}  linesCleared   Number of lines cleared this piece (0–4).
+ * @param {number}  comboCount     Consecutive-clear counter (1 = first clear, no bonus).
+ * @param {boolean} isTSpin        True if the clearing piece performed a T-spin.
+ * @param {boolean} isPerfectClear True if the board is empty after this clear.
+ * @returns {number} Total garbage rows to send (may be 0).
  */
-function calcGarbageSent(linesCleared, comboCount, isBackToBack) {
-  const base = _BASE_GARBAGE[Math.min(linesCleared, 4)] || 1;
+function calcGarbageSent(linesCleared, comboCount, isTSpin, isPerfectClear) {
+  // Perfect clear overrides everything
+  if (isPerfectClear) return PERFECT_CLEAR_GARBAGE;
 
-  // Back-to-Back Tetris: override to 8 rows (base 6 + 2 bonus)
-  let garbage = (isBackToBack && linesCleared >= 4) ? 8 : base;
+  let base;
+  if (isTSpin) {
+    base = _TSPIN_GARBAGE[Math.min(linesCleared, 3)] || 0;
+  } else {
+    base = _BASE_GARBAGE[Math.min(linesCleared, 4)] || 0;
+  }
 
-  // Combo multiplier: +1 per tier above first clear, capped at +3
-  const comboBonus = Math.min(Math.max((comboCount | 0) - 1, 0), 3);
-  garbage += comboBonus;
+  // Combo bonus: +1 per consecutive clear after the first
+  const comboBonus = Math.max((comboCount | 0) - 1, 0);
+  return base + comboBonus;
+}
 
-  return garbage;
+/**
+ * Returns the total number of pending garbage lines queued for delivery.
+ * Used to drive the garbage meter UI.
+ */
+function getPendingGarbageLines() {
+  let total = 0;
+  for (let i = 0; i < _garbageQueue.length; i++) total += _garbageQueue[i].lines;
+  return total;
+}
+
+/**
+ * Cancel up to `linesToCancel` pending garbage lines, consuming queue entries
+ * from oldest first.  Returns the number of lines actually cancelled.
+ * Called when a player clears lines while garbage is pending — those garbage
+ * lines are cancelled before any surplus is sent to the opponent.
+ * @param {number} linesToCancel
+ * @returns {number} Lines actually cancelled (≤ linesToCancel).
+ */
+function cancelPendingGarbageLines(linesToCancel) {
+  let remaining = linesToCancel;
+  while (remaining > 0 && _garbageQueue.length > 0) {
+    const entry = _garbageQueue[0];
+    if (entry.lines <= remaining) {
+      remaining -= entry.lines;
+      _garbageQueue.shift();
+    } else {
+      entry.lines -= remaining;
+      remaining = 0;
+    }
+  }
+  return linesToCancel - remaining;
 }
 
 // ── Garbage grid dimensions ───────────────────────────────────────────────────
@@ -77,6 +118,10 @@ function deliverPendingGarbage() {
   const entry = _garbageQueue[0];
   if (now < entry.readyAt) return;  // still in the 0.5 s warning window
   _garbageQueue.shift();
+  // Update garbage meter after consuming the entry
+  if (typeof battleHud !== 'undefined' && typeof battleHud.updateGarbageMeter === 'function') {
+    battleHud.updateGarbageMeter(getPendingGarbageLines());
+  }
   // Fortress: block all incoming garbage while active
   if (typeof fortressActive !== 'undefined' && fortressActive) return;
   _injectRubbleRows(entry.lines, entry.gapSeed);
@@ -85,6 +130,9 @@ function deliverPendingGarbage() {
 /** Flush the queue — call on battle start and game reset. */
 function resetGarbageQueue() {
   _garbageQueue = [];
+  if (typeof battleHud !== 'undefined' && typeof battleHud.updateGarbageMeter === 'function') {
+    battleHud.updateGarbageMeter(0);
+  }
 }
 
 /**
@@ -136,13 +184,14 @@ function _injectRubbleRows(count, gapSeed) {
   });
 
   // 2. Inject Rubble rows at the bottom ─────────────────────────────────────────
-  let seed = gapSeed >>> 0;
+  // All rows from the same attack share a single gap column (consistent gap per attack).
+  const _seed = ((((gapSeed >>> 0) * 1664525) + 1013904223) >>> 0);
+  const _gapCol = _seed % _GG_COLS;
+  const _gapX   = _GG_X_MIN + _gapCol;  // X position of the shared gap column
+
   const _newRubbleBlocks = [];
   for (let row = 0; row < count; row++) {
-    // Advance seed for each row to get a distinct gap column per row
-    seed   = ((seed * 1664525) + 1013904223) >>> 0;
-    const gapCol = seed % _GG_COLS;
-    const gapX   = _GG_X_MIN + gapCol;   // X position of the gap column
+    const gapX = _gapX;
 
     // grid-Y follows the same float convention: 0.5, 1.5, 2.5, …
     const gridY = row + 0.5;

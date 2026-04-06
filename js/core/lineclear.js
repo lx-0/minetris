@@ -518,21 +518,37 @@ function checkLineClear(newBlocks) {
   if (isCoopMode && typeof coop !== 'undefined' && coop.state === CoopState.IN_GAME) {
     coop.send({ type: 'line_clear', rows: completeLevels, score: _lcComputedScore });
   }
-  // Battle: calculate scaled garbage, update back-to-back flag, and notify opponent.
+  // Battle: calculate scaled garbage, apply cancellation, and notify opponent.
+  // Cancellation rule: if we have pending incoming garbage, use our attack to cancel
+  // it first before sending any surplus to the opponent.
   // gapSeed is derived from the local PRNG so it is consistent but not predictable.
   if (isBattleMode && typeof battle !== 'undefined' && battle.state === BattleState.IN_GAME) {
-    const _isB2B = lastClearWasTetris && completeLevels.length >= 4;
     const _garbageRows = (typeof calcGarbageSent === 'function')
-      ? calcGarbageSent(completeLevels.length, comboCount, _isB2B)
+      ? calcGarbageSent(completeLevels.length, comboCount, _lcIsTSpin, _lcPerfectClear)
       : completeLevels.length;
-    const _gapSeed = Math.floor((typeof _rng === 'function' ? _rng() : Math.random()) * 0xffffffff) >>> 0;
-    battle.send({ type: 'battle_attack', lines: _garbageRows, gapSeed: _gapSeed });
-    battleGarbageSent += _garbageRows;
-    if (typeof onMissionBattleGarbageSent === 'function') onMissionBattleGarbageSent(_garbageRows);
-    // Show outgoing attack preview on our opponent mini-map HUD
-    if (typeof battleHud !== 'undefined') battleHud.showOutgoingAttack(_garbageRows);
-    // Outgoing particle streak + whoosh
-    if (typeof battleFx !== 'undefined') battleFx.showOutgoingAttack(_garbageRows);
+
+    // Cancel pending incoming garbage before sending to opponent
+    let _rowsToSend = _garbageRows;
+    const _pending = (typeof getPendingGarbageLines === 'function') ? getPendingGarbageLines() : 0;
+    if (_pending > 0 && _rowsToSend > 0 && typeof cancelPendingGarbageLines === 'function') {
+      const _cancelled = cancelPendingGarbageLines(_rowsToSend);
+      _rowsToSend -= _cancelled;
+      // Update garbage meter after cancellation
+      if (typeof battleHud !== 'undefined' && typeof battleHud.updateGarbageMeter === 'function') {
+        battleHud.updateGarbageMeter((typeof getPendingGarbageLines === 'function') ? getPendingGarbageLines() : 0);
+      }
+    }
+
+    if (_rowsToSend > 0) {
+      const _gapSeed = Math.floor((typeof _rng === 'function' ? _rng() : Math.random()) * 0xffffffff) >>> 0;
+      battle.send({ type: 'battle_attack', lines: _rowsToSend, gapSeed: _gapSeed });
+      battleGarbageSent += _rowsToSend;
+      if (typeof onMissionBattleGarbageSent === 'function') onMissionBattleGarbageSent(_rowsToSend);
+      // Show outgoing attack preview on our opponent mini-map HUD
+      if (typeof battleHud !== 'undefined') battleHud.showOutgoingAttack(_rowsToSend);
+      // Outgoing particle streak + whoosh
+      if (typeof battleFx !== 'undefined') battleFx.showOutgoingAttack(_rowsToSend);
+    }
     // Combo feed toast (show when combo bonus is active, i.e. comboCount >= 2)
     if (comboCount >= 2 && typeof battleFx !== 'undefined') battleFx.showComboFeed(comboCount);
   }

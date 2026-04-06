@@ -27,6 +27,8 @@ const battleHud = (function () {
   let _opponentBannerColor = null;
   let _opponentIsLegendary = false;
 
+  const GARBAGE_METER_MAX_LINES = 10;  // 10 lines fills the track completely
+
   // ── DOM build ─────────────────────────────────────────────────────────────
 
   function _build() {
@@ -224,11 +226,20 @@ const battleHud = (function () {
       _opponentBannerColor = null;
       _opponentIsLegendary = false;
       if (_opponentEmblemEl) { _opponentEmblemEl.textContent = ''; _opponentEmblemEl.style.display = 'none'; }
+      // Show and reset the garbage meter
+      const _meterEl = document.getElementById('battle-garbage-meter');
+      if (_meterEl) { _meterEl.style.display = 'flex'; _meterEl.classList.remove('danger'); }
+      const _fillEl  = document.getElementById('battle-garbage-meter-fill');
+      if (_fillEl)  _fillEl.style.height = '0';
+      const _countEl = document.getElementById('battle-garbage-meter-count');
+      if (_countEl) _countEl.textContent = '';
     },
 
     /** Call when battle ends. */
     hide() {
       if (_el) _el.style.display = 'none';
+      const _meterEl = document.getElementById('battle-garbage-meter');
+      if (_meterEl) _meterEl.style.display = 'none';
     },
 
     /**
@@ -321,6 +332,30 @@ const battleHud = (function () {
       }
       // Redraw mini-map to apply/remove skin tint
       if (_flashTimer <= 0) _drawBars(_lastCols, false);
+    },
+
+    /**
+     * Update the garbage meter to reflect `pendingLines` queued incoming rows.
+     * Shows the meter filled to proportion; hides count label when 0.
+     * @param {number} pendingLines  Total pending incoming garbage line count.
+     */
+    updateGarbageMeter(pendingLines) {
+      const _meterEl = document.getElementById('battle-garbage-meter');
+      const _fillEl  = document.getElementById('battle-garbage-meter-fill');
+      const _countEl = document.getElementById('battle-garbage-meter-count');
+      if (!_meterEl || !_fillEl || !_countEl) return;
+
+      const n = Math.max(0, pendingLines | 0);
+      const pct = Math.min(n / GARBAGE_METER_MAX_LINES, 1.0);
+      _fillEl.style.height = Math.round(pct * 120) + 'px';
+      _countEl.textContent = n > 0 ? String(n) : '';
+
+      // Danger state (≥ 6 lines = 60% fill)
+      if (n >= 6) {
+        _meterEl.classList.add('danger');
+      } else {
+        _meterEl.classList.remove('danger');
+      }
     },
 
     /**
