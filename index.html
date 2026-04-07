@@ -502,6 +502,11 @@
                   <div class="mode-card-desc">Fight your opponent. Last miner standing wins.</div>
                   <button class="mode-card-lb-btn" data-lb-tab="battle" title="Leaderboard">&#127942;</button>
                 </div>
+                <div class="mode-card mode-card-rooms" id="mode-card-rooms" tabindex="0" role="button" aria-label="Custom Room — Create a private lobby with configurable rules and invite links">
+                  <div class="mode-card-icon">&#127981;</div>
+                  <div class="mode-card-name">Custom Room</div>
+                  <div class="mode-card-desc">Create a private lobby. Set rules, invite friends, play your way.</div>
+                </div>
                 <div class="mode-card mode-card-local-multi" id="mode-card-local_multi" data-mode="local_multi" tabindex="0" role="button" aria-label="Local 1v1 — Split-screen battle on the same device. No internet required.">
                   <div class="mode-card-icon">&#127918;</div>
                   <div class="mode-card-name">Local 1v1</div>
@@ -2561,6 +2566,140 @@
         </div>
       </div>
 
+      <!-- Custom Rooms overlay — shown when Custom Room mode card is clicked -->
+      <div id="rooms-overlay" style="display:none;">
+        <div id="rooms-inner">
+
+          <!-- ── Choice view ── -->
+          <div id="rooms-choice-view">
+            <div class="rooms-title">&#127981; CUSTOM ROOM</div>
+            <div class="rooms-subtitle">Create a lobby with your own rules</div>
+            <div class="rooms-choice-btns">
+              <button id="rooms-choice-create-btn">&#10024; Create Room</button>
+              <button id="rooms-choice-join-btn">&#128279; Join by Code</button>
+              <button id="rooms-choice-browse-btn">&#128065; Browse Public Rooms</button>
+            </div>
+            <button id="rooms-choice-cancel-btn">&#8592; Back</button>
+          </div>
+
+          <!-- ── Settings view (host fills in before creating) ── -->
+          <div id="rooms-settings-view" style="display:none;">
+            <div class="rooms-title">&#9881; ROOM SETTINGS</div>
+            <div class="rooms-settings-form">
+              <label class="rooms-label">Room Name
+                <input id="rooms-settings-name" type="text" maxlength="32" placeholder="My Room" autocomplete="off">
+              </label>
+              <label class="rooms-label">Max Players
+                <select id="rooms-settings-max">
+                  <option value="2">2 Players</option>
+                  <option value="3">3 Players</option>
+                  <option value="4">4 Players</option>
+                </select>
+              </label>
+              <label class="rooms-label">Game Speed
+                <select id="rooms-settings-speed">
+                  <option value="slow">Slow (0.6&#215;)</option>
+                  <option value="normal" selected>Normal (1.0&#215;)</option>
+                  <option value="fast">Fast (1.8&#215;)</option>
+                </select>
+              </label>
+              <label class="rooms-label">Starting Level: <span id="rooms-settings-level-display">0</span>
+                <input id="rooms-settings-level" type="range" min="0" max="15" value="0" step="1">
+              </label>
+              <label class="rooms-label">Lock Delay
+                <select id="rooms-settings-lock">
+                  <option value="short">Short</option>
+                  <option value="normal" selected>Normal</option>
+                  <option value="long">Long</option>
+                </select>
+              </label>
+              <label class="rooms-label">Board Size
+                <select id="rooms-settings-board">
+                  <option value="standard" selected>Standard (10&#215;20)</option>
+                  <option value="wide">Wide (12&#215;20)</option>
+                </select>
+              </label>
+              <label class="rooms-label rooms-checkbox-label">
+                <input id="rooms-settings-garbage" type="checkbox"> Garbage Lines (competitive mode)
+              </label>
+              <label class="rooms-label rooms-checkbox-label">
+                <input id="rooms-settings-public" type="checkbox" checked> Make room public (visible in Browse)
+              </label>
+            </div>
+            <div class="rooms-settings-actions">
+              <button id="rooms-settings-create-btn">&#10024; Create Room</button>
+              <button id="rooms-settings-back-btn">&#8592; Back</button>
+            </div>
+          </div>
+
+          <!-- ── Join view ── -->
+          <div id="rooms-join-view" style="display:none;">
+            <div class="rooms-title">&#128279; JOIN ROOM</div>
+            <div class="rooms-join-hint">Enter the room code from your friend</div>
+            <input id="rooms-join-code-input" type="text" maxlength="6" placeholder="ABCD12" autocomplete="off" spellcheck="false" class="rooms-code-input">
+            <div id="rooms-join-status" class="rooms-status-msg"></div>
+            <div class="rooms-join-btns">
+              <button id="rooms-join-confirm-btn">&#9654; Join</button>
+              <button id="rooms-join-cancel-btn">&#8592; Back</button>
+            </div>
+          </div>
+
+          <!-- ── Browse public rooms view ── -->
+          <div id="rooms-browse-view" style="display:none;">
+            <div class="rooms-title">&#128065; PUBLIC ROOMS</div>
+            <div id="rooms-browse-list" class="rooms-browse-list"></div>
+            <div class="rooms-browse-actions">
+              <button id="rooms-browse-refresh-btn">&#8635; Refresh</button>
+              <button id="rooms-browse-back-btn">&#8592; Back</button>
+            </div>
+          </div>
+
+          <!-- ── Lobby view ── -->
+          <div id="rooms-lobby-view" style="display:none;">
+            <!-- Header row: room code + invite -->
+            <div class="rooms-lobby-header">
+              <div class="rooms-lobby-title">&#127981; LOBBY</div>
+              <div class="rooms-lobby-code-row">
+                <span class="rooms-code-label">Code:</span>
+                <span id="rooms-lobby-code" class="rooms-lobby-code"></span>
+                <button id="rooms-copy-link-btn" class="rooms-copy-btn">&#128203; Copy Invite</button>
+                <div id="rooms-copy-feedback" class="rooms-copy-feedback"></div>
+              </div>
+            </div>
+
+            <!-- Settings summary + edit (host only) -->
+            <div class="rooms-lobby-settings-row">
+              <div id="rooms-lobby-settings" class="rooms-lobby-settings"></div>
+              <button id="rooms-edit-settings-btn" class="rooms-edit-btn" style="display:none;">&#9881; Edit</button>
+            </div>
+
+            <!-- Player list -->
+            <div id="rooms-player-list" class="rooms-player-list"></div>
+            <div id="rooms-ready-count" class="rooms-ready-count"></div>
+            <div id="rooms-spec-count" class="rooms-spec-count"></div>
+
+            <!-- Chat -->
+            <div class="rooms-chat-section">
+              <div id="rooms-chat-log" class="rooms-chat-log"></div>
+              <div class="rooms-chat-input-row">
+                <input id="rooms-chat-input" type="text" maxlength="200" placeholder="Say something&#8230;" autocomplete="off" class="rooms-chat-input">
+                <button id="rooms-chat-send-btn" class="rooms-chat-send">&#9654;</button>
+              </div>
+            </div>
+
+            <div id="rooms-lobby-status" class="rooms-status-msg"></div>
+
+            <!-- Action buttons -->
+            <div class="rooms-lobby-actions">
+              <button id="rooms-ready-btn" class="rooms-ready-toggle">&#9633; Ready?</button>
+              <button id="rooms-start-btn" class="rooms-start-btn" disabled style="display:none;">&#9654; Start Game</button>
+              <button id="rooms-lobby-leave-btn" class="rooms-leave-btn">&#8592; Leave</button>
+            </div>
+          </div>
+
+        </div><!-- /rooms-inner -->
+      </div><!-- /rooms-overlay -->
+
       <!-- Spectator overlay — shown when watching a live match -->
       <div id="spectator-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.93);z-index:9000;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px;padding-right:256px;box-sizing:border-box;font-family:monospace;color:#fff;overflow-y:auto;">
 
@@ -3146,6 +3285,8 @@
     <script src="js/social/coop-init.js"></script>
     <script src="js/battle/battle-init.js"></script>
     <script src="js/battle/battle-spectator-init.js"></script>
+    <script src="js/social/rooms.js"></script>
+    <script src="js/social/rooms-init.js"></script>
     <script src="js/social/tournament-init.js"></script>
     <script src="js/ui/share-modal-init.js"></script>
     <script src="js/player/touch-controls.js"></script>
