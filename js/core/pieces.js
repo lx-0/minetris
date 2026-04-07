@@ -119,7 +119,10 @@ function updateSnapAnimations(delta) {
 
 function createPiece3D(shapeData, colorIndex) {
   const pieceGroup = new THREE.Group();
-  const color = COLORS[colorIndex];
+  const _seColorHex = typeof getSeasonalBlockColor === 'function' ? getSeasonalBlockColor() : null;
+  const color = _seColorHex
+    ? parseInt(_seColorHex.replace('#', ''), 16)
+    : COLORS[colorIndex];
   shapeData.forEach((row, y) => {
     row.forEach((value, x) => {
       if (value > 0) {

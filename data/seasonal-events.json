@@ -1,11 +1,11 @@
 [
   {
-    "id": "spring_mining_festival_2026",
-    "name": "Spring Mining Festival",
+    "id": "spring_bloom_2026",
+    "name": "Spring Bloom",
     "narrativeBlurb": "Cherry blossoms bloom underground! Mine through spring for exclusive rewards.",
     "icon": "🌸",
     "startDate": "2026-03-20",
-    "endDate": "2026-04-20",
+    "endDate": "2026-06-19",
     "theme": {
       "blockColorOverride": "#f9a8d4",
       "blockColorOverride2": "#fbcfe8",
@@ -15,8 +15,8 @@
       "hudAccent": "#f472b6"
     },
     "challenge": {
-      "id": "spring_100_lines",
-      "description": "Clear 100 lines during the Spring Mining Festival",
+      "id": "spring_bloom_100_lines_2026",
+      "description": "Clear 100 lines during the Spring Bloom event",
       "target": 100,
       "metric": "lines_cleared",
       "rewards": [
@@ -27,6 +27,102 @@
         {
           "cosmeticId": "seasonal_spring_border",
           "label": "Cherry Blossom border"
+        }
+      ]
+    }
+  },
+  {
+    "id": "summer_heat_2026",
+    "name": "Summer Heat",
+    "narrativeBlurb": "The mines sizzle! Blaze through the hottest season for legendary loot.",
+    "icon": "☀️",
+    "startDate": "2026-06-20",
+    "endDate": "2026-09-21",
+    "theme": {
+      "blockColorOverride": "#fbbf24",
+      "blockColorOverride2": "#f59e0b",
+      "blockColorOverride3": "#fde68a",
+      "particleEffect": "fire",
+      "bannerAccent": "#f59e0b",
+      "hudAccent": "#fbbf24"
+    },
+    "challenge": {
+      "id": "summer_heat_score_20000_2026",
+      "description": "Reach 20,000 points in a single game during Summer Heat",
+      "target": 20000,
+      "metric": "score",
+      "rewards": [
+        {
+          "cosmeticId": "seasonal_summer_crown",
+          "label": "Solar Crown title"
+        },
+        {
+          "cosmeticId": "seasonal_summer_border",
+          "label": "Sunbeam border"
+        }
+      ]
+    }
+  },
+  {
+    "id": "autumn_harvest_2026",
+    "name": "Autumn Harvest",
+    "narrativeBlurb": "Leaves fall as the mine changes color. Reap the rewards of a bountiful season.",
+    "icon": "🍂",
+    "startDate": "2026-09-22",
+    "endDate": "2026-12-20",
+    "theme": {
+      "blockColorOverride": "#b45309",
+      "blockColorOverride2": "#d97706",
+      "blockColorOverride3": "#92400e",
+      "particleEffect": "cherry_blossom",
+      "bannerAccent": "#d97706",
+      "hudAccent": "#b45309"
+    },
+    "challenge": {
+      "id": "autumn_harvest_150_lines_2026",
+      "description": "Clear 150 lines during the Autumn Harvest event",
+      "target": 150,
+      "metric": "lines_cleared",
+      "rewards": [
+        {
+          "cosmeticId": "seasonal_autumn_badge",
+          "label": "Harvest Moon badge"
+        },
+        {
+          "cosmeticId": "seasonal_autumn_border",
+          "label": "Fallen Leaves border"
+        }
+      ]
+    }
+  },
+  {
+    "id": "winter_frost_2026",
+    "name": "Winter Frost",
+    "narrativeBlurb": "Ice seeps into the mines. Brave the frost and claim the frozen crown.",
+    "icon": "❄️",
+    "startDate": "2026-12-21",
+    "endDate": "2027-03-19",
+    "theme": {
+      "blockColorOverride": "#bae6fd",
+      "blockColorOverride2": "#e0f2fe",
+      "blockColorOverride3": "#7dd3fc",
+      "particleEffect": "cherry_blossom",
+      "bannerAccent": "#38bdf8",
+      "hudAccent": "#7dd3fc"
+    },
+    "challenge": {
+      "id": "winter_frost_score_25000_2026",
+      "description": "Reach 25,000 points in a single game during Winter Frost",
+      "target": 25000,
+      "metric": "score",
+      "rewards": [
+        {
+          "cosmeticId": "seasonal_winter_crown",
+          "label": "Frozen Crown title"
+        },
+        {
+          "cosmeticId": "seasonal_winter_border",
+          "label": "Snowflake border"
         }
       ]
     }

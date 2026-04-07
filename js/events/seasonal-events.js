@@ -713,6 +713,15 @@ function getSeasonalBlockColor() {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
+/**
+ * Returns the void-block spawn multiplier for the active event.
+ * A value > 1 adds extra void-block slots to the piece pool in pieces.js.
+ */
+function getSeasonalVoidBlockMult() {
+  if (!_seActiveEvent || !_seActiveEvent.specialRules) return 1;
+  return _seActiveEvent.specialRules.voidBlockMult || 1;
+}
+
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
 function _seEsc(s) {

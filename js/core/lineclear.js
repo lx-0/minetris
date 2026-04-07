@@ -966,12 +966,12 @@ function _lcDetonate() {
   });
   lineClearFlashBlocks = [];
 
-  // Seasonal event: spawn flower particles along cleared rows
-  if (typeof spawnSpringParticles === 'function' && typeof getActiveSeasonalEvent === 'function' && getActiveSeasonalEvent()) {
+  // Seasonal event: spawn themed particles along cleared rows
+  if (typeof spawnSeasonalParticles === 'function' && typeof getActiveSeasonalEvent === 'function' && getActiveSeasonalEvent()) {
     const midX = 0;
     const midZ = 0;
     for (let i = 0; i < worldYs.length; i++) {
-      spawnSpringParticles(midX, worldYs[i], midZ);
+      spawnSeasonalParticles(midX, worldYs[i], midZ);
     }
   }
   // Puzzle / custom puzzle mode: check win/lose after line clear
