@@ -897,6 +897,13 @@ function _renderHeatmap(history) {
 function _renderHistoryContent() {
   var histEl = document.getElementById('profile-history-content');
   if (!histEl) return;
+
+  // Delegate to history.js enhanced panel if available
+  if (typeof renderMatchHistoryContent === 'function') {
+    renderMatchHistoryContent(histEl);
+    return;
+  }
+
   histEl.innerHTML = _renderHistoryTab();
 
   var history = typeof loadSessionHistory === 'function' ? loadSessionHistory() : [];

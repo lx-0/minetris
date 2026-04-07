@@ -139,10 +139,10 @@ function loadSessionHistory() {
  * @param {number} [params.piecesPlaced] pieces placed
  * @param {number} [params.apm]         actions per minute
  */
-function logSession({ mode, score, lines, durationSecs, result, maxCombo, tSpins, tetrises, piecesPlaced, apm }) {
+function logSession({ mode, score, lines, durationSecs, result, level, maxCombo, tSpins, tetrises, piecesPlaced, apm }) {
   try {
     const history = loadSessionHistory();
-    history.unshift({
+    const entry = {
       date: new Date().toISOString().slice(0, 10),
       mode: mode || 'classic',
       score: score || 0,
@@ -154,7 +154,9 @@ function logSession({ mode, score, lines, durationSecs, result, maxCombo, tSpins
       tetrises: tetrises || 0,
       piecesPlaced: piecesPlaced || 0,
       apm: apm || 0,
-    });
+    };
+    if (level != null && level > 0) entry.level = level;
+    history.unshift(entry);
     // Keep only the most recent entries
     if (history.length > SESSION_HISTORY_LIMIT) history.length = SESSION_HISTORY_LIMIT;
     localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(history));

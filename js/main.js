@@ -897,6 +897,19 @@ function init() {
     if (typeof openMissionsPanel === "function") openMissionsPanel();
   });
 
+  // Match History button (main menu)
+  const startHistoryBtn = document.getElementById("start-history-btn");
+  if (startHistoryBtn) startHistoryBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (typeof openMatchHistoryOverlay === "function") openMatchHistoryOverlay();
+  });
+
+  // Match History button (game-over screen)
+  const goHistoryBtn = document.getElementById("go-history-btn");
+  if (goHistoryBtn) goHistoryBtn.addEventListener("click", function () {
+    if (typeof openMatchHistoryOverlay === "function") openMatchHistoryOverlay();
+  });
+
   const missionsCloseBtn = document.getElementById("missions-close-btn");
   if (missionsCloseBtn) missionsCloseBtn.addEventListener("click", function () {
     if (typeof closeMissionsPanel === "function") closeMissionsPanel();

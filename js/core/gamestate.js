@@ -471,6 +471,7 @@ function triggerGameOver() {
       score: state.score,
       lines: state.linesCleared,
       durationSecs: _gsDurSecs,
+      level: isMarathonMode ? marathonLevel : lastDifficultyTier,
       maxCombo: sessionHighestComboCount,
       tSpins: sessionTSpins,
       tetrises: sessionTetrises,
