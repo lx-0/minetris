@@ -354,6 +354,7 @@ function updateDifficulty(delta) {
   if (tier > lastDifficultyTier) {
     lastDifficultyTier = tier;
     if (typeof achOnDifficultyTier === "function") achOnDifficultyTier(tier);
+    if (typeof ptLevelUpBurst === 'function') ptLevelUpBurst(tier + 1);
     // Coach mark: first speed increase
     if (typeof coachMarkSpeedUp === "function") coachMarkSpeedUp(tier);
     if (speedUpBannerEl) {

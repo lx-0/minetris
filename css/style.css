@@ -652,6 +652,13 @@ body.board-glow-off #board-powerup-overlay { display: none !important; }
   z-index: 3;
 }
 
+#particle-overlay-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
 /* ── Speed-up banner ── */
 #speed-up-banner {
   position: absolute;

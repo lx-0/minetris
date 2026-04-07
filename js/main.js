@@ -1413,6 +1413,7 @@ function init() {
 
   initLineClearFragmentPool();
   _lcResizeParticleCanvas();
+  if (typeof initParticleSystem === 'function') initParticleSystem();
   initTrails();
   initAuras();
   initLandingRingPool();

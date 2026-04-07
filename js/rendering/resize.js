@@ -12,6 +12,7 @@ function onWindowResize() {
     resizePostProcessing(w, h);
     if (typeof coopAvatar !== 'undefined') coopAvatar.onResize();
     if (typeof _lcResizeParticleCanvas === 'function') _lcResizeParticleCanvas();
+    if (typeof resizeParticleOverlay === 'function') resizeParticleOverlay();
     applyResponsiveHUD(w);
   }, 100);
 }

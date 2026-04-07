@@ -589,6 +589,7 @@
       <div id="board-danger-overlay"></div>
       <div id="board-powerup-overlay"></div>
       <canvas id="combo-particle-canvas"></canvas>
+      <canvas id="particle-overlay-canvas" aria-hidden="true"></canvas>
       <div id="crosshair"></div>
 
       <!-- Touch zone hint overlay (mobile, optional) -->
@@ -1606,6 +1607,17 @@
             </select>
           </div>
           <div class="settings-hint">Dynamic borders that react to line clears, combos, danger, and power-ups</div>
+
+          <div class="settings-row">
+            <label class="settings-label" for="particle-intensity-select">Particle Effects</label>
+            <select id="particle-intensity-select" class="settings-select">
+              <option value="off">Off</option>
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="settings-hint">Canvas particle bursts for line clears, T-Spins, combos, and level-ups</div>
 
           <!-- ── Accessibility section ──────────────────────────────────── -->
           <div class="settings-section-divider"></div>
@@ -3435,6 +3447,7 @@
     <script src="js/core/gamestate-reset.js"></script>
     <script src="js/core/gamestate-battle.js"></script>
     <script src="js/rendering/effects.js"></script>
+    <script src="js/rendering/particles.js"></script>
     <script src="js/core/lineclear.js"></script>
     <script src="js/rendering/shadows.js"></script>
     <script src="js/core/pieces.js"></script>

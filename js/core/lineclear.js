@@ -1166,6 +1166,28 @@ function _lcDetonate() {
     }
   }
 
+  // ── 2-D particle overlay effects ─────────────────────────────────────────
+  if (typeof ptLineClearBurst === 'function') {
+    // Line-clear burst along each cleared row
+    const _boardRows = typeof getBoardRows === 'function' ? getBoardRows() : 20;
+    clearedYs.forEach((sk) => {
+      const rowFrac = 1.0 - (sk / (_boardRows - 1));
+      ptLineClearBurst(Math.max(0, Math.min(1, rowFrac)), dominantColor, numLines);
+    });
+    // Tetris: full-screen explosion
+    if (numLines >= 4) ptTetrisExplosion();
+    // T-Spin: vortex effect
+    if (_lcIsTSpin && typeof ptTSpinVortex === 'function') ptTSpinVortex();
+    // Perfect Clear: golden confetti rain
+    if (_lcPerfectClear && typeof ptPerfectClearConfetti === 'function') ptPerfectClearConfetti();
+    // Combo: escalating burst (combo>=2 already checked inside)
+    if (typeof ptComboBurst === 'function') ptComboBurst(comboCount, numLines);
+    // Back-to-back bonus: subtle glow trail
+    const _wasB2B = (typeof lastClearWasDifficult !== 'undefined') && lastClearWasDifficult
+      && ((_lcIsTSpin && numLines >= 1) || numLines >= 4);
+    if (_wasB2B && typeof ptBackToBackGlow === 'function') ptBackToBackGlow();
+  }
+
   // Clear pending Ys (gravity already applied above)
   lineClearPendingYs = [];
 }

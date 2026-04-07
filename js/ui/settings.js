@@ -18,6 +18,7 @@ const SFX_MUTE_KEY          = "mineCtris_sfxMute";
 const MUSIC_MUTE_KEY        = "mineCtris_musicMute";
 const FONT_SIZE_KEY         = "mineCtris_uiFontSize";
 const GLOW_INTENSITY_KEY    = "mineCtris_glowIntensity";
+const PARTICLE_INTENSITY_KEY = "mineCtris_particleIntensity";
 const LOCK_DELAY_KEY        = "mineCtris_lockDelay";
 const BOARD_SIZE_KEY        = "mineCtris_boardSize";
 const NEXT_PIECE_COUNT_KEY  = "mineCtris_nextPieceCount";
@@ -203,6 +204,24 @@ function applyGlowIntensity(label) {
   document.body.classList.toggle('board-glow-off', label === 'off');
   try {
     localStorage.setItem(GLOW_INTENSITY_KEY, label);
+  } catch (_) {}
+}
+
+// ── Particle intensity ────────────────────────────────────────────────────────
+// Values: 'off' | 'low' | 'medium' | 'high'. Default: 'medium'.
+
+function _loadParticleIntensity() {
+  try {
+    const raw = localStorage.getItem(PARTICLE_INTENSITY_KEY);
+    const label = (raw === 'off' || raw === 'low' || raw === 'medium' || raw === 'high') ? raw : 'medium';
+    if (typeof particleIntensityLevel !== 'undefined') particleIntensityLevel = label;
+  } catch (_) {}
+}
+
+function applyParticleIntensity(label) {
+  if (typeof particleIntensityLevel !== 'undefined') particleIntensityLevel = label;
+  try {
+    localStorage.setItem(PARTICLE_INTENSITY_KEY, label);
   } catch (_) {}
 }
 
@@ -1415,6 +1434,7 @@ function initSettings() {
   _loadDynamicMusic();
   _loadReducedMotion();
   _loadGlowIntensity();
+  _loadParticleIntensity();
   // Auto-enable reduced motion if the OS requests it (only when user has no saved pref)
   if (!localStorage.getItem(REDUCED_MOTION_KEY)) {
     try {
@@ -1623,6 +1643,20 @@ function initSettings() {
     } catch (_) {}
     glowSelect.addEventListener("change", function () {
       applyGlowIntensity(this.value);
+    });
+  }
+
+  // Wire particle intensity select
+  const particleSelect = document.getElementById("particle-intensity-select");
+  if (particleSelect) {
+    try {
+      const saved = localStorage.getItem(PARTICLE_INTENSITY_KEY);
+      if (saved === 'off' || saved === 'low' || saved === 'medium' || saved === 'high') {
+        particleSelect.value = saved;
+      }
+    } catch (_) {}
+    particleSelect.addEventListener("change", function () {
+      applyParticleIntensity(this.value);
     });
   }
 
