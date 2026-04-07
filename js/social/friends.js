@@ -342,9 +342,15 @@ function _friendsRenderList() {
       ? '<button class="friends-invite-btn friends-invite-battle" data-code="' + _esc(f.code) + '" data-mode="battle">&#9876; Battle</button>'
       + '<button class="friends-invite-btn friends-invite-coop"   data-code="' + _esc(f.code) + '" data-mode="coop">&#129309; Co-op</button>'
       : '';
+    // Deterministic skin from friend code hash (consistent per friend)
+    const avatarCanvas = typeof renderAvatarToCanvas === 'function'
+      ? '<canvas class="friends-avatar-thumb" data-friend-code="' + _esc(f.code) + '" width="24" height="24"></canvas>'
+      : '';
     html +=
       '<div class="friends-row">'
-      + '<div class="friends-row-left">' + dot
+      + '<div class="friends-row-left">'
+      + avatarCanvas
+      + dot
       + '<div class="friends-row-info">'
       + '<span class="friends-name">' + _esc(f.name) + '</span>'
       + info
@@ -357,6 +363,19 @@ function _friendsRenderList() {
       + '</div>';
   });
   container.innerHTML = html;
+
+  // Render mini avatars — deterministic skin based on friend code hash
+  if (typeof renderAvatarToCanvas === 'function') {
+    const _SKIN_IDS = ['steve','alex','creeper','enderman','skeleton','zombie',
+                       'blaze','ghast','iron_golem','villager','wither','ender_dragon'];
+    container.querySelectorAll('.friends-avatar-thumb').forEach(function (c) {
+      const code = c.getAttribute('data-friend-code') || '';
+      let hash = 0;
+      for (let ci = 0; ci < code.length; ci++) hash = (hash * 31 + code.charCodeAt(ci)) | 0;
+      const skinId = _SKIN_IDS[Math.abs(hash) % _SKIN_IDS.length];
+      renderAvatarToCanvas(c, skinId, 'none');
+    });
+  }
 
   container.querySelectorAll('.friends-invite-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {

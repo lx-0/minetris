@@ -164,6 +164,7 @@ const _AVATAR_DEFS = {
 // ── Avatar skin catalogue ────────────────────────────────────────────────────
 
 const AVATAR_SKINS = [
+  { id: 'custom',       name: 'Custom',       icon: '\uD83C\uDFA8' },
   { id: 'steve',        name: 'Steve',        icon: '\uD83E\uDDD1' },
   { id: 'alex',         name: 'Alex',         icon: '\uD83D\uDC69' },
   { id: 'creeper',      name: 'Creeper',      icon: '\uD83D\uDC9A' },
@@ -250,12 +251,19 @@ const AVATAR_FRAMES = [
 // ── Storage ──────────────────────────────────────────────────────────────────
 
 function getSelectedAvatar() {
+  if (typeof isUsingCustomAvatar === 'function' && isUsingCustomAvatar()) return 'custom';
   try { return localStorage.getItem(AVATAR_SKIN_KEY) || 'steve'; } catch (_) { return 'steve'; }
 }
 
 function setSelectedAvatar(id) {
   if (!AVATAR_SKINS.find(function(s) { return s.id === id; })) return;
-  try { localStorage.setItem(AVATAR_SKIN_KEY, id); } catch (_) {}
+  if (id === 'custom') {
+    // 'custom' is activated by the avatar editor — just reflect via isUsingCustomAvatar()
+    if (typeof setUseCustomAvatar === 'function') setUseCustomAvatar(true);
+  } else {
+    if (typeof setUseCustomAvatar === 'function') setUseCustomAvatar(false);
+    try { localStorage.setItem(AVATAR_SKIN_KEY, id); } catch (_) {}
+  }
   if (typeof onAutoSync === 'function') onAutoSync();
 }
 
@@ -328,6 +336,16 @@ function _checkFrameUnlock(cond) {
  * @param {string} frameId
  */
 function renderAvatarToCanvas(canvas, skinId, frameId) {
+  // Delegate custom avatar to avatar.js renderer
+  if (skinId === 'custom') {
+    if (typeof renderCustomAvatarToCanvas === 'function') {
+      var px = typeof getCustomAvatarPixels === 'function' ? getCustomAvatarPixels() : null;
+      renderCustomAvatarToCanvas(canvas, px, frameId);
+      return;
+    }
+    skinId = 'steve'; // graceful fallback if avatar.js not loaded
+  }
+
   var size = canvas.width; // assumes square
   var ctx  = canvas.getContext('2d');
   ctx.clearRect(0, 0, size, size);
@@ -404,6 +422,9 @@ function renderAvatarSelectorHtml() {
   html += '<canvas id="av-preview-canvas" width="96" height="96" class="av-preview-canvas"></canvas>';
   html += '</div>';
 
+  // Edit custom avatar button (always shown)
+  html += '<button class="av-edit-custom-btn" id="av-edit-custom-btn">&#9998; Create / Edit Custom Avatar</button>';
+
   // Skin grid
   html += '<div class="av-label">AVATAR SKIN</div>';
   html += '<div class="av-skin-grid">';
@@ -439,6 +460,14 @@ function renderAvatarSelectorHtml() {
 
 function mountAvatarSelector(containerEl) {
   if (!containerEl) return;
+
+  // Wire "Edit custom avatar" button
+  var editBtn = containerEl.querySelector('#av-edit-custom-btn');
+  if (editBtn) {
+    editBtn.addEventListener('click', function () {
+      if (typeof openAvatarCreator === 'function') openAvatarCreator();
+    });
+  }
 
   // Render mini canvases for skins
   var skinMinis = containerEl.querySelectorAll('.av-skin-mini');
