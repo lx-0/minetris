@@ -16,6 +16,7 @@ function animate() {
   // Yield to local multiplayer — it runs its own RAF loop.
   if (typeof window !== 'undefined' && window.isLocalMultiActive) return;
 
+  try {
   const time = performance.now();
   const rawDelta = clock.getDelta();
 
@@ -673,5 +674,18 @@ function animate() {
   }
 
   lastTime = time;
+  } catch (err) {
+    // Safety net: log frame errors without crashing the RAF loop.
+    // MineErrorReporter.showOverlay() is intentionally NOT called here —
+    // transient frame errors (e.g. a single bad tick) should not interrupt
+    // gameplay. The global window.onerror handler will surface truly fatal errors.
+    if (typeof MineErrorReporter !== 'undefined') {
+      MineErrorReporter.log('Game loop error: ' + (err && err.message ? err.message : String(err)), err);
+    }
+    if (typeof window !== 'undefined' && (location.hostname === 'localhost' ||
+        location.hostname === '127.0.0.1' || location.search.indexOf('dev=1') !== -1)) {
+      console.error('[game-loop] Frame error:', err);
+    }
+  }
 }
 
