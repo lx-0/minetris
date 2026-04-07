@@ -1,6 +1,6 @@
 // MINETRIS Service Worker
 // Cache version — bump this string to trigger an update toast in the game
-const CACHE_VERSION = 'minetris-v6.6';
+const CACHE_VERSION = 'minetris-v6.7';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -117,6 +117,7 @@ const STATIC_ASSETS = [
   './js/ui/profile-page.js',
   './js/ui/theme-editor.js',
   './js/ui/mini-game.js',
+  './js/ui/multiplayer-hud.js',
   // JS — social
   './js/social/chat.js',
   './js/social/community.js',
@@ -146,6 +147,7 @@ const STATIC_ASSETS = [
   './js/events/events-creeper.js',
   './js/events/seasonal-events.js',
   './js/cosmetics/cosmetics.js',
+  './js/cosmetics/boardskins.js',
   './js/cosmetics/story-fragments.js',
   './js/expedition/expedition-session.js',
   './js/expedition/expedition-map.js',
@@ -164,6 +166,7 @@ const STATIC_ASSETS = [
   './js/battle/matchmaking.js',
   './js/battle/battleroyale.js',
   // JS — themes & i18n
+  './js/netcode.js',
   './js/themes.js',
   './js/i18n/i18n.js',
   './js/loader.js',
