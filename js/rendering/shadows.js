@@ -142,10 +142,17 @@ function updatePieceShadow(piece) {
   shadowGroup.visible = true;
 
   const t = 1 - distToLanding / SHADOW_APPEAR_DIST;
-  const _opMax = (typeof mobileOverridesActive !== 'undefined' && mobileOverridesActive
-    && typeof MOBILE_OVERRIDES !== 'undefined')
-    ? MOBILE_OVERRIDES.ghostOpacityMax : 0.40;
-  const opacity = 0.08 + t * (_opMax - 0.08);
+  // Use player-configured ghost opacity (0–100%) when set, else fall back to defaults.
+  let _opMax;
+  if (typeof playerGhostOpacity !== 'undefined') {
+    _opMax = playerGhostOpacity / 100;
+  } else if (typeof mobileOverridesActive !== 'undefined' && mobileOverridesActive
+    && typeof MOBILE_OVERRIDES !== 'undefined') {
+    _opMax = MOBILE_OVERRIDES.ghostOpacityMax;
+  } else {
+    _opMax = 0.40;
+  }
+  const opacity = _opMax <= 0 ? 0 : 0.08 + t * (_opMax - 0.08);
   const _hc = (typeof highContrastEnabled !== 'undefined') && highContrastEnabled;
   // HC opacity is higher so the outline is clearly visible
   const hcOpacity = 0.3 + t * 0.7;

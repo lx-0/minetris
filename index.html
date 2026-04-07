@@ -1444,6 +1444,45 @@
           </div>
           <div class="settings-hint">Show your personal best run as a transparent ghost overlay (Classic, Sprint, Blitz, Marathon)</div>
           <div class="settings-section-divider"></div>
+
+          <!-- ── Piece Preview section ── -->
+          <div class="settings-section-heading" role="heading" aria-level="3">Piece Preview</div>
+          <div class="settings-row">
+            <label class="settings-label" for="next-piece-count-select">Next Pieces</label>
+            <select id="next-piece-count-select" class="settings-select" aria-label="Number of next pieces to show">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5" selected>5</option>
+              <option value="6">6</option>
+            </select>
+          </div>
+          <div class="settings-hint">Number of upcoming pieces shown in the preview panel (1–6)</div>
+          <div class="settings-row">
+            <label class="settings-label" for="ghost-opacity-slider">Ghost Opacity</label>
+            <input type="range" id="ghost-opacity-slider" class="vol-slider" min="0" max="100" value="30" aria-label="Ghost piece opacity" aria-valuetext="30%">
+            <span class="vol-val" id="ghost-opacity-val" aria-hidden="true">30</span>
+          </div>
+          <div class="settings-hint">Landing shadow opacity — 0% hides it, 100% makes it fully solid</div>
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="hold-piece-visible-toggle">Show Hold Piece</label>
+            <label class="cb-toggle-switch">
+              <input type="checkbox" id="hold-piece-visible-toggle" checked>
+              <span class="cb-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-hint">Show or hide the hold piece panel</div>
+          <div class="settings-row">
+            <label class="settings-label" for="preview-side-select">Preview Side</label>
+            <select id="preview-side-select" class="settings-select" aria-label="Preview panel side">
+              <option value="right" selected>Right</option>
+              <option value="left">Left</option>
+            </select>
+          </div>
+          <div class="settings-hint">Position the next-piece panel on the left or right side of the screen</div>
+          <div class="settings-section-divider"></div>
+
           <div class="settings-row">
             <label class="settings-label" for="glow-intensity-select">Board Edge Glow</label>
             <select id="glow-intensity-select" class="settings-select">

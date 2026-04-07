@@ -20,6 +20,20 @@ const FONT_SIZE_KEY         = "mineCtris_uiFontSize";
 const GLOW_INTENSITY_KEY    = "mineCtris_glowIntensity";
 const LOCK_DELAY_KEY        = "mineCtris_lockDelay";
 const BOARD_SIZE_KEY        = "mineCtris_boardSize";
+const NEXT_PIECE_COUNT_KEY  = "mineCtris_nextPieceCount";
+const GHOST_OPACITY_KEY     = "mineCtris_ghostOpacity";
+const HOLD_VISIBLE_KEY      = "mineCtris_holdVisible";
+const PREVIEW_SIDE_KEY      = "mineCtris_previewSide";
+
+// Piece preview settings
+// Next piece count: 1–6, default 5.
+let playerNextPieceCount = 5;
+// Ghost piece opacity: 0–100 (%), default 30.
+let playerGhostOpacity = 30;
+// Hold piece panel visible: default true.
+let playerHoldVisible = true;
+// Preview panel side: 'right' (default) or 'left'.
+let playerPreviewSide = 'right';
 
 // Lock delay in milliseconds: 200 (fast), 500 (standard), 800 (relaxed). Default 500.
 let playerLockDelayMs = 500;
@@ -223,6 +237,67 @@ function _saveBoardSize(size) {
   try {
     localStorage.setItem(BOARD_SIZE_KEY, size);
   } catch (_) {}
+}
+
+// ── Piece preview settings ────────────────────────────────────────────────────
+
+function _loadNextPieceCount() {
+  try {
+    const v = parseInt(localStorage.getItem(NEXT_PIECE_COUNT_KEY), 10);
+    if (v >= 1 && v <= 6) playerNextPieceCount = v;
+  } catch (_) {}
+}
+
+function _saveNextPieceCount(n) {
+  playerNextPieceCount = n;
+  try { localStorage.setItem(NEXT_PIECE_COUNT_KEY, String(n)); } catch (_) {}
+  if (typeof updateNextPiecesHUD === 'function') updateNextPiecesHUD();
+}
+
+function _loadGhostOpacity() {
+  try {
+    const v = parseInt(localStorage.getItem(GHOST_OPACITY_KEY), 10);
+    if (!isNaN(v) && v >= 0 && v <= 100) playerGhostOpacity = v;
+  } catch (_) {}
+}
+
+function _saveGhostOpacity(pct) {
+  playerGhostOpacity = pct;
+  try { localStorage.setItem(GHOST_OPACITY_KEY, String(pct)); } catch (_) {}
+}
+
+function _loadHoldVisible() {
+  try {
+    const raw = localStorage.getItem(HOLD_VISIBLE_KEY);
+    if (raw !== null) playerHoldVisible = (raw !== 'false');
+  } catch (_) {}
+}
+
+function applyHoldVisible(visible) {
+  playerHoldVisible = visible;
+  try { localStorage.setItem(HOLD_VISIBLE_KEY, String(visible)); } catch (_) {}
+  const panel = document.getElementById('hold-piece-panel');
+  if (!panel) return;
+  // Only hide if game is running (panel has content); if it was already hidden by game logic, leave it.
+  if (!visible) {
+    panel.style.display = 'none';
+  } else {
+    // Restore — game code (updateHoldPanelHUD) will set actual display when needed.
+    if (typeof updateHoldPanelHUD === 'function') updateHoldPanelHUD();
+  }
+}
+
+function _loadPreviewSide() {
+  try {
+    const raw = localStorage.getItem(PREVIEW_SIDE_KEY);
+    if (raw === 'left' || raw === 'right') playerPreviewSide = raw;
+  } catch (_) {}
+}
+
+function applyPreviewSide(side) {
+  playerPreviewSide = (side === 'left') ? 'left' : 'right';
+  try { localStorage.setItem(PREVIEW_SIDE_KEY, playerPreviewSide); } catch (_) {}
+  document.body.classList.toggle('preview-panel-left', playerPreviewSide === 'left');
 }
 
 // ── High contrast mode ────────────────────────────────────────────────────────
@@ -1332,6 +1407,11 @@ function initSettings() {
   _loadHighContrast();
   _loadLockDelay();
   _loadBoardSize();
+  _loadNextPieceCount();
+  _loadGhostOpacity();
+  _loadHoldVisible();
+  _loadPreviewSide();
+  applyPreviewSide(playerPreviewSide);
   _loadTheme();
   if (typeof ghostReplayLoadSetting === 'function') ghostReplayLoadSetting();
   if (typeof initGraphicsQuality === 'function') initGraphicsQuality();
@@ -1514,6 +1594,46 @@ function initSettings() {
     boardSizeSelect.value = playerBoardSize;
     boardSizeSelect.addEventListener("change", function () {
       _saveBoardSize(this.value);
+    });
+  }
+
+  // Wire up next piece count selector.
+  const nextPieceCountSelect = document.getElementById("next-piece-count-select");
+  if (nextPieceCountSelect) {
+    nextPieceCountSelect.value = String(playerNextPieceCount);
+    nextPieceCountSelect.addEventListener("change", function () {
+      _saveNextPieceCount(parseInt(this.value, 10));
+    });
+  }
+
+  // Wire up ghost opacity slider.
+  const ghostOpacitySlider = document.getElementById("ghost-opacity-slider");
+  const ghostOpacityVal    = document.getElementById("ghost-opacity-val");
+  if (ghostOpacitySlider) {
+    ghostOpacitySlider.value = String(playerGhostOpacity);
+    if (ghostOpacityVal) ghostOpacityVal.textContent = playerGhostOpacity;
+    ghostOpacitySlider.addEventListener("input", function () {
+      const v = parseInt(this.value, 10);
+      if (ghostOpacityVal) ghostOpacityVal.textContent = v;
+      _saveGhostOpacity(v);
+    });
+  }
+
+  // Wire up hold piece visibility toggle.
+  const holdVisibleToggle = document.getElementById("hold-piece-visible-toggle");
+  if (holdVisibleToggle) {
+    holdVisibleToggle.checked = playerHoldVisible;
+    holdVisibleToggle.addEventListener("change", function () {
+      applyHoldVisible(this.checked);
+    });
+  }
+
+  // Wire up preview panel side selector.
+  const previewSideSelect = document.getElementById("preview-side-select");
+  if (previewSideSelect) {
+    previewSideSelect.value = playerPreviewSide;
+    previewSideSelect.addEventListener("change", function () {
+      applyPreviewSide(this.value);
     });
   }
 
@@ -1733,6 +1853,15 @@ function openSettings(onClose) {
   _syncThemeButtons();
   if (typeof _syncGraphicsQualityButtons === 'function') _syncGraphicsQualityButtons();
   _syncFontSizeButtons();
+  const _npcSel = document.getElementById('next-piece-count-select');
+  if (_npcSel) _npcSel.value = String(playerNextPieceCount);
+  const _goSlider = document.getElementById('ghost-opacity-slider');
+  const _goVal    = document.getElementById('ghost-opacity-val');
+  if (_goSlider) { _goSlider.value = String(playerGhostOpacity); if (_goVal) _goVal.textContent = playerGhostOpacity; }
+  const _hvToggle = document.getElementById('hold-piece-visible-toggle');
+  if (_hvToggle) _hvToggle.checked = playerHoldVisible;
+  const _psSel = document.getElementById('preview-side-select');
+  if (_psSel) _psSel.value = playerPreviewSide;
   _syncDisplayNameField();
   _syncKeybindTable();
   _syncLastExportLabel();

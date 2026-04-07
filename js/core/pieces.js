@@ -211,8 +211,9 @@ function updateNextPiecesHUD() {
     nextPiecesEl.innerHTML = '<div class="np-label">NEXT</div><div class="np-pieces-row"><div class="np-piece np-blind">?</div></div>';
     return;
   }
+  const _displayCount = (typeof playerNextPieceCount !== 'undefined') ? Math.min(playerNextPieceCount, pieceQueue.length) : pieceQueue.length;
   let html = '<div class="np-label">NEXT</div><div class="np-pieces-row">';
-  pieceQueue.forEach(({ index, shape }) => {
+  pieceQueue.slice(0, _displayCount).forEach(({ index, shape }) => {
     let palette;
     if (colorblindMode && getCBColors(index) !== null && getCBColors(index) !== undefined) {
       palette = getCBColors(index);

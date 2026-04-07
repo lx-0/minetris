@@ -409,6 +409,16 @@ body {
   filter: grayscale(80%);
 }
 
+/* ── Preview panel position — left side ─────────────────────── */
+body.preview-panel-left #top-right-hud {
+  right: auto;
+  left: 16px;
+}
+body.preview-panel-left #hold-piece-panel {
+  left: auto;
+  right: 16px;
+}
+
 /* ── Game-Over Cinematic Sequence ───────────────────────────── */
 #go-seq-overlay {
   position: absolute;
