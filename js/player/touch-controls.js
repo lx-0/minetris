@@ -96,7 +96,8 @@ function _tcStopDAS(btnId) {
 // ── Haptics ───────────────────────────────────────────────────────────────────
 
 function _tcVibrate() {
-  try { if (navigator.vibrate) navigator.vibrate(10); } catch (_) {}
+  if (typeof hapticsOnTouchButton === 'function') hapticsOnTouchButton();
+  else { try { if (navigator.vibrate) navigator.vibrate(10); } catch (_) {} }
 }
 
 // ── Button actions ────────────────────────────────────────────────────────────
@@ -519,26 +520,6 @@ function _tcOnKeyDown(e) {
     _tcKeyboardActive = false;
     _tcUpdateVisibility();
   }, TC_KEYBOARD_IDLE_MS);
-}
-
-// ── Haptic helpers (called by pieces.js / lineclear.js) ──────────────────────
-
-/** Short pulse when a falling piece locks to the board. */
-function tcVibrateOnLock() {
-  try { if (navigator.vibrate && mobileOverridesActive) navigator.vibrate(18); } catch (_) {}
-}
-
-/** Stronger rumble scaled to the number of lines cleared simultaneously. */
-function tcVibrateOnLineClear(numLines) {
-  try {
-    if (!navigator.vibrate || !mobileOverridesActive) return;
-    var pattern = numLines >= 4
-      ? [40, 20, 60]   // Tetris (4-line): double pulse
-      : numLines === 3
-        ? [30, 15, 30] // Triple
-        : [20];        // 1-2 lines
-    navigator.vibrate(pattern);
-  } catch (_) {}
 }
 
 // ── Public init ───────────────────────────────────────────────────────────────

@@ -361,6 +361,16 @@ function onMouseUp(event) {
 
 window.addEventListener("mouseup", onMouseUp);
 
+// ── Haptics init ──────────────────────────────────────────────────────────────
+(function () {
+  if (typeof initHaptics !== 'function') return;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHaptics);
+  } else {
+    initHaptics();
+  }
+}());
+
 // ── Touch detection gate ──────────────────────────────────────────────────────
 // Initialise the virtual touch overlay when a touch-capable device is detected
 // (or when the user has force-enabled it via settings).

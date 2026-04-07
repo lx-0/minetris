@@ -286,6 +286,8 @@ function triggerGameOver() {
   if (isGameOver) return;
   isGameOver = true;
   gameTimerRunning = false;
+  // Haptic feedback on game over.
+  if (typeof hapticsOnGameOver === 'function') hapticsOnGameOver();
   // Hide screenshot button once game ends
   const _ssBtnGO = document.getElementById('screenshot-btn');
   if (_ssBtnGO) _ssBtnGO.style.display = 'none';

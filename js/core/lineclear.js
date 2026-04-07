@@ -879,7 +879,14 @@ function updateLineClear(delta) {
 
 function _lcDetonate() {
   const numLines = _lcNumLines;
-  if (typeof tcVibrateOnLineClear === 'function') tcVibrateOnLineClear(numLines);
+  // Haptic feedback — delegated to haptics manager.
+  if (typeof hapticsOnLineClear === 'function') hapticsOnLineClear(numLines);
+  // T-Spin haptic overlay
+  if (_lcIsTSpin && typeof hapticsOnTSpin === 'function') hapticsOnTSpin();
+  // Combo haptic (fired when combo is already incremented — comboCount >= 2)
+  if ((typeof comboCount !== 'undefined') && comboCount >= 2 && typeof hapticsOnCombo === 'function') {
+    hapticsOnCombo(comboCount);
+  }
 
   // Ring count per tier (unchanged from original)
   const numRings = numLines >= 4 ? 3 : numLines >= 3 ? 2 : 1;

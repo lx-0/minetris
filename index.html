@@ -1729,6 +1729,29 @@
           </div>
           <div class="settings-hint" data-i18n="settings.mobile_difficulty_hint">Reduce piece speed by 20% on touch — ON by default for touch devices</div>
           <div class="settings-section-divider"></div>
+
+          <!-- ── Haptic Feedback (MINAA-526) ── -->
+          <div class="settings-label settings-label-section">Haptic Feedback</div>
+          <div class="settings-row settings-row-toggle">
+            <label class="settings-label settings-label-toggle" for="haptics-enabled-toggle">Enable Haptics</label>
+            <label class="cb-toggle-switch">
+              <input type="checkbox" id="haptics-enabled-toggle" checked>
+              <span class="cb-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-hint">Vibration on piece lock, line clears, combos, T-Spins and game over (mobile &amp; gamepad)</div>
+          <div class="settings-row" style="margin-top:8px">
+            <label class="settings-label" for="haptics-intensity-select">Intensity</label>
+            <select id="haptics-intensity-select" class="settings-select">
+              <option value="light">Light</option>
+              <option value="medium" selected>Medium</option>
+              <option value="strong">Strong</option>
+            </select>
+          </div>
+          <div class="settings-hint">Controls vibration strength for all haptic events</div>
+          <div class="settings-hint" id="haptics-battery-hint" style="color:#fa0;display:none">&#9889; Battery below 20% — haptics auto-disabled to conserve power</div>
+          <div class="settings-section-divider"></div>
+
           <div class="settings-row settings-row-toggle">
             <label class="settings-label settings-label-toggle" for="input-display-toggle">Input Display</label>
             <label class="cb-toggle-switch">
@@ -3592,6 +3615,7 @@
     <script src="js/social/rooms-init.js"></script>
     <script src="js/social/tournament-init.js"></script>
     <script src="js/ui/share-modal-init.js"></script>
+    <script src="js/player/haptics.js"></script>
     <script src="js/player/touch-controls.js"></script>
     <script src="js/player/input.js"></script>
     <script src="js/player/powerups.js"></script>

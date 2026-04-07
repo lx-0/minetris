@@ -1469,10 +1469,8 @@ function updateFallingPieces(delta) {
       const _hdIntensity = Math.min(0.5 + (_hdBlocks / 4) * 0.4 + (lastDifficultyTier || 0) * 0.04, 1.0);
       playHardDropSound(_hdPx, _hdIntensity);
     }
-    // Haptic feedback on piece lock for touch devices.
-    if (typeof mobileOverridesActive !== 'undefined' && mobileOverridesActive) {
-      try { if (navigator.vibrate) navigator.vibrate(20); } catch (_) {}
-    }
+    // Haptic feedback on piece lock — delegated to haptics manager.
+    if (typeof hapticsOnPieceLock === 'function') hapticsOnPieceLock();
     disposePieceTrail(pieceToLand);
 
     // ── Shockwave ring + chromatic aberration on landing ─────────────────────
@@ -1551,7 +1549,6 @@ function updateFallingPieces(delta) {
       holdLocked = false;
       if (typeof updateHoldPanelHUD === 'function') updateHoldPanelHUD();
     }
-    if (typeof tcVibrateOnLock === 'function') tcVibrateOnLock();
     checkLineClear(newBlocks);
     // Desert biome: schedule sand block crumble for sand pieces
     var _sandCrumbleSecs = typeof getDesertSandCrumbleSecs === 'function' ? getDesertSandCrumbleSecs() : 0;

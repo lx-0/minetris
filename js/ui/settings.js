@@ -1778,6 +1778,22 @@ function initSettings() {
     });
   }
 
+  // Wire up haptic feedback settings.
+  const hapticsToggle = document.getElementById("haptics-enabled-toggle");
+  if (hapticsToggle) {
+    hapticsToggle.checked = (typeof isHapticsEnabled === "function") ? isHapticsEnabled() : true;
+    hapticsToggle.addEventListener("change", function() {
+      if (typeof setHapticsEnabled === "function") setHapticsEnabled(this.checked);
+    });
+  }
+  const hapticsIntensitySel = document.getElementById("haptics-intensity-select");
+  if (hapticsIntensitySel) {
+    hapticsIntensitySel.value = (typeof getHapticsIntensity === "function") ? getHapticsIntensity() : "medium";
+    hapticsIntensitySel.addEventListener("change", function() {
+      if (typeof setHapticsIntensity === "function") setHapticsIntensity(this.value);
+    });
+  }
+
   // Wire up display name field.
   const dnInput    = document.getElementById("settings-displayname-input");
   const dnSaveBtn  = document.getElementById("settings-displayname-save-btn");
@@ -1929,6 +1945,10 @@ function openSettings(onClose) {
   if (sensSelSync) sensSelSync.value = (typeof getTouchSensitivity === "function") ? getTouchSensitivity() : "medium";
   const tzToggleSync = document.getElementById("touch-zones-toggle");
   if (tzToggleSync) tzToggleSync.checked = (typeof isTouchZonesEnabled === "function") && isTouchZonesEnabled();
+  const hapticsToggleSync = document.getElementById("haptics-enabled-toggle");
+  if (hapticsToggleSync) hapticsToggleSync.checked = (typeof isHapticsEnabled === "function") ? isHapticsEnabled() : true;
+  const hapticsIntensitySync = document.getElementById("haptics-intensity-select");
+  if (hapticsIntensitySync) hapticsIntensitySync.value = (typeof getHapticsIntensity === "function") ? getHapticsIntensity() : "medium";
   _syncThemeButtons();
   if (typeof _syncGraphicsQualityButtons === 'function') _syncGraphicsQualityButtons();
   _syncFontSizeButtons();
