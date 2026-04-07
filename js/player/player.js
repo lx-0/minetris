@@ -289,8 +289,14 @@ function onKeyDown(event) {
       }
       break;
     case "KeyT":
-      if ((isCoopMode || isBattleMode) && typeof chatEmotes !== 'undefined') {
-        chatEmotes.openWheel();
+      if (isCoopMode || isBattleMode) {
+        // T key: toggle in-game text chat panel
+        if (typeof chat !== 'undefined') {
+          chat.toggle();
+        } else if (typeof chatEmotes !== 'undefined') {
+          // Fallback to emote wheel if chat module not loaded
+          chatEmotes.openWheel();
+        }
       }
       break;
     case "KeyR":
@@ -393,7 +399,8 @@ function onKeyUp(event) {
       if (isPuzzleMode && typeof setThinkMode === "function") setThinkMode(false);
       break;
     case "KeyT":
-      if (typeof chatEmotes !== 'undefined' && chatEmotes.isOpen()) {
+      // Only close emote wheel on keyup if chat module is not handling T
+      if (typeof chat === 'undefined' && typeof chatEmotes !== 'undefined' && chatEmotes.isOpen()) {
         chatEmotes.closeWheel();
       }
       break;

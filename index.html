@@ -899,8 +899,11 @@
         <div class="coop-emote-key"><span class="coop-emote-key-label">V</span><span class="coop-emote-key-icon">⚠️</span></div>
         <div class="coop-emote-key coop-chat-key"><span class="coop-emote-key-label">G</span><span class="coop-emote-key-icon">Nice!</span></div>
         <div class="coop-emote-key coop-chat-key"><span class="coop-emote-key-label">H</span><span class="coop-emote-key-icon">Help!</span></div>
-        <div class="coop-emote-key coop-chat-key"><span class="coop-emote-key-label">T</span><span class="coop-emote-key-icon">Emotes<span id="chat-emote-t-cooldown"></span></span></div>
+        <div class="coop-emote-key coop-chat-key"><span class="coop-emote-key-label">T</span><span class="coop-emote-key-icon">Chat<span id="chat-emote-t-cooldown"></span></span></div>
       </div>
+
+      <!-- In-game chat toggle button (battle / rooms game) -->
+      <button id="ingame-chat-toggle-btn" class="ingame-chat-toggle-btn" style="display:none;" title="Toggle chat [T]" onclick="if(typeof chat!=='undefined')chat.toggle();">&#128172;</button>
 
       <!-- Chat emote wheel overlay (T-key radial picker) -->
       <div id="chat-emote-wheel" aria-hidden="true"></div>
@@ -3279,6 +3282,7 @@
     <script src="js/social/coop-trade.js"></script>
     <script src="js/social/coop-emote.js"></script>
     <script src="js/social/chat-emotes.js"></script>
+    <script src="js/social/chat.js"></script>
     <script src="js/social/coop-board.js"></script>
     <script src="js/battle/matchmaking.js"></script>
     <script src="js/battle/battle-rating.js"></script>

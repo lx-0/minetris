@@ -190,13 +190,28 @@ const rooms = (function () {
           _publicAPI.send({ type: 'room_settings', settings: _settings });
           _publicAPI.send({ type: 'room_roster', players: _players });
         }
+        // System message: player joined
+        if (msg.player.id !== _myId) {
+          const joinEntry = { type: 'system', text: '\u2713 ' + (msg.player.name || 'Player') + ' joined the room.', ts: Date.now() };
+          _chatHistory.push(joinEntry);
+          if (_chatHistory.length > 100) _chatHistory.shift();
+          _emit('chat', joinEntry);
+        }
         _emit('roster_change', { players: _players.slice() });
         break;
       }
 
       case 'room_player_leave': {
         if (!msg.playerId) break;
-        const wasHost = _players.find(function (p) { return p.id === msg.playerId && p.isHost; });
+        const leaving = _players.find(function (p) { return p.id === msg.playerId; });
+        const wasHost = leaving && leaving.isHost;
+        // System message: player left
+        if (leaving && leaving.id !== _myId) {
+          const leaveEntry = { type: 'system', text: '\u2190 ' + (leaving.name || 'Player') + ' left the room.', ts: Date.now() };
+          _chatHistory.push(leaveEntry);
+          if (_chatHistory.length > 100) _chatHistory.shift();
+          _emit('chat', leaveEntry);
+        }
         _removePlayer(msg.playerId);
         if (wasHost && _players.length > 0) {
           // Promote the first remaining player to host
@@ -238,10 +253,12 @@ const rooms = (function () {
       }
 
       case 'room_chat': {
-        if (!msg.playerId || !msg.text) break;
-        const entry = { playerId: msg.playerId, playerName: msg.playerName || '?', text: msg.text, ts: Date.now() };
+        if (!msg.playerId || (!msg.text && !msg.emoteId)) break;
+        const entry = msg.emoteId
+          ? { type: 'emote', playerId: msg.playerId, playerName: msg.playerName || '?', emoteId: msg.emoteId, icon: msg.icon || '', label: msg.label || '', ts: Date.now() }
+          : { type: 'text', playerId: msg.playerId, playerName: msg.playerName || '?', text: msg.text, ts: Date.now() };
         _chatHistory.push(entry);
-        if (_chatHistory.length > 200) _chatHistory.shift();
+        if (_chatHistory.length > 100) _chatHistory.shift();
         _emit('chat', entry);
         break;
       }
@@ -257,6 +274,11 @@ const rooms = (function () {
       case 'room_start': {
         if (msg.settings) _settings = Object.assign({}, ROOM_DEFAULTS, msg.settings);
         _setState(RoomState.IN_GAME);
+        // System message: game starting
+        const startEntry = { type: 'system', text: '\u25BA Game starting!', ts: Date.now() };
+        _chatHistory.push(startEntry);
+        if (_chatHistory.length > 100) _chatHistory.shift();
+        _emit('chat', startEntry);
         _emit('state_change', { state: _state, roomCode: _roomCode });
         _emit('game_start', { settings: Object.assign({}, _settings), isHost: _isHost });
         break;
@@ -375,14 +397,35 @@ const rooms = (function () {
       _emit('roster_change', { players: _players.slice() });
     },
 
-    // Send a chat message
+    // Send a chat message (or emote shortcut)
     sendChat: function (text) {
       if (!text || !text.trim()) return;
-      const t = text.trim().slice(0, 200);
-      _publicAPI.send({ type: 'room_chat', playerId: _myId, playerName: _getMyName(), text: t });
+
+      // Rate limiting (client-side)
+      if (typeof chat !== 'undefined' && !chat.canSend()) return;
+
+      const raw = text.trim().slice(0, 200);
+
+      // Emote shortcut (/gg /gl /wp /nice)
+      if (typeof chat !== 'undefined') {
+        const emote = chat.parseEmote(raw);
+        if (emote) {
+          const entry = { type: 'emote', playerId: _myId, playerName: _getMyName(), emoteId: emote.id, icon: emote.icon, label: emote.label, ts: Date.now(), isSelf: true };
+          _publicAPI.send({ type: 'room_chat', playerId: _myId, playerName: _getMyName(), emoteId: emote.id, icon: emote.icon, label: emote.label });
+          _chatHistory.push(entry);
+          if (_chatHistory.length > 100) _chatHistory.shift();
+          _emit('chat', entry);
+          return;
+        }
+      }
+
+      // Profanity filter
+      const filtered = typeof chat !== 'undefined' ? chat.filter(raw) : raw;
+      _publicAPI.send({ type: 'room_chat', playerId: _myId, playerName: _getMyName(), text: filtered });
       // Echo own message locally
-      const entry = { playerId: _myId, playerName: _getMyName(), text: t, ts: Date.now(), isSelf: true };
+      const entry = { type: 'text', playerId: _myId, playerName: _getMyName(), text: filtered, ts: Date.now(), isSelf: true };
       _chatHistory.push(entry);
+      if (_chatHistory.length > 100) _chatHistory.shift();
       _emit('chat', entry);
     },
 
@@ -414,6 +457,7 @@ const rooms = (function () {
       _chatHistory = [];
       _spectatorCount = 0;
       _isHost   = false;
+      if (typeof chat !== 'undefined') { chat.resetRateLimit(); chat.clear(); }
       _emit('state_change', { state: _state, roomCode: null });
     },
 

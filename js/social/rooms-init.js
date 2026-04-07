@@ -157,18 +157,71 @@
   function _appendChatMessage(entry) {
     const log = document.getElementById('rooms-chat-log');
     if (!log) return;
+
+    // Hide muted players
+    if (entry.playerId && typeof chat !== 'undefined' && chat.isMuted(entry.playerId)) return;
+
     const row = document.createElement('div');
+
+    if (entry.type === 'system') {
+      row.className = 'rooms-chat-row rooms-chat-system';
+      row.textContent = entry.text || '';
+      log.appendChild(row);
+      log.scrollTop = log.scrollHeight;
+      return;
+    }
+
     row.className = 'rooms-chat-row' + (entry.isSelf ? ' rooms-chat-self' : '');
+    if (entry.playerId) row.dataset.player = entry.playerId;
+
+    // Avatar initial
+    const avatarEl = document.createElement('span');
+    avatarEl.className = 'rooms-chat-avatar';
+    avatarEl.textContent = (entry.playerName || '?').charAt(0).toUpperCase();
+    row.appendChild(avatarEl);
+
+    // Player name with mute on right-click
     const nameEl = document.createElement('span');
     nameEl.className = 'rooms-chat-name';
-    nameEl.textContent = entry.playerName + ': ';
-    const textEl = document.createElement('span');
-    textEl.className = 'rooms-chat-text';
-    textEl.textContent = entry.text;
+    nameEl.textContent = (entry.playerName || '?');
+    if (entry.playerId && typeof chat !== 'undefined') {
+      nameEl.title = 'Right-click to mute';
+      nameEl.addEventListener('contextmenu', function (e) {
+        e.preventDefault();
+        const nowMuted = chat.toggleMute(entry.playerId);
+        if (nowMuted) {
+          log.querySelectorAll('[data-player="' + CSS.escape(entry.playerId) + '"]').forEach(function (r) { r.remove(); });
+        }
+      });
+    }
     row.appendChild(nameEl);
+
+    // Text or emote
+    const textEl = document.createElement('span');
+    if (entry.type === 'emote') {
+      textEl.className = 'rooms-chat-text rooms-chat-emote';
+      textEl.textContent = ' ' + (entry.icon || '') + ' ' + (entry.label || '');
+    } else {
+      textEl.className = 'rooms-chat-text';
+      textEl.textContent = ': ' + (entry.text || '');
+    }
     row.appendChild(textEl);
+
+    // Timestamp
+    const tsEl = document.createElement('span');
+    tsEl.className = 'rooms-chat-ts';
+    try {
+      tsEl.textContent = new Date(entry.ts || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (_) {}
+    row.appendChild(tsEl);
+
     log.appendChild(row);
     log.scrollTop = log.scrollHeight;
+
+    // Mirror to in-game chat panel if open
+    if (typeof chat !== 'undefined') {
+      chat.appendMessage(entry);
+    }
   }
 
   // ── Browse rooms view ─────────────────────────────────────────────────────
@@ -553,6 +606,19 @@
 
   // Wire rooms event listeners
   _wireRoomsEvents();
+
+  // Wire in-game chat panel to send via rooms when a room game is active
+  if (typeof chat !== 'undefined') {
+    chat.onSend(function (entry) {
+      if (typeof rooms !== 'undefined' && rooms.state === 'in_game') {
+        if (entry.type === 'emote') {
+          rooms.sendChat('/' + (entry.emoteId || 'gg'));
+        } else {
+          rooms.sendChat(entry.text || '');
+        }
+      }
+    });
+  }
 
   // Expose room state constant so closeOverlay can reference it
   window.RoomState = typeof RoomState !== 'undefined' ? RoomState : { DISCONNECTED: 'disconnected' };
