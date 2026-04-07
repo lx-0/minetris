@@ -7693,6 +7693,54 @@ body.theme-candy .inv-slot.selected {
 }
 .lb-country-filter { cursor: pointer; }
 
+/* ── Country flag ── */
+.lb-flag { font-style: normal; margin-right: 2px; }
+
+/* ── Scroll sentinel (infinite scroll trigger) ── */
+.lb-scroll-sentinel { height: 1px; }
+
+/* ── Skeleton loading rows ── */
+.lb-skeleton { padding: 4px 0; }
+.lb-skeleton-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(0,255,0,0.06);
+}
+.lb-skel {
+  display: inline-block;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(0,255,136,0.08) 25%, rgba(0,255,136,0.18) 50%, rgba(0,255,136,0.08) 75%);
+  background-size: 200% 100%;
+  animation: lb-skel-shimmer 1.4s infinite;
+}
+.lb-skel-rank  { width: 22px; height: 10px; flex-shrink: 0; }
+.lb-skel-name  { width: 120px; height: 10px; flex: 1; max-width: 180px; }
+.lb-skel-score { width: 60px; height: 10px; flex-shrink: 0; }
+@keyframes lb-skel-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Table row slide-in animation ── */
+@keyframes lb-row-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.lb-table-animate tbody tr {
+  animation: lb-row-in 0.25s ease both;
+}
+.lb-table-animate tbody tr:nth-child(1)  { animation-delay: 0.00s; }
+.lb-table-animate tbody tr:nth-child(2)  { animation-delay: 0.02s; }
+.lb-table-animate tbody tr:nth-child(3)  { animation-delay: 0.04s; }
+.lb-table-animate tbody tr:nth-child(4)  { animation-delay: 0.06s; }
+.lb-table-animate tbody tr:nth-child(5)  { animation-delay: 0.08s; }
+.lb-table-animate tbody tr:nth-child(6)  { animation-delay: 0.10s; }
+.lb-table-animate tbody tr:nth-child(7)  { animation-delay: 0.12s; }
+.lb-table-animate tbody tr:nth-child(8)  { animation-delay: 0.14s; }
+.lb-table-animate tbody tr:nth-child(n+9) { animation-delay: 0.16s; }
+
 /* ── Friends leaderboard ── */
 .lb-friends-header {
   font-size: 0.85em;

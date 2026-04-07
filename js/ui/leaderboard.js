@@ -6,7 +6,7 @@ const DISPLAY_NAME_KEY = 'mineCtris_displayName';
 const LB_SUBMITTED_KEY = 'mineCtris_lbSubmitted'; // value: "YYYY-MM-DD"
 
 // ── 5-Minute Leaderboard Cache ────────────────────────────────────────────────
-const _LB_CACHE_TTL = 5 * 60 * 1000;
+const _LB_CACHE_TTL = 60 * 1000;
 const _lbCache = {};
 function _lbCacheGet(key) {
   const e = _lbCache[key];
@@ -43,6 +43,31 @@ function _lbTrendHtml(tabKey, currentRank) {
 
 // ── Pagination state ──────────────────────────────────────────────────────────
 let _lbPaginationState = null; // { entries, date, labelOverride, isSeason, tabKey, count }
+
+// ── Country flag helper ───────────────────────────────────────────────────────
+function _countryFlagEmoji(code) {
+  if (!code || code.length !== 2) return '';
+  try {
+    return code.toUpperCase().split('').map(function(c) {
+      return String.fromCodePoint(c.charCodeAt(0) - 65 + 0x1F1E6);
+    }).join('');
+  } catch (_) { return ''; }
+}
+
+// ── Skeleton loading ──────────────────────────────────────────────────────────
+function _lbSkeletonHtml(rows) {
+  rows = rows || 8;
+  var html = '<div class="lb-skeleton">';
+  for (var i = 0; i < rows; i++) {
+    html += '<div class="lb-skeleton-row">' +
+      '<span class="lb-skel lb-skel-rank"></span>' +
+      '<span class="lb-skel lb-skel-name"></span>' +
+      '<span class="lb-skel lb-skel-score"></span>' +
+      '</div>';
+  }
+  html += '</div>';
+  return html;
+}
 
 // ── Rank badge helper ─────────────────────────────────────────────────────────
 function _lbRankBadge(rank) {
@@ -311,7 +336,7 @@ function _getYesterdayString() {
 async function _loadLbTab(tab) {
   const body = document.getElementById('lb-panel-body');
   if (!body) return;
-  body.innerHTML = '<div class="lb-loading">Loading...</div>';
+  body.innerHTML = _lbSkeletonHtml();
   _lbPaginationState = null; // reset pagination on tab switch
 
   try {
@@ -401,7 +426,7 @@ async function _loadLbTab(tab) {
 
 function _renderLeaderboard(container, entries, date, labelOverride, isSeason, tabKey) {
   // Store for pagination
-  _lbPaginationState = { entries: entries, date: date, labelOverride: labelOverride, isSeason: isSeason, tabKey: tabKey, count: 25 };
+  _lbPaginationState = { entries: entries, date: date, labelOverride: labelOverride, isSeason: isSeason, tabKey: tabKey, count: 100 };
   _doRenderLeaderboard(container);
 }
 
@@ -461,7 +486,10 @@ function _doRenderLeaderboard(container) {
     const isMe = myName && e.displayName.toLowerCase() === myName;
     if (isMe) myVisibleEntry = e;
     const cls  = isMe ? ' class="lb-row-me"' : '';
-    let nameCell = _escHtml(e.displayName);
+    const flagHtml = e.country
+      ? '<span class="lb-flag" title="' + _escHtml(e.country.toUpperCase()) + '">' + _countryFlagEmoji(e.country) + '</span> '
+      : '';
+    let nameCell = flagHtml + _escHtml(e.displayName);
 
     // Season top-3 badges
     if (isSeason && _SEASON_BADGES[e.rank]) {
@@ -518,9 +546,9 @@ function _doRenderLeaderboard(container) {
 
   html += '</tbody></table>';
 
-  // Load More button
+  // Scroll sentinel for infinite scroll
   if (hasMore) {
-    html += '<button class="lb-load-more-btn">Load More (' + (visibleEntries.length - count) + ' more)</button>';
+    html += '<div class="lb-scroll-sentinel" data-remaining="' + (visibleEntries.length - count) + '"></div>';
   }
 
   // Pinned personal rank — shown when player is not in current page
@@ -533,6 +561,10 @@ function _doRenderLeaderboard(container) {
   }
 
   container.innerHTML = html;
+
+  // Animate table rows sliding in
+  var lbTable = container.querySelector('.lb-table');
+  if (lbTable) lbTable.classList.add('lb-table-animate');
 
   // Lazy-render local player avatar thumbnail
   const lbAvatarThumb = container.querySelector('.lb-avatar-thumb[data-lb-avatar]');
@@ -556,13 +588,17 @@ function _doRenderLeaderboard(container) {
     });
   }
 
-  // Wire load-more
-  const lmBtn = container.querySelector('.lb-load-more-btn');
-  if (lmBtn) {
-    lmBtn.addEventListener('click', function() {
-      _lbPaginationState.count += 25;
-      _doRenderLeaderboard(container);
-    });
+  // Wire scroll sentinel for infinite scroll
+  const sentinel = container.querySelector('.lb-scroll-sentinel');
+  if (sentinel && typeof IntersectionObserver !== 'undefined') {
+    const obs = new IntersectionObserver(function(entries) {
+      if (entries[0].isIntersecting) {
+        obs.disconnect();
+        _lbPaginationState.count += 25;
+        _doRenderLeaderboard(container);
+      }
+    }, { threshold: 0.1 });
+    obs.observe(sentinel);
   }
 }
 
@@ -1079,7 +1115,7 @@ async function openHallOfFamePanel() {
 
   const body    = document.getElementById('hof-body');
   const select  = document.getElementById('hof-season-select');
-  if (body) body.innerHTML = '<div class="lb-loading">Loading...</div>';
+  if (body) body.innerHTML = _lbSkeletonHtml();
 
   try {
     if (!_hofSeasons) {
@@ -1313,7 +1349,10 @@ function _renderModeLeaderboard(container, data, mode, range) {
     }
 
     // Name cell
-    let nameCell = _escHtml(e.displayName);
+    const _modeFlagHtml = e.country
+      ? '<span class="lb-flag" title="' + _escHtml(e.country.toUpperCase()) + '">' + _countryFlagEmoji(e.country) + '</span> '
+      : '';
+    let nameCell = _modeFlagHtml + _escHtml(e.displayName);
     if (isMe) {
       const _prestigeHtml = typeof getPrestigeStarsHtml === 'function' ? getPrestigeStarsHtml() : '';
       if (_prestigeHtml) nameCell = _prestigeHtml + ' ' + nameCell;
@@ -1362,6 +1401,10 @@ function _renderModeLeaderboard(container, data, mode, range) {
 
   container.innerHTML = html;
   _attachModeTabListeners(container, mode, range);
+
+  // Animate table rows sliding in
+  var modeLbTable = container.querySelector('.lb-table');
+  if (modeLbTable) modeLbTable.classList.add('lb-table-animate');
 
   // Record rank for trend tracking
   const modeTabKey = 'mode:' + mode + ':' + range;
