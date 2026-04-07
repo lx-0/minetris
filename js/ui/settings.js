@@ -1960,6 +1960,9 @@ function openSettings(onClose) {
   // Rebuild piece skin selector (checks unlock state live).
   _buildPieceSkinSelector();
 
+  // Rebuild board skin selector (checks unlock state live).
+  if (typeof initBoardSkinSelector === 'function') initBoardSkinSelector();
+
   // Refresh animated skin preview strip.
   if (typeof initAnimatedSkinStrip === 'function') initAnimatedSkinStrip();
 }

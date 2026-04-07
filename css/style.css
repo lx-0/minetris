@@ -24245,3 +24245,216 @@ body.ui-theme-retro .notif-toast {
 #training-editor-btns button:hover { background: rgba(255,255,255,0.14); color: #fff; }
 #training-editor-save { background: rgba(120, 220, 80, 0.2) !important; color: #7be857 !important; border-color: rgba(120, 220, 80, 0.4) !important; }
 #training-editor-save:hover { background: rgba(120, 220, 80, 0.35) !important; }
+
+/* ── Board Skins ──────────────────────────────────────────────────────────── */
+
+/* Overlay sits above the 3D renderer but below UI panels */
+#board-skin-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+#board-skin-overlay.board-skin--wireframe,
+#board-skin-overlay.board-skin--stone,
+#board-skin-overlay.board-skin--wooden,
+#board-skin-overlay.board-skin--nether,
+#board-skin-overlay.board-skin--end,
+#board-skin-overlay.board-skin--glass,
+#board-skin-overlay.board-skin--pixel {
+  opacity: 0.18;
+}
+
+/* Classic — no overlay (opacity remains 0) */
+.board-skin--classic { opacity: 0 !important; }
+
+/* Wireframe — glowing grid */
+.board-skin--wireframe {
+  background-color: transparent;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      rgba(0, 255, 136, 0.55) 39px,
+      rgba(0, 255, 136, 0.55) 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 39px,
+      rgba(0, 255, 136, 0.55) 39px,
+      rgba(0, 255, 136, 0.55) 40px
+    );
+}
+
+/* Minecraft Stone — ashlar brickwork */
+.board-skin--stone {
+  background-color: #6e6e6e;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 29px,
+      rgba(48, 48, 48, 0.7) 29px,
+      rgba(48, 48, 48, 0.7) 31px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 59px,
+      rgba(48, 48, 48, 0.7) 59px,
+      rgba(48, 48, 48, 0.7) 61px
+    );
+}
+
+/* Wooden — oak plank grain */
+.board-skin--wooden {
+  background-color: #7a4a28;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 18px,
+      rgba(40, 18, 6, 0.55) 18px,
+      rgba(40, 18, 6, 0.55) 20px
+    ),
+    repeating-linear-gradient(
+      178deg,
+      transparent,
+      transparent 6px,
+      rgba(255, 200, 120, 0.08) 6px,
+      rgba(255, 200, 120, 0.08) 7px
+    );
+}
+
+/* Minecraft Nether — nether brick and ember */
+.board-skin--nether {
+  background-color: #3a0a0a;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 22px,
+      rgba(16, 4, 4, 0.75) 22px,
+      rgba(16, 4, 4, 0.75) 24px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 44px,
+      rgba(16, 4, 4, 0.75) 44px,
+      rgba(16, 4, 4, 0.75) 46px
+    );
+}
+
+/* Minecraft End — endstone tiles */
+.board-skin--end {
+  background-color: #24231a;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 34px,
+      rgba(200, 190, 120, 0.3) 34px,
+      rgba(200, 190, 120, 0.3) 36px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 34px,
+      rgba(200, 190, 120, 0.3) 34px,
+      rgba(200, 190, 120, 0.3) 36px
+    );
+}
+
+/* Glass — crystal pane refractions */
+.board-skin--glass {
+  background-color: rgba(30, 60, 100, 0.4);
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      rgba(136, 200, 255, 0.35) 39px,
+      rgba(136, 200, 255, 0.35) 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 39px,
+      rgba(136, 200, 255, 0.35) 39px,
+      rgba(136, 200, 255, 0.35) 40px
+    );
+  backdrop-filter: brightness(1.05);
+}
+
+/* Pixel Art — chunky 16-bit checkerboard */
+.board-skin--pixel {
+  background-color: #0d0d0d;
+  background-image:
+    repeating-conic-gradient(#161616 0% 25%, #0d0d0d 0% 50%);
+  background-size: 20px 20px;
+}
+
+/* ── Board Skin Selector (settings panel) ─────────────────────────────────── */
+
+#board-skin-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.board-skin-btn {
+  flex: 1 1 calc(25% - 6px);
+  min-width: 68px;
+  font-family: "Press Start 2P", cursive;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #333;
+  border-radius: 6px;
+  padding: 5px 3px 6px;
+  cursor: pointer;
+  color: #aaa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.board-skin-btn:hover:not(:disabled) {
+  border-color: #888;
+  color: #fff;
+}
+.board-skin-btn-selected {
+  border-color: #4ade80;
+  color: #4ade80;
+}
+.board-skin-btn-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.board-skin-preview-canvas {
+  display: block;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.1);
+  image-rendering: pixelated;
+}
+
+.board-skin-btn-name {
+  font-size: 5.5px;
+  text-align: center;
+  line-height: 1.4;
+}
+.board-skin-btn-sub {
+  font-size: 4.5px;
+  color: #777;
+  text-align: center;
+}
+.board-skin-btn-hint {
+  color: #e07730;
+}

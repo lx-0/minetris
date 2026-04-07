@@ -1600,6 +1600,7 @@ function updateFallingPieces(delta) {
         guildBoardSkin:  _guildCosmetics ? _guildCosmetics.activeBoardSkin : null,
         guildBannerColor: _guildCosmetics ? _guildCosmetics.bannerColor : null,
         guildIsLegendary: _guildCosmetics ? _guildCosmetics.isLegendary : false,
+        playerBoardSkin: (typeof getActiveBoardSkin === 'function') ? getActiveBoardSkin() : null,
       });
     }
     if (isPuzzleMode || isCustomPuzzleMode) {
@@ -1672,5 +1673,6 @@ function broadcastBoardState() {
     guildBoardSkin:  _guildCosmetics ? _guildCosmetics.activeBoardSkin : null,
     guildBannerColor: _guildCosmetics ? _guildCosmetics.bannerColor : null,
     guildIsLegendary: _guildCosmetics ? _guildCosmetics.isLegendary : false,
+    playerBoardSkin: (typeof getActiveBoardSkin === 'function') ? getActiveBoardSkin() : null,
   });
 }

@@ -24,6 +24,7 @@ function init() {
   if (window.MineLoader) window.MineLoader.setStage('audio');
   if (typeof initI18n === 'function') initI18n();
   initSettings();
+  if (typeof initBoardSkinSelector === 'function') initBoardSkinSelector();
   if (typeof applyTranslations === 'function') applyTranslations();
   if (typeof initNotifications === 'function') initNotifications();
   if (typeof detectReturningPlayer === "function") detectReturningPlayer();
@@ -1433,6 +1434,8 @@ function init() {
   if (typeof restoreSeasonCosmetic === "function") restoreSeasonCosmetic();
   // Restore equipped biome cosmetic — runs after restoreSeasonCosmetic so biome cosmetic takes priority.
   if (typeof restoreBiomeCosmetic === "function") restoreBiomeCosmetic();
+  // Restore personal board skin overlay.
+  if (typeof restoreBoardSkin === "function") restoreBoardSkin();
 
   // ── Depths launch handlers ──────────────────────────────────────────────────
   // depthsLaunch: Free Run (roguelike 7-floor run)

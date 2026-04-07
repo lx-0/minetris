@@ -331,6 +331,10 @@ function checkLevelUp(oldXP, newXP) {
   if (typeof _syncThemeButtons === 'function') {
     _syncThemeButtons();
   }
+  // Re-sync board skin selector (new level may unlock skins)
+  if (typeof refreshBoardSkinSelector === 'function') {
+    refreshBoardSkinSelector();
+  }
 }
 
 let _levelUpToastQueue = [];
