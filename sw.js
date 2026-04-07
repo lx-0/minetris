@@ -1,6 +1,6 @@
 // MINETRIS Service Worker
 // Cache version — bump this string to trigger an update toast in the game
-const CACHE_VERSION = 'minetris-v5.9';
+const CACHE_VERSION = 'minetris-v6.0';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -157,6 +157,9 @@ const STATIC_ASSETS = [
   './js/battle/battle-init.js',
   './js/battle/battle-spectator-init.js',
   './js/battle/matchmaking.js',
+  // JS — themes & i18n
+  './js/themes.js',
+  './js/i18n/i18n.js',
   './js/loader.js',
   './js/main.js',
 ];
