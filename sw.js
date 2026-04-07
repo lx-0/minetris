@@ -1,6 +1,6 @@
 // MINETRIS Service Worker
 // Cache version — bump this string to trigger an update toast in the game
-const CACHE_VERSION = 'minetris-v5.7';
+const CACHE_VERSION = 'minetris-v5.8';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -117,6 +117,8 @@ const STATIC_ASSETS = [
   './js/social/community.js',
   './js/social/community-goals.js',
   './js/social/friends.js',
+  './js/social/rooms.js',
+  './js/social/rooms-init.js',
   './js/social/guild.js',
   './js/social/guild-home.js',
   './js/social/guild-chat.js',
