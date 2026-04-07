@@ -85,7 +85,10 @@ var _editorEditingId   = null; // null = new theme
 
 // ── Open / close ────────────────────────────────────────────────────────────────
 
+var _themeEditorOpener = null;
+
 function openThemeEditor(existingId) {
+  _themeEditorOpener = document.activeElement || null;
   if (typeof analyticsFeatureUsed === 'function') analyticsFeatureUsed('theme_editor');
   var overlay = document.getElementById('theme-editor-overlay');
   if (!overlay) return;
@@ -117,14 +120,20 @@ function openThemeEditor(existingId) {
 
   _renderThemeEditorUI();
   overlay.style.display = 'flex';
+  if (typeof trapFocus === 'function') trapFocus(overlay, closeThemeEditor);
 }
 
 function closeThemeEditor() {
+  if (typeof releaseFocusTrap === 'function') releaseFocusTrap();
   var overlay = document.getElementById('theme-editor-overlay');
   if (overlay) overlay.style.display = 'none';
   // Clear export field
   var shareOut = document.getElementById('te-share-output');
   if (shareOut) { shareOut.value = ''; shareOut.style.display = 'none'; }
+  if (_themeEditorOpener && typeof _themeEditorOpener.focus === 'function') {
+    try { _themeEditorOpener.focus(); } catch (_) {}
+    _themeEditorOpener = null;
+  }
 }
 
 // ── UI sync ─────────────────────────────────────────────────────────────────────

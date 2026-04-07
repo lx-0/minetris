@@ -3,6 +3,58 @@
 //           world.js (createBlockMesh), shaders.js (createBlockMaterialColorblind),
 //           achievements.js (loadAchievements)
 
+// ── Focus trap utility ───────────────────────────────────────────────────────
+// Traps keyboard focus inside a dialog element until releaseFocusTrap() is called.
+// Supports nested traps: each call pushes onto a stack; release pops the top.
+(function () {
+  var _trapStack = [];
+  var _trapHandlers = [];
+
+  var FOCUSABLE = [
+    'a[href]', 'button:not([disabled])', 'input:not([disabled])',
+    'select:not([disabled])', 'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(',');
+
+  function _getFocusable(el) {
+    return Array.prototype.slice.call(el.querySelectorAll(FOCUSABLE)).filter(function (n) {
+      return !!(n.offsetWidth || n.offsetHeight || n.getClientRects().length);
+    });
+  }
+
+  window.trapFocus = function (el, onEscape) {
+    var handler = function (e) {
+      if (e.key === 'Escape' || e.keyCode === 27) {
+        if (typeof onEscape === 'function') { e.preventDefault(); onEscape(); }
+        return;
+      }
+      if (e.key !== 'Tab' && e.keyCode !== 9) return;
+      var focusable = _getFocusable(el);
+      if (!focusable.length) { e.preventDefault(); return; }
+      var first = focusable[0];
+      var last  = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener('keydown', handler);
+    _trapStack.push(el);
+    _trapHandlers.push(handler);
+    // Focus first focusable element inside the dialog.
+    var focusable = _getFocusable(el);
+    if (focusable.length) focusable[0].focus();
+  };
+
+  window.releaseFocusTrap = function () {
+    if (!_trapStack.length) return;
+    var handler = _trapHandlers.pop();
+    _trapStack.pop();
+    document.removeEventListener('keydown', handler);
+  };
+}());
+
 // GAME_VERSION is defined in config.js
 const TRANSFER_LAST_EXPORT_KEY = "mineCtris_lastExportTime";
 
@@ -2007,7 +2059,10 @@ function _syncDisplayNameField() {
 }
 
 /** Show the settings overlay. Optional onClose callback fires when panel is dismissed. */
+var _settingsOpener = null;
+
 function openSettings(onClose) {
+  _settingsOpener = document.activeElement || null;
   _settingsCloseCallback = onClose || null;
   _syncSliders();
   const cbModeSelect = document.getElementById("cb-mode-select");
@@ -2067,6 +2122,11 @@ function openSettings(onClose) {
 
   // Refresh animated skin preview strip.
   if (typeof initAnimatedSkinStrip === 'function') initAnimatedSkinStrip();
+
+  // Trap focus inside the settings dialog.
+  if (overlay && typeof trapFocus === 'function') {
+    trapFocus(overlay, closeSettings);
+  }
 }
 
 // ── Custom theme background / grid helpers ────────────────────────────────────
@@ -2326,8 +2386,14 @@ function closeSettings() {
     _kbListeningAction = null;
     _kbListeningBtn    = null;
   }
+  // Release focus trap and restore focus to the element that opened settings.
+  if (typeof releaseFocusTrap === 'function') releaseFocusTrap();
   const overlay = document.getElementById("settings-overlay");
   if (overlay) overlay.style.display = "none";
+  if (_settingsOpener && typeof _settingsOpener.focus === 'function') {
+    try { _settingsOpener.focus(); } catch (_) {}
+    _settingsOpener = null;
+  }
   if (_settingsCloseCallback) {
     const cb = _settingsCloseCallback;
     _settingsCloseCallback = null;

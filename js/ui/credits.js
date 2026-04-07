@@ -128,7 +128,10 @@
     if (scrollRAF) { cancelAnimationFrame(scrollRAF); scrollRAF = null; }
   }
 
+  let _creditsOpener = null;
+
   function openCredits() {
+    _creditsOpener = document.activeElement || null;
     const overlay = document.getElementById('credits-overlay');
     if (!overlay) return;
     const inner = document.getElementById('credits-inner');
@@ -138,14 +141,20 @@
     overlay.style.display = 'flex';
     konamiIdx = 0;
     startScroll();
+    if (typeof trapFocus === 'function') trapFocus(overlay, closeCredits);
   }
 
   function closeCredits() {
+    if (typeof releaseFocusTrap === 'function') releaseFocusTrap();
     const overlay = document.getElementById('credits-overlay');
     if (overlay) overlay.style.display = 'none';
     stopScroll();
     scrollPaused = false;
     konamiIdx = 0;
+    if (_creditsOpener && typeof _creditsOpener.focus === 'function') {
+      try { _creditsOpener.focus(); } catch (_) {}
+      _creditsOpener = null;
+    }
   }
 
   function triggerEasterEgg() {

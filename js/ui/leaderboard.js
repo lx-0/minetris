@@ -286,18 +286,27 @@ function openDisplayNameModal(onConfirm) {
 
 let _lbActiveTab = 'today'; // 'today' | 'yesterday' | 'thisweek' | 'lastweek' | 'season' | 'seasonrating' | 'coop' | 'dailycoop' | 'battle' | 'mastery' | 'modes' | 'friends'
 
+var _lbOpener = null;
+
 function openLeaderboardPanel(defaultTab) {
+  _lbOpener = document.activeElement || null;
   const overlay = document.getElementById('lb-panel-overlay');
   if (!overlay) return;
   overlay.style.display = 'flex';
   _lbActiveTab = defaultTab || 'today';
   _syncLbTabs();
   _loadLbTab(_lbActiveTab);
+  if (typeof trapFocus === 'function') trapFocus(overlay, closeLeaderboardPanel);
 }
 
 function closeLeaderboardPanel() {
+  if (typeof releaseFocusTrap === 'function') releaseFocusTrap();
   const overlay = document.getElementById('lb-panel-overlay');
   if (overlay) overlay.style.display = 'none';
+  if (_lbOpener && typeof _lbOpener.focus === 'function') {
+    try { _lbOpener.focus(); } catch (_) {}
+    _lbOpener = null;
+  }
 }
 
 function _syncLbTabs() {
