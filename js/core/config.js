@@ -1180,3 +1180,5 @@ const MOBILE_OVERRIDES = {
   speedMult:        0.80, // 20% speed reduction (Mobile Difficulty toggle)
   ghostOpacityMax:  0.65, // was 0.40 — more visible on small screens
 };
+
+const GAME_VERSION = "6.8";

@@ -24,6 +24,7 @@ function init() {
   if (window.MineLoader) window.MineLoader.setStage('audio');
   if (typeof initI18n === 'function') initI18n();
   initSettings();
+  if (typeof initCredits === 'function') initCredits();
   if (typeof initBoardSkinSelector === 'function') initBoardSkinSelector();
   if (typeof applyTranslations === 'function') applyTranslations();
   if (typeof initNotifications === 'function') initNotifications();

@@ -279,6 +279,9 @@
                   <button id="start-tutorial-btn">&#127891; Tutorial</button>
                   <button id="start-replays-btn">&#9654; Replays</button>
                 </div>
+                <div class="menu-group-row">
+                  <button id="start-credits-btn">&#9733; Credits</button>
+                </div>
               </div>
             </div>
           </div>
@@ -2096,6 +2099,17 @@
         </div>
       </div>
 
+      <!-- Credits overlay -->
+      <div id="credits-overlay" role="dialog" aria-modal="true" aria-label="Credits" style="display:none;">
+        <div id="credits-panel">
+          <div id="credits-header">
+            <span id="credits-title">CREDITS</span>
+            <button id="credits-close-btn" aria-label="Close credits">&#10005;</button>
+          </div>
+          <div id="credits-inner"></div>
+        </div>
+      </div>
+
       <!-- FPS performance suggestion toast -->
       <div id="fps-suggestion-toast">
         <div id="fps-suggestion-content">
@@ -3634,6 +3648,7 @@
     <script src="js/events/seasonal-events.js"></script>
     <script src="js/ui/history.js"></script>
     <script src="js/ui/theme-editor.js"></script>
+    <script src="js/ui/credits.js"></script>
     <script src="js/themes.js"></script>
     <script src="js/cloud/sync.js"></script>
     <script src="js/debug.js"></script>
