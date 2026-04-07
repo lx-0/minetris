@@ -1,6 +1,6 @@
 // MINETRIS Service Worker
 // Cache version — bump this string to trigger an update toast in the game
-const CACHE_VERSION = 'minetris-v6.9';
+const CACHE_VERSION = 'minetris-v7.0';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -35,6 +35,8 @@ const STATIC_ASSETS = [
   './js/core/inventory.js',
   './js/core/savestate.js',
   './js/core/replay.js',
+  './js/core/finesse.js',
+  './js/core/error-reporter.js',
   './js/core/game-loop.js',
   // JS — player
   './js/player/player.js',

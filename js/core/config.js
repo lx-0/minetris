@@ -1181,4 +1181,4 @@ const MOBILE_OVERRIDES = {
   ghostOpacityMax:  0.65, // was 0.40 — more visible on small screens
 };
 
-const GAME_VERSION = "6.8";
+const GAME_VERSION = "7.0";
