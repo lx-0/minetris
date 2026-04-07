@@ -370,6 +370,19 @@
                   <div class="mode-card-desc">29 levels. Speed up every 10 lines. Reach the kill screen.</div>
                   <div class="mode-card-pb" id="mode-pb-marathon"></div>
                 </div>
+                <div class="mode-card" id="mode-card-marathon_endless" data-mode="marathon_endless" tabindex="0" role="button" aria-label="Marathon Endless — infinite progression, milestone cosmetics, optional garbage after 300 lines">
+                  <div class="mode-card-icon">&#9854;</div>
+                  <div class="mode-card-name">Marathon Endless</div>
+                  <div class="mode-card-desc">No level cap. Milestones at 50/100/200/500/1000 lines. Garbage starts at 300.</div>
+                  <div class="mode-card-pb" id="mode-pb-marathon_endless"></div>
+                  <div class="me-garbage-toggle" onclick="event.stopPropagation()" style="margin-top:6px;pointer-events:auto;">
+                    <label style="font-size:0.55rem;color:#aaa;display:flex;align-items:center;gap:4px;cursor:pointer;">
+                      <input type="checkbox" id="me-garbage-toggle-cb" checked style="cursor:pointer;">
+                      Garbage after 300 lines
+                    </label>
+                  </div>
+                  <button class="mode-card-lb-btn" data-lb-tab="marathon_endless" title="Leaderboard">&#127942;</button>
+                </div>
                 <div class="mode-card mode-card-practice" id="mode-card-practice" data-mode="practice" tabindex="0" role="button" aria-label="Practice mode — Configurable sandbox for skill building">
                   <div class="mode-card-icon">&#127979;</div>
                   <div class="mode-card-name">Practice</div>
@@ -665,6 +678,9 @@
 
       <!-- Survival mode badge (shown during survival runs) -->
       <div id="survival-badge" style="display:none;">&#129430; Survival</div>
+
+      <!-- Marathon Endless mode badge -->
+      <div id="marathon-endless-badge" style="display:none;">&#9854; Marathon Endless</div>
 
       <!-- Endless Survival mode badge and active modifier icons -->
       <div id="endless-badge" style="display:none;">&#9854; Endless</div>
@@ -982,6 +998,7 @@
         <div id="survival-go-section" style="display:none;"></div>
         <div id="endless-go-section" style="display:none;"></div>
         <div id="marathon-go-section" style="display:none;"></div>
+        <div id="marathon-endless-go-section" style="display:none;"></div>
         <div id="finesse-go-section" style="display:none;"></div>
         <button id="go-share-btn">Share Score</button>
         <div id="go-share-feedback"></div>
@@ -3277,6 +3294,7 @@
     <script src="js/modes/sprint.js"></script>
     <script src="js/modes/blitz.js"></script>
     <script src="js/modes/marathon.js"></script>
+    <script src="js/modes/marathon-endless.js"></script>
     <script src="js/modes/combo-challenge.js"></script>
     <script src="js/modes/countdown.js"></script>
     <script src="js/modes/practice.js"></script>

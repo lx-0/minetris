@@ -284,6 +284,17 @@ const MARATHON_LINES_PER_LEVEL = 10;
 const MARATHON_KILL_SCREEN_LEVEL = 29;
 const MARATHON_LEVEL_RATE = 1.18; // per-level speed multiplier (≈ 1.18^28 ≈ 84× at kill screen)
 
+// ── Marathon Endless mode state ───────────────────────────────────────────────
+// Infinite marathon — no level cap, progressive speed, milestone cosmetics,
+// optional garbage injection after 300 lines, auto-save every 50 lines.
+let isMarathonEndlessMode        = false;
+let marathonEndlessLevel         = 1;    // current level (increases every 10 lines, no cap)
+let marathonEndlessPeakLPM       = 0;   // highest lines-per-minute seen this session
+let marathonEndlessLastMilestone = 0;   // last milestone threshold reached (50/100/200/500/1000)
+let marathonEndlessLastCheckpoint = 0;  // last checkpoint save at this line count
+let marathonEndlessGarbageTimer  = 0;   // seconds since last garbage injection
+let marathonEndlessGarbageEnabled = true; // toggle garbage injection in the settings card
+
 // ── Sprint mode state ─────────────────────────────────────────────────────────
 // Target: clear exactly 40 lines as fast as possible.
 // Fixed fall speed = Classic Level 5 (tier 4 multiplier).

@@ -68,6 +68,14 @@
           ? "Best: Level " + mBest.level + " (" + mBest.score + ")"
           : "";
       }
+      // Populate Marathon Endless personal best
+      const mePbEl = document.getElementById("mode-pb-marathon_endless");
+      if (mePbEl && typeof loadMarathonEndlessBest === 'function') {
+        const meBest = loadMarathonEndlessBest();
+        mePbEl.textContent = meBest
+          ? "Best: " + meBest.linesCleared + " lines"
+          : "";
+      }
       // Populate Zen personal best
       const zenPbEl = document.getElementById("mode-pb-zen");
       if (zenPbEl && typeof loadZenBest === 'function') {
@@ -154,7 +162,7 @@
       // Render World Card stats panel
       if (typeof renderWorldCard === "function") renderWorldCard();
       // Apply highlight to the specified mode card
-      ["tutorial", "classic", "sprint", "blitz", "marathon", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai", "countdown"].forEach(function (mode) {
+      ["tutorial", "classic", "sprint", "blitz", "marathon", "marathon_endless", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai", "countdown"].forEach(function (mode) {
         const cardEl = document.getElementById("mode-card-" + mode);
         if (cardEl) {
           if (mode === highlightMode) {
@@ -484,6 +492,34 @@
         applyWorldModifierHUD();
         try { localStorage.setItem("mineCtris_lastMode", "marathon"); } catch (_) {}
         if (typeof metricsModePlayed === 'function') metricsModePlayed('marathon');
+        hideModeSelect();
+        requestPointerLock();
+      });
+    }
+
+    const marathonEndlessCardEl = document.getElementById("mode-card-marathon_endless");
+    if (marathonEndlessCardEl) {
+      marathonEndlessCardEl.addEventListener("click", function () {
+        isDailyChallenge         = false;
+        gameRng                  = null;
+        isMarathonEndlessMode    = true;
+        marathonEndlessLevel     = 1;
+        marathonEndlessPeakLPM   = 0;
+        marathonEndlessLastMilestone  = 0;
+        marathonEndlessLastCheckpoint = 0;
+        marathonEndlessGarbageTimer   = 0;
+        // Read garbage toggle from the card checkbox
+        const garbageCb = document.getElementById('me-garbage-toggle-cb');
+        marathonEndlessGarbageEnabled = garbageCb ? garbageCb.checked : true;
+        // Start at level 1 speed
+        difficultyMultiplier = 1.0;
+        lastDifficultyTier   = 0;
+        // Show badge in HUD
+        const meBadgeEl = document.getElementById('marathon-endless-badge');
+        if (meBadgeEl) meBadgeEl.style.display = 'block';
+        applyWorldModifierHUD();
+        try { localStorage.setItem("mineCtris_lastMode", "marathon_endless"); } catch (_) {}
+        if (typeof metricsModePlayed === 'function') metricsModePlayed('marathon_endless');
         hideModeSelect();
         requestPointerLock();
       });

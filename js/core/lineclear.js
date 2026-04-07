@@ -437,6 +437,11 @@ function checkLineClear(newBlocks) {
     updateMarathonLevel();
   }
 
+  // Marathon Endless: advance level (no cap) and check milestones / checkpoints
+  if (isMarathonEndlessMode && typeof updateMarathonEndlessLevel === "function") {
+    updateMarathonEndlessLevel();
+  }
+
   const now = clock.getElapsedTime();
   var _comboWindow = 3.0;
   if (lastClearTime >= 0 && (now - lastClearTime) <= _comboWindow) {

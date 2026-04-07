@@ -25,6 +25,10 @@ function getSaveStateLabel() {
     if (data.mode === 'marathon') {
       return 'Marathon — Level ' + (data.marathonLevel || 1);
     }
+    if (data.mode === 'marathon_endless') {
+      return 'Marathon Endless — Level ' + (data.marathonEndlessLevel || 1) +
+        ' (' + (data.linesCleared || 0) + ' lines)';
+    }
     return data.mode ? (data.mode.charAt(0).toUpperCase() + data.mode.slice(1)) : 'Game';
   } catch (_) { return null; }
 }
@@ -70,10 +74,11 @@ function saveGameState() {
     }
   });
 
-  const mode = isMarathonMode    ? "marathon"
-             : isSprintMode     ? "sprint"
-             : isBlitzMode      ? "blitz"
-             : isDailyChallenge ? "daily"
+  const mode = isMarathonMode        ? "marathon"
+             : isMarathonEndlessMode ? "marathon_endless"
+             : isSprintMode          ? "sprint"
+             : isBlitzMode           ? "blitz"
+             : isDailyChallenge      ? "daily"
              : "classic";
 
   const data = {
@@ -100,9 +105,15 @@ function saveGameState() {
     blitzTimerActive,
     blitzBonusActive,
     dailyTimerActive,
-    marathonLevel:       typeof marathonLevel !== 'undefined'      ? marathonLevel      : 1,
-    marathonKillScreen:  typeof marathonKillScreen !== 'undefined' ? marathonKillScreen : false,
-    marathonPeakLPM:     typeof marathonPeakLPM !== 'undefined'    ? marathonPeakLPM    : 0,
+    marathonLevel:                typeof marathonLevel !== 'undefined'                ? marathonLevel                : 1,
+    marathonKillScreen:           typeof marathonKillScreen !== 'undefined'          ? marathonKillScreen           : false,
+    marathonPeakLPM:              typeof marathonPeakLPM !== 'undefined'             ? marathonPeakLPM              : 0,
+    marathonEndlessLevel:         typeof marathonEndlessLevel !== 'undefined'        ? marathonEndlessLevel         : 1,
+    marathonEndlessPeakLPM:       typeof marathonEndlessPeakLPM !== 'undefined'     ? marathonEndlessPeakLPM       : 0,
+    marathonEndlessLastMilestone: typeof marathonEndlessLastMilestone !== 'undefined' ? marathonEndlessLastMilestone : 0,
+    marathonEndlessLastCheckpoint: typeof marathonEndlessLastCheckpoint !== 'undefined' ? marathonEndlessLastCheckpoint : 0,
+    marathonEndlessGarbageTimer:  typeof marathonEndlessGarbageTimer !== 'undefined' ? marathonEndlessGarbageTimer  : 0,
+    marathonEndlessGarbageEnabled: typeof marathonEndlessGarbageEnabled !== 'undefined' ? marathonEndlessGarbageEnabled : true,
     pieceQueue:          pieceQueue.map(function (p) { return { index: p.index }; }),
     landedBlocks
   };
@@ -162,11 +173,12 @@ function restoreGameState() {
   iceBridgeSlowTimer  = typeof data.iceBridgeSlowTimer === "number" ? data.iceBridgeSlowTimer : 0;
 
   // ── Game mode ─────────────────────────────────────────────────────────────
-  const mode        = data.mode || "classic";
-  isMarathonMode    = mode === "marathon";
-  isSprintMode      = mode === "sprint";
-  isBlitzMode       = mode === "blitz";
-  isDailyChallenge  = mode === "daily";
+  const mode              = data.mode || "classic";
+  isMarathonMode          = mode === "marathon";
+  isMarathonEndlessMode   = mode === "marathon_endless";
+  isSprintMode            = mode === "sprint";
+  isBlitzMode             = mode === "blitz";
+  isDailyChallenge        = mode === "daily";
   gameRng           = isDailyChallenge && typeof getDailyPrng === "function"
                       ? getDailyPrng() : null;
 
@@ -187,6 +199,30 @@ function restoreGameState() {
     // Restore the speed multiplier for the saved level
     difficultyMultiplier = Math.pow(MARATHON_LEVEL_RATE, marathonLevel - 1);
     lastDifficultyTier   = marathonLevel - 1;
+  }
+
+  // ── Marathon Endless state ────────────────────────────────────────────────
+  if (isMarathonEndlessMode) {
+    marathonEndlessLevel          = typeof data.marathonEndlessLevel === "number"
+                                    ? data.marathonEndlessLevel : 1;
+    marathonEndlessPeakLPM        = typeof data.marathonEndlessPeakLPM === "number"
+                                    ? data.marathonEndlessPeakLPM : 0;
+    marathonEndlessLastMilestone  = typeof data.marathonEndlessLastMilestone === "number"
+                                    ? data.marathonEndlessLastMilestone : 0;
+    marathonEndlessLastCheckpoint = typeof data.marathonEndlessLastCheckpoint === "number"
+                                    ? data.marathonEndlessLastCheckpoint : 0;
+    marathonEndlessGarbageTimer   = typeof data.marathonEndlessGarbageTimer === "number"
+                                    ? data.marathonEndlessGarbageTimer : 0;
+    marathonEndlessGarbageEnabled = (typeof data.marathonEndlessGarbageEnabled !== 'undefined')
+                                    ? !!data.marathonEndlessGarbageEnabled : true;
+    // Restore the speed multiplier for the saved level
+    if (typeof getMarathonEndlessMultiplier === 'function') {
+      difficultyMultiplier = getMarathonEndlessMultiplier(marathonEndlessLevel);
+    }
+    lastDifficultyTier = marathonEndlessLevel - 1;
+    // Restore the HUD badge
+    const meBadgeEl = document.getElementById('marathon-endless-badge');
+    if (meBadgeEl) meBadgeEl.style.display = 'block';
   }
 
   // ── Piece queue ───────────────────────────────────────────────────────────

@@ -138,6 +138,19 @@ function resetGame() {
   const _lpmEl = document.getElementById("hud-lpm");
   if (_lpmEl) { _lpmEl.style.display = "none"; _lpmEl.textContent = "LPM: —"; }
 
+  // Reset marathon-endless state
+  isMarathonEndlessMode        = false;
+  marathonEndlessLevel         = 1;
+  marathonEndlessPeakLPM       = 0;
+  marathonEndlessLastMilestone = 0;
+  marathonEndlessLastCheckpoint = 0;
+  marathonEndlessGarbageTimer  = 0;
+  marathonEndlessGarbageEnabled = true;
+  const meBadgeEl = document.getElementById('marathon-endless-badge');
+  if (meBadgeEl) meBadgeEl.style.display = 'none';
+  const meGoEl = document.getElementById('marathon-endless-go-section');
+  if (meGoEl) meGoEl.style.display = 'none';
+
   // Reset sprint state
   isSprintMode      = false;
   sprintTimerActive = false;

@@ -73,6 +73,11 @@ function animate() {
       tickEndlessSurvival(delta);
     }
 
+    // Tick marathon-endless garbage injection timer
+    if (isMarathonEndlessMode && typeof tickMarathonEndlessGarbage === 'function') {
+      tickMarathonEndlessGarbage(delta);
+    }
+
     // Tick the sprint timer (starts only once the first piece begins falling)
     if (isSprintMode && sprintTimerActive && !sprintComplete) {
       sprintElapsedMs += delta * 1000;

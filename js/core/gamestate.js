@@ -354,6 +354,11 @@ function triggerGameOver() {
     onMarathonGameOver();
   }
 
+  // Marathon Endless mode: save best, submit leaderboard, render go section
+  if (isMarathonEndlessMode && typeof onMarathonEndlessGameOver === "function") {
+    onMarathonEndlessGameOver();
+  }
+
   // Survival mode: record run, clear the world, then show special summary
   if (isSurvivalMode) {
     const survStats = typeof submitSurvivalStats === "function"
@@ -713,6 +718,8 @@ function triggerGameOver() {
     if (isMarathonMode) {
       // Marathon ranked by level reached; use level as score, linesCleared as tiebreaker
       trySubmitModeScore('marathon', marathonLevel, state.linesCleared);
+    } else if (isMarathonEndlessMode) {
+      // Marathon Endless ranked by lines cleared (handled inside onMarathonEndlessGameOver)
     } else if (isBlitzMode && !isDailyChallenge && !isWeeklyChallenge) {
       trySubmitModeScore('blitz', state.score, state.linesCleared);
     } else if (typeof activeDungeonId !== 'undefined' && activeDungeonId) {
@@ -735,6 +742,12 @@ function triggerGameOver() {
   if (!isMarathonMode) {
     const marathonGoHideEl = document.getElementById('marathon-go-section');
     if (marathonGoHideEl) marathonGoHideEl.style.display = 'none';
+  }
+
+  // Hide marathon-endless section when not in that mode
+  if (!isMarathonEndlessMode) {
+    const meGoHideEl = document.getElementById('marathon-endless-go-section');
+    if (meGoHideEl) meGoHideEl.style.display = 'none';
   }
 
   // Wire up Share Score button
