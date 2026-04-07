@@ -343,6 +343,12 @@ function onKeyDown(event) {
     case "KeyG":
       if (typeof activateIceBridge === "function") activateIceBridge();
       break;
+    case "KeyN":
+      // Co-op: mark the current column as a highlight zone (signals intent to partner).
+      if (isCoopMode && typeof triggerCoopHighlight === 'function') {
+        triggerCoopHighlight();
+      }
+      break;
     case "KeyI":
       // Announce current score to screen readers on demand.
       if (typeof announceToScreenReader === 'function' && typeof score !== 'undefined') {

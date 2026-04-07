@@ -331,6 +331,23 @@ function animate() {
         netcode.tickRollback();
         netcode.tickInterpolation(delta * 1000, null); // renderFn wired per-mode in init handlers
       }
+      // Co-op: tick highlight zone timers
+      if (isCoopMode && typeof tickCoopHighlight === 'function') {
+        tickCoopHighlight(delta);
+      }
+      // Co-op: periodic garbage injection — queue one rubble row when timer fires
+      if (isCoopMode && coopGarbageTimer > 0) {
+        coopGarbageTimer -= delta;
+        if (coopGarbageTimer <= 0) {
+          var _diffCfg = typeof COOP_DIFFICULTY_SETTINGS !== 'undefined' ? COOP_DIFFICULTY_SETTINGS : null;
+          var _garbageInterval = (_diffCfg && _diffCfg[coopDifficulty])
+            ? _diffCfg[coopDifficulty].garbageInterval : 0;
+          if (_garbageInterval > 0 && typeof queueGarbage === 'function') {
+            queueGarbage(1, (Math.random() * 0xFFFFFFFF) >>> 0);
+          }
+          coopGarbageTimer = _garbageInterval > 0 ? _garbageInterval : 0;
+        }
+      }
       updateLandingRings(delta);
       updateSnapAnimations(delta);
       updateTrails(delta, elapsedTime);

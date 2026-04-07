@@ -959,6 +959,13 @@
         <div class="coop-emote-key coop-chat-key"><span class="coop-emote-key-label">G</span><span class="coop-emote-key-icon">Nice!</span></div>
         <div class="coop-emote-key coop-chat-key"><span class="coop-emote-key-label">H</span><span class="coop-emote-key-icon">Help!</span></div>
         <div class="coop-emote-key coop-chat-key"><span class="coop-emote-key-label">T</span><span class="coop-emote-key-icon">Chat<span id="chat-emote-t-cooldown"></span></span></div>
+        <div class="coop-emote-key"><span class="coop-emote-key-label">N</span><span class="coop-emote-key-icon">&#8679;Zone</span></div>
+      </div>
+
+      <!-- Co-op highlight zone HUD — shows active column markers for both players -->
+      <div id="coop-highlight-hud" style="display:none;">
+        <div id="coop-my-highlight" style="display:none;">&#8679; Marking col <span class="coop-hl-col">0</span></div>
+        <div id="coop-partner-highlight" style="display:none;">&#9873; Partner col <span class="coop-hl-col">0</span></div>
       </div>
 
       <!-- In-game chat toggle button (battle / rooms game) -->
@@ -3534,6 +3541,7 @@
     <script src="js/social/chat-emotes.js"></script>
     <script src="js/social/chat.js"></script>
     <script src="js/social/coop-board.js"></script>
+    <script src="js/social/coop-highlight.js"></script>
     <script src="js/battle/matchmaking.js"></script>
     <script src="js/battle/battle-rating.js"></script>
     <script src="js/battle/battle.js"></script>

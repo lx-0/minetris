@@ -11153,6 +11153,37 @@ body.sandstorm-active [data-ghost-piece] {
 }
 
 /* ── Co-op emote keybinding HUD row ── */
+#coop-highlight-hud {
+  position: fixed;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 9990;
+  pointer-events: none;
+  align-items: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+}
+
+#coop-my-highlight {
+  color: #00ffff;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(0, 255, 255, 0.30);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+
+#coop-partner-highlight {
+  color: #ff8800;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 136, 0, 0.30);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+
 #coop-emote-hud {
   position: fixed;
   bottom: 48px;

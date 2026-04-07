@@ -248,6 +248,7 @@ let coopDifficulty = 'normal';      // 'casual' | 'normal' | 'challenge'
 let coopFallMultiplier = 1.5;       // baseline fall speed multiplier from difficulty
 let coopScoreMultiplier = 1.8;      // score multiplier from difficulty
 let coopBonusBannerTimer = 0;       // seconds remaining for "CO-OP BONUS" banner
+let coopGarbageTimer = 0;           // seconds until next periodic garbage injection (0 = disabled)
 
 // ── Daily challenge state ─────────────────────────────────────────────────────
 let isDailyChallenge = false;

@@ -706,11 +706,12 @@ const COOP_BOARD_HOST_X_MAX   =  0;   // right edge of host's half (inclusive)
 const COOP_BOARD_GUEST_X_MIN  =  1;   // left edge of guest's half (inclusive)
 const COOP_BOARD_HALF_SPAWN   = (WORLD_SIZE * 0.8) * (8 / 40); // ≈ 8 units half-range
 
-// Co-op difficulty settings: fall speed baseline multiplier and score multiplier.
+// Co-op difficulty settings: fall speed baseline multiplier, score multiplier,
+// and periodic garbage interval (seconds between injected rubble rows; 0 = none).
 const COOP_DIFFICULTY_SETTINGS = {
-  casual:    { fallMult: 1.0, scoreMult: 1.2, label: 'Just vibing' },
-  normal:    { fallMult: 1.5, scoreMult: 1.8, label: 'Working together' },
-  challenge: { fallMult: 2.0, scoreMult: 2.5, label: 'We came to win' },
+  casual:    { fallMult: 1.0, scoreMult: 1.2, garbageInterval: 0,   label: 'Just vibing' },
+  normal:    { fallMult: 1.5, scoreMult: 1.8, garbageInterval: 90,  label: 'Working together' },
+  challenge: { fallMult: 2.0, scoreMult: 2.5, garbageInterval: 45,  label: 'We came to win' },
 };
 
 // Tetromino shape definitions (row-major, value = color index).

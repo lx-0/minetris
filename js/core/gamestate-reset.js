@@ -243,6 +243,8 @@ function resetGame() {
   coopFallMultiplier = 1.5;
   coopScoreMultiplier = 1.8;
   coopBonusBannerTimer = 0;
+  coopGarbageTimer = 0;
+  if (typeof resetCoopHighlights === 'function') resetCoopHighlights();
   const coopBonusEl = document.getElementById('coop-bonus-overlay');
   if (coopBonusEl) coopBonusEl.style.display = 'none';
   // Hide co-op HUD elements

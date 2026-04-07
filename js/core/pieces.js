@@ -379,8 +379,8 @@ function spawnFallingPiece() {
   if (isDailyChallenge && !dailyTimerActive && !isGameOver) {
     dailyTimerActive = true;
   }
-  // Battle: deliver one queued garbage row before this piece spawns.
-  if (isBattleMode && typeof deliverPendingGarbage === 'function') {
+  // Battle / co-op: deliver one queued garbage row before this piece spawns.
+  if ((isBattleMode || isCoopMode) && typeof deliverPendingGarbage === 'function') {
     deliverPendingGarbage();
   }
 

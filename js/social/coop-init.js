@@ -303,6 +303,11 @@ function _initCoopHandlers() {
         if (typeof coopAvatar !== 'undefined') coopAvatar.init('Partner');
         if (typeof coopTrade !== 'undefined') coopTrade.showFirstRunHint();
         if (typeof coopEmote !== 'undefined') coopEmote.showHud(true);
+        // Start periodic garbage timer based on difficulty (0 = disabled for casual)
+        var _diffSettings = typeof COOP_DIFFICULTY_SETTINGS !== 'undefined' ? COOP_DIFFICULTY_SETTINGS : null;
+        var _garbageInterval = (_diffSettings && _diffSettings[coopDifficulty])
+          ? _diffSettings[coopDifficulty].garbageInterval : 0;
+        coopGarbageTimer = _garbageInterval > 0 ? _garbageInterval : 0;
         coop.startGame();
         coopOverlay.style.display = "none";
         setTimeout(function () { requestPointerLock(); }, 500);
@@ -413,6 +418,12 @@ function _initCoopHandlers() {
         }
       });
 
+      // ── Incoming highlight-zone signal from partner ──
+      coop.on('highlight', function (msg) {
+        if (!isCoopMode || typeof msg.col !== 'number') return;
+        if (typeof receiveCoopHighlight === 'function') receiveCoopHighlight(msg.col);
+      });
+
       // ── Incoming difficulty change from host ──
       coop.on('difficulty', function (msg) {
         if (!msg || !msg.level) return;
@@ -459,6 +470,11 @@ function _initCoopHandlers() {
           if (typeof coopAvatar !== 'undefined') coopAvatar.init('Partner');
           if (typeof coopTrade !== 'undefined') coopTrade.showFirstRunHint();
           if (typeof coopEmote !== 'undefined') coopEmote.showHud(true);
+          // Start garbage timer (guest mirrors host difficulty already applied above)
+          var _gsDiffSettings = typeof COOP_DIFFICULTY_SETTINGS !== 'undefined' ? COOP_DIFFICULTY_SETTINGS : null;
+          var _gsGarbageInterval = (_gsDiffSettings && _gsDiffSettings[coopDifficulty])
+            ? _gsDiffSettings[coopDifficulty].garbageInterval : 0;
+          coopGarbageTimer = _gsGarbageInterval > 0 ? _gsGarbageInterval : 0;
           coop.startGame();
           if (coopOverlay) coopOverlay.style.display = "none";
           applyWorldModifierHUD();
