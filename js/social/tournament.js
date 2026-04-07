@@ -37,6 +37,24 @@ function _tBotName() {
  */
 function _tGetRounds(bracket) {
   if (!bracket) return [];
+  // Double elimination: return winners + losers + grand final as flat rounds
+  if (bracket.format === 'double_elimination') {
+    var combined = [];
+    if (bracket.winners && bracket.winners.rounds) {
+      bracket.winners.rounds.forEach(function (r) { combined.push(r); });
+    }
+    if (bracket.losers && bracket.losers.rounds) {
+      bracket.losers.rounds.forEach(function (r) { combined.push(r); });
+    }
+    if (bracket.grandFinal) {
+      combined.push({ label: 'GRAND FINAL', matches: [bracket.grandFinal] });
+    }
+    return combined;
+  }
+  // Round robin: return all match rounds (standings rendered separately)
+  if (bracket.format === 'round_robin') {
+    return bracket.rounds || [];
+  }
   if (bracket.rounds) return bracket.rounds;
   // Legacy format (qf/sf/final fixed for 8-player)
   var rounds = [];
@@ -91,6 +109,165 @@ function _tBuildFlexBracket(players, size) {
   });
 
   return { rounds: rounds, size: size };
+}
+
+// ── Double-elimination bracket builder ───────────────────────────────────────
+
+/**
+ * Build a double-elimination bracket for `size` players (4 or 8).
+ * Returns {
+ *   format: 'double_elimination',
+ *   winners: { rounds: [...] },  // winners bracket (same structure as single-elim)
+ *   losers:  { rounds: [...] },  // losers bracket
+ *   grandFinal: { p1: null, p2: null, result: null, live: false },
+ *   size
+ * }
+ * Players must be sorted rating-descending (seed 1 = index 0).
+ */
+function _tBuildDoubleElimBracket(players, size) {
+  // Winners bracket — same as single elimination but without final label
+  var wb = _tBuildFlexBracket(players, size);
+  wb.rounds[wb.rounds.length - 1].label = 'WINNERS FINAL';
+
+  // Losers bracket — one round per winners bracket round (minus 1)
+  var lbRounds = [];
+  var lbSize   = size / 2;
+  var numWR    = wb.rounds.length;
+  for (var r = 0; r < numWR - 1; r++) {
+    var n = Math.max(1, lbSize >> r);
+    var matches = [];
+    for (var m = 0; m < n; m++) {
+      matches.push({ p1: null, p2: null, result: null, live: false });
+    }
+    lbRounds.push({ label: 'LOSERS ROUND ' + (r + 1), matches: matches });
+  }
+  if (lbRounds.length > 0) lbRounds[lbRounds.length - 1].label = 'LOSERS FINAL';
+
+  return {
+    format:     'double_elimination',
+    winners:    wb,
+    losers:     { rounds: lbRounds },
+    grandFinal: { p1: null, p2: null, result: null, live: false, label: 'GRAND FINAL' },
+    size:       size,
+  };
+}
+
+// ── Round-robin bracket builder ───────────────────────────────────────────────
+
+/**
+ * Build a round-robin bracket for `players` (2–8 players).
+ * Returns {
+ *   format: 'round_robin',
+ *   rounds: [ { label, matches: [{p1,p2,result,live},...] }, ... ],
+ *   standings: [ { name, rating, wins, losses, points }, ... ],
+ *   size
+ * }
+ */
+function _tBuildRoundRobinBracket(players, size) {
+  // Generate all unique pairings
+  var allMatches = [];
+  for (var i = 0; i < players.length; i++) {
+    for (var j = i + 1; j < players.length; j++) {
+      allMatches.push({ p1: players[i], p2: players[j], result: null, live: false });
+    }
+  }
+
+  // Group into rounds (each player plays at most once per round)
+  var rounds     = [];
+  var remaining  = allMatches.slice();
+  var roundNum   = 0;
+  while (remaining.length > 0) {
+    roundNum++;
+    var roundMatches = [];
+    var usedPlayers  = {};
+    var leftover     = [];
+    for (var m = 0; m < remaining.length; m++) {
+      var match = remaining[m];
+      var n1    = match.p1 ? match.p1.name : null;
+      var n2    = match.p2 ? match.p2.name : null;
+      if (!usedPlayers[n1] && !usedPlayers[n2]) {
+        roundMatches.push(match);
+        usedPlayers[n1] = true;
+        usedPlayers[n2] = true;
+      } else {
+        leftover.push(match);
+      }
+    }
+    remaining = leftover;
+    rounds.push({ label: 'ROUND ' + roundNum, matches: roundMatches });
+  }
+
+  // Initial standings
+  var standings = players.map(function (p) {
+    return { name: p.name, rating: p.rating, wins: 0, losses: 0, points: 0 };
+  });
+
+  return {
+    format:     'round_robin',
+    rounds:     rounds,
+    standings:  standings,
+    size:       size,
+  };
+}
+
+// ── Tournament notification helper ────────────────────────────────────────────
+
+function _tNotify(msg) {
+  if (typeof notifPush === 'function' && typeof NOTIF_TYPES !== 'undefined') {
+    notifPush(NOTIF_TYPES.TOURNAMENT, '\u{1F3C6}', msg);
+  }
+}
+
+// ── Tournament prize helpers ──────────────────────────────────────────────────
+
+/**
+ * Award participation XP to all registered players when a tournament completes.
+ * Only awards XP to the local player if they were registered.
+ */
+function _tAwardParticipationXP(tournamentId) {
+  try {
+    var reg = _tLoadRegistrations();
+    if (!reg[tournamentId]) return;
+    // Award 20 participation XP via leveling system
+    if (typeof awardXP === 'function') {
+      awardXP(0, 'tournament_participation', { linesCleared: 0 });
+    } else {
+      // Fallback: directly increment playerXP
+      try {
+        var stats = JSON.parse(localStorage.getItem('mineCtris_stats') || '{}');
+        stats.playerXP = (stats.playerXP || 0) + 20;
+        localStorage.setItem('mineCtris_stats', JSON.stringify(stats));
+      } catch (_) {}
+    }
+    if (typeof notifPush === 'function' && typeof NOTIF_TYPES !== 'undefined') {
+      notifPush(NOTIF_TYPES.TOURNAMENT, '\u{1F3C6}', 'Tournament ended — +20 XP participation bonus!');
+    }
+  } catch (_) {}
+}
+
+/**
+ * Award top-3 XP bonus prizes.
+ * @param {number} placement  1 = champion, 2 = runner-up, 3 = third place
+ */
+function _tAwardPlacementXP(placement) {
+  var xpByPlace = { 1: 100, 2: 60, 3: 30 };
+  var xp = xpByPlace[placement];
+  if (!xp) return;
+  try {
+    if (typeof awardXP === 'function') {
+      awardXP(0, 'tournament_placement', { linesCleared: 0 });
+    } else {
+      var stats = JSON.parse(localStorage.getItem('mineCtris_stats') || '{}');
+      stats.playerXP = (stats.playerXP || 0) + xp;
+      localStorage.setItem('mineCtris_stats', JSON.stringify(stats));
+    }
+    if (typeof notifPush === 'function' && typeof NOTIF_TYPES !== 'undefined') {
+      var labels = { 1: '\u{1F947} Champion', 2: '\u{1F948} Runner-up', 3: '\u{1F949} 3rd Place' };
+      notifPush(NOTIF_TYPES.TOURNAMENT, '\u{1F3C6}', labels[placement] + ' — +' + xp + ' XP prize!');
+    }
+    // Trigger cosmetic unlock check so badge can be awarded
+    if (typeof processUnlocks === 'function') processUnlocks();
+  } catch (_) {}
 }
 
 // ── Seed data ─────────────────────────────────────────────────────────────────
@@ -415,8 +592,15 @@ var tournamentLobby = (function () {
     if (t.players.length < size) return;
 
     // Sort by rating, build bracket
-    var sorted  = t.players.slice().sort(function (a, b) { return b.rating - a.rating; });
-    t.bracket   = _tBuildFlexBracket(sorted, size);
+    var sorted = t.players.slice().sort(function (a, b) { return b.rating - a.rating; });
+    var fmt    = t.format || 'single_elimination';
+    if (fmt === 'double_elimination' && size <= 8) {
+      t.bracket = _tBuildDoubleElimBracket(sorted, size);
+    } else if (fmt === 'round_robin') {
+      t.bracket = _tBuildRoundRobinBracket(sorted, size);
+    } else {
+      t.bracket = _tBuildFlexBracket(sorted, size);
+    }
     t.status    = TournamentStatus.IN_PROGRESS;
     t.startedAt = Date.now();
 
@@ -432,6 +616,7 @@ var tournamentLobby = (function () {
           if (inMatch) { match.live = true; t.matchReady = true; }
         });
       }
+      _tNotify('\u{1F3C6} ' + t.name + ' has started! Your match is ready.');
     }
 
     // Seed chat with opening bot messages
@@ -472,12 +657,17 @@ var tournamentLobby = (function () {
 
   // ── Create tournament ─────────────────────────────────────────────────────────
 
-  function createTournament(name, bracketSize, gameMode) {
+  function createTournament(name, bracketSize, gameMode, format) {
     _ensure();
-    var validSizes = [4, 8, 16];
+    var validSizes   = [4, 8, 16];
+    var validFormats = ['single_elimination', 'double_elimination', 'round_robin'];
     name = (name || '').trim().slice(0, 32);
-    if (!name)                            return { ok: false, reason: 'invalid_name' };
+    if (!name)                                  return { ok: false, reason: 'invalid_name' };
     if (validSizes.indexOf(bracketSize) === -1) return { ok: false, reason: 'invalid_size' };
+    format = format || 'single_elimination';
+    if (validFormats.indexOf(format) === -1)    format = 'single_elimination';
+    // Double elimination capped at 8 players (16-player DE is too complex for client sim)
+    if (format === 'double_elimination' && bracketSize > 8) bracketSize = 8;
 
     var prizeBySize  = { 4: { label: '\u2665 Open',  color: '#cd7f32' },
                          8: { label: '\u26a1 Pro',   color: '#c0c0c0' },
@@ -491,6 +681,7 @@ var tournamentLobby = (function () {
       status:      TournamentStatus.OPEN,
       bracketSize: bracketSize,
       gameMode:    gameMode || 'Survival',
+      format:      format,
       players:     [],
       bracket:     null,
       matchReady:  false,
@@ -551,7 +742,16 @@ var tournamentLobby = (function () {
             tournamentWon = true;
             if (typeof applyTournamentWinBonus === 'function') applyTournamentWinBonus();
             _tSubmitWin(t);
+            _tAwardPlacementXP(1);
+            _tNotify('\u{1F947} You won ' + t.name + '! Champion!');
+          } else {
+            // Runner-up: 2nd place
+            _tAwardPlacementXP(2);
+            _tNotify('\u{1F948} You finished 2nd in ' + t.name + '!');
           }
+          // Everyone who registered gets participation XP when tournament ends
+          _tAwardParticipationXP(tournamentId);
+          _tNotify('\u{1F3C6} ' + t.name + ' is over! Winner: ' + (t.winner || 'Unknown'));
         } else {
           // Advance winner to next round slot
           var nextRound    = rounds[ri + 1].matches;
@@ -561,11 +761,20 @@ var tournamentLobby = (function () {
             if (mi % 2 === 0) { nextMatch.p1 = winner; }
             else               { nextMatch.p2 = winner; }
             // Mark as live if player advanced
-            if (won) { nextMatch.live = true; t.matchReady = true; }
+            if (won) {
+              nextMatch.live = true;
+              t.matchReady   = true;
+              _tNotify('\u{1F3C6} Round ' + (ri + 2) + ' match ready in ' + t.name + '!');
+            }
           }
           // If player won the semi-final, they've reached the Final
           if (won && ri === rounds.length - 2) {
             if (typeof achOnTournamentFinalReached === 'function') achOnTournamentFinalReached();
+          }
+          // If player lost and it's a semi (3rd-place consolation)
+          if (!won && ri === rounds.length - 2) {
+            _tAwardPlacementXP(3);
+            _tNotify('\u{1F949} 3rd place finish in ' + t.name + '! +30 XP');
           }
         }
         break;
@@ -598,6 +807,102 @@ var tournamentLobby = (function () {
     }
 
     return { advanced: advanced, tournamentWon: tournamentWon };
+  }
+
+  // ── Round-robin match result ───────────────────────────────────────────────
+
+  /**
+   * Record a round-robin match result. Updates standings.
+   * @param {string} tournamentId
+   * @param {boolean} won
+   */
+  function recordRoundRobinResult(tournamentId, won) {
+    _ensure();
+    var t = getById(tournamentId);
+    if (!t || t.status !== TournamentStatus.IN_PROGRESS || !t.bracket || t.bracket.format !== 'round_robin') {
+      return { advanced: false, tournamentWon: false };
+    }
+
+    var myName   = _getMyName();
+    var rounds   = t.bracket.rounds || [];
+    var standings = t.bracket.standings || [];
+    var advanced  = false;
+
+    for (var ri = 0; ri < rounds.length; ri++) {
+      var round = rounds[ri].matches;
+      for (var mi = 0; mi < round.length; mi++) {
+        var match = round[mi];
+        if (!match || match.result) continue;
+        var isP1 = match.p1 && match.p1.name === myName;
+        var isP2 = match.p2 && match.p2.name === myName;
+        if (!isP1 && !isP2) continue;
+
+        match.result = won ? (isP1 ? 'p1' : 'p2') : (isP1 ? 'p2' : 'p1');
+        match.live   = false;
+        advanced     = true;
+
+        // Update standings
+        var winnerName = won ? myName : (isP1 ? match.p2.name : match.p1.name);
+        var loserName  = won ? (isP1 ? match.p2.name : match.p1.name) : myName;
+        standings.forEach(function (s) {
+          if (s.name === winnerName) { s.wins++;   s.points += 3; }
+          if (s.name === loserName)  { s.losses++; }
+        });
+        standings.sort(function (a, b) { return b.points - a.points; });
+
+        // Check if all matches played
+        var allDone = rounds.every(function (r) {
+          return r.matches.every(function (m) { return m && m.result; });
+        });
+        if (allDone) {
+          t.status      = TournamentStatus.COMPLETED;
+          t.winner      = standings[0] ? standings[0].name : null;
+          t.completedAt = Date.now();
+          // Award prizes based on final standings
+          var myPos = standings.findIndex(function (s) { return s.name === myName; }) + 1;
+          if (myPos === 1) {
+            if (typeof applyTournamentWinBonus === 'function') applyTournamentWinBonus();
+            _tSubmitWin(t);
+            if (typeof achOnTournamentWon === 'function') achOnTournamentWon();
+            _tAwardPlacementXP(1);
+            _tNotify('\u{1F947} You won ' + t.name + '! Champion!');
+          } else if (myPos === 2) {
+            _tAwardPlacementXP(2);
+            _tNotify('\u{1F948} 2nd place in ' + t.name + '!');
+          } else if (myPos === 3) {
+            _tAwardPlacementXP(3);
+            _tNotify('\u{1F949} 3rd place in ' + t.name + '!');
+          }
+          _tAwardParticipationXP(tournamentId);
+          _tNotify('\u{1F3C6} ' + t.name + ' complete! Winner: ' + (t.winner || 'Unknown'));
+        } else {
+          // Mark player's next unplayed match as live
+          t.matchReady = false;
+          var foundNext = false;
+          for (var nr = 0; nr < rounds.length && !foundNext; nr++) {
+            for (var nm = 0; nm < rounds[nr].matches.length && !foundNext; nm++) {
+              var nm2 = rounds[nr].matches[nm];
+              if (!nm2 || nm2.result) continue;
+              var inNext = (nm2.p1 && nm2.p1.name === myName) || (nm2.p2 && nm2.p2.name === myName);
+              if (inNext) {
+                nm2.live     = true;
+                t.matchReady = true;
+                foundNext    = true;
+                _tNotify('\u{1F3C6} Next match ready in ' + t.name + '!');
+              }
+            }
+          }
+        }
+        break;
+      }
+      if (advanced) break;
+    }
+
+    _tSaveTournaments(_tournaments);
+    if (advanced && won && typeof achOnTournamentMatchWin === 'function') {
+      achOnTournamentMatchWin(1);
+    }
+    return { advanced: advanced, tournamentWon: t.status === TournamentStatus.COMPLETED && t.winner === myName };
   }
 
   // ── Registrations accessor ──
@@ -713,9 +1018,10 @@ var tournamentLobby = (function () {
     getRegistration:      getRegistration,
     getRegistrations:     getRegistrations,
     register:             register,
-    createTournament:     createTournament,
-    recordMatchResult:    recordMatchResult,
-    setMatchRoomCode:     setMatchRoomCode,
+    createTournament:          createTournament,
+    recordMatchResult:         recordMatchResult,
+    recordRoundRobinResult:    recordRoundRobinResult,
+    setMatchRoomCode:          setMatchRoomCode,
     startCountdown:       startCountdown,
     stopCountdown:        stopCountdown,
     getCountdownSecs:     getCountdownSecs,

@@ -26,6 +26,7 @@ const NOTIF_TYPES = {
   OPPONENT_LEFT:    'opponent_left',
   GARBAGE_ATTACK:   'garbage_attack',
   XP_PASS:          'xp_pass',
+  TOURNAMENT:       'tournament',
 };
 
 // Default settings — all types on
@@ -47,6 +48,7 @@ const NOTIF_DEFAULTS = {
   [NOTIF_TYPES.OPPONENT_LEFT]:   true,
   [NOTIF_TYPES.GARBAGE_ATTACK]:  true,
   [NOTIF_TYPES.XP_PASS]:         true,
+  [NOTIF_TYPES.TOURNAMENT]:      true,
 };
 
 let _notifSettings = Object.assign({}, NOTIF_DEFAULTS);

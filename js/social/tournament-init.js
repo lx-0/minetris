@@ -27,6 +27,7 @@ function _initTournamentHandlers() {
       var tournCreatePanel    = document.getElementById('tourn-create-panel');
       var tournCreateName     = document.getElementById('tourn-create-name');
       var tournCreateSize     = document.getElementById('tourn-create-size');
+      var tournCreateFormat   = document.getElementById('tourn-create-format');
       var tournCreateMode     = document.getElementById('tourn-create-mode');
       var tournCreateSubmit   = document.getElementById('tourn-create-submit-btn');
       var tournCreateCancel   = document.getElementById('tourn-create-cancel-btn');
@@ -126,9 +127,10 @@ function _initTournamentHandlers() {
 
       if (tournCreateSubmit) {
         tournCreateSubmit.addEventListener('click', function () {
-          var name      = tournCreateName  ? tournCreateName.value.trim()        : '';
-          var sizeVal   = tournCreateSize  ? parseInt(tournCreateSize.value, 10) : 8;
-          var gameMode  = tournCreateMode  ? tournCreateMode.value               : 'Survival';
+          var name      = tournCreateName   ? tournCreateName.value.trim()        : '';
+          var sizeVal   = tournCreateSize   ? parseInt(tournCreateSize.value, 10) : 8;
+          var format    = tournCreateFormat ? tournCreateFormat.value             : 'single_elimination';
+          var gameMode  = tournCreateMode   ? tournCreateMode.value               : 'Survival';
 
           if (!name) {
             if (tournCreateFeedback) tournCreateFeedback.textContent = 'Enter a tournament name.';
@@ -136,7 +138,7 @@ function _initTournamentHandlers() {
           }
 
           tournCreateSubmit.disabled = true;
-          var result = tournamentLobby.createTournament(name, sizeVal, gameMode);
+          var result = tournamentLobby.createTournament(name, sizeVal, gameMode, format);
           if (result.ok) {
             if (tournCreateFeedback) {
               tournCreateFeedback.innerHTML = '&#10003; Created! Opening bracket&#8230;';
@@ -321,11 +323,16 @@ function _initTournamentHandlers() {
           tournBracketStatus.textContent = statusText[t.status] || t.status;
         }
 
-        // Meta line: bracket size + game mode
+        // Meta line: bracket size + format + game mode
         if (tournBracketMeta) {
           var size = t.bracketSize || 8;
+          var fmtLabels = { single_elimination: 'SE', double_elimination: 'DE', round_robin: 'RR' };
+          var fmtTag = t.format && fmtLabels[t.format]
+            ? ' <span class="tourn-meta-tag">' + fmtLabels[t.format] + '</span>'
+            : '';
           tournBracketMeta.innerHTML =
             '<span class="tourn-meta-tag">' + size + '-player</span>' +
+            fmtTag +
             (t.gameMode ? ' <span class="tourn-meta-tag">' + t.gameMode + '</span>' : '');
         }
 
@@ -347,6 +354,25 @@ function _initTournamentHandlers() {
           if (t.bracket) {
             var rounds = typeof _tGetRounds === 'function' ? _tGetRounds(t.bracket) : [];
             var html   = '';
+
+            // Round-robin: render standings table above the match rounds
+            if (t.bracket.format === 'round_robin' && t.bracket.standings) {
+              html += '<div class="tourn-round-label">STANDINGS</div>';
+              html += '<table class="tourn-rr-standings" style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:0.85em;">';
+              html += '<tr style="color:#aaa;"><th style="text-align:left;padding:2px 6px;">#</th><th style="text-align:left;padding:2px 6px;">Player</th><th style="padding:2px 6px;">W</th><th style="padding:2px 6px;">L</th><th style="padding:2px 6px;">Pts</th></tr>';
+              t.bracket.standings.forEach(function (s, i) {
+                var isMe = s.name === myName;
+                html += '<tr style="' + (isMe ? 'color:#00ff88;font-weight:bold;' : '') + '">' +
+                  '<td style="padding:2px 6px;">' + (i + 1) + '</td>' +
+                  '<td style="padding:2px 6px;">' + s.name + '</td>' +
+                  '<td style="text-align:center;padding:2px 6px;">' + s.wins + '</td>' +
+                  '<td style="text-align:center;padding:2px 6px;">' + s.losses + '</td>' +
+                  '<td style="text-align:center;padding:2px 6px;color:#ffd700;">' + s.points + '</td>' +
+                '</tr>';
+              });
+              html += '</table>';
+            }
+
             rounds.forEach(function (round) {
               html += '<div class="tourn-round-label">' + round.label + '</div>';
               html += '<div class="tourn-round">';

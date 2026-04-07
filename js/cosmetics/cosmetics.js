@@ -327,6 +327,28 @@ const COSMETIC_REGISTRY = [
     timeLimited:     true,
   },
 
+  // ── Tournament Cosmetics ────────────────────────────────────────────────────
+  {
+    id:              'tournament_champion_badge',
+    category:        'badge',
+    name:            'Tournament Champion',
+    rarity:          'rare',
+    unlockCondition: { type: 'achievement', value: 'champion' },
+    assets:          { icon: '🏆', nameColor: '#ffd700' },
+    icon:            '🏆',
+    description:     'Awarded for winning a tournament bracket.',
+  },
+  {
+    id:              'tournament_finalist_badge',
+    category:        'badge',
+    name:            'Tournament Finalist',
+    rarity:          'uncommon',
+    unlockCondition: { type: 'achievement', value: 'finalist' },
+    assets:          { icon: '🥈', nameColor: '#c0c0c0' },
+    icon:            '🥈',
+    description:     'Awarded for reaching a tournament final.',
+  },
+
   // ── Seasonal Event Cosmetics — "Spring Mining Festival" (2026) ───────────
   // Earned by clearing 100 lines during the Spring Mining Festival event window.
   {
