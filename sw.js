@@ -1,6 +1,6 @@
 // MINETRIS Service Worker
 // Cache version — bump this string to trigger an update toast in the game
-const CACHE_VERSION = 'minetris-v6.7';
+const CACHE_VERSION = 'minetris-v6.8';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -39,6 +39,7 @@ const STATIC_ASSETS = [
   // JS — player
   './js/player/player.js',
   './js/player/input.js',
+  './js/player/haptics.js',
   './js/player/touch-controls.js',
   './js/player/keybindings.js',
   './js/player/crafting.js',
@@ -137,6 +138,7 @@ const STATIC_ASSETS = [
   './js/social/clan-war-standings.js',
   './js/social/coop.js',
   './js/social/coop-init.js',
+  './js/social/coop-highlight.js',
   './js/social/coop-avatar.js',
   './js/social/coop-emote.js',
   './js/social/coop-trade.js',
