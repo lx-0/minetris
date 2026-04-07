@@ -562,6 +562,18 @@ function init() {
         const modeName = (typeof getActiveModeName === 'function') ? getActiveModeName() : 'Classic';
         announceToScreenReader('Game started. ' + modeName + ' mode. Good luck!');
       }
+      // Friends presence: broadcast active game mode
+      if (typeof friendsSetMode === 'function' && !isPaused) {
+        let _fm = 'classic';
+        if (typeof isBattleMode !== 'undefined' && isBattleMode)           _fm = 'battle';
+        else if (typeof isCoopMode !== 'undefined' && isCoopMode)          _fm = 'coop';
+        else if (typeof isSprintMode !== 'undefined' && isSprintMode)      _fm = 'sprint';
+        else if (typeof isBlitzMode !== 'undefined' && isBlitzMode)        _fm = 'blitz';
+        else if (typeof isSurvivalMode !== 'undefined' && isSurvivalMode)  _fm = 'survival';
+        else if (typeof isEndlessSurvivalMode !== 'undefined' && isEndlessSurvivalMode) _fm = 'survival';
+        else if (typeof isDailyChallenge !== 'undefined' && isDailyChallenge) _fm = 'daily';
+        friendsSetMode(_fm);
+      }
       if (nextPiecesEl) nextPiecesEl.style.display = "block";
       // Show hold panel (disabled in puzzle modes)
       if (!holdPanelEl) holdPanelEl = document.getElementById('hold-piece-panel');
@@ -611,6 +623,8 @@ function init() {
     controls.addEventListener("unlock", function () {
       console.log("Pointer lock released ('unlock' event fired).");
       gameTimerRunning = false;
+      // Friends presence: return to menu mode on unlock
+      if (typeof friendsSetMode === 'function') friendsSetMode('menu');
 
       // Replay: Escape pressed during playback — stop replay and reset
       if (typeof isReplayMode !== 'undefined' && isReplayMode) {
@@ -754,6 +768,13 @@ function init() {
   const pauseSettingsBtn = document.getElementById("pause-settings-btn");
   if (pauseSettingsBtn) pauseSettingsBtn.addEventListener("click", function () {
     openSettings();
+  });
+
+  const pauseFriendsBtn = document.getElementById("pause-friends-btn");
+  if (pauseFriendsBtn) pauseFriendsBtn.addEventListener("click", function () {
+    const pauseScreenEl = document.getElementById("pause-screen");
+    if (pauseScreenEl) pauseScreenEl.style.display = "none";
+    if (typeof friendsOpenPanel === 'function') friendsOpenPanel();
   });
 
   const pauseMainMenuBtn = document.getElementById("pause-main-menu-btn");

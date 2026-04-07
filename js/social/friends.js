@@ -103,8 +103,9 @@ function _friendsRecordSeen(data) {
 
 // ── Presence WebSocket ────────────────────────────────────────────────────────
 
-let _friendsPresenceWs  = null;
-let _friendsPresenceTmr = null;
+let _friendsPresenceWs   = null;
+let _friendsPresenceTmr  = null;
+let _friendsCurrentMode  = 'menu';
 
 function _friendsMyName() {
   return (typeof loadDisplayName === 'function' ? loadDisplayName() : null)
@@ -132,8 +133,8 @@ function friendsConnectPresence() {
   catch (e) { return; }
 
   _friendsPresenceWs.addEventListener('open', function () {
-    _friendsSendPresence('menu');
-    _friendsPresenceTmr = setInterval(function () { _friendsSendPresence('menu'); }, 30000);
+    _friendsSendPresence(_friendsCurrentMode);
+    _friendsPresenceTmr = setInterval(function () { _friendsSendPresence(_friendsCurrentMode); }, 30000);
   });
 
   _friendsPresenceWs.addEventListener('message', function (event) {
@@ -168,6 +169,13 @@ function friendsDisconnectPresence() {
     try { _friendsPresenceWs.close(); } catch (e) {}
     _friendsPresenceWs = null;
   }
+}
+
+// Call this whenever the player enters or exits a game mode.
+// mode should match keys in _friendsModeLabel (e.g. 'classic', 'battle', 'menu').
+function friendsSetMode(mode) {
+  _friendsCurrentMode = mode || 'menu';
+  _friendsSendPresence(_friendsCurrentMode);
 }
 
 // ── Outgoing invite ───────────────────────────────────────────────────────────
@@ -304,16 +312,29 @@ function _friendsRenderList() {
     container.innerHTML = '<div class="friends-empty">No friends yet — share your code<br>or add one below!</div>';
     return;
   }
-  const online = [], offline = [];
+  const online = [], inGame = [], offline = [];
   list.forEach(function (f) {
     const s = friendsGetStatus(f.code);
-    (s.online ? online : offline).push({ f: f, s: s });
+    if (!s.online) {
+      offline.push({ f: f, s: s });
+    } else if (s.mode && s.mode !== 'menu') {
+      inGame.push({ f: f, s: s });
+    } else {
+      online.push({ f: f, s: s });
+    }
   });
+  function _sortAlpha(a, b) {
+    return (a.f.name || a.f.code).localeCompare(b.f.name || b.f.code);
+  }
+  online.sort(_sortAlpha);
+  inGame.sort(_sortAlpha);
+  offline.sort(_sortAlpha);
 
   let html = '';
-  online.concat(offline).forEach(function (item) {
+  inGame.concat(online).concat(offline).forEach(function (item) {
     const f = item.f, s = item.s;
-    const dot  = '<span class="friends-dot ' + (s.online ? 'online' : 'offline') + '"></span>';
+    const dotClass = !s.online ? 'offline' : (s.mode && s.mode !== 'menu' ? 'in-game' : 'online');
+    const dot  = '<span class="friends-dot ' + dotClass + '"></span>';
     const info = s.online
       ? '<span class="friends-status-mode">' + _esc(_friendsModeLabel(s.mode)) + '</span>'
       : '<span class="friends-status-seen">Last seen: ' + _friendsFormatLastSeen(s.lastSeen) + '</span>';

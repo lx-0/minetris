@@ -19681,8 +19681,9 @@ button:focus-visible {
   border-radius: 50%;
   flex-shrink: 0;
 }
-.friends-dot.online  { background: #4ade80; box-shadow: 0 0 6px #22c55e; }
-.friends-dot.offline { background: rgba(255,255,255,0.2); }
+.friends-dot.online   { background: #4ade80; box-shadow: 0 0 6px #22c55e; }
+.friends-dot.in-game  { background: #fbbf24; box-shadow: 0 0 6px #f59e0b; }
+.friends-dot.offline  { background: rgba(255,255,255,0.2); }
 
 .friends-row-info {
   display: flex;
