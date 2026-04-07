@@ -1713,6 +1713,9 @@ function initSettings() {
     });
   }
 
+  // Wire finesse HUD metric toggles
+  if (typeof finesseInitMetricToggles === 'function') finesseInitMetricToggles();
+
   const lockDelaySelect = document.getElementById("lock-delay-select");
   if (lockDelaySelect) {
     lockDelaySelect.value = String(playerLockDelayMs);

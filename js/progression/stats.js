@@ -138,8 +138,10 @@ function loadSessionHistory() {
  * @param {number} [params.tetrises]    4-line clears in session
  * @param {number} [params.piecesPlaced] pieces placed
  * @param {number} [params.apm]         actions per minute
+ * @param {number} [params.kpp]         keys per piece
+ * @param {number} [params.finessePercentage] finesse % (0–100)
  */
-function logSession({ mode, score, lines, durationSecs, result, level, maxCombo, tSpins, tetrises, piecesPlaced, apm }) {
+function logSession({ mode, score, lines, durationSecs, result, level, maxCombo, tSpins, tetrises, piecesPlaced, apm, kpp, finessePercentage }) {
   try {
     const history = loadSessionHistory();
     const entry = {
@@ -154,6 +156,8 @@ function logSession({ mode, score, lines, durationSecs, result, level, maxCombo,
       tetrises: tetrises || 0,
       piecesPlaced: piecesPlaced || 0,
       apm: apm || 0,
+      kpp: kpp || 0,
+      finessePercentage: finessePercentage != null ? finessePercentage : 100,
     };
     if (level != null && level > 0) entry.level = level;
     history.unshift(entry);

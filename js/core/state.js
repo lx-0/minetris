@@ -549,11 +549,17 @@ let sessionB2BCount = 0;
 // finesseTotalPieces:       total pieces that have landed (denominator for stats).
 // finesseCurrentPerfectStreak: current run of consecutive 0-fault placements.
 // finesseBestPerfectStreak:    session-best run of consecutive 0-fault placements.
+// finesseTotalInputs:       cumulative keypresses counted for KPP / APM.
+// finesseByPieceType:       map colorIndex→{inputs, optimal, count} for post-game breakdown.
+// finessePieceLandTimes:    timestamps (ms) of each piece-land event for PPS computation.
 let finesseTotalFaults          = 0;
 let finessePerfectPlacements    = 0;
 let finesseTotalPieces          = 0;
 let finesseCurrentPerfectStreak = 0;
 let finesseBestPerfectStreak    = 0;
+let finesseTotalInputs          = 0;
+let finesseByPieceType          = {};   // { [colorIndex]: { inputs, optimal, count } }
+let finessePieceLandTimes       = [];   // Array<DOMHighResTimeStamp>
 
 // ── Editor mode state ─────────────────────────────────────────────────────────
 // Free-fly no-gravity mode accessible via main menu "Create" or ?editor=1 URL param.

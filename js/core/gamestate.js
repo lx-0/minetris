@@ -171,16 +171,24 @@ function updateScoreHUD() {
 
 /** Returns current game stats for use by the Game Over screen. */
 function getGameState() {
+  const _dur = gameElapsedSeconds || 0;
   return {
     score,
     blocksMined,
     linesCleared,
-    elapsedSeconds: gameElapsedSeconds,
+    elapsedSeconds: _dur,
     finesseTotalFaults:       (typeof finesseTotalFaults       !== 'undefined') ? finesseTotalFaults       : 0,
     finessePercentage:        (typeof finesseGetPercentage     === 'function')  ? finesseGetPercentage()   : 100,
     finessePerfectPlacements: (typeof finessePerfectPlacements !== 'undefined') ? finessePerfectPlacements : 0,
     finesseTotalPieces:       (typeof finesseTotalPieces       !== 'undefined') ? finesseTotalPieces       : 0,
     finesseBestPerfectStreak: (typeof finesseBestPerfectStreak !== 'undefined') ? finesseBestPerfectStreak : 0,
+    finesseKPP:               (typeof finesseGetKPP            === 'function')  ? finesseGetKPP()          : 0,
+    finesseAPM:               (typeof finesseGetAPM            === 'function')  ? finesseGetAPM(_dur)      : 0,
+    finessePieceBreakdown:    (typeof finesseGetPieceBreakdown === 'function')  ? finesseGetPieceBreakdown() : [],
+    // Attack efficiency (multiplayer): lines sent per piece placed
+    attackEfficiency: (typeof battleGarbageSent !== 'undefined' && typeof blocksPlaced !== 'undefined' && blocksPlaced > 0)
+      ? Math.round((battleGarbageSent / blocksPlaced) * 100) / 100
+      : null,
   };
 }
 
@@ -440,12 +448,35 @@ function triggerGameOver() {
   // Finesse section on game-over screen
   const finesseGoEl = document.getElementById('finesse-go-section');
   if (finesseGoEl && state.finesseTotalPieces > 0) {
-    finesseGoEl.innerHTML =
+    let finesseHtml =
       '<div class="go-label" style="margin-bottom:4px;">FINESSE</div>' +
-      '<div>Total faults: ' + state.finesseTotalFaults + '</div>' +
-      '<div>Perfect placements: ' + state.finessePerfectPlacements + ' / ' + state.finesseTotalPieces + '</div>' +
-      '<div>Finesse %: ' + state.finessePercentage + '%</div>' +
-      '<div>Best perfect streak: ' + state.finesseBestPerfectStreak + '</div>';
+      '<div>Finesse %: ' + state.finessePercentage + '%  |  ' +
+        'Faults: ' + state.finesseTotalFaults + '</div>' +
+      '<div>Perfect placements: ' + state.finessePerfectPlacements + ' / ' + state.finesseTotalPieces +
+        '  |  Best streak: ' + state.finesseBestPerfectStreak + '</div>' +
+      '<div>KPP: ' + (state.finesseKPP || 0).toFixed(1) +
+        '  |  APM: ' + Math.round(state.finesseAPM || 0) + '</div>';
+
+    // Attack efficiency (battle only)
+    if (state.attackEfficiency !== null && typeof isBattleMode !== 'undefined' && isBattleMode) {
+      finesseHtml += '<div>Attack Efficiency: ' + state.attackEfficiency.toFixed(2) + ' lines/piece</div>';
+    }
+
+    // Per-piece-type breakdown
+    if (state.finessePieceBreakdown && state.finessePieceBreakdown.length > 0) {
+      finesseHtml += '<div class="go-label" style="margin:6px 0 3px;">PER-PIECE EFFICIENCY</div>';
+      finesseHtml += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+      state.finessePieceBreakdown.forEach(function (p) {
+        finesseHtml +=
+          '<span style="background:rgba(255,255,255,0.07);border-radius:4px;padding:2px 5px;">' +
+          p.name + ': ' + p.efficiency + '%' +
+          (p.avgFaults > 0 ? ' (' + p.avgFaults.toFixed(1) + ' f)' : ' ✓') +
+          '</span>';
+      });
+      finesseHtml += '</div>';
+    }
+
+    finesseGoEl.innerHTML = finesseHtml;
     finesseGoEl.style.display = 'block';
   } else if (finesseGoEl) {
     finesseGoEl.style.display = 'none';
@@ -483,7 +514,9 @@ function triggerGameOver() {
       tSpins: sessionTSpins,
       tetrises: sessionTetrises,
       piecesPlaced: blocksPlaced,
-      apm: _gsDurSecs > 0 ? Math.round((blocksPlaced / (_gsDurSecs / 60)) * 10) / 10 : 0,
+      apm: state.finesseAPM || (_gsDurSecs > 0 ? Math.round((blocksPlaced / (_gsDurSecs / 60)) * 10) / 10 : 0),
+      kpp: state.finesseKPP || 0,
+      finessePercentage: state.finessePercentage || 100,
     });
   }
 

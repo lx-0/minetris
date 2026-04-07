@@ -656,6 +656,7 @@ function _renderHistoryTab() {
   html += '<div class="ph-chart-box ph-chart-trend"><div class="ph-chart-title">Score Trend (Last 30 Days)</div><canvas id="ph-canvas-trend" width="480" height="160"></canvas></div>';
   html += '<div class="ph-chart-box ph-chart-donut"><div class="ph-chart-title">Mode Distribution</div><canvas id="ph-canvas-donut" width="200" height="160"></canvas></div>';
   html += '</div>';
+  html += '<div class="ph-chart-box ph-chart-finesse-trend"><div class="ph-chart-title">Finesse % Trend (Last 30 Days)</div><canvas id="ph-canvas-finesse-trend" width="480" height="120"></canvas></div>';
   html += '<div class="ph-chart-box ph-chart-heatmap"><div class="ph-chart-title">Play Frequency (Last 90 Days)</div><div id="ph-heatmap-container"></div></div>';
   html += '<div class="ph-recent-title">RECENT SESSIONS</div>';
   html += _renderSessionTable(history, _historyModeFilter);
@@ -773,6 +774,104 @@ function _drawTrendChart(history, modeFilter) {
       ctx.beginPath();
       ctx.arc(px, py, 3, 0, Math.PI * 2);
       ctx.fillStyle = color;
+      ctx.fill();
+    }
+  }
+}
+
+function _drawFinesseTrendChart(history) {
+  var canvas = document.getElementById('ph-canvas-finesse-trend');
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  var dates = _historyDatesRange(30);
+  // Average finesse % per day (only sessions that have finessePercentage recorded)
+  var sumByDate = {}, countByDate = {};
+  for (var i = 0; i < history.length; i++) {
+    var s = history[i];
+    if (s.finessePercentage == null) continue;
+    if (!sumByDate[s.date]) { sumByDate[s.date] = 0; countByDate[s.date] = 0; }
+    sumByDate[s.date] += s.finessePercentage;
+    countByDate[s.date]++;
+  }
+
+  var values = dates.map(function(d) {
+    return countByDate[d] ? Math.round(sumByDate[d] / countByDate[d]) : null;
+  });
+
+  // Check we have at least one data point
+  var hasData = values.some(function(v) { return v !== null; });
+  if (!hasData) {
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('No finesse data yet — play a game!', W / 2, H / 2);
+    return;
+  }
+
+  var padL = 36, padR = 8, padT = 10, padB = 28;
+  var chartW = W - padL - padR;
+  var chartH = H - padT - padB;
+
+  // Grid 0–100%
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  for (var gi = 0; gi <= 4; gi++) {
+    var gy = padT + chartH - (gi / 4) * chartH;
+    ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL + chartW, gy); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText((gi * 25) + '%', padL - 3, gy + 3);
+  }
+
+  // X labels
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  for (var di = 0; di < dates.length; di += 7) {
+    var dx = padL + (di / (dates.length - 1)) * chartW;
+    ctx.fillText(dates[di].slice(5), dx, H - padB + 12);
+  }
+
+  var accentColor = '#fbbf24'; // gold — matches finesse-perfect colour
+
+  // Connect non-null segments
+  var segments = [];
+  var cur = null;
+  for (var vi = 0; vi < values.length; vi++) {
+    if (values[vi] !== null) {
+      if (!cur) { cur = []; }
+      cur.push({ idx: vi, val: values[vi] });
+    } else {
+      if (cur && cur.length) { segments.push(cur); cur = null; }
+    }
+  }
+  if (cur && cur.length) segments.push(cur);
+
+  segments.forEach(function(seg) {
+    if (seg.length < 2) return;
+    ctx.beginPath();
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 2;
+    for (var si = 0; si < seg.length; si++) {
+      var sx = padL + (seg[si].idx / (dates.length - 1)) * chartW;
+      var sy = padT + chartH - (seg[si].val / 100) * chartH;
+      if (si === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+  });
+
+  // Dots
+  for (var pi = 0; pi < values.length; pi++) {
+    if (values[pi] !== null) {
+      var px = padL + (pi / (dates.length - 1)) * chartW;
+      var py = padT + chartH - (values[pi] / 100) * chartH;
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fillStyle = accentColor;
       ctx.fill();
     }
   }
@@ -909,6 +1008,7 @@ function _renderHistoryContent() {
   var history = typeof loadSessionHistory === 'function' ? loadSessionHistory() : [];
   _drawTrendChart(history, _historyModeFilter);
   _drawDonutChart(history);
+  _drawFinesseTrendChart(history);
   _renderHeatmap(history);
 
   // Wire mode filter buttons
@@ -923,6 +1023,7 @@ function _renderHistoryContent() {
       // Redraw trend chart and session table
       var hist2 = typeof loadSessionHistory === 'function' ? loadSessionHistory() : [];
       _drawTrendChart(hist2, _historyModeFilter);
+      _drawFinesseTrendChart(hist2);
       var tableEl = histEl.querySelector('.ph-table-wrap') || histEl.querySelector('.ph-empty');
       if (tableEl && tableEl.parentNode) {
         var newTable = document.createElement('div');
