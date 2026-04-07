@@ -79,6 +79,12 @@ const coop = (function () {
 
       if (msg.type === 'pong') return;
 
+      // Netcode: timestamped pong for latency measurement
+      if (msg.type === 'pong_ts') {
+        if (typeof netcode !== 'undefined') netcode.onPongReceived(msg);
+        return;
+      }
+
       if (msg.type === 'player_joined') {
         if (_partnerTimeout) { clearTimeout(_partnerTimeout); _partnerTimeout = null; }
         _setState(CoopState.READY);
@@ -111,7 +117,17 @@ const coop = (function () {
         _reconnectCount++;
         _setState(CoopState.CONNECTING);
         _emit('state_change', { state: _state });
-        setTimeout(function () { _connectWs(_lastWsUrl); }, 1000);
+        // Netcode: enter offline fallback while reconnect is attempted
+        if (typeof netcode !== 'undefined') {
+          netcode.enterOfflineFallback(function () { _connectWs(_lastWsUrl); });
+        }
+        setTimeout(function () {
+          if (typeof netcode !== 'undefined' && netcode.isOfflineFallback()) {
+            netcode.attemptReconnect();
+          } else {
+            _connectWs(_lastWsUrl);
+          }
+        }, 1000);
         return;
       }
       if (_state !== CoopState.IDLE) {
@@ -183,6 +199,16 @@ const coop = (function () {
       _reconnectCount = 0;
       _setState(CoopState.IN_GAME);
       _emit('state_change', { state: _state });
+      // Netcode: begin latency measurement and wire ping display
+      if (typeof netcode !== 'undefined') {
+        netcode.init({
+          sendFn: function (msg) { _publicAPI.send(msg); },
+          pingDisplayCb: function (ms, quality) {
+            if (typeof updateMultiplayerPingHUD === 'function') updateMultiplayerPingHUD(ms, quality);
+          },
+        });
+        netcode.startPingMeasurement();
+      }
     },
 
     /** Clean disconnect — resets all state */
@@ -198,6 +224,8 @@ const coop = (function () {
       _isHost       = false;
       _setState(CoopState.IDLE);
       _handlers = {};
+      if (typeof netcode !== 'undefined') netcode.reset();
+      if (typeof updateMultiplayerPingHUD === 'function') updateMultiplayerPingHUD(null, null);
     },
   };
 

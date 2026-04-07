@@ -326,6 +326,11 @@ function animate() {
       updateFallingPieces(delta);
       if (isBattleMode && typeof battleHud !== 'undefined') battleHud.tick(delta);
       if (isBattleMode && typeof checkBattleScoreRace === 'function') checkBattleScoreRace(delta);
+      // Netcode: advance rollback blend and opponent interpolation each frame
+      if ((isBattleMode || isCoopMode) && typeof netcode !== 'undefined') {
+        netcode.tickRollback();
+        netcode.tickInterpolation(delta * 1000, null); // renderFn wired per-mode in init handlers
+      }
       updateLandingRings(delta);
       updateSnapAnimations(delta);
       updateTrails(delta, elapsedTime);

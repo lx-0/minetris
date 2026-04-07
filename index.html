@@ -945,6 +945,11 @@
       <div id="coop-emote-feedback" style="display:none;"></div>
       <!-- Co-op emote toast: "[Name] waved" bottom-right -->
       <div id="coop-emote-toast" style="display:none;"></div>
+      <!-- Multiplayer ping HUD: shown during battle/coop, hidden otherwise -->
+      <div id="multiplayer-ping-hud" style="display:none;position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:152;display:none;align-items:center;gap:5px;font-family:'Press Start 2P',cursive;font-size:7px;color:#ccc;pointer-events:none;">
+        <span id="mp-ping-dot" style="width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block;flex-shrink:0;"></span>
+        <span id="mp-ping-label">-- ms</span>
+      </div>
       <!-- Co-op emote keybinding HUD row -->
       <div id="coop-emote-hud" style="display:none;">
         <div class="coop-emote-key"><span class="coop-emote-key-label">Z</span><span class="coop-emote-key-icon">👋</span></div>
@@ -3521,6 +3526,7 @@
     <script src="js/ui/editor.js"></script>
     <script src="js/social/community.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+    <script src="js/netcode.js"></script>
     <script src="js/social/coop.js"></script>
     <script src="js/social/coop-avatar.js"></script>
     <script src="js/social/coop-trade.js"></script>
@@ -3532,6 +3538,7 @@
     <script src="js/battle/battle-rating.js"></script>
     <script src="js/battle/battle.js"></script>
     <script src="js/battle/battle-hud.js"></script>
+    <script src="js/ui/multiplayer-hud.js"></script>
     <script src="js/battle/battle-garbage.js"></script>
     <script src="js/battle/battleroyale.js"></script>
     <script src="js/battle/battle-fx.js"></script>
