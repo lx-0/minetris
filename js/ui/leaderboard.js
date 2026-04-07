@@ -103,13 +103,18 @@ async function apiSubmitScore(displayName, score, linesCleared) {
   const timestamp = Date.now();
   const replay    = typeof replayConsumeSubmissionData === 'function' ? replayConsumeSubmissionData() : null;
   const signature = replay ? await _buildReplaySignature(replay.pieceIndices, score, linesCleared, timestamp) : null;
+  const boardHash = typeof acBoardStateHash === 'function' ? await acBoardStateHash() : null;
+  const sessionToken = typeof acGetSessionToken === 'function' ? acGetSessionToken() : null;
+  if (typeof acMarkSubmitted === 'function') acMarkSubmitted();
   const resp = await fetch(LEADERBOARD_WORKER_URL + '/api/scores', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       displayName, score, linesCleared, date, clientTimestamp: timestamp,
-      replay:    replay    || undefined,
-      signature: signature || undefined,
+      replay:        replay        || undefined,
+      signature:     signature     || undefined,
+      boardHash:     boardHash     || undefined,
+      sessionToken:  sessionToken  || undefined,
     }),
   });
   return resp.json();

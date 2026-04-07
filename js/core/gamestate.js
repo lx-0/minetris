@@ -13,6 +13,7 @@ function addScore(pts) {
   if (typeof clearSkiesActive !== 'undefined' && clearSkiesActive) _mult *= 2.0;
   const _actual = (_mult !== 1.0) ? Math.round(pts * _mult) : pts;
   score += _actual;
+  if (typeof acAddScore === 'function') acAddScore(_actual);
   if (isCoopMode) {
     coopScore += _actual;
     coopMyScore += _actual;

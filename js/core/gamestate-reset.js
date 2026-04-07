@@ -53,6 +53,7 @@ function resetGame() {
 
   // Reset score / stats
   score = 0;
+  if (typeof acSetScore === 'function') acSetScore(0);
   blocksMined = 0;
   linesCleared = 0;
   gameElapsedSeconds = 0;

@@ -192,6 +192,38 @@ async function checkPerMinuteRateLimit(env, playerLower, now) {
   return { allowed: true };
 }
 
+// ── Anti-cheat: 30-second burst rate limiting ─────────────────────────────────
+
+/**
+ * Enforce a minimum 30-second gap between submissions per player.
+ * Uses a KV key with a 30-second TTL; if the key exists the player is throttled.
+ */
+async function check30SecRateLimit(env, playerLower) {
+  const key = `ratelimit:30s:${playerLower}`;
+  const entry = await env.LEADERBOARD_KV.get(key);
+  if (entry !== null) return { allowed: false };
+  await env.LEADERBOARD_KV.put(key, '1', { expirationTtl: 30 });
+  return { allowed: true };
+}
+
+// ── Anti-cheat: rejection logging ────────────────────────────────────────────
+
+/**
+ * Log a hard-rejected submission (invalid signature, duration breach, etc.)
+ * for monitoring. Stored as a rotating 30-day log keyed by date.
+ */
+async function logRejectedSubmission(env, info) {
+  try {
+    const date = todayUTC();
+    const key  = `rejected:${date}`;
+    const list = (await env.LEADERBOARD_KV.get(key, { type: 'json' })) || [];
+    list.push({ ...info, rejectedAt: new Date().toISOString() });
+    // Keep only last 500 rejections per day, 14-day retention
+    if (list.length > 500) list.splice(0, list.length - 500);
+    await env.LEADERBOARD_KV.put(key, JSON.stringify(list), { expirationTtl: 60 * 60 * 24 * 14 });
+  } catch (_) { /* non-critical logging — never throw */ }
+}
+
 // ── Anti-cheat: anomaly detection (Welford's online algorithm) ────────────────
 
 /**
@@ -329,6 +361,13 @@ const DISPLAY_NAME_REGEX = /^[a-zA-Z0-9_]{1,16}$/;
 // 1500 per line is ~2× theoretical perfect play.
 const MAX_SCORE_PER_LINE = 1500;
 
+// Theoretical upper bound on points per second of game time.
+// Derived from: fastest possible piece cycle (~0.5s) × max score per piece (~6000
+// base × 2× multiplier stack) ≈ 24000/s. Using 80000 gives generous headroom for
+// future multipliers; scores above this rate are physically impossible.
+// Example: 999999 points requires at least ~12.5 seconds of play time.
+const MAX_SCORE_PER_SECOND = 80000;
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function todayUTC() {
@@ -392,7 +431,7 @@ async function handlePostScore(request, env) {
     return jsonResponse({ error: 'Invalid JSON' }, 400);
   }
 
-  const { displayName, score, linesCleared, date, clientTimestamp, replay, signature } = body;
+  const { displayName, score, linesCleared, date, clientTimestamp, replay, signature, boardHash, sessionToken } = body;
 
   // 1. Validate display name
   if (!displayName || !DISPLAY_NAME_REGEX.test(displayName)) {
@@ -414,12 +453,34 @@ async function handlePostScore(request, env) {
 
   // 4. Plausibility: score / (linesCleared + 1) must be within theoretical max
   if (scoreNum / (linesNum + 1) > MAX_SCORE_PER_LINE) {
+    await logRejectedSubmission(env, { displayName, score: scoreNum, date, reason: 'score_per_line' });
     return jsonResponse({ error: 'Score fails plausibility check' }, 400);
   }
 
-  // 5. Per-minute rate limit: max 10 submissions per minute per player
+  // 4b. Duration-based plausibility: reject if score exceeds theoretical max for elapsed time
+  if (replay && typeof replay.duration === 'number' && replay.duration > 0) {
+    const durationSec = replay.duration / 1000;
+    if (scoreNum > durationSec * MAX_SCORE_PER_SECOND) {
+      await logRejectedSubmission(env, {
+        displayName, score: scoreNum, date,
+        reason: 'duration_plausibility',
+        durationSec: Math.round(durationSec),
+      });
+      return jsonResponse({ error: 'Score fails duration plausibility check' }, 400);
+    }
+  }
+
+  // 5. Rate limits
   const playerLower = displayName.toLowerCase();
   const now = Date.now();
+
+  // 5a. 30-second burst limit: prevent rapid-fire submissions
+  const thirtySecCheck = await check30SecRateLimit(env, playerLower);
+  if (!thirtySecCheck.allowed) {
+    return jsonResponse({ error: 'Rate limit exceeded — please wait 30 seconds between submissions' }, 429);
+  }
+
+  // 5b. Per-minute rate limit: max 10 submissions per minute per player
   const minuteCheck = await checkPerMinuteRateLimit(env, playerLower, now);
   if (!minuteCheck.allowed) {
     return jsonResponse({ error: 'Rate limit exceeded — too many submissions this minute' }, 429);
@@ -451,11 +512,13 @@ async function handlePostScore(request, env) {
       replay.pieceIndices, scoreNum, linesNum, clientTimestamp, signature
     );
     if (!sigOk) {
+      await logRejectedSubmission(env, { displayName, score: scoreNum, date, reason: 'invalid_signature' });
       return jsonResponse({ error: 'Invalid submission signature' }, 400);
     }
     // 8b. Verify piece count is plausible (need at least linesNum / 4 pieces to clear that many lines)
     const minPiecesForLines = Math.floor(linesNum / 4);
     if (replay.pieceIndices.length < minPiecesForLines) {
+      await logRejectedSubmission(env, { displayName, score: scoreNum, date, reason: 'piece_count_mismatch', pieceCount: replay.pieceIndices.length, minPieces: minPiecesForLines });
       return jsonResponse({ error: 'Replay piece count inconsistent with lines cleared' }, 400);
     }
     // 8c. For daily mode — verify deterministic piece sequence matches server-derived sequence
@@ -464,6 +527,7 @@ async function handlePostScore(request, env) {
       const pieceCheck = validateDailyPieces(date, replay.pieceIndices);
       if (!pieceCheck.valid) {
         // Sequence mismatch — reject (cheated or corrupted replay)
+        await logRejectedSubmission(env, { displayName, score: scoreNum, date, reason: 'piece_sequence_invalid', mismatch: pieceCheck.mismatch });
         return jsonResponse({ error: 'Score rejected: replay sequence invalid' }, 400);
       }
     }
@@ -499,6 +563,8 @@ async function handlePostScore(request, env) {
     date,
     submittedAt: new Date().toISOString(),
     verified,
+    ...(boardHash     ? { boardHash }     : {}),
+    ...(sessionToken  ? { sessionToken }  : {}),
   };
 
   if (flagged) {
