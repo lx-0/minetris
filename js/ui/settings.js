@@ -1231,6 +1231,20 @@ function _initTransferProgressSection() {
 
 // ── Cloud Sync UI ─────────────────────────────────────────────────────────────
 
+function _updateLastSyncDisplay() {
+  const el = document.getElementById('cloud-sync-last-sync');
+  if (!el) return;
+  try {
+    const ts = localStorage.getItem('mineCtris_lastCloudSync');
+    if (ts) {
+      el.textContent = 'Last synced: ' + new Date(ts).toLocaleString();
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  } catch (_) { el.style.display = 'none'; }
+}
+
 function _showCloudFeedback(msg, color) {
   const el = document.getElementById("cloud-sync-status");
   if (!el) return;
@@ -1278,6 +1292,16 @@ async function _showSyncCode() {
 
 function _initCloudSyncSection() {
   _hideCloudPreview();
+  _updateLastSyncDisplay();
+
+  // Auto-sync toggle
+  const autoToggle = document.getElementById('cloud-sync-auto-toggle');
+  if (autoToggle) {
+    autoToggle.checked = typeof isAutoSyncEnabled === 'function' && isAutoSyncEnabled();
+    autoToggle.addEventListener('change', function() {
+      if (typeof setAutoSyncEnabled === 'function') setAutoSyncEnabled(autoToggle.checked);
+    });
+  }
 
   const saveBtn = document.getElementById("cloud-sync-save-btn");
   if (saveBtn) {
@@ -1289,6 +1313,7 @@ function _initCloudSyncSection() {
       if (result.ok) {
         _showCloudFeedback("Saved to cloud!", "#7f7");
         _showSyncCode();
+        _updateLastSyncDisplay();
       } else {
         _showCloudFeedback("Save failed: " + result.error, "#f77");
       }
