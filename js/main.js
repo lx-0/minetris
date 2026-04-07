@@ -600,6 +600,8 @@ function init() {
           badgeEl.style.display = "block";
           if (typeof updatePuzzleHUD === "function") updatePuzzleHUD();
         }
+        var undoBtnCp = document.getElementById("puzzle-undo-btn");
+        if (undoBtnCp) { undoBtnCp.style.display = "block"; if (typeof _updatePuzzleUndoBtn === "function") _updatePuzzleUndoBtn(); }
         // Reset the start button label if it was changed
         const startBtnEl = document.getElementById("start-random-btn");
         if (startBtnEl && startBtnEl.textContent.indexOf("Custom") !== -1) {
@@ -618,6 +620,8 @@ function init() {
           badgeEl.style.display = "block";
           if (typeof updatePuzzleHUD === "function") updatePuzzleHUD();
         }
+        var undoBtnPz = document.getElementById("puzzle-undo-btn");
+        if (undoBtnPz) { undoBtnPz.style.display = "block"; if (typeof _updatePuzzleUndoBtn === "function") _updatePuzzleUndoBtn(); }
       }
 
       // Training mode: place scenario board, init fixed piece queue, capture initial snapshot
@@ -701,6 +705,8 @@ function init() {
       miningProgress = 0;
       const puzzleBadgeEl = document.getElementById("puzzle-badge");
       if (puzzleBadgeEl) puzzleBadgeEl.style.display = "none";
+      var puzzleUndoBtnHide = document.getElementById("puzzle-undo-btn");
+      if (puzzleUndoBtnHide) puzzleUndoBtnHide.style.display = "none";
       const powerupHudEl = document.getElementById("powerup-hud");
       if (powerupHudEl) powerupHudEl.style.display = "none";
     });

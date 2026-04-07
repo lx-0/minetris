@@ -4975,6 +4975,31 @@ tr.dgo-top10-me .dgo-top10-score { color: #0cf; }
   white-space: nowrap;
 }
 
+/* ── Puzzle undo button ── */
+#puzzle-undo-btn {
+  position: absolute;
+  top: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: #e0b0ff;
+  background: rgba(96, 32, 128, 0.55);
+  border: 1px solid rgba(180, 100, 255, 0.5);
+  border-radius: 3px;
+  padding: 3px 8px;
+  cursor: pointer;
+  z-index: 150;
+  white-space: nowrap;
+  transition: background 0.15s, opacity 0.15s;
+}
+#puzzle-undo-btn:hover:not(:disabled) {
+  background: rgba(180, 100, 255, 0.3);
+}
+#puzzle-undo-btn:disabled {
+  cursor: default;
+}
+
 /* ── World modifier HUD badge ── */
 #world-modifier-badge {
   position: absolute;
@@ -5156,18 +5181,19 @@ tr.dgo-top10-me .dgo-top10-score { color: #0cf; }
 .puzzle-diff-medium   { color: #ffd700; }
 .puzzle-diff-hard     { color: #ff6060; }
 .puzzle-diff-expert   { color: #cc44ff; }
+.puzzle-diff-master   { color: #ff6600; }
 
 #puzzle-tab-bar {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   margin-bottom: 14px;
   width: 100%;
 }
 .puzzle-tab-btn {
   flex: 1;
   font-family: "Press Start 2P", cursive;
-  font-size: 8px;
-  padding: 7px 4px;
+  font-size: 7px;
+  padding: 6px 2px;
   background: rgba(96, 32, 128, 0.2);
   border: 1px solid rgba(180, 100, 255, 0.35);
   border-radius: 4px;

@@ -373,6 +373,359 @@ const PUZZLES = [
     winCondition: { mode: "clear_lines", n: 10 },
     hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0]],
   },
+
+  // ── Expert tier (IDs 31–40) — combo, T-spin, perfect-clear, survival ──────────
+  {
+    id: 31,
+    name: "Double Tap",
+    difficulty: "expert",
+    description: "Clear 2 lines in a row to build a combo of 2. Precision is everything.",
+    layout: [
+      [-4, 0, 0, 2], [-3, 0, 0, 2], [-2, 0, 0, 2], [-1, 0, 0, 2],
+      [1, 0, 0, 2], [2, 0, 0, 2], [3, 0, 0, 2], [4, 0, 0, 2],
+      [-4, 1, 0, 2], [-3, 1, 0, 2], [-2, 1, 0, 2], [-1, 1, 0, 2],
+      [1, 1, 0, 2], [2, 1, 0, 2], [3, 1, 0, 2], [4, 1, 0, 2],
+    ],
+    pieces: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+    winCondition: { mode: "combo", n: 2 },
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 32,
+    name: "Triple Combo",
+    difficulty: "expert",
+    description: "Keep the combo going — clear 3 lines consecutively without a break.",
+    layout: [
+      [-4, 0, 0, 3], [-3, 0, 0, 3], [-2, 0, 0, 3],
+      [2, 0, 0, 3], [3, 0, 0, 3], [4, 0, 0, 3],
+      [-4, 1, 0, 3], [-3, 1, 0, 3],
+      [3, 1, 0, 3], [4, 1, 0, 3],
+      [-4, 2, 0, 3],
+      [4, 2, 0, 3],
+    ],
+    pieces: [4, 4, 1, 4, 1, 4, 1, 4, 4, 4, 1, 4],
+    winCondition: { mode: "combo", n: 3 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 33,
+    name: "T-Spin Intro",
+    difficulty: "expert",
+    description: "Twist a T-piece into a tight gap to perform your first T-spin.",
+    layout: [
+      [-3, 0, 0, 2], [-2, 0, 0, 2], [-1, 0, 0, 2],
+      [1, 0, 0, 2], [2, 0, 0, 2], [3, 0, 0, 2],
+      [-3, 1, 0, 2], [3, 1, 0, 2],
+      [-3, 2, 0, 2], [-1, 2, 0, 2], [1, 2, 0, 2], [3, 2, 0, 2],
+    ],
+    pieces: [5, 4, 5, 2, 5, 1, 5, 3, 5, 7],
+    winCondition: { mode: "t_spin", n: 1 },
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 34,
+    name: "T-Spin Double",
+    difficulty: "expert",
+    description: "Two T-spins required. Set up the overhang, twist in, and repeat.",
+    layout: [
+      [-4, 0, 0, 7], [-3, 0, 0, 7],
+      [3, 0, 0, 7], [4, 0, 0, 7],
+      [-4, 1, 0, 7], [-3, 1, 0, 7], [-2, 1, 0, 7],
+      [2, 1, 0, 7], [3, 1, 0, 7], [4, 1, 0, 7],
+      [-4, 2, 0, 7], [4, 2, 0, 7],
+      [-4, 3, 0, 7], [-2, 3, 0, 7], [2, 3, 0, 7], [4, 3, 0, 7],
+    ],
+    pieces: [5, 4, 5, 1, 5, 2, 5, 4, 7, 1],
+    winCondition: { mode: "t_spin", n: 2 },
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 35,
+    name: "Perfect Void",
+    difficulty: "expert",
+    description: "Clear the entire board in one shot — a perfect clear.",
+    layout: [
+      [-2, 0, 0, 3], [-1, 0, 0, 3], [1, 0, 0, 3], [2, 0, 0, 3],
+    ],
+    pieces: [4, 4, 3, 1, 2, 5, 7],
+    winCondition: { mode: "perfect_clear" },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0]],
+  },
+  {
+    id: 36,
+    name: "Blank Slate",
+    difficulty: "expert",
+    description: "Two rows of gold ore block your path to a clean board. Perfect clear wins.",
+    layout: [
+      [-3, 0, 0, 3], [-2, 0, 0, 3], [-1, 0, 0, 3], [0, 0, 0, 3], [1, 0, 0, 3], [2, 0, 0, 3], [3, 0, 0, 3],
+      [-3, 1, 0, 3], [-2, 1, 0, 3], [-1, 1, 0, 3], [0, 1, 0, 3], [1, 1, 0, 3], [2, 1, 0, 3], [3, 1, 0, 3],
+    ],
+    pieces: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+    winCondition: { mode: "perfect_clear" },
+    hintBlocks: [[-3, 0], [-2, 0], [-1, 0], [0, 0]],
+  },
+  {
+    id: 37,
+    name: "Garbage Gauntlet",
+    difficulty: "expert",
+    description: "Garbage rows encroach from below. Clear them before they reach row 8.",
+    layout: [
+      [-4, 0, 0, 6], [-3, 0, 0, 6], [-2, 0, 0, 6], [-1, 0, 0, 6],
+      [1, 0, 0, 6], [2, 0, 0, 6], [3, 0, 0, 6], [4, 0, 0, 6],
+      [-4, 1, 0, 6], [-3, 1, 0, 6], [-2, 1, 0, 6], [-1, 1, 0, 6],
+      [1, 1, 0, 6], [2, 1, 0, 6], [3, 1, 0, 6], [4, 1, 0, 6],
+      [-4, 2, 0, 6], [-3, 2, 0, 6], [-2, 2, 0, 6], [-1, 2, 0, 6],
+      [1, 2, 0, 6], [2, 2, 0, 6], [3, 2, 0, 6], [4, 2, 0, 6],
+    ],
+    pieces: [4, 1, 4, 2, 4, 7, 4, 1, 4, 2, 4, 7, 4, 1, 4, 2, 4, 7, 4, 4],
+    winCondition: { mode: "survival", garbageRows: 3, heightLimit: 8 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 38,
+    name: "Chaos Field",
+    difficulty: "expert",
+    description: "Scattered lava and crystal blocks at height. Reach score 800 in 3 minutes.",
+    layout: [
+      [-3, 2, 0, 6], [0, 3, 0, 7], [3, 2, 0, 6],
+      [-2, 4, 0, 7], [2, 4, 0, 7],
+      [-1, 5, 0, 6], [1, 5, 0, 6],
+      [0, 6, 0, 7],
+    ],
+    pieces: [4, 2, 1, 5, 7, 3, 6, 4, 2, 1, 5, 7, 3, 6, 4, 2, 1, 5, 7, 3],
+    winCondition: { mode: "timed_score", scoreTarget: 800, timeLimit: 180 },
+    hintBlocks: [[-3, 0], [-2, 0], [-1, 0], [0, 0]],
+  },
+  {
+    id: 39,
+    name: "Obsidian Combo",
+    difficulty: "expert",
+    description: "Obsidian walls frame a narrow channel. Chain 4 consecutive clears.",
+    layout: [
+      [-4, 0, 0, 15], [-3, 0, 0, 15],
+      [3, 0, 0, 15], [4, 0, 0, 15],
+      [-4, 1, 0, 15], [-3, 1, 0, 15],
+      [3, 1, 0, 15], [4, 1, 0, 15],
+      [-4, 2, 0, 15], [-3, 2, 0, 15],
+      [3, 2, 0, 15], [4, 2, 0, 15],
+      [-4, 3, 0, 15], [-3, 3, 0, 15],
+      [3, 3, 0, 15], [4, 3, 0, 15],
+    ],
+    pieces: [4, 1, 4, 2, 4, 7, 4, 5, 4, 1, 4, 2, 4, 7, 4, 5, 4, 4],
+    winCondition: { mode: "combo", n: 4 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 40,
+    name: "Expert's Edge",
+    difficulty: "expert",
+    description: "Complex layout demands T-spin mastery AND a score of 700 — both must be met.",
+    layout: [
+      [-4, 0, 0, 2], [-3, 0, 0, 3], [-2, 0, 0, 7],
+      [2, 0, 0, 7], [3, 0, 0, 3], [4, 0, 0, 2],
+      [-4, 1, 0, 2], [4, 1, 0, 2],
+      [-4, 2, 0, 2], [-2, 2, 0, 2], [2, 2, 0, 2], [4, 2, 0, 2],
+      [-4, 3, 0, 2], [4, 3, 0, 2],
+    ],
+    pieces: [5, 4, 5, 2, 5, 1, 7, 5, 4, 3, 5, 6, 5, 2, 5, 1],
+    winCondition: { mode: "t_spin", n: 3 },
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+
+  // ── Master tier (IDs 41–50) — hardest challenges ──────────────────────────────
+  {
+    id: 41,
+    name: "Void Run",
+    difficulty: "master",
+    description: "Empty the board completely — perfect clear on a dense 3-row field.",
+    layout: [
+      [-4, 0, 0, 2], [-3, 0, 0, 3], [-2, 0, 0, 7], [-1, 0, 0, 6], [0, 0, 0, 2], [1, 0, 0, 3], [2, 0, 0, 7], [3, 0, 0, 6], [4, 0, 0, 2],
+      [-4, 1, 0, 3], [-3, 1, 0, 7], [-2, 1, 0, 2], [-1, 1, 0, 3],
+      [1, 1, 0, 7], [2, 1, 0, 2], [3, 1, 0, 3], [4, 1, 0, 7],
+      [-4, 2, 0, 6], [-3, 2, 0, 2],
+      [3, 2, 0, 2], [4, 2, 0, 6],
+    ],
+    pieces: [4, 4, 1, 2, 4, 7, 4, 5, 1, 4, 2, 7, 4, 1, 4, 2, 4, 7, 5, 4],
+    winCondition: { mode: "perfect_clear" },
+    hintBlocks: [[-4, 0], [-3, 0], [-2, 0], [-1, 0], [0, 0]],
+  },
+  {
+    id: 42,
+    name: "Spin Doctor",
+    difficulty: "master",
+    description: "Three T-spins in a row. Every twist counts — no wasted moves.",
+    layout: [
+      [-4, 0, 0, 15], [-3, 0, 0, 15], [-2, 0, 0, 15],
+      [2, 0, 0, 15], [3, 0, 0, 15], [4, 0, 0, 15],
+      [-4, 1, 0, 15], [4, 1, 0, 15],
+      [-4, 2, 0, 15], [-2, 2, 0, 15], [2, 2, 0, 15], [4, 2, 0, 15],
+      [-4, 3, 0, 15], [-2, 3, 0, 15], [2, 3, 0, 15], [4, 3, 0, 15],
+      [-4, 4, 0, 15], [4, 4, 0, 15],
+      [-4, 5, 0, 15], [-2, 5, 0, 15], [2, 5, 0, 15], [4, 5, 0, 15],
+    ],
+    pieces: [5, 4, 5, 1, 5, 2, 5, 7, 5, 4, 3, 5, 5, 2, 5, 1],
+    winCondition: { mode: "t_spin", n: 3 },
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 43,
+    name: "Infinite Chain",
+    difficulty: "master",
+    description: "Chain 5 consecutive line clears without breaking the combo.",
+    layout: [
+      [-4, 0, 0, 6], [-3, 0, 0, 6], [-2, 0, 0, 6],
+      [2, 0, 0, 6], [3, 0, 0, 6], [4, 0, 0, 6],
+      [-4, 1, 0, 6], [-3, 1, 0, 6],
+      [3, 1, 0, 6], [4, 1, 0, 6],
+      [-4, 2, 0, 6],
+      [4, 2, 0, 6],
+      [-4, 3, 0, 6],
+      [4, 3, 0, 6],
+      [-4, 4, 0, 6],
+      [4, 4, 0, 6],
+    ],
+    pieces: [4, 1, 4, 2, 4, 7, 4, 5, 4, 1, 4, 2, 4, 7, 4, 5, 4, 1, 4, 2],
+    winCondition: { mode: "combo", n: 5 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 44,
+    name: "Void & Spin",
+    difficulty: "master",
+    description: "Perfect clear the first two rows, then deliver a T-spin finale.",
+    layout: [
+      [-4, 0, 0, 3], [-3, 0, 0, 3], [-2, 0, 0, 3],
+      [2, 0, 0, 3], [3, 0, 0, 3], [4, 0, 0, 3],
+      [-4, 1, 0, 3], [-3, 1, 0, 3], [-2, 1, 0, 3],
+      [2, 1, 0, 3], [3, 1, 0, 3], [4, 1, 0, 3],
+      [-3, 2, 0, 7], [-2, 2, 0, 7],
+      [2, 2, 0, 7], [3, 2, 0, 7],
+      [-3, 3, 0, 7], [3, 3, 0, 7],
+      [-3, 4, 0, 7], [-1, 4, 0, 7], [1, 4, 0, 7], [3, 4, 0, 7],
+    ],
+    pieces: [4, 4, 4, 5, 4, 5, 4, 1, 5, 2, 5, 7, 5, 4, 5, 1, 5, 2],
+    winCondition: { mode: "t_spin", n: 2 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 45,
+    name: "Survival Mode",
+    difficulty: "master",
+    description: "Garbage rises — survive 4 garbage rows in a narrow 3-wide shaft.",
+    layout: [
+      [-4, 0, 0, 15], [-3, 0, 0, 15], [-2, 0, 0, 15],
+      [2, 0, 0, 15], [3, 0, 0, 15], [4, 0, 0, 15],
+      [-4, 1, 0, 15], [-3, 1, 0, 15], [-2, 1, 0, 15],
+      [2, 1, 0, 15], [3, 1, 0, 15], [4, 1, 0, 15],
+      [-4, 2, 0, 15], [-3, 2, 0, 15], [-2, 2, 0, 15],
+      [2, 2, 0, 15], [3, 2, 0, 15], [4, 2, 0, 15],
+      [-4, 3, 0, 15], [-3, 3, 0, 15], [-2, 3, 0, 15],
+      [2, 3, 0, 15], [3, 3, 0, 15], [4, 3, 0, 15],
+    ],
+    pieces: [4, 1, 4, 2, 4, 7, 4, 5, 4, 1, 4, 2, 4, 7, 4, 5, 4, 4, 1, 2],
+    winCondition: { mode: "survival", garbageRows: 4, heightLimit: 10 },
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 46,
+    name: "Score Blitz",
+    difficulty: "master",
+    description: "Race to 1200 points in just 2 minutes. Efficient T-spins and combos are key.",
+    layout: [
+      [-3, 0, 0, 3], [0, 0, 0, 7], [3, 0, 0, 3],
+      [-2, 1, 0, 7], [2, 1, 0, 7],
+      [0, 2, 0, 3],
+    ],
+    pieces: [5, 4, 5, 2, 5, 1, 7, 5, 4, 3, 5, 6, 5, 2, 5, 1, 5, 3, 4, 2, 7],
+    winCondition: { mode: "timed_score", scoreTarget: 1200, timeLimit: 120 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0]],
+  },
+  {
+    id: 47,
+    name: "The Gauntlet",
+    difficulty: "master",
+    description: "15 lines of obsidian walls. Clear 12 lines to escape the gauntlet.",
+    layout: [
+      [-4, 0, 0, 15], [-3, 0, 0, 15],
+      [3, 0, 0, 15], [4, 0, 0, 15],
+      [-4, 1, 0, 15], [-3, 1, 0, 15],
+      [3, 1, 0, 15], [4, 1, 0, 15],
+      [-4, 2, 0, 15], [-3, 2, 0, 15],
+      [3, 2, 0, 15], [4, 2, 0, 15],
+      [-4, 3, 0, 15], [-3, 3, 0, 15],
+      [3, 3, 0, 15], [4, 3, 0, 15],
+      [-4, 4, 0, 15], [-3, 4, 0, 15],
+      [3, 4, 0, 15], [4, 4, 0, 15],
+      [-4, 5, 0, 15], [-3, 5, 0, 15],
+      [3, 5, 0, 15], [4, 5, 0, 15],
+    ],
+    pieces: [4, 1, 2, 4, 7, 4, 5, 1, 4, 2, 4, 7, 5, 4, 1, 2, 7, 4, 5, 4, 1, 2, 4, 7, 4, 5, 4, 1],
+    winCondition: { mode: "clear_lines", n: 12 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 48,
+    name: "Master's Combo",
+    difficulty: "master",
+    description: "Seven consecutive clears. One broken chain and you start over.",
+    layout: [
+      [-4, 0, 0, 7], [-3, 0, 0, 7],
+      [3, 0, 0, 7], [4, 0, 0, 7],
+      [-4, 1, 0, 7], [-3, 1, 0, 7],
+      [3, 1, 0, 7], [4, 1, 0, 7],
+      [-4, 2, 0, 7],
+      [4, 2, 0, 7],
+      [-4, 3, 0, 7],
+      [4, 3, 0, 7],
+      [-4, 4, 0, 7],
+      [4, 4, 0, 7],
+      [-4, 5, 0, 7],
+      [4, 5, 0, 7],
+      [-4, 6, 0, 7],
+      [4, 6, 0, 7],
+    ],
+    pieces: [4, 1, 4, 2, 4, 7, 4, 5, 4, 1, 4, 2, 4, 7, 4, 5, 4, 1, 4, 2, 4, 7, 4, 5],
+    winCondition: { mode: "combo", n: 7 },
+    hintBlocks: [[-2, 0], [-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 49,
+    name: "Pinnacle",
+    difficulty: "master",
+    description: "Ultimate T-spin challenge — land 5 T-spins in a brutal maze of obsidian.",
+    layout: [
+      [-4, 0, 0, 15], [-3, 0, 0, 15], [-2, 0, 0, 15], [-1, 0, 0, 15],
+      [1, 0, 0, 15], [2, 0, 0, 15], [3, 0, 0, 15], [4, 0, 0, 15],
+      [-4, 1, 0, 15], [4, 1, 0, 15],
+      [-4, 2, 0, 15], [-2, 2, 0, 15], [2, 2, 0, 15], [4, 2, 0, 15],
+      [-4, 3, 0, 15], [4, 3, 0, 15],
+      [-4, 4, 0, 15], [-2, 4, 0, 15], [2, 4, 0, 15], [4, 4, 0, 15],
+      [-4, 5, 0, 15], [4, 5, 0, 15],
+      [-4, 6, 0, 15], [-2, 6, 0, 15], [2, 6, 0, 15], [4, 6, 0, 15],
+      [-4, 7, 0, 15], [4, 7, 0, 15],
+    ],
+    pieces: [5, 4, 5, 1, 5, 2, 5, 7, 5, 4, 5, 3, 5, 6, 5, 1, 5, 2, 5, 4],
+    winCondition: { mode: "t_spin", n: 5 },
+    hintBlocks: [[-1, 0], [0, 0], [1, 0]],
+  },
+  {
+    id: 50,
+    name: "Absolute Zero",
+    difficulty: "master",
+    description: "The ultimate test — perfect clear a 4-row fully occupied field.",
+    layout: [
+      [-4, 0, 0, 15], [-3, 0, 0, 2], [-2, 0, 0, 3], [-1, 0, 0, 7], [0, 0, 0, 6], [1, 0, 0, 3], [2, 0, 0, 2], [3, 0, 0, 7], [4, 0, 0, 15],
+      [-4, 1, 0, 2], [-3, 1, 0, 7], [-2, 1, 0, 6], [-1, 1, 0, 3],
+      [1, 1, 0, 3], [2, 1, 0, 7], [3, 1, 0, 6], [4, 1, 0, 2],
+      [-4, 2, 0, 6], [-3, 2, 0, 3],
+      [3, 2, 0, 3], [4, 2, 0, 6],
+      [-4, 3, 0, 15],
+      [4, 3, 0, 15],
+    ],
+    pieces: [4, 4, 1, 4, 2, 4, 7, 4, 5, 4, 1, 4, 2, 4, 7, 4, 5, 4, 1, 4, 2, 4, 7, 4, 5, 4, 1, 2],
+    winCondition: { mode: "perfect_clear" },
+    hintBlocks: [[-4, 0], [-3, 0], [-2, 0], [-1, 0], [0, 0]],
+  },
 ];
 
 // ── Progress persistence ───────────────────────────────────────────────────────
@@ -449,6 +802,8 @@ function countCompletedByDiff(diff) {
  *  - easy:   first is always unlocked; each subsequent needs previous easy solved.
  *  - medium: first needs 5 easy solved; each subsequent needs previous medium solved.
  *  - hard:   first needs 5 medium solved; each subsequent needs previous hard solved.
+ *  - expert: first needs 5 hard solved; each subsequent needs previous expert solved.
+ *  - master: first needs 5 expert solved; each subsequent needs previous master solved.
  */
 function isPuzzleUnlocked(puzzleId) {
   const puzzle = getPuzzleById(puzzleId);
@@ -458,9 +813,11 @@ function isPuzzleUnlocked(puzzleId) {
                       .sort(function (a, b) { return a.id - b.id; });
   const idx = tier.findIndex(function (p) { return p.id === puzzleId; });
   if (idx <= 0) {
-    if (diff === "easy") return true;
-    if (diff === "medium") return countCompletedByDiff("easy") >= 5;
-    if (diff === "hard") return countCompletedByDiff("medium") >= 5;
+    if (diff === "easy")   return true;
+    if (diff === "medium") return countCompletedByDiff("easy")   >= 5;
+    if (diff === "hard")   return countCompletedByDiff("medium") >= 5;
+    if (diff === "expert") return countCompletedByDiff("hard")   >= 5;
+    if (diff === "master") return countCompletedByDiff("expert") >= 5;
     return false;
   }
   return getPuzzleStars(tier[idx - 1].id) >= 1;
@@ -558,6 +915,150 @@ function resetPuzzleState() {
   _puzzleTimeLimitSecs = 0;
   _puzzleTimeElapsed = 0;
   clearPuzzleHintGhost();
+  _puzzleUndoStack = [];
+  _updatePuzzleUndoBtn();
+}
+
+// ── Puzzle undo system ────────────────────────────────────────────────────────
+// Captures a full snapshot of the world + puzzle state before each piece is drawn.
+// On undo, removes all non-preset landed blocks and restores saved world + stats.
+
+let _puzzleUndoStack = [];  // Array of snapshot objects
+
+/**
+ * Capture the current world state for puzzle undo.
+ * Stores: all landed_block positions/colors, queue state, score/lines/combo/tSpin/perfectClear.
+ */
+function _puzzleCaptureUndoSnapshot() {
+  if (typeof worldGroup === "undefined" || !worldGroup) return null;
+  var blocks = [];
+  worldGroup.children.forEach(function (c) {
+    if (c.name !== "landed_block") return;
+    var wp = new THREE.Vector3();
+    c.getWorldPosition(wp);
+    blocks.push({
+      x: wp.x, y: wp.y, z: wp.z,
+      color: c.userData.canonicalColor,
+      isPuzzlePreset: !!c.userData.isPuzzlePreset,
+      materialType: c.userData.materialType,
+      miningClicks: c.userData.miningClicks,
+    });
+  });
+  return {
+    blocks:                  blocks,
+    puzzleFixedQueue:        puzzleFixedQueue.slice(),
+    _puzzlePiecesUsed:       _puzzlePiecesUsed,
+    score:                   typeof score !== "undefined" ? score : 0,
+    linesCleared:            typeof linesCleared !== "undefined" ? linesCleared : 0,
+    blocksMined:             typeof blocksMined !== "undefined" ? blocksMined : 0,
+    comboCount:              typeof comboCount !== "undefined" ? comboCount : 0,
+    sessionHighestComboCount: typeof sessionHighestComboCount !== "undefined" ? sessionHighestComboCount : 0,
+    sessionTSpins:           typeof sessionTSpins !== "undefined" ? sessionTSpins : 0,
+    sessionPerfectClears:    typeof sessionPerfectClears !== "undefined" ? sessionPerfectClears : 0,
+    sessionTetrises:         typeof sessionTetrises !== "undefined" ? sessionTetrises : 0,
+    _puzzleTimeElapsed:      _puzzleTimeElapsed,
+  };
+}
+
+/**
+ * Restore the world + puzzle state from a snapshot.
+ */
+function _puzzleRestoreUndoSnapshot(snap) {
+  if (!snap || typeof worldGroup === "undefined" || !worldGroup) return;
+
+  // Remove all current landed blocks from scene
+  var toRemove = worldGroup.children.filter(function (c) { return c.name === "landed_block"; });
+  toRemove.forEach(function (b) {
+    if (typeof unregisterBlock === "function") unregisterBlock(b);
+    if (typeof disposeBlock === "function") disposeBlock(b);
+    worldGroup.remove(b);
+  });
+  if (typeof obsidianBlocks !== "undefined") obsidianBlocks.length = 0;
+  _puzzlePresetBlocks = [];
+
+  // Rebuild blocks from snapshot
+  snap.blocks.forEach(function (b) {
+    var block = createBlockMesh(new THREE.Color(b.color));
+    block.name = "landed_block";
+    block.position.set(b.x, b.y, b.z);
+    block.userData.isPuzzlePreset = !!b.isPuzzlePreset;
+    block.userData.materialType = b.materialType || "stone";
+    block.userData.miningClicks = b.miningClicks || MINING_CLICKS_NEEDED;
+    worldGroup.add(block);
+    if (typeof registerBlock === "function") registerBlock(block);
+    if (b.isPuzzlePreset) _puzzlePresetBlocks.push(block);
+  });
+
+  // Restore queue
+  puzzleFixedQueue = snap.puzzleFixedQueue.slice();
+  pieceQueue.length = 0;
+  var previewCount = Math.min(typeof NEXT_QUEUE_SIZE !== "undefined" ? NEXT_QUEUE_SIZE : 5, puzzleFixedQueue.length);
+  for (var i = 0; i < previewCount; i++) {
+    var qIdx = puzzleFixedQueue[i];
+    pieceQueue.push({ index: qIdx, shape: SHAPES[qIdx] });
+  }
+  if (typeof updateNextPiecesHUD === "function") updateNextPiecesHUD();
+
+  // Restore stats
+  _puzzlePiecesUsed       = snap._puzzlePiecesUsed;
+  if (typeof score !== "undefined")               score               = snap.score;
+  if (typeof linesCleared !== "undefined")        linesCleared        = snap.linesCleared;
+  if (typeof blocksMined !== "undefined")         blocksMined         = snap.blocksMined;
+  if (typeof comboCount !== "undefined")          comboCount          = snap.comboCount;
+  if (typeof sessionHighestComboCount !== "undefined") sessionHighestComboCount = snap.sessionHighestComboCount;
+  if (typeof sessionTSpins !== "undefined")       sessionTSpins       = snap.sessionTSpins;
+  if (typeof sessionPerfectClears !== "undefined") sessionPerfectClears = snap.sessionPerfectClears;
+  if (typeof sessionTetrises !== "undefined")     sessionTetrises     = snap.sessionTetrises;
+  _puzzleTimeElapsed      = snap._puzzleTimeElapsed;
+
+  // Refresh HUD
+  if (typeof updateScoreHUD === "function") updateScoreHUD();
+  if (typeof updateStreakHUD === "function") updateStreakHUD();
+}
+
+/**
+ * Push a snapshot onto the undo stack.
+ * Called just before a piece is drawn from the queue.
+ */
+function puzzlePushUndo() {
+  if (!isPuzzleMode) return;
+  var snap = _puzzleCaptureUndoSnapshot();
+  if (!snap) return;
+  _puzzleUndoStack.push(snap);
+  _updatePuzzleUndoBtn();
+}
+
+/**
+ * Undo the last piece draw. Restores world + queue to the state before it was drawn.
+ * Returns true if undo was performed, false if stack is empty.
+ */
+function puzzleUndo() {
+  if (!isPuzzleMode) return false;
+  if (isGameOver) return false;
+  if (lineClearInProgress) return false;
+  if (_puzzleUndoStack.length === 0) return false;
+  // Kill any currently falling piece
+  if (typeof fallingPieces !== "undefined") {
+    fallingPieces.forEach(function (fp) {
+      if (fp.group) {
+        if (typeof fallingPiecesGroup !== "undefined") fallingPiecesGroup.remove(fp.group);
+      }
+    });
+    fallingPieces.length = 0;
+  }
+  var snap = _puzzleUndoStack.pop();
+  _puzzleRestoreUndoSnapshot(snap);
+  _updatePuzzleUndoBtn();
+  return true;
+}
+
+/** Update the undo button enabled/disabled state. */
+function _updatePuzzleUndoBtn() {
+  var btn = document.getElementById("puzzle-undo-btn");
+  if (!btn) return;
+  var canUndo = isPuzzleMode && !isGameOver && _puzzleUndoStack.length > 0;
+  btn.disabled = !canUndo;
+  btn.style.opacity = canUndo ? "1" : "0.35";
 }
 
 // ── Piece queue for puzzle mode ────────────────────────────────────────────────
@@ -592,6 +1093,8 @@ function initPuzzleWinCondition() {
 /** Draw the next piece from puzzleFixedQueue. Returns { index, shape } or null if empty. */
 function drawPuzzlePiece() {
   if (puzzleFixedQueue.length === 0) return null;
+  // Capture undo snapshot before consuming the piece
+  puzzlePushUndo();
   _puzzlePiecesUsed++;
   // Clear hint ghost as soon as the first piece is drawn (hint served its purpose)
   if (_puzzlePiecesUsed === 1) clearPuzzleHintGhost();
@@ -859,6 +1362,53 @@ function checkPuzzleConditions() {
     }
     if (_getMaxBlockHeight() >= wc.targetHeight) {
       _triggerPuzzleWin();
+      return;
+    }
+    if (puzzleFixedQueue.length === 0 && pieceQueue.length === 0 && fallingPieces.length === 0) {
+      _triggerPuzzleLose();
+    }
+
+  } else if (wc.mode === "perfect_clear") {
+    // Win when the board has zero non-preset placed blocks after a line clear
+    // _lcPerfectClear is set by lineclear.js when the board empties after a clear
+    if (typeof sessionPerfectClears !== "undefined" && sessionPerfectClears > 0) {
+      _triggerPuzzleWin();
+      return;
+    }
+    if (puzzleFixedQueue.length === 0 && pieceQueue.length === 0 && fallingPieces.length === 0) {
+      _triggerPuzzleLose();
+    }
+
+  } else if (wc.mode === "combo") {
+    // Win when sessionHighestComboCount reaches the required value
+    if (typeof sessionHighestComboCount !== "undefined" && sessionHighestComboCount >= wc.n) {
+      _triggerPuzzleWin();
+      return;
+    }
+    if (puzzleFixedQueue.length === 0 && pieceQueue.length === 0 && fallingPieces.length === 0) {
+      _triggerPuzzleLose();
+    }
+
+  } else if (wc.mode === "t_spin") {
+    // Win when sessionTSpins reaches the required count
+    if (typeof sessionTSpins !== "undefined" && sessionTSpins >= wc.n) {
+      _triggerPuzzleWin();
+      return;
+    }
+    if (puzzleFixedQueue.length === 0 && pieceQueue.length === 0 && fallingPieces.length === 0) {
+      _triggerPuzzleLose();
+    }
+
+  } else if (wc.mode === "survival") {
+    // Win when all garbage rows (preset blocks treated as garbage) are cleared
+    const remaining = countRemainingPresetBlocks();
+    if (remaining === 0 && _puzzleInitialCount > 0) {
+      _triggerPuzzleWin();
+      return;
+    }
+    // Lose if the stack reaches the height limit
+    if (_getMaxBlockHeight() >= (wc.heightLimit || 8)) {
+      _triggerPuzzleLose("height_limit");
       return;
     }
     if (puzzleFixedQueue.length === 0 && pieceQueue.length === 0 && fallingPieces.length === 0) {

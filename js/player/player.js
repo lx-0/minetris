@@ -321,6 +321,12 @@ function onKeyDown(event) {
     case "ControlRight":
       if (typeof doHardDrop === 'function') doHardDrop();
       break;
+    case "KeyZ":
+      // Puzzle undo (Z key)
+      if (isPuzzleMode && typeof puzzleUndo === "function") {
+        puzzleUndo();
+      }
+      break;
     case "KeyF":
       // Co-op trade takes priority (not in puzzle mode)
       if (isCoopMode && !isPuzzleMode && typeof coopTrade !== 'undefined') {

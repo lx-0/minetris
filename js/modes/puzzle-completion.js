@@ -129,6 +129,8 @@ function _showPuzzleCompleteOverlay(won, stars, isNewBest, puzzle, loseReason) {
       titleEl.textContent = "TIME'S UP!";
     } else if (loseReason === "line_cleared") {
       titleEl.textContent = "LINE CLEARED!";
+    } else if (loseReason === "height_limit") {
+      titleEl.textContent = "TOO HIGH!";
     } else {
       titleEl.textContent = "OUT OF PIECES";
     }
@@ -175,6 +177,16 @@ function _showPuzzleCompleteOverlay(won, stars, isNewBest, puzzle, loseReason) {
         remainEl.textContent = "Score: " + score + " / " + wc.scoreTarget + " reached!";
       } else if (wc.mode === "reach_height") {
         remainEl.textContent = "Reached height " + (wc.targetHeight + 1) + " with 0 line clears!";
+      } else if (wc.mode === "perfect_clear") {
+        remainEl.textContent = "Perfect clear achieved!";
+      } else if (wc.mode === "combo") {
+        const curCombo = typeof sessionHighestComboCount !== "undefined" ? sessionHighestComboCount : 0;
+        remainEl.textContent = "Combo x" + curCombo + " achieved!";
+      } else if (wc.mode === "t_spin") {
+        const curTSpins = typeof sessionTSpins !== "undefined" ? sessionTSpins : 0;
+        remainEl.textContent = curTSpins + " T-Spin" + (curTSpins === 1 ? "" : "s") + " performed!";
+      } else if (wc.mode === "survival") {
+        remainEl.textContent = "All garbage cleared!";
       } else {
         remainEl.textContent = "All " + _puzzleInitialCount + " blocks cleared!";
       }
@@ -190,6 +202,21 @@ function _showPuzzleCompleteOverlay(won, stars, isNewBest, puzzle, loseReason) {
           remainEl.textContent = "A line was cleared — stacking only!";
         } else {
           remainEl.textContent = "Ran out of pieces before reaching height " + (wc.targetHeight + 1);
+        }
+      } else if (wc.mode === "perfect_clear") {
+        remainEl.textContent = "Board not empty — perfect clear requires a fully clean board";
+      } else if (wc.mode === "combo") {
+        const curCombo = typeof sessionHighestComboCount !== "undefined" ? sessionHighestComboCount : 0;
+        remainEl.textContent = "Best combo: " + curCombo + " / " + wc.n + " needed";
+      } else if (wc.mode === "t_spin") {
+        const curTSpins = typeof sessionTSpins !== "undefined" ? sessionTSpins : 0;
+        remainEl.textContent = "T-Spins: " + curTSpins + " / " + wc.n + " needed";
+      } else if (wc.mode === "survival") {
+        if (loseReason === "height_limit") {
+          remainEl.textContent = "Stack reached height limit — garbage not cleared in time";
+        } else {
+          const remaining = countRemainingPresetBlocks();
+          remainEl.textContent = remaining + " garbage block" + (remaining === 1 ? "" : "s") + " remaining";
         }
       } else {
         const remaining = countRemainingPresetBlocks();
@@ -541,6 +568,19 @@ function updatePuzzleHUD() {
     objective = "Height: " + curHeight + "/" + (wc.targetHeight + 1) +
       " | Lines: " + linesCleared + " (must be 0)" +
       " | Pieces: " + piecesLeft;
+  } else if (wc.mode === "perfect_clear") {
+    objective = "Perfect Clear | Pieces: " + piecesLeft;
+  } else if (wc.mode === "combo") {
+    const curCombo = typeof sessionHighestComboCount !== "undefined" ? sessionHighestComboCount : 0;
+    objective = "Combo: " + curCombo + "/" + wc.n + " | Pieces: " + piecesLeft;
+  } else if (wc.mode === "t_spin") {
+    const curTSpins = typeof sessionTSpins !== "undefined" ? sessionTSpins : 0;
+    objective = "T-Spins: " + curTSpins + "/" + wc.n + " | Pieces: " + piecesLeft;
+  } else if (wc.mode === "survival") {
+    const blocksLeft = countRemainingPresetBlocks();
+    const curHeight = _getMaxBlockHeight() + 1;
+    objective = "Clear: " + blocksLeft + " left | Height: " + curHeight + "/" + (wc.heightLimit || 8) +
+      " | Pieces: " + piecesLeft;
   } else {
     const blocksLeft = countRemainingPresetBlocks();
     objective = "Blocks: " + blocksLeft + "/" + _puzzleInitialCount + " | Pieces: " + piecesLeft;
@@ -624,7 +664,7 @@ function renderPuzzleSelectList(tabOverride) {
   listEl.innerHTML = "";
 
   // Update tab button active states
-  ["easy", "medium", "hard", "daily", "my"].forEach(function (tab) {
+  ["easy", "medium", "hard", "expert", "master", "daily", "my"].forEach(function (tab) {
     const btn = document.getElementById("puzzle-tab-" + tab);
     if (btn) btn.classList.toggle("puzzle-tab-active", tab === _activePuzzleDiffTab);
   });
@@ -808,11 +848,18 @@ function _escHtml(str) {
 function _winConditionLabel(wc) {
   if (!wc) return "Mine All";
   switch (wc.mode) {
-    case "mine_all":       return "Mine All Blocks";
-    case "clear_lines":    return "Clear " + (wc.n || 0) + " Lines";
-    case "survive_seconds":return "Survive " + (wc.n || 0) + "s";
-    case "score_points":   return "Score " + (wc.n || 0) + " pts";
-    default:               return wc.mode || "Mine All";
+    case "mine_all":        return "Mine All Blocks";
+    case "clear_lines":     return "Clear " + (wc.n || 0) + " Lines";
+    case "survive_seconds": return "Survive " + (wc.n || 0) + "s";
+    case "score_points":    return "Score " + (wc.n || 0) + " pts";
+    case "no_craft":        return "Mine All (No Crafting)";
+    case "timed_score":     return "Score " + (wc.scoreTarget || 0) + " in " + (wc.timeLimit || 0) + "s";
+    case "reach_height":    return "Reach Height " + ((wc.targetHeight || 0) + 1);
+    case "perfect_clear":   return "Perfect Clear";
+    case "combo":           return "Combo x" + (wc.n || 0);
+    case "t_spin":          return "T-Spin x" + (wc.n || 0);
+    case "survival":        return "Survival (clear before height " + (wc.heightLimit || 8) + ")";
+    default:                return wc.mode || "Mine All";
   }
 }
 
