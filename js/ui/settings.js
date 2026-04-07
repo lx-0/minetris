@@ -1511,6 +1511,59 @@ function initSettings() {
     });
   }
 
+  // ── Jukebox controls ──────────────────────────────────────────────────────
+  // Track buttons: Auto + tracks 0–4
+  const _jbAutoBtn = document.getElementById('jukebox-track-btn-auto');
+  if (_jbAutoBtn) {
+    _jbAutoBtn.addEventListener('click', function() {
+      if (typeof jukeboxSelectTrack === 'function') jukeboxSelectTrack(-1);
+    });
+  }
+  for (let _jbI = 0; _jbI < 5; _jbI++) {
+    (function(idx) {
+      const _btn = document.getElementById('jukebox-track-btn-' + idx);
+      if (_btn) {
+        _btn.addEventListener('click', function() {
+          if (typeof jukeboxSelectTrack === 'function') jukeboxSelectTrack(idx);
+        });
+      }
+    })(_jbI);
+  }
+
+  const _jbPrevBtn = document.getElementById('jukebox-prev-btn');
+  if (_jbPrevBtn) {
+    _jbPrevBtn.addEventListener('click', function() {
+      if (typeof jukeboxPrev === 'function') jukeboxPrev();
+    });
+  }
+
+  const _jbNextBtn = document.getElementById('jukebox-next-btn');
+  if (_jbNextBtn) {
+    _jbNextBtn.addEventListener('click', function() {
+      if (typeof jukeboxNext === 'function') jukeboxNext();
+    });
+  }
+
+  const _jbShuffleBtn = document.getElementById('jukebox-shuffle-btn');
+  if (_jbShuffleBtn) {
+    _jbShuffleBtn.addEventListener('click', function() {
+      if (typeof jukeboxToggleShuffle === 'function') {
+        const on = jukeboxToggleShuffle();
+        _jbShuffleBtn.setAttribute('aria-pressed', String(on));
+      }
+    });
+  }
+
+  const _jbVolSlider = document.getElementById('jukebox-vol-slider');
+  if (_jbVolSlider) {
+    _jbVolSlider.addEventListener('input', function() {
+      const v = parseInt(this.value, 10);
+      const lbl = document.getElementById('jukebox-vol-val');
+      if (lbl) lbl.textContent = v;
+      if (typeof jukeboxSetVolume === 'function') jukeboxSetVolume(v);
+    });
+  }
+
   const showOpponentEmotesToggle = document.getElementById("show-opponent-emotes-toggle");
   if (showOpponentEmotesToggle) {
     // Initialise from storage
@@ -1965,6 +2018,7 @@ function openSettings(onClose) {
   _syncKeybindTable();
   _syncLastExportLabel();
   _hideImportPreview();
+  if (typeof jukeboxSyncPanel === 'function') jukeboxSyncPanel();
   // Always start on the General tab.
   const paneGeneral  = document.getElementById("settings-pane-general");
   const paneControls = document.getElementById("settings-pane-controls");

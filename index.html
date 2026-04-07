@@ -680,6 +680,9 @@
       <!-- Daily streak badge (top-left HUD, below XP bar) -->
       <div id="hud-streak-badge" style="display:none;"></div>
 
+      <!-- Music mute HUD button (top-right, M key shortcut) -->
+      <button id="hud-music-mute-btn" title="Mute music (M)" aria-label="Mute music" style="position:fixed;top:10px;right:10px;z-index:180;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.25);border-radius:6px;color:#fff;font-size:14px;padding:4px 8px;cursor:pointer;font-family:inherit;line-height:1;" onclick="if(typeof toggleMusicMuteJukebox==='function')toggleMusicMuteJukebox();">&#127925;</button>
+
       <!-- Season HUD badge: shown in-game when < 14 days remain in the active season -->
       <div id="season-game-hud" style="display:none;">
         <span class="season-game-hud-icon">&#127942;</span>
@@ -1555,6 +1558,69 @@
           </div>
           <div class="settings-hint" data-i18n="settings.dynamic_music_hint">Tempo intensifies with stack height and game speed</div>
           <div class="settings-section-divider"></div>
+
+          <!-- ── Music Jukebox section ── -->
+          <div class="settings-section-heading" role="heading" aria-level="3">Music Jukebox</div>
+          <div class="settings-hint" style="margin-bottom:8px;">Select a background music track or leave on Auto for dynamic music.</div>
+          <div id="jukebox-tracklist" role="listbox" aria-label="Music tracks">
+            <button id="jukebox-track-btn-auto" class="jukebox-track-btn jukebox-track-active" role="option" aria-selected="true" title="Dynamic music — mood changes with gameplay">
+              <span class="jukebox-track-icon">&#127925;</span>
+              <span class="jukebox-track-info">
+                <span class="jukebox-track-name">Auto</span>
+                <span class="jukebox-track-hint">Dynamic — mood follows gameplay</span>
+              </span>
+            </button>
+            <button id="jukebox-track-btn-0" class="jukebox-track-btn" role="option" aria-selected="false" title="Calm — sparse piano and pads">
+              <span class="jukebox-track-icon">&#127876;</span>
+              <span class="jukebox-track-info">
+                <span class="jukebox-track-name">Calm</span>
+                <span class="jukebox-track-hint">Menu ambient &#8212; sparse piano &amp; pads</span>
+              </span>
+            </button>
+            <button id="jukebox-track-btn-1" class="jukebox-track-btn" role="option" aria-selected="false" title="Upbeat — bouncy bass and melody">
+              <span class="jukebox-track-icon">&#9835;</span>
+              <span class="jukebox-track-info">
+                <span class="jukebox-track-name">Upbeat</span>
+                <span class="jukebox-track-hint">Gameplay &#8212; bouncy bass &amp; melody</span>
+              </span>
+            </button>
+            <button id="jukebox-track-btn-2" class="jukebox-track-btn" role="option" aria-selected="false" title="Intense — driving rhythm">
+              <span class="jukebox-track-icon">&#9889;</span>
+              <span class="jukebox-track-info">
+                <span class="jukebox-track-name">Intense</span>
+                <span class="jukebox-track-hint">High speed &#8212; driving rhythm &amp; bass</span>
+              </span>
+            </button>
+            <button id="jukebox-track-btn-3" class="jukebox-track-btn" role="option" aria-selected="false" title="Retro — 8-bit chiptune">
+              <span class="jukebox-track-icon">&#127918;</span>
+              <span class="jukebox-track-info">
+                <span class="jukebox-track-name">Retro</span>
+                <span class="jukebox-track-hint">8-Bit &#8212; chiptune square-wave arpeggios</span>
+              </span>
+            </button>
+            <button id="jukebox-track-btn-4" class="jukebox-track-btn" role="option" aria-selected="false" title="Ambient — slow drones">
+              <span class="jukebox-track-icon">&#127807;</span>
+              <span class="jukebox-track-info">
+                <span class="jukebox-track-name">Ambient</span>
+                <span class="jukebox-track-hint">Zen mode &#8212; slow atmospheric drones</span>
+              </span>
+            </button>
+          </div>
+          <div id="jukebox-controls" style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <button id="jukebox-prev-btn" class="jukebox-ctrl-btn" title="Previous track" aria-label="Previous track">&#9664;</button>
+            <button id="jukebox-next-btn" class="jukebox-ctrl-btn" title="Next track" aria-label="Next track">&#9654;</button>
+            <button id="jukebox-shuffle-btn" class="jukebox-ctrl-btn" title="Toggle shuffle" aria-label="Toggle shuffle" aria-pressed="false">&#128256; Shuffle</button>
+          </div>
+          <div class="settings-row" style="margin-top:8px;">
+            <label class="settings-label" for="jukebox-vol-slider">Track Volume</label>
+            <input type="range" id="jukebox-vol-slider" class="vol-slider" min="0" max="100" value="60" aria-label="Jukebox track volume" aria-valuetext="60%">
+            <span class="vol-val" id="jukebox-vol-val" aria-hidden="true">60</span>
+          </div>
+          <div class="settings-hint">
+            Now playing: <span id="jukebox-now-playing" style="font-style:italic;">Auto (Dynamic)</span>
+          </div>
+          <div class="settings-section-divider"></div>
+
           <div class="settings-row settings-row-toggle">
             <label class="settings-label settings-label-toggle" for="show-opponent-emotes-toggle">Show Opponent Emotes</label>
             <label class="cb-toggle-switch">
@@ -3492,6 +3558,7 @@
     <script src="js/audio/audio-env.js"></script>
     <script src="js/audio/audio-sfx.js"></script>
     <script src="js/audio/audio-event.js"></script>
+    <script src="js/audio/jukebox.js"></script>
     <script src="js/world/worldmodifier.js"></script>
     <script src="js/world/biome-rules.js"></script>
     <script src="js/core/inventory.js"></script>

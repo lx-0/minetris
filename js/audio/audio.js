@@ -377,6 +377,8 @@ function initAudio() {
     _initBgMusic();
     _initEnvironmentalAudio();
     if (typeof _initEventAudio === 'function') _initEventAudio();
+    // Initialize jukebox synthesis now that masterCompressor exists.
+    if (typeof initJukebox === 'function') initJukebox();
     console.log("Tone.js musical bus initialized.");
   } else {
     console.warn("Tone.js not loaded — line-clear music disabled.");
@@ -764,8 +766,12 @@ function startBgMusic() {
 
   Tone.Transport.start();
 
-  // Fade in over 3 seconds (silenced if music is muted)
-  _amb.gain.gain.rampTo(_musicMuted ? 0 : _volMusic / 100, 3);
+  // If jukebox has a track selected, it overrides _amb — suppress _amb gain.
+  var _jbActive = (typeof _jbTrack !== 'undefined' && _jbTrack >= 0);
+  _amb.gain.gain.rampTo((_musicMuted || _jbActive) ? 0 : _volMusic / 100, 3);
+
+  // Notify jukebox to activate its track if one is selected.
+  if (typeof jukeboxOnBgMusicStart === 'function') jukeboxOnBgMusicStart();
 
   // Start environmental soundscapes alongside music
   startEnvironmentalAudio();
@@ -789,6 +795,9 @@ function stopBgMusic() {
     _amb.pulseLoopId = null;
   }
   if (_amb.pulseGain) _amb.pulseGain.gain.cancelScheduledValues(Tone.now());
+
+  // Notify jukebox to fade out
+  if (typeof jukeboxOnBgMusicStop === 'function') jukeboxOnBgMusicStop();
 
   // 3 second fade out
   _amb.gain.gain.rampTo(0, 3);

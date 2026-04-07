@@ -108,6 +108,11 @@ function onKeyDown(event) {
     if (typeof toggleInputDisplay === 'function') toggleInputDisplay();
     return;
   }
+  // M: toggle music mute (works any time).
+  if (event.code === 'KeyM' && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+    if (typeof toggleMusicMuteJukebox === 'function') toggleMusicMuteJukebox();
+    return;
+  }
   // Replay: handle speed keys, pause, and Escape; all other input is blocked.
   if (typeof isReplayMode !== 'undefined' && isReplayMode) {
     if (event.code === 'Digit0' && typeof replaySetSpeed === 'function') replaySetSpeed(0.5);

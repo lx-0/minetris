@@ -182,6 +182,8 @@ function animate() {
       if (typeof updateMusicTempo === 'function') {
         var _speedMult = (typeof difficultyMultiplier !== 'undefined') ? difficultyMultiplier : 1.0;
         updateMusicTempo(_heightRatio, _speedMult);
+        // Notify jukebox of speed changes (no-op in auto mode)
+        if (typeof jukeboxAutoSwitch === 'function') jukeboxAutoSwitch(_speedMult);
       }
 
       // Update level-based tempo and pulse layer (BPM = 80 + level*5, capped 160)
