@@ -1664,6 +1664,7 @@ function initSettings() {
   _initCloudSyncSection();
   if (typeof initCloudSync === 'function') initCloudSync();
   if (typeof initThemeEditor === 'function') initThemeEditor();
+  if (typeof initUIThemes === 'function') initUIThemes();
 
   // Escape closes the settings overlay
   document.addEventListener('keydown', function (e) {

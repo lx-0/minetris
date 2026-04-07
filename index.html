@@ -1563,6 +1563,42 @@
           </div>
           <div id="settings-displayname-feedback"></div>
           <div class="settings-section-divider"></div>
+
+          <!-- ── UI Theme Customization (MINAA-500) ── -->
+          <div id="ui-theme-section">
+            <div class="settings-label settings-label-section">UI Theme</div>
+            <div class="settings-hint" style="margin-bottom:8px">Choose an overall look. Affects menus, HUD, panels, and background.</div>
+            <div id="ui-theme-selector">
+              <button id="ui-theme-btn-classic" class="ui-theme-btn ui-theme-btn-selected" title="Classic — matrix green terminal">
+                <span class="ui-theme-btn-icon">&#x1F7E9;</span>
+                <span class="ui-theme-btn-name">Classic</span>
+              </button>
+              <button id="ui-theme-btn-dark" class="ui-theme-btn" title="Dark Mode — dark background, muted colors">
+                <span class="ui-theme-btn-icon">&#x1F319;</span>
+                <span class="ui-theme-btn-name">Dark</span>
+              </button>
+              <button id="ui-theme-btn-high-contrast" class="ui-theme-btn" title="High Contrast — WCAG AA compliant, bold outlines">
+                <span class="ui-theme-btn-icon">&#x26AB;</span>
+                <span class="ui-theme-btn-name">Hi-Contrast</span>
+              </button>
+              <button id="ui-theme-btn-neon" class="ui-theme-btn" title="Neon — cyberpunk purple and cyan glow">
+                <span class="ui-theme-btn-icon">&#x26A1;</span>
+                <span class="ui-theme-btn-name">Neon</span>
+              </button>
+              <button id="ui-theme-btn-retro" class="ui-theme-btn" title="Retro — amber terminal style">
+                <span class="ui-theme-btn-icon">&#x1F4FA;</span>
+                <span class="ui-theme-btn-name">Retro</span>
+              </button>
+            </div>
+            <div class="settings-hint" style="margin:8px 0 4px">Background</div>
+            <div id="ui-bg-mode-selector">
+              <button id="ui-bg-btn-solid" class="ui-bg-btn ui-bg-btn-selected" title="Solid background color">Solid</button>
+              <button id="ui-bg-btn-gradient" class="ui-bg-btn" title="Radial gradient background">Gradient</button>
+              <button id="ui-bg-btn-particles" class="ui-bg-btn" title="Animated floating particles">Particles</button>
+            </div>
+          </div>
+          <div class="settings-section-divider"></div>
+
           <div class="settings-label settings-label-section" data-i18n="settings.block_skin_theme">Block Skin Theme</div>
           <div id="theme-selector">
             <button id="theme-btn-classic" class="theme-btn theme-btn-selected" title="Classic">
@@ -3307,6 +3343,7 @@
     <script src="js/social/community-goals.js"></script>
     <script src="js/events/seasonal-events.js"></script>
     <script src="js/ui/theme-editor.js"></script>
+    <script src="js/themes.js"></script>
     <script src="js/cloud/sync.js"></script>
     <script src="js/debug.js"></script>
     <script>

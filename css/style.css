@@ -23097,3 +23097,269 @@ body.hc-mode .lang-btn-active { background: #ff0 !important; color: #000 !import
 }
 .rooms-start-btn:hover:not(:disabled) { background: rgba(100, 255, 100, 0.32); }
 .rooms-start-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UI Theme System (MINAA-500) — CSS custom properties + theme class overrides
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Default CSS custom properties (Classic theme) */
+:root {
+  --ui-bg:           #1a1a2e;
+  --ui-panel-bg:     #111111;
+  --ui-panel-border: #00ff00;
+  --ui-text:         #00ff00;
+  --ui-text-dim:     #007700;
+  --ui-accent:       #00ff00;
+  --ui-glow:         rgba(0,255,0,0.3);
+  --ui-input-bg:     #222222;
+  --ui-input-border: #00ff00;
+}
+
+/* Theme transition — smooth 300ms fade on key properties */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+#settings-panel,
+#profile-panel,
+#settings-overlay,
+#profile-overlay,
+.notif-toast,
+#pause-menu,
+#blocker {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* ── Apply CSS variables to key UI panels ── */
+#settings-panel {
+  background: var(--ui-panel-bg);
+  border-color: var(--ui-panel-border);
+  box-shadow: 0 0 30px var(--ui-glow);
+}
+#settings-title {
+  color: var(--ui-text);
+  text-shadow: 0 0 10px var(--ui-accent);
+}
+.settings-label { color: var(--ui-text); }
+.settings-hint  { color: var(--ui-text-dim); }
+.settings-select {
+  background: var(--ui-input-bg);
+  color: var(--ui-text);
+  border-color: var(--ui-input-border);
+}
+.settings-tab {
+  color: var(--ui-text-dim);
+  border-bottom-color: transparent;
+}
+.settings-tab-active, .settings-tab:hover {
+  color: var(--ui-text);
+  border-bottom-color: var(--ui-accent);
+}
+#settings-close-btn {
+  color: var(--ui-text);
+  border-color: var(--ui-panel-border);
+}
+
+/* Profile panel */
+#profile-panel {
+  background: var(--ui-panel-bg);
+  border-color: var(--ui-panel-border);
+}
+#profile-page-title { color: var(--ui-text); }
+
+/* Score / HUD */
+#score-display {
+  border-color: var(--ui-panel-border);
+  color: var(--ui-text);
+}
+.hud-score { color: var(--ui-text); }
+.hud-stat  { color: var(--ui-text-dim); }
+
+/* Notifications */
+.notif-toast {
+  background: var(--ui-panel-bg);
+  border-color: var(--ui-panel-border);
+  color: var(--ui-text);
+}
+
+/* Pause menu */
+#pause-menu {
+  color: var(--ui-text);
+}
+
+/* ── UI Theme selector widget ── */
+#ui-theme-section {
+  width: 100%;
+}
+#ui-theme-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ui-theme-btn {
+  flex: 1 1 calc(33% - 8px);
+  min-width: 90px;
+  padding: 8px 4px 6px;
+  background: #1a1a2e;
+  border: 2px solid #333;
+  border-radius: 4px;
+  color: #888;
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  cursor: pointer;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.ui-theme-btn:hover { border-color: var(--ui-accent); color: var(--ui-text); }
+.ui-theme-btn-selected {
+  border-color: var(--ui-accent) !important;
+  background: rgba(128,128,128,0.15);
+  color: var(--ui-text) !important;
+  box-shadow: 0 0 8px var(--ui-glow);
+}
+.ui-theme-btn-icon { font-size: 16px; line-height: 1; }
+.ui-theme-btn-name { font-size: 6px; }
+
+/* ── Background mode selector ── */
+#ui-bg-mode-selector {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.ui-bg-btn {
+  flex: 1;
+  padding: 6px 4px;
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #666;
+  font-family: "Press Start 2P", cursive;
+  font-size: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s, color 0.2s;
+}
+.ui-bg-btn:hover { border-color: var(--ui-accent); color: var(--ui-text-dim); }
+.ui-bg-btn-selected {
+  border-color: var(--ui-accent);
+  color: var(--ui-text);
+  background: rgba(128,128,128,0.12);
+}
+
+/* ── Dark Mode UI theme body overrides ── */
+body.ui-theme-dark #settings-panel,
+body.ui-theme-dark #profile-panel {
+  background: var(--ui-panel-bg);
+  border-color: var(--ui-panel-border);
+}
+body.ui-theme-dark {
+  background-color: #0d0d0d;
+  color: #e0e0e0;
+}
+body.ui-theme-dark .theme-btn,
+body.ui-theme-dark .ui-theme-btn,
+body.ui-theme-dark .ui-bg-btn {
+  background: #1e1e1e;
+  color: #aaa;
+  border-color: #444;
+}
+body.ui-theme-dark .theme-btn-selected,
+body.ui-theme-dark .ui-theme-btn-selected {
+  border-color: #4fc3f7;
+  box-shadow: 0 0 8px rgba(79,195,247,0.3);
+}
+
+/* ── High Contrast UI theme body overrides ── */
+body.ui-theme-high-contrast {
+  background-color: #000;
+  color: #fff;
+}
+body.ui-theme-high-contrast #settings-panel,
+body.ui-theme-high-contrast #profile-panel {
+  background: #000;
+  border: 3px solid #fff;
+  box-shadow: none;
+}
+body.ui-theme-high-contrast .settings-label { color: #fff; font-weight: bold; }
+body.ui-theme-high-contrast .settings-hint  { color: #ccc; }
+body.ui-theme-high-contrast #score-display  { border: 3px solid #fff; }
+body.ui-theme-high-contrast .hud-score      { color: #fff; text-shadow: none; }
+/* WCAG AA: bold outlines on pieces via canvas — handled by applyUITheme body class */
+body.ui-theme-high-contrast .theme-btn      { border-width: 3px; }
+body.ui-theme-high-contrast .theme-btn-locked { opacity: 0.5; }
+body.ui-theme-high-contrast .ui-theme-btn   {
+  background: #111;
+  color: #ccc;
+  border: 2px solid #555;
+}
+body.ui-theme-high-contrast .ui-theme-btn-selected {
+  border-color: #ffff00 !important;
+  color: #ffff00 !important;
+  box-shadow: 0 0 6px rgba(255,255,0,0.5);
+}
+
+/* ── Neon UI theme body overrides ── */
+body.ui-theme-neon {
+  background-color: #0a0015;
+  color: #ff00ff;
+}
+body.ui-theme-neon #settings-panel,
+body.ui-theme-neon #profile-panel {
+  background: #100025;
+  border-color: #cc00ff;
+  box-shadow: 0 0 40px rgba(204,0,255,0.3), 0 0 80px rgba(0,255,255,0.1);
+}
+body.ui-theme-neon #settings-title,
+body.ui-theme-neon #profile-page-title {
+  color: #00ffff;
+  text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+}
+body.ui-theme-neon .hud-score { color: #ff00ff; text-shadow: 0 0 10px #ff00ff; }
+body.ui-theme-neon #score-display { border-color: #cc00ff; box-shadow: 0 0 12px rgba(204,0,255,0.4); }
+body.ui-theme-neon .ui-theme-btn  { background: #1a002a; color: #aa00cc; border-color: #440066; }
+body.ui-theme-neon .ui-theme-btn-selected {
+  border-color: #00ffff !important;
+  color: #00ffff !important;
+  box-shadow: 0 0 10px rgba(0,255,255,0.5);
+}
+body.ui-theme-neon .notif-toast {
+  background: #100025;
+  border-color: #cc00ff;
+  color: #ff00ff;
+}
+
+/* ── Retro UI theme body overrides ── */
+body.ui-theme-retro {
+  background-color: #1a0d00;
+  color: #ffaa00;
+}
+body.ui-theme-retro #settings-panel,
+body.ui-theme-retro #profile-panel {
+  background: #110800;
+  border-color: #ff8800;
+  box-shadow: 0 0 30px rgba(255,136,0,0.25);
+}
+body.ui-theme-retro #settings-title,
+body.ui-theme-retro #profile-page-title {
+  color: #ffaa00;
+  text-shadow: 0 0 8px #ff8800;
+}
+body.ui-theme-retro .hud-score { color: #ffaa00; text-shadow: 0 0 8px #ff8800; }
+body.ui-theme-retro #score-display { border-color: #ff8800; }
+body.ui-theme-retro .settings-label { color: #ffaa00; }
+body.ui-theme-retro .settings-hint  { color: #884400; }
+body.ui-theme-retro .ui-theme-btn   { background: #220e00; color: #884400; border-color: #442200; }
+body.ui-theme-retro .ui-theme-btn-selected {
+  border-color: #ff8800 !important;
+  color: #ffaa00 !important;
+  box-shadow: 0 0 8px rgba(255,136,0,0.4);
+}
+body.ui-theme-retro .notif-toast {
+  background: #110800;
+  border-color: #ff8800;
+  color: #ffaa00;
+}
