@@ -613,6 +613,11 @@ function init() {
           if (typeof updatePuzzleHUD === "function") updatePuzzleHUD();
         }
       }
+
+      // Training mode: place scenario board, init fixed piece queue, capture initial snapshot
+      if (typeof isTrainingMode !== "undefined" && isTrainingMode) {
+        if (typeof setupTrainingGame === "function") setupTrainingGame();
+      }
       // Show equipped power-up HUD badge if applicable
       updatePowerupHUD();
 

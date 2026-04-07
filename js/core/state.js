@@ -591,6 +591,11 @@ let isPracticeMode      = false;
 let practiceUndoEnabled = true;
 let practiceUndoHistory = [];
 
+// ── Training mode state ───────────────────────────────────────────────────────
+// isTrainingMode: true while a Training scenario session is active.
+// Training scenarios are managed by js/modes/training.js.
+let isTrainingMode = false;
+
 // ── Zen mode state ────────────────────────────────────────────────────────────
 // Relaxed endless mode: no time pressure, no game-over from block height,
 // slow fixed fall speed, ambient visuals, and a meditation (elapsed) timer.

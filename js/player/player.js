@@ -263,7 +263,17 @@ function onKeyDown(event) {
         if (typeof undoPracticePlacement === "function") undoPracticePlacement();
         break;
       }
+      if (typeof isTrainingMode !== 'undefined' && isTrainingMode) {
+        if (typeof undoTrainingPlacement === "function") undoTrainingPlacement();
+        break;
+      }
       if (typeof dasKeyDown === 'function') dasKeyDown('z');
+      break;
+    case "KeyY":
+      if (typeof isTrainingMode !== 'undefined' && isTrainingMode) {
+        if (typeof redoTrainingPlacement === "function") redoTrainingPlacement();
+        break;
+      }
       break;
     case "KeyX":
       if (isCoopMode && typeof coopEmote !== 'undefined') {

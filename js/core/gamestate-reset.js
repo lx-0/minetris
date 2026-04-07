@@ -387,6 +387,9 @@ function resetGame() {
   if (practiceCompleteEl) practiceCompleteEl.style.display = "none";
   const practiceBadgeEl = document.getElementById("practice-badge");
   if (practiceBadgeEl) practiceBadgeEl.style.display = "none";
+
+  // Reset training mode state
+  if (typeof resetTrainingMode === "function") resetTrainingMode();
   // Reset gravity direction and hide indicator
   gravityDirection = 'down';
   const gravIndicatorEl = document.getElementById("gravity-indicator");

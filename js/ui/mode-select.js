@@ -1198,6 +1198,31 @@
   }
 })();
 
+// ── Training mode card ────────────────────────────────────────────────────────
+(function _initTrainingCard() {
+  var trainingCardEl = document.getElementById('mode-card-training');
+  if (!trainingCardEl) return;
+
+  trainingCardEl.addEventListener('click', function () {
+    hideModeSelect();
+    if (typeof showTrainingSelect === 'function') showTrainingSelect();
+  });
+
+  // Update personal best count on card
+  function _updateTrainingCardPb() {
+    var pbEl = document.getElementById('mode-pb-training');
+    if (!pbEl) return;
+    try {
+      var raw = localStorage.getItem('mineCtris_trainingProgress');
+      var prog = raw ? JSON.parse(raw) : {};
+      var completed = Object.values(prog).filter(function (v) { return v && v.completed; }).length;
+      var total = 10; // number of built-in scenarios
+      pbEl.textContent = completed > 0 ? completed + '/' + total + ' scenarios done' : '';
+    } catch (_) {}
+  }
+  _updateTrainingCardPb();
+})();
+
 // ── Tutorial mode card ────────────────────────────────────────────────────────
 (function _initTutorialCard() {
   var tutorialCardEl = document.getElementById('mode-card-tutorial');

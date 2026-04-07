@@ -399,6 +399,12 @@
                   </div>
                   <div class="mode-card-pb" id="mode-pb-practice"></div>
                 </div>
+                <div class="mode-card mode-card-training" id="mode-card-training" tabindex="0" role="button" aria-label="Training mode — Practice specific scenarios with configurable board states">
+                  <div class="mode-card-icon">&#127919;</div>
+                  <div class="mode-card-name">Training</div>
+                  <div class="mode-card-desc">T-Spins, combos, speed drills, garbage clearing. Custom boards.</div>
+                  <div class="mode-card-pb" id="mode-pb-training"></div>
+                </div>
                 <div class="mode-card mode-card-zen" id="mode-card-zen" data-mode="zen" tabindex="0" role="button" aria-label="Zen mode — Relaxing play with no time pressure, ambient visuals, and meditation timer">
                   <div class="mode-card-icon">&#129666;</div>
                   <div class="mode-card-name">Zen</div>
@@ -695,6 +701,21 @@
 
       <!-- Practice mode badge (shown during practice runs) -->
       <div id="practice-badge" style="display:none;">&#127979; Practice — not scored</div>
+
+      <!-- Training mode HUD elements -->
+      <div id="training-badge" style="display:none;"></div>
+      <div id="training-goal-display" style="display:none;position:fixed;top:54px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);color:#ffd700;font-size:10px;font-family:'Press Start 2P',cursive;padding:5px 14px;border-radius:4px;pointer-events:none;z-index:151;white-space:nowrap;border:1px solid rgba(255,215,0,0.4);text-shadow:0 0 8px #ffd700;"></div>
+      <div id="training-guidance-tip" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:#a0ffb0;font-size:9px;font-family:'Press Start 2P',cursive;padding:6px 14px;border-radius:4px;pointer-events:none;z-index:151;max-width:320px;text-align:center;border:1px solid rgba(80,200,100,0.3);line-height:1.6;"></div>
+      <div id="training-speed-hud" style="display:none;position:fixed;top:10px;right:14px;flex-direction:column;align-items:flex-end;gap:4px;pointer-events:none;z-index:151;">
+        <div id="training-ppm-display" style="font-family:'Press Start 2P',cursive;font-size:10px;color:#ffe040;text-shadow:0 0 6px #ffe040;background:rgba(0,0,0,0.5);padding:4px 8px;border-radius:3px;">PPM: 0</div>
+        <div id="training-timer-display" style="font-family:'Press Start 2P',cursive;font-size:10px;color:#fff;background:rgba(0,0,0,0.5);padding:4px 8px;border-radius:3px;">--:--</div>
+      </div>
+      <div id="training-undo-hud" style="position:fixed;bottom:10px;right:14px;display:none;gap:8px;align-items:center;pointer-events:auto;z-index:151;font-family:'Press Start 2P',cursive;font-size:8px;color:#aaa;">
+        <span>Undo: <span id="training-undo-count">0</span></span>
+        <span>Redo: <span id="training-redo-count">0</span></span>
+        <button id="training-reset-btn" style="font-family:'Press Start 2P',cursive;font-size:7px;background:rgba(255,80,80,0.15);color:#ff8080;border:1px solid rgba(255,80,80,0.4);padding:3px 8px;border-radius:3px;cursor:pointer;">&#8635; Reset</button>
+        <button id="training-guidance-btn" style="font-family:'Press Start 2P',cursive;font-size:7px;background:rgba(80,200,100,0.15);color:#80ff90;border:1px solid rgba(80,200,100,0.4);padding:3px 8px;border-radius:3px;cursor:pointer;">&#128065; Guidance ON</button>
+      </div>
 
       <!-- Gravity direction indicator (shown in Practice mode when gravity != 'down') -->
       <div id="gravity-indicator" style="display:none;position:fixed;top:54px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.55);color:#7df;font-size:13px;font-family:monospace;padding:4px 12px;border-radius:6px;pointer-events:none;z-index:900;letter-spacing:0.05em;border:1px solid rgba(100,200,255,0.3);"></div>
@@ -1100,6 +1121,64 @@
         <div id="cc-xp-earned" class="xp-earned-display"></div>
         <button id="cc-play-again-btn">Play Again</button>
         <button id="cc-main-menu-btn">Main Menu</button>
+      </div>
+
+      <!-- Training scenario select screen -->
+      <div id="training-select-screen" style="display:none;flex-direction:column;align-items:center;justify-content:flex-start;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.93);z-index:190;overflow-y:auto;padding:24px 12px;">
+        <div id="training-select-inner" style="max-width:700px;width:100%;">
+          <div id="training-select-title">TRAINING MODE</div>
+          <div id="training-select-hint">Practice specific skills. No leaderboard. Undo/redo anytime (Z / Y).</div>
+          <div id="training-tab-bar">
+            <button class="training-tab-btn training-tab-active" data-cat="tspin">🔄 T-Spin</button>
+            <button class="training-tab-btn" data-cat="combo">🔥 Combo</button>
+            <button class="training-tab-btn" data-cat="speed">⚡ Speed</button>
+            <button class="training-tab-btn" data-cat="garbage">🗑 Garbage</button>
+            <button class="training-tab-btn" data-cat="perfect">💎 Perfect</button>
+            <button class="training-tab-btn" data-cat="custom">📐 Custom</button>
+          </div>
+          <div id="training-scenario-list"></div>
+          <div id="training-select-actions">
+            <button id="training-open-editor-btn">📐 Board Editor</button>
+            <button id="training-select-back">&#8592; Back</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Training board editor screen -->
+      <div id="training-editor-screen" style="display:none;flex-direction:column;align-items:center;justify-content:flex-start;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:195;overflow-y:auto;padding:24px 12px;">
+        <div id="training-editor-inner" style="max-width:600px;width:100%;">
+          <div id="training-editor-title">BOARD EDITOR</div>
+          <div id="training-editor-hint">Click to place, Shift+click to erase. Right-click also erases.</div>
+          <div id="training-editor-name-row" style="display:flex;gap:8px;align-items:center;margin:10px 0;">
+            <label style="font-family:'Press Start 2P',cursive;font-size:8px;color:#aaa;">Name:</label>
+            <input id="training-editor-name" type="text" placeholder="My Board" maxlength="24" style="font-family:'Press Start 2P',cursive;font-size:9px;background:#1a1a1a;border:1px solid #555;color:#fff;padding:6px 10px;border-radius:4px;width:180px;" />
+          </div>
+          <div id="training-editor-color-bar">
+            <span style="font-family:'Press Start 2P',cursive;font-size:8px;color:#aaa;margin-right:6px;">Block:</span>
+            <span class="training-editor-color training-editor-color-active" data-color-idx="2" style="background:#8c8c8c;" title="Stone"></span>
+            <span class="training-editor-color" data-color-idx="3" style="background:#d4af37;" title="Gold"></span>
+            <span class="training-editor-color" data-color-idx="4" style="background:#a0e0ff;" title="Ice"></span>
+            <span class="training-editor-color" data-color-idx="5" style="background:#7ec850;" title="Moss"></span>
+            <span class="training-editor-color" data-color-idx="6" style="background:#cc3300;" title="Lava"></span>
+            <span class="training-editor-color" data-color-idx="7" style="background:#9966cc;" title="Crystal"></span>
+          </div>
+          <div id="training-editor-grid" style="display:grid;gap:2px;margin:12px 0;border:2px solid #333;padding:4px;background:#111;"></div>
+          <div id="training-editor-btns" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="training-editor-save" style="background:#7be857;color:#000;">💾 Save Board</button>
+            <button id="training-editor-clear">🗑 Clear</button>
+            <button id="training-editor-back">&#8592; Back</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Training complete screen -->
+      <div id="training-complete-screen" style="display:none;">
+        <div id="training-complete-title">GOAL ACHIEVED!</div>
+        <div id="training-complete-subtitle"></div>
+        <div id="training-complete-stats"></div>
+        <button id="training-retry-btn">Try Again</button>
+        <button id="training-select-btn">Scenario Select</button>
+        <button id="training-main-menu-btn">Main Menu</button>
       </div>
 
       <!-- Puzzle select screen -->
@@ -3340,6 +3419,7 @@
     <script src="js/modes/combo-challenge.js"></script>
     <script src="js/modes/countdown.js"></script>
     <script src="js/modes/practice.js"></script>
+    <script src="js/modes/training.js"></script>
     <script src="js/modes/zen.js"></script>
     <script src="js/modes/puzzle.js"></script>
     <script src="js/modes/puzzle-completion.js"></script>

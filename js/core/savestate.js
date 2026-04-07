@@ -53,6 +53,8 @@ function saveGameState() {
     if (typeof capturePracticeSnapshot === "function") capturePracticeSnapshot();
     return;
   }
+  // Training mode: state managed by training.js undo stack, not localStorage
+  if (typeof isTrainingMode !== 'undefined' && isTrainingMode) return;
   // Zen mode: no mid-session savestate needed (endless, no critical progress)
   if (isZenMode) return;
 

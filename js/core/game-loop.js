@@ -310,6 +310,10 @@ function animate() {
         if ((isPuzzleMode || isCustomPuzzleMode) && typeof updatePuzzleHUD === "function") updatePuzzleHUD();
       }
       updateLineClear(delta);
+      // Training mode: update speed drill HUD every frame
+      if (typeof isTrainingMode !== 'undefined' && isTrainingMode && typeof updateTrainingSpeedHUD === 'function') {
+        updateTrainingSpeedHUD();
+      }
       // Weather disabled on Low/Medium; seasonal particles disabled on Low only.
       if (graphicsQualityTier !== 'low' && graphicsQualityTier !== 'medium' &&
           typeof updateWeather === 'function') updateWeather(delta);

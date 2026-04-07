@@ -488,6 +488,17 @@ function checkLineClear(newBlocks) {
     && (_lcIsTSpin || completeLevels.length >= 4);
   const _b2bMult = _isB2B ? 1.5 : 1.0;
   if (_isB2B && typeof sessionB2BCount !== 'undefined') sessionB2BCount++;
+
+  // Training mode: check goal after line clear
+  if (typeof isTrainingMode !== 'undefined' && isTrainingMode && typeof checkTrainingGoal === 'function') {
+    checkTrainingGoal({
+      tspinType: _lcIsTSpin ? (_lcIsMiniTSpin ? 'mini' : 'full') : '',
+      linesJustCleared: completeLevels.length,
+      combo: typeof comboCount !== 'undefined' ? comboCount : 0,
+      b2b: _isB2B,
+      isPerfectClear: _lcPerfectClear,
+    });
+  }
   let baseScore;
   if (_lcIsTSpin) {
     const _fullTSpinScores = [400, 800, 1200, 1600];

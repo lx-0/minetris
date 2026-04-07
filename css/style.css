@@ -23723,3 +23723,326 @@ body.ui-theme-retro .notif-toast {
   70%  { opacity:1; transform: scale(1); }
   100% { opacity:0; }
 }
+
+/* ── Training mode ── */
+
+/* Training mode card — gold/target accent */
+.mode-card-training {
+  border-color: rgba(255, 200, 0, 0.5);
+  box-shadow: 0 0 14px rgba(255, 200, 0, 0.1);
+}
+.mode-card-training .mode-card-name {
+  color: #ffd700;
+  text-shadow: 0 0 6px #ffd700;
+}
+.mode-card-training .mode-card-desc {
+  color: #fff0a0;
+}
+.mode-card-training:hover {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 22px rgba(255, 200, 0, 0.4) !important;
+}
+.mode-card-training.mode-card-highlighted {
+  border-color: #ffd700;
+  box-shadow: 0 0 28px rgba(255, 200, 0, 0.55);
+}
+
+/* Training mode HUD badge */
+#training-badge {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: #ffd700;
+  text-shadow: 0 0 8px #ffd700;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4px 10px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 150;
+  white-space: nowrap;
+}
+
+/* Training complete screen */
+#training-complete-screen {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 200;
+}
+#training-complete-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 2em;
+  color: #ffd700;
+  text-shadow: 3px 3px #7a6000;
+  margin-bottom: 10px;
+}
+#training-complete-subtitle {
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: rgba(255, 215, 0, 0.6);
+  letter-spacing: 2px;
+  margin-bottom: 28px;
+}
+#training-complete-stats {
+  display: flex;
+  gap: 28px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 11px;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 36px;
+}
+#training-complete-stats > div {
+  line-height: 1.8;
+}
+#training-retry-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 12px;
+  color: #000;
+  background: #ffd700;
+  border: none;
+  padding: 14px 28px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  transition: background 0.15s;
+}
+#training-retry-btn:hover { background: #fff; }
+#training-select-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 10px;
+  color: #000;
+  background: #a0e060;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  transition: background 0.15s;
+}
+#training-select-btn:hover { background: #fff; }
+#training-main-menu-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 10px;
+  color: #fff;
+  background: rgba(60, 60, 60, 0.8);
+  border: 1px solid #555;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+#training-main-menu-btn:hover { background: rgba(100, 100, 100, 0.8); }
+
+/* Training scenario select screen */
+#training-select-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 1.6em;
+  color: #ffd700;
+  text-shadow: 2px 2px #7a6000;
+  text-align: center;
+  margin-bottom: 6px;
+}
+#training-select-hint {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #888;
+  text-align: center;
+  margin-bottom: 16px;
+  letter-spacing: 0.04em;
+}
+#training-tab-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.training-tab-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  background: rgba(255, 215, 0, 0.08);
+  color: #aaa;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.training-tab-btn:hover,
+.training-tab-btn.training-tab-active {
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+  border-color: #ffd700;
+}
+
+#training-scenario-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.training-scenario-card {
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 6px;
+  padding: 12px 16px;
+  cursor: default;
+}
+.training-scenario-card.training-scenario-done {
+  border-color: rgba(100, 220, 80, 0.4);
+  background: rgba(100, 220, 80, 0.05);
+}
+.tsc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.tsc-name {
+  font-family: "Press Start 2P", cursive;
+  font-size: 10px;
+  color: #ffd700;
+}
+.training-scenario-done .tsc-name {
+  color: #7be857;
+}
+.tsc-desc {
+  font-size: 11px;
+  color: #bbb;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.tsc-stats {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: #777;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.tsc-start-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  color: #000;
+  background: #ffd700;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.tsc-start-btn:hover { background: #fff; }
+.tsc-delete-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #ff8080;
+  background: rgba(255, 80, 80, 0.1);
+  border: 1px solid rgba(255, 80, 80, 0.3);
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+.tsc-empty {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #666;
+  text-align: center;
+  padding: 20px;
+}
+
+#training-select-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+#training-open-editor-btn, #training-select-back {
+  font-family: "Press Start 2P", cursive;
+  font-size: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ccc;
+  border: 1px solid #555;
+  padding: 9px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+#training-open-editor-btn:hover, #training-select-back:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* Board editor */
+#training-editor-title {
+  font-family: "Press Start 2P", cursive;
+  font-size: 1.4em;
+  color: #ffd700;
+  text-align: center;
+  margin-bottom: 6px;
+}
+#training-editor-hint {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #777;
+  text-align: center;
+  margin-bottom: 12px;
+}
+#training-editor-color-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.training-editor-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+  border: 2px solid #444;
+  cursor: pointer;
+  display: inline-block;
+  transition: border-color 0.1s;
+}
+.training-editor-color:hover,
+.training-editor-color-active {
+  border-color: #ffd700;
+}
+.training-editor-cell {
+  width: 28px;
+  height: 28px;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  cursor: crosshair;
+  transition: background 0.05s;
+}
+.training-editor-cell:hover {
+  border-color: #555;
+  filter: brightness(1.3);
+}
+
+#training-editor-btns button {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  padding: 8px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid #555;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ccc;
+  transition: background 0.12s;
+}
+#training-editor-btns button:hover { background: rgba(255,255,255,0.14); color: #fff; }
+#training-editor-save { background: rgba(120, 220, 80, 0.2) !important; color: #7be857 !important; border-color: rgba(120, 220, 80, 0.4) !important; }
+#training-editor-save:hover { background: rgba(120, 220, 80, 0.35) !important; }

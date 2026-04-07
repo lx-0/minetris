@@ -466,6 +466,32 @@ function spawnFallingPiece() {
     return;
   }
 
+  // In Training mode, draw from the training fixed queue (loops automatically).
+  if (typeof isTrainingMode !== 'undefined' && isTrainingMode) {
+    const next = typeof drawTrainingPiece === 'function' ? drawTrainingPiece() : null;
+    if (next) {
+      const piece3D = createPiece3D(next.shape, next.index);
+      const spawnX = (_rng() - 0.5) * (WORLD_SIZE * 0.8);
+      const spawnZ = (_rng() - 0.5) * (WORLD_SIZE * 0.8);
+      _applyGravitySpawn(piece3D, spawnX, spawnZ, (GRAVITY / 4) * difficultyMultiplier * speedModifierMultiplier * _fallMult);
+      piece3D.userData.colorIndex = next.index;
+      piece3D.userData.timeSinceRotation = 0;
+      piece3D.userData.rotationInterval =
+        _rng() * (MAX_ROTATION_INTERVAL - MIN_ROTATION_INTERVAL) + MIN_ROTATION_INTERVAL;
+      piece3D.userData.nudgeOffsetX = 0;
+      piece3D.userData.nudgeOffsetZ = 0;
+      piece3D.userData.nudgePulseEnd = -1;
+      piece3D.userData.shapeMatrix = next.shape.map(function (row) { return row.slice(); });
+      piece3D.userData.rotState = 0;
+      piece3D.userData.lastRotWasKick = false;
+      fallingPiecesGroup.add(piece3D);
+      fallingPieces.push(piece3D);
+      createPieceShadow(piece3D);
+      createPieceTrail(piece3D);
+      return;
+    }
+  }
+
   // In Puzzle mode, draw from the fixed queue; stop spawning when exhausted.
   if (isPuzzleMode) {
     const next = typeof drawPuzzlePiece === "function" ? drawPuzzlePiece() : null;
@@ -1579,6 +1605,10 @@ function updateFallingPieces(delta) {
     if (isPuzzleMode || isCustomPuzzleMode) {
       if (typeof checkPuzzleConditions === "function") checkPuzzleConditions();
       if (!isPuzzleMode) checkGameOver(); // custom puzzle: still check game-over (blocks too high)
+    } else if (typeof isTrainingMode !== 'undefined' && isTrainingMode) {
+      // Training mode: capture undo snapshot and track piece count; no game-over from height.
+      if (typeof captureTrainingSnapshot === 'function') captureTrainingSnapshot();
+      if (typeof onTrainingPiecePlaced   === 'function') onTrainingPiecePlaced();
     } else {
       checkGameOver();
     }
