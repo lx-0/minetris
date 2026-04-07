@@ -162,6 +162,42 @@ function resetGame() {
   // Reset daily state
   dailyTimerActive  = false;
 
+  // Reset cheese race state
+  isCheeseRaceMode      = false;
+  cheeseRaceTimerActive = false;
+  cheeseRaceElapsedMs   = 0;
+  cheeseRaceComplete    = false;
+  const cheeseCompleteEl = document.getElementById('cheese-race-complete-screen');
+  if (cheeseCompleteEl) cheeseCompleteEl.style.display = 'none';
+
+  // Reset dig mode state
+  isDigMode      = false;
+  digTimerActive = false;
+  digElapsedMs   = 0;
+  digGarbageAccMs = 0;
+
+  // Reset ultra mode state
+  isUltraMode       = false;
+  ultraTimerActive  = false;
+  ultraRemainingMs  = ULTRA_DURATION_MS;
+  ultraComplete     = false;
+  ultraBonusActive  = false;
+  const ultraCompleteEl = document.getElementById('ultra-complete-screen');
+  if (ultraCompleteEl) ultraCompleteEl.style.display = 'none';
+  if (scoreEl) {
+    const ultraTimerEl = scoreEl.querySelector('.hud-stat:nth-child(4)');
+    if (ultraTimerEl) ultraTimerEl.style.color = '';
+  }
+
+  // Reset block puzzle mini state
+  isBlockPuzzleMiniMode    = false;
+  blockPuzzleMiniComplete  = false;
+  blockPuzzleMiniSuccess   = false;
+  blockPuzzleMiniPiecesLeft = 0;
+  blockPuzzleMiniRowsTarget = 0;
+  const bpMiniCompleteEl = document.getElementById('block-puzzle-mini-complete-screen');
+  if (bpMiniCompleteEl) bpMiniCompleteEl.style.display = 'none';
+
   // Reset blitz state
   isBlitzMode       = false;
   blitzTimerActive  = false;

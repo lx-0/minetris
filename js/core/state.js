@@ -656,3 +656,44 @@ function getCountdownMultiplier(stage) {
   const idx = Math.max(0, Math.min(stage - 1, COUNTDOWN_STAGE_MULTIPLIERS.length - 1));
   return COUNTDOWN_STAGE_MULTIPLIERS[idx];
 }
+
+// ── Cheese Race mode state ─────────────────────────────────────────────────────
+// Start with 10 garbage rows; clear them all as fast as possible.
+let isCheeseRaceMode      = false;
+let cheeseRaceTimerActive = false;  // starts on first piece drop
+let cheeseRaceElapsedMs   = 0;
+let cheeseRaceComplete    = false;
+const CHEESE_RACE_ROWS    = 10;     // garbage rows injected at start
+const CHEESE_RACE_FIXED_MULTIPLIER = Math.pow(1.1, 4); // Level 5 speed
+
+// ── Dig Mode state ─────────────────────────────────────────────────────────────
+// Garbage rows rise from the bottom every 5 seconds. Survive as long as possible.
+let isDigMode             = false;
+let digTimerActive        = false;  // starts on first piece drop
+let digElapsedMs          = 0;
+let digGarbageAccMs       = 0;      // accumulator toward next row injection
+const DIG_GARBAGE_INTERVAL_MS = 5000; // inject 1 row every 5 seconds
+const DIG_FIXED_MULTIPLIER    = Math.pow(1.1, 4); // Level 5 speed
+
+// ── Ultra Mode state ───────────────────────────────────────────────────────────
+// Score as many points as possible in exactly 3 minutes.
+// Like Blitz but longer, with bonus multiplier in the last 60 seconds.
+let isUltraMode          = false;
+let ultraTimerActive     = false;
+let ultraRemainingMs     = 180000;  // 3 minutes countdown
+let ultraComplete        = false;
+let ultraBonusActive     = false;   // true when ≤ 60s remaining (2× multiplier)
+const ULTRA_DURATION_MS         = 180000;
+const ULTRA_BONUS_THRESHOLD_MS  = 60000;  // final 60 seconds
+const ULTRA_FIXED_MULTIPLIER    = Math.pow(1.1, 4); // Level 5 speed
+
+// ── Block Puzzle mini-game state ───────────────────────────────────────────────
+// Each level pre-fills garbage rows; player clears them with a limited piece set.
+let isBlockPuzzleMiniMode   = false;
+let blockPuzzleMiniLevel    = 1;     // 1–20
+let blockPuzzleMiniPiecesLeft = 0;   // pieces remaining before the puzzle ends
+let blockPuzzleMiniRowsTarget = 0;   // lines that must be cleared to win
+let blockPuzzleMiniComplete  = false;
+let blockPuzzleMiniSuccess   = false; // true on win, false on fail/timeout
+const BLOCK_PUZZLE_MINI_MAX_LEVEL = 20;
+const BLOCK_PUZZLE_MINI_FIXED_MULTIPLIER = Math.pow(1.1, 3); // Level 4 (slower for puzzling)

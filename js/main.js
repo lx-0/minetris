@@ -630,6 +630,17 @@ function init() {
       if (typeof isTrainingMode !== "undefined" && isTrainingMode) {
         if (typeof setupTrainingGame === "function") setupTrainingGame();
       }
+
+      // Cheese Race: inject 10 garbage rows at game start
+      if (typeof isCheeseRaceMode !== 'undefined' && isCheeseRaceMode) {
+        if (typeof initCheeseRace === 'function') initCheeseRace();
+      }
+
+      // Block Puzzle Mini: inject level-specific garbage rows
+      if (typeof isBlockPuzzleMiniMode !== 'undefined' && isBlockPuzzleMiniMode) {
+        if (typeof initBlockPuzzleMini === 'function') initBlockPuzzleMini();
+      }
+
       // Show equipped power-up HUD badge if applicable
       updatePowerupHUD();
 

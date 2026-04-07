@@ -426,6 +426,19 @@ function checkLineClear(newBlocks) {
     triggerSprintComplete();
   }
 
+  // Cheese Race: win when all cheese rows are cleared
+  if (isCheeseRaceMode && !cheeseRaceComplete &&
+      linesCleared >= CHEESE_RACE_ROWS &&
+      typeof triggerCheeseRaceComplete === 'function') {
+    triggerCheeseRaceComplete();
+  }
+
+  // Block Puzzle Mini: check win condition after each line clear
+  if (isBlockPuzzleMiniMode && !blockPuzzleMiniComplete &&
+      typeof checkBlockPuzzleMiniCondition === 'function') {
+    checkBlockPuzzleMiniCondition();
+  }
+
   // Daily challenge: end the game when 200 lines are cleared
   if (isDailyChallenge && linesCleared >= DAILY_LINE_LIMIT &&
       typeof triggerGameOver === "function") {
@@ -470,7 +483,8 @@ function checkLineClear(newBlocks) {
     : [1.0, 1.0, 1.5, 2.0, 3.0]; // index by comboCount (capped at 4)
   const comboIdx = Math.min(comboCount, 4);
   const comboMult = COMBO_MULTIPLIERS[comboIdx];
-  const blitzMult = (isBlitzMode && blitzBonusActive) ? BLITZ_BONUS_MULTIPLIER : 1.0;
+  const blitzMult = (isBlitzMode && blitzBonusActive) ? BLITZ_BONUS_MULTIPLIER :
+                    (isUltraMode && ultraBonusActive) ? 2.0 : 1.0;
   // Gold Rush: 2× score multiplier on all line clears.
   const goldMult = weeklyGoldRush ? 2.0 : 1.0;
   // Golden Hour event: 3× score multiplier on all line clears.

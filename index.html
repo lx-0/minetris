@@ -512,6 +512,42 @@
                 </div>
               </div>
             </div>
+            <!-- ── MINI-GAMES ── -->
+            <div class="mode-section">
+              <div class="mode-section-header">MINI-GAMES</div>
+              <div class="mode-section-cards">
+                <div class="mode-card" id="mode-card-sprint_mini" data-mode="sprint_mini" tabindex="0" role="button" aria-label="Sprint mini-game — Clear 40 lines as fast as possible">
+                  <div class="mode-card-icon">&#9889;</div>
+                  <div class="mode-card-name">Sprint</div>
+                  <div class="mode-card-desc">Clear 40 lines. Beat the clock.</div>
+                  <div class="mode-card-pb" id="mode-pb-sprint_mini"></div>
+                </div>
+                <div class="mode-card" id="mode-card-cheese_race" data-mode="cheese_race" tabindex="0" role="button" aria-label="Cheese Race — Clear 10 garbage rows as fast as possible">
+                  <div class="mode-card-icon">&#127856;</div>
+                  <div class="mode-card-name">Cheese Race</div>
+                  <div class="mode-card-desc">10 garbage rows. Clear them all as fast as you can.</div>
+                  <div class="mode-card-pb" id="mode-pb-cheese_race"></div>
+                </div>
+                <div class="mode-card" id="mode-card-block_puzzle_mini" data-mode="block_puzzle_mini" tabindex="0" role="button" aria-label="Block Puzzle — Clear garbage rows with a limited piece set across 20 levels">
+                  <div class="mode-card-icon">&#129513;</div>
+                  <div class="mode-card-name">Block Puzzle</div>
+                  <div class="mode-card-desc">Clear the rows with limited pieces. 20 progressive levels.</div>
+                  <div class="mode-card-pb" id="mode-pb-block_puzzle_mini"></div>
+                </div>
+                <div class="mode-card" id="mode-card-dig_mode" data-mode="dig_mode" tabindex="0" role="button" aria-label="Dig Mode — Garbage rows rise every 5 seconds. Survive as long as possible">
+                  <div class="mode-card-icon">&#9935;</div>
+                  <div class="mode-card-name">Dig Mode</div>
+                  <div class="mode-card-desc">Rows rise every 5 seconds. How long can you last?</div>
+                  <div class="mode-card-pb" id="mode-pb-dig_mode"></div>
+                </div>
+                <div class="mode-card" id="mode-card-ultra_mode" data-mode="ultra_mode" tabindex="0" role="button" aria-label="Ultra Mode — Score as many points as possible in 3 minutes">
+                  <div class="mode-card-icon">&#128293;</div>
+                  <div class="mode-card-name">Ultra</div>
+                  <div class="mode-card-desc">Score as many points as possible in exactly 3 minutes.</div>
+                  <div class="mode-card-pb" id="mode-pb-ultra_mode"></div>
+                </div>
+              </div>
+            </div>
             <!-- ── MULTIPLAYER ── -->
             <div class="mode-section">
               <div class="mode-section-header">MULTIPLAYER</div>
@@ -1267,6 +1303,36 @@
         <div id="sprint-xp-earned" class="xp-earned-display"></div>
         <button id="sprint-play-again-btn">Play Again</button>
         <button id="sprint-main-menu-btn">Main Menu</button>
+      </div>
+
+      <!-- Cheese Race complete screen -->
+      <div id="cheese-race-complete-screen" style="display:none;">
+        <div class="mg-complete-title">CHEESE RACE!</div>
+        <div class="mg-complete-time-label">CLEAR TIME</div>
+        <div id="cheese-race-final-time" class="mg-complete-time">00:00.00</div>
+        <div id="cheese-race-personal-best" class="mg-complete-pb-line"></div>
+        <button id="cheese-race-play-again-btn">Play Again</button>
+        <button id="cheese-race-menu-btn">Main Menu</button>
+      </div>
+
+      <!-- Ultra Mode complete screen -->
+      <div id="ultra-complete-screen" style="display:none;">
+        <div class="mg-complete-title">ULTRA COMPLETE!</div>
+        <div class="mg-complete-score-label">FINAL SCORE</div>
+        <div id="ultra-final-score" class="mg-complete-score">0</div>
+        <div id="ultra-personal-best" class="mg-complete-pb-line"></div>
+        <button id="ultra-play-again-btn">Play Again</button>
+        <button id="ultra-menu-btn">Main Menu</button>
+      </div>
+
+      <!-- Block Puzzle Mini complete screen -->
+      <div id="block-puzzle-mini-complete-screen" style="display:none;">
+        <div id="bp-mini-result-title" class="mg-complete-title">LEVEL COMPLETE!</div>
+        <div id="bp-mini-level-display" class="mg-complete-pb-line"></div>
+        <div id="bp-mini-levels-completed" class="mg-complete-pb-line"></div>
+        <button id="bp-mini-next-btn" style="display:none;">Next Level</button>
+        <button id="bp-mini-play-again-btn">Retry Level</button>
+        <button id="bp-mini-menu-btn">Main Menu</button>
       </div>
 
       <!-- Practice complete screen -->
@@ -3639,6 +3705,7 @@
     <script src="js/modes/marathon-endless.js"></script>
     <script src="js/modes/combo-challenge.js"></script>
     <script src="js/modes/countdown.js"></script>
+    <script src="js/modes/minigames.js"></script>
     <script src="js/modes/practice.js"></script>
     <script src="js/modes/training.js"></script>
     <script src="js/modes/zen.js"></script>
