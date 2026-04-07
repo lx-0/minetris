@@ -532,6 +532,13 @@
                   <div class="mode-card-desc">Challenge the bot. Pick Easy, Medium, or Hard. No second player needed.</div>
                   <div class="mode-card-pb" id="mode-pb-vs_ai"></div>
                 </div>
+                <div class="mode-card mode-card-battle-royale" id="mode-card-battle_royale" tabindex="0" role="button" aria-label="Battle Royale — 4–10 players, last miner standing wins">
+                  <div class="mode-card-icon">&#128081;</div>
+                  <div class="mode-card-name">Battle Royale</div>
+                  <div class="mode-card-desc">4–10 players. Board shrinks. Last miner standing wins.</div>
+                  <div class="mode-card-pb" id="mode-pb-battle_royale"></div>
+                  <button class="mode-card-lb-btn" data-lb-tab="battle_royale" title="Leaderboard">&#127942;</button>
+                </div>
               </div>
             </div>
           </div>
@@ -2564,6 +2571,41 @@
         </div>
       </div>
 
+      <!-- Battle Royale overlay — shown when BR mode card is clicked -->
+      <div id="br-overlay" style="display:none;">
+        <div id="br-inner">
+          <!-- Queue view: waiting for players -->
+          <div id="br-queue-view">
+            <div id="br-title">&#128081; BATTLE ROYALE</div>
+            <div id="br-subtitle">Last miner standing wins</div>
+            <div id="br-player-count">Connecting&#8230;</div>
+            <div id="br-queue-desc" style="font-size:0.42em;color:#aaa;margin:4px 0 12px;">Waiting for players (min 4, max 10)</div>
+            <div id="br-waiting-spinner">&#9696; In queue&#8230;</div>
+            <button id="br-cancel-btn">&#8592; Leave Queue</button>
+          </div>
+          <!-- Countdown view -->
+          <div id="br-countdown-view" style="display:none;">
+            <div id="br-title">GET READY!</div>
+            <div id="br-countdown-num">3</div>
+            <div style="font-size:0.5em;color:#aaa;">Match starting</div>
+          </div>
+          <!-- Placement view: shown after elimination or victory -->
+          <div id="br-placement-view" style="display:none;">
+            <div id="br-title">MATCH OVER</div>
+            <div id="br-placement-label">#?</div>
+            <div id="br-placement-xp" style="font-size:0.55em;color:#4ade80;margin:6px 0;"></div>
+            <button id="br-menu-btn">&#8592; Main Menu</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BR in-game panel: mini-boards of all opponents (shown during active match) -->
+      <div id="br-ingame-panel" style="display:none;">
+        <div id="br-alive-count"></div>
+        <div id="br-mini-boards"></div>
+        <div id="br-shrink-notice" style="display:none;">&#9654;&#9664; Board Shrinking!</div>
+      </div>
+
       <!-- Battle lobby overlay — shown when Battle mode card is clicked -->
       <div id="battle-overlay" style="display:none;">
         <div id="battle-inner">
@@ -3348,6 +3390,7 @@
     <script src="js/battle/battle.js"></script>
     <script src="js/battle/battle-hud.js"></script>
     <script src="js/battle/battle-garbage.js"></script>
+    <script src="js/battle/battleroyale.js"></script>
     <script src="js/battle/battle-fx.js"></script>
     <script src="js/social/tournament.js"></script>
     <script src="js/social/guild.js"></script>
