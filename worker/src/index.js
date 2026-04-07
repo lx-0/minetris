@@ -21,6 +21,8 @@
  *   POST /api/puzzles/:id/play     — increment play count for a community puzzle
  *   POST /api/puzzles/:id/vote     — submit thumbs-up or thumbs-down vote for a puzzle
  *   GET  /api/puzzles/featured     — return curated official featured puzzles (admin-seeded)
+ *   POST /api/analytics            — receive anonymous aggregate stats from a device
+ *   GET  /api/analytics/summary    — return aggregated analytics (requires ?key=ADMIN_SECRET)
  *
  * Guild Routes:
  *   POST   /api/guilds                                   — create guild (caller = owner)
@@ -7534,6 +7536,167 @@ async function handleGetModeLeaderboard(modeId, request, env) {
   });
 }
 
+// ── Analytics ─────────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/analytics
+ * Receive anonymous aggregate stats from a device.
+ * Body: { deviceId, deviceType, sessionCount, totalPlayTimeMs, totalPiecesPlaced,
+ *         dailySessions, modePlayCounts, featureUsage, modeAvgScores }
+ */
+async function handlePostAnalytics(request, env) {
+  if (!env.ANALYTICS_KV) return jsonResponse({ error: 'Analytics not configured' }, 503);
+
+  let body;
+  try { body = await request.json(); } catch (_) {
+    return jsonResponse({ error: 'Invalid JSON' }, 400);
+  }
+
+  const deviceId = typeof body.deviceId === 'string' && /^[a-f0-9]{24}$/.test(body.deviceId)
+    ? body.deviceId : null;
+  if (!deviceId) return jsonResponse({ error: 'Invalid deviceId' }, 400);
+
+  // Sanitize: accept only expected numeric/object fields
+  const snapshot = {
+    deviceType: ['mobile', 'tablet', 'desktop'].includes(body.deviceType) ? body.deviceType : 'desktop',
+    sessionCount: Math.max(0, Math.round(Number(body.sessionCount) || 0)),
+    totalPlayTimeMs: Math.max(0, Math.round(Number(body.totalPlayTimeMs) || 0)),
+    totalPiecesPlaced: Math.max(0, Math.round(Number(body.totalPiecesPlaced) || 0)),
+    updatedAt: Date.now(),
+    dailySessions: {},
+    modePlayCounts: {},
+    featureUsage: {},
+    modeAvgScores: {},
+  };
+
+  // Daily sessions: accept only YYYY-MM-DD keys with integer values
+  if (body.dailySessions && typeof body.dailySessions === 'object') {
+    for (const [k, v] of Object.entries(body.dailySessions)) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(k)) {
+        snapshot.dailySessions[k] = Math.max(0, Math.round(Number(v) || 0));
+      }
+    }
+  }
+
+  // Mode play counts: accept only safe string keys
+  if (body.modePlayCounts && typeof body.modePlayCounts === 'object') {
+    for (const [k, v] of Object.entries(body.modePlayCounts)) {
+      if (/^[a-z_]{1,32}$/.test(k)) {
+        snapshot.modePlayCounts[k] = Math.max(0, Math.round(Number(v) || 0));
+      }
+    }
+  }
+
+  // Feature usage
+  if (body.featureUsage && typeof body.featureUsage === 'object') {
+    for (const [k, v] of Object.entries(body.featureUsage)) {
+      if (/^[a-z_]{1,48}$/.test(k)) {
+        snapshot.featureUsage[k] = Math.max(0, Math.round(Number(v) || 0));
+      }
+    }
+  }
+
+  // Mode avg scores
+  if (body.modeAvgScores && typeof body.modeAvgScores === 'object') {
+    for (const [k, v] of Object.entries(body.modeAvgScores)) {
+      if (/^[a-z_]{1,32}$/.test(k)) {
+        snapshot.modeAvgScores[k] = Math.max(0, Math.round(Number(v) || 0));
+      }
+    }
+  }
+
+  // Store per-device snapshot (30-day TTL)
+  await env.ANALYTICS_KV.put(
+    `analytics:device:${deviceId}`,
+    JSON.stringify(snapshot),
+    { expirationTtl: 30 * 24 * 60 * 60 },
+  );
+
+  return jsonResponse({ ok: true });
+}
+
+/**
+ * GET /api/analytics/summary?key=<ADMIN_SECRET>
+ * Returns aggregated analytics across all device snapshots.
+ */
+async function handleGetAnalyticsSummary(request, env) {
+  if (!env.ANALYTICS_KV) return jsonResponse({ error: 'Analytics not configured' }, 503);
+
+  // Require ADMIN_SECRET
+  const url = new URL(request.url);
+  const key = url.searchParams.get('key') || '';
+  const expectedSecret = env.ADMIN_SECRET;
+  if (!expectedSecret || key !== expectedSecret) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+
+  // List all device snapshots
+  const list = await env.ANALYTICS_KV.list({ prefix: 'analytics:device:' });
+  const snapshots = [];
+  for (const item of list.keys) {
+    const snap = await env.ANALYTICS_KV.get(item.name, { type: 'json' });
+    if (snap) snapshots.push(snap);
+  }
+
+  if (snapshots.length === 0) {
+    return jsonResponse({ aggregate: null, deviceCount: 0 });
+  }
+
+  // Aggregate across snapshots
+  const agg = {
+    totalSessions: 0,
+    totalPlayTimeMs: 0,
+    totalPiecesPlaced: 0,
+    deviceBreakdown: { mobile: 0, tablet: 0, desktop: 0 },
+    dailySessions: {},
+    modePlayCounts: {},
+    featureUsage: {},
+    modeAvgScores: {},
+    activePlayers24h: 0,
+  };
+
+  const now = Date.now();
+  const _24h = 24 * 60 * 60 * 1000;
+  // Accumulate mode scores for weighted average
+  const modeScoreAccum = {}; // { mode: { sum, count } }
+
+  for (const snap of snapshots) {
+    agg.totalSessions += snap.sessionCount || 0;
+    agg.totalPlayTimeMs += snap.totalPlayTimeMs || 0;
+    agg.totalPiecesPlaced += snap.totalPiecesPlaced || 0;
+
+    if (snap.deviceType && agg.deviceBreakdown[snap.deviceType] !== undefined) {
+      agg.deviceBreakdown[snap.deviceType]++;
+    }
+
+    if (snap.updatedAt && (now - snap.updatedAt) < _24h) {
+      agg.activePlayers24h++;
+    }
+
+    for (const [day, cnt] of Object.entries(snap.dailySessions || {})) {
+      agg.dailySessions[day] = (agg.dailySessions[day] || 0) + cnt;
+    }
+    for (const [mode, cnt] of Object.entries(snap.modePlayCounts || {})) {
+      agg.modePlayCounts[mode] = (agg.modePlayCounts[mode] || 0) + cnt;
+    }
+    for (const [feat, cnt] of Object.entries(snap.featureUsage || {})) {
+      agg.featureUsage[feat] = (agg.featureUsage[feat] || 0) + cnt;
+    }
+    for (const [mode, avg] of Object.entries(snap.modeAvgScores || {})) {
+      if (!modeScoreAccum[mode]) modeScoreAccum[mode] = { sum: 0, count: 0 };
+      modeScoreAccum[mode].sum += avg;
+      modeScoreAccum[mode].count++;
+    }
+  }
+
+  // Weighted avg scores
+  for (const [mode, acc] of Object.entries(modeScoreAccum)) {
+    agg.modeAvgScores[mode] = Math.round(acc.sum / acc.count);
+  }
+
+  return jsonResponse({ aggregate: agg, deviceCount: snapshots.length });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -7883,6 +8046,12 @@ export default {
     } else if (method === 'DELETE' && /^\/api\/sync\/[^/]+$/.test(url.pathname)) {
       const playerId = url.pathname.replace('/api/sync/', '');
       response = await handleSyncDelete(playerId, request, env);
+
+    // ── Analytics ─────────────────────────────────────────────────────────────
+    } else if (method === 'POST' && url.pathname === '/api/analytics') {
+      response = await handlePostAnalytics(request, env);
+    } else if (method === 'GET' && url.pathname === '/api/analytics/summary') {
+      response = await handleGetAnalyticsSummary(request, env);
 
     } else {
       response = jsonResponse({ error: 'Not found' }, 404);

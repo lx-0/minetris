@@ -86,6 +86,7 @@ var _editorEditingId   = null; // null = new theme
 // ── Open / close ────────────────────────────────────────────────────────────────
 
 function openThemeEditor(existingId) {
+  if (typeof analyticsFeatureUsed === 'function') analyticsFeatureUsed('theme_editor');
   var overlay = document.getElementById('theme-editor-overlay');
   if (!overlay) return;
 

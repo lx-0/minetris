@@ -490,6 +490,15 @@ function triggerGameOver() {
     metricsSessionEnd({ score: state.score, linesCleared: state.linesCleared, blocksMined: state.blocksMined });
   }
 
+  // Analytics: log session end with extended stats
+  if (typeof analyticsSessionEnd === 'function') {
+    analyticsSessionEnd({
+      score: state.score,
+      linesCleared: state.linesCleared,
+      piecesPlaced: blocksPlaced,
+    });
+  }
+
   // Mastery tracking
   if (typeof activeDungeonId !== 'undefined' && activeDungeonId) {
     if (typeof masteryOnDepthsEnd === 'function') {

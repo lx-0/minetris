@@ -1386,6 +1386,26 @@ function _initCloudSyncSection() {
   }
 }
 
+/** Update the per-device analytics stats hint shown in settings. */
+function _settingsUpdateAnalyticsStats() {
+  var el = document.getElementById("analytics-device-stats");
+  if (!el) return;
+  if (typeof analyticsIsOptedOut === 'function' && analyticsIsOptedOut()) {
+    el.textContent = '';
+    return;
+  }
+  if (typeof analyticsGetDeviceStats !== 'function') return;
+  var s = analyticsGetDeviceStats();
+  var fmt = typeof _analyticsFmtMs === 'function' ? _analyticsFmtMs : function(ms) {
+    if (!ms) return '0s';
+    var m = Math.floor(ms / 60000);
+    if (m < 60) return m + 'm';
+    return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+  };
+  el.textContent = 'This device: ' + s.sessionCount + ' sessions \u00B7 ' +
+    fmt(s.totalPlayTimeMs) + ' played \u00B7 fav: ' + s.favoriteMode;
+}
+
 /** Called once during init() — loads persisted settings and wires sliders. */
 function initSettings() {
   _loadAudioSettings();
@@ -1550,6 +1570,31 @@ function initSettings() {
       if (typeof openMetricsDashboard === 'function') openMetricsDashboard();
     });
   }
+
+  // Analytics opt-out toggle
+  var analyticsToggle = document.getElementById("analytics-opt-out-toggle");
+  if (analyticsToggle) {
+    // Reflect current opt-out state (checked = analytics ON)
+    if (typeof analyticsIsOptedOut === 'function') {
+      analyticsToggle.checked = !analyticsIsOptedOut();
+    }
+    analyticsToggle.addEventListener("change", function () {
+      if (typeof analyticsSetOptOut === 'function') {
+        analyticsSetOptOut(!this.checked);
+      }
+      _settingsUpdateAnalyticsStats();
+    });
+  }
+
+  // Admin dashboard close button
+  var analyticsAdminCloseBtn = document.getElementById("analytics-admin-close-btn");
+  if (analyticsAdminCloseBtn) {
+    analyticsAdminCloseBtn.addEventListener("click", function () {
+      if (typeof analyticsCloseAdminDashboard === 'function') analyticsCloseAdminDashboard();
+    });
+  }
+
+  _settingsUpdateAnalyticsStats();
 
   const cbModeSelect = document.getElementById("cb-mode-select");
   if (cbModeSelect) {

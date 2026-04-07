@@ -749,6 +749,7 @@ function selectTrainingCategory(cat) {
 // ── Launch a scenario ─────────────────────────────────────────────────────────
 
 function launchTrainingScenario(scenarioId) {
+  if (typeof analyticsFeatureUsed === 'function') analyticsFeatureUsed('training_mode');
   const scenario = TRAINING_SCENARIOS.find(function (s) { return s.id === scenarioId; });
   if (!scenario) return;
 

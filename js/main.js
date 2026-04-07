@@ -27,6 +27,7 @@ function init() {
   if (typeof applyTranslations === 'function') applyTranslations();
   if (typeof initNotifications === 'function') initNotifications();
   if (typeof detectReturningPlayer === "function") detectReturningPlayer();
+  if (typeof analyticsInit === 'function') analyticsInit();
   if (typeof initLeaderboard === "function") initLeaderboard();
   if (typeof initGuild === "function") initGuild();
   if (typeof initSeasonBanner === "function") initSeasonBanner();
@@ -582,6 +583,10 @@ function init() {
       gameTimerRunning = true;
       // Metrics: log session start
       if (typeof metricsSessionStart === 'function') metricsSessionStart();
+      // Analytics: log session start
+      if (typeof analyticsSessionStart === 'function') {
+        analyticsSessionStart(typeof _metricsGetCurrentMode === 'function' ? _metricsGetCurrentMode() : 'classic');
+      }
       // Restore inventory HUD if non-empty
       if (inventoryTotal() > 0) updateInventoryHUD();
 
