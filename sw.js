@@ -1,6 +1,6 @@
 // MINETRIS Service Worker
 // Cache version — bump this string to trigger an update toast in the game
-const CACHE_VERSION = 'minetris-v6.2';
+const CACHE_VERSION = 'minetris-v6.3';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -77,6 +77,7 @@ const STATIC_ASSETS = [
   './js/modes/puzzle-completion.js',
   './js/modes/dungeon-modifier.js',
   './js/modes/infinite-weekly.js',
+  './js/modes/marathon-endless.js',
   // JS — progression
   './js/progression/highscores.js',
   './js/progression/leveling.js',
@@ -159,6 +160,7 @@ const STATIC_ASSETS = [
   './js/battle/battle-init.js',
   './js/battle/battle-spectator-init.js',
   './js/battle/matchmaking.js',
+  './js/battle/battleroyale.js',
   // JS — themes & i18n
   './js/themes.js',
   './js/i18n/i18n.js',
