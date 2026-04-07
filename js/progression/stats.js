@@ -238,11 +238,31 @@ const XP_MODE_MULTIPLIERS = {
 /**
  * Calculate and award XP for a completed session. Updates playerXP,
  * lastPlayedDate, and currentStreak in lifetime stats.
- * @param {number} finalScore  the session score
- * @param {string} modeKey     one of: classic, sprint, blitz, daily, weekly, puzzle
+ *
+ * When `details` is provided the new granular formula is used:
+ *   lines cleared × 10, T-Spins × 50, Tetrises × 100, combos × 10,
+ *   game duration × 2, multiplayer win +200, daily challenge +150.
+ * When `details` is omitted the legacy score/50 formula applies (backward compat).
+ *
+ * In both cases the following multipliers stack:
+ *   • Streak bonus      +10% (2+ consecutive days)
+ *   • Seasonal event    ×2 XP
+ *   • Prestige bonus    (additive %)
+ *   • Guild XP boost    (additive %)
+ *
+ * @param {number} finalScore  the session score (used for legacy formula)
+ * @param {string} modeKey     one of: classic, sprint, blitz, daily, weekly, puzzle …
+ * @param {object} [details]   granular gameplay data for the new XP formula
+ * @param {number}  [details.linesCleared]    total lines cleared this session
+ * @param {number}  [details.tSpins]          T-Spin clears this session
+ * @param {number}  [details.tetrises]        4-line clear count this session
+ * @param {number}  [details.highestCombo]    peak combo count (raw, not multiplier)
+ * @param {number}  [details.durationSecs]    session duration in seconds
+ * @param {boolean} [details.isMultiplayerWin] true if player won a multiplayer match
+ * @param {boolean} [details.isDailyChallenge] true if this was a daily challenge session
  * @returns {{ xpEarned: number, streakBonus: boolean, currentStreak: number }}
  */
-function awardXP(finalScore, modeKey) {
+function awardXP(finalScore, modeKey, details) {
   const stats = loadLifetimeStats();
   const today = new Date().toISOString().slice(0, 10);
   const yesterday = new Date();
@@ -267,17 +287,46 @@ function awardXP(finalScore, modeKey) {
   // Streak bonus (+10% XP) applies on every session once you have 2+ consecutive days
   const streakBonus = streak >= 2;
 
-  const multiplier = XP_MODE_MULTIPLIERS[modeKey] || 1.0;
-  const baseXP = Math.floor(finalScore / 50);
-  let xpEarned = Math.floor(baseXP * multiplier);
+  // ── XP calculation ────────────────────────────────────────────────────────────
+  let baseXP;
+  if (details) {
+    // New granular formula
+    const lines    = Math.max(0, details.linesCleared  || 0);
+    const tSpins   = Math.max(0, details.tSpins        || 0);
+    const tetrises = Math.max(0, details.tetrises      || 0);
+    const combo    = Math.max(0, details.highestCombo  || 0);
+    const dur      = Math.max(0, details.durationSecs  || 0);
+    baseXP  = lines    * 10;          // 10 XP per line
+    baseXP += tSpins   * 50;          // 50 XP per T-Spin
+    baseXP += tetrises * 100;         // 100 XP per Tetris (4-line clear)
+    baseXP += combo    * 10;          // 10 XP × peak combo count
+    baseXP += Math.floor(dur * 2);    // game completion bonus: 2 XP/sec
+    if (details.isMultiplayerWin)  baseXP += 200; // multiplayer win bonus
+    if (details.isDailyChallenge)  baseXP += 150; // daily challenge bonus
+  } else {
+    // Legacy formula: score ÷ 50 with mode multiplier
+    const multiplier = XP_MODE_MULTIPLIERS[modeKey] || 1.0;
+    baseXP = Math.floor(Math.floor(finalScore / 50) * multiplier);
+  }
+
+  let xpEarned = baseXP;
   if (streakBonus) xpEarned = Math.floor(xpEarned * 1.1);
-  // Prestige XP bonus (multiplicative)
+
+  // Seasonal event: 2× XP multiplier
+  if (typeof getActiveSeasonalEvent === 'function') {
+    try {
+      const activeEvent = getActiveSeasonalEvent();
+      if (activeEvent) xpEarned = xpEarned * 2;
+    } catch (_) {}
+  }
+
+  // Prestige XP bonus (additive %)
   if (typeof getPrestigeXPBonus === 'function') {
     const prestigeBonus = getPrestigeXPBonus();
     if (prestigeBonus > 0) xpEarned = Math.floor(xpEarned * (1 + prestigeBonus));
   }
 
-  // Guild XP boost perk (multiplicative)
+  // Guild XP boost perk (additive %)
   if (typeof getGuildXPBoost === 'function') {
     const guildBoost = getGuildXPBoost();
     if (guildBoost > 0) xpEarned = Math.floor(xpEarned * (1 + guildBoost));
@@ -290,6 +339,9 @@ function awardXP(finalScore, modeKey) {
 
   stats.playerXP = (stats.playerXP || 0) + xpEarned;
   saveLifetimeStats(stats);
+
+  // Update HUD XP bar
+  if (typeof updateXPBarHUD === 'function') updateXPBarHUD();
 
   // Award guild XP for game completion
   if (typeof awardGuildXP === 'function') {

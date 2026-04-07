@@ -18,7 +18,7 @@
 // Cumulative XP to reach level N is stored in CUMULATIVE_XP[N-1] (0-indexed).
 // CUMULATIVE_XP[0] = 0 (starting XP for level 1).
 
-const MAX_LEVEL = 50;
+const MAX_LEVEL = 100;
 
 // ── Prestige system ──────────────────────────────────────────────────────────
 // At level 50, players can prestige: reset XP/level to 0 for permanent bonuses.
@@ -143,15 +143,13 @@ function _showPrestigeToast(prestigeLevel) {
   if (!_levelUpToastRunning) _drainLevelUpQueue();
 }
 
-// Early-level XP requirements (L1→L2 through L6→L7): flat, low values.
-// These ensure levels 1-6 are achievable in ~15 minutes of first-session play.
-const EARLY_LEVEL_XP = [50, 50, 60, 60, 75, 75]; // indices 0-5 → levels 1→2 through 6→7
+// Level formula: XP required to go from level N to N+1 = N * 500.
+// e.g. L1→L2: 500 XP, L2→L3: 1000 XP, L99→L100: 49500 XP.
+// Cumulative XP to reach level N = (N-1)*N/2 * 500.
 
-/** XP required to go from level N to level N+1 (1-indexed, so level 1 = L1→L2). */
+/** XP required to go from level N to level N+1 (1-indexed). */
 function _xpForLevelUp(level) {
-  if (level <= EARLY_LEVEL_XP.length) return EARLY_LEVEL_XP[level - 1];
-  // L7+ uses 15% exponential growth from a 100 XP base
-  return Math.round(100 * Math.pow(1.15, level - 7));
+  return level * 500;
 }
 
 /** Build cumulative XP thresholds. CUMULATIVE_XP[n] = total XP needed to reach level n+1. */
@@ -160,7 +158,7 @@ const CUMULATIVE_XP = (function () {
   for (let i = 1; i <= MAX_LEVEL; i++) {
     arr[i] = arr[i - 1] + _xpForLevelUp(i);
   }
-  return arr; // arr[n] = total XP to reach level n+1 (arr[49] = XP to reach L50)
+  return arr; // arr[n] = total XP to reach level n+1 (arr[99] = XP to reach L100)
 })();
 
 /**
@@ -245,10 +243,26 @@ function getPrestigeStarsHtml() {
 // ── Milestone skins ───────────────────────────────────────────────────────────
 
 const LEVEL_SKIN_MILESTONES = [
-  { level: 5,  themeKey: 'fossil',    name: 'Fossil',    icon: '\u{1FAB4}', desc: 'Reach Level 5'  },
-  { level: 15, themeKey: 'storm',     name: 'Storm',     icon: '\u26A1',    desc: 'Reach Level 15' },
-  { level: 30, themeKey: 'void',      name: 'Void',      icon: '\u{1F300}', desc: 'Reach Level 30' },
-  { level: 50, themeKey: 'legendary', name: 'Legendary', icon: '\u{1F947}', desc: 'Reach Level 50 (Max!)' },
+  { level: 5,   themeKey: 'fossil',    name: 'Fossil',      icon: '\u{1FAB4}', desc: 'Reach Level 5'   },
+  { level: 10,  themeKey: 'copper',    name: 'Copper',      icon: '\uD83E\uDEB7', desc: 'Reach Level 10' },
+  { level: 15,  themeKey: 'storm',     name: 'Storm',       icon: '\u26A1',    desc: 'Reach Level 15'  },
+  { level: 20,  themeKey: 'jungle',    name: 'Jungle',      icon: '\uD83C\uDF3F', desc: 'Reach Level 20' },
+  { level: 25,  themeKey: 'deep',      name: 'Deep',        icon: '\uD83C\uDF0C', desc: 'Reach Level 25' },
+  { level: 30,  themeKey: 'void',      name: 'Void',        icon: '\u{1F300}', desc: 'Reach Level 30'  },
+  { level: 35,  themeKey: 'inferno',   name: 'Inferno',     icon: '\uD83D\uDD25', desc: 'Reach Level 35' },
+  { level: 40,  themeKey: 'frost',     name: 'Frost',       icon: '\u2744',    desc: 'Reach Level 40'  },
+  { level: 45,  themeKey: 'ancient',   name: 'Ancient',     icon: '\uD83C\uDFDB', desc: 'Reach Level 45' },
+  { level: 50,  themeKey: 'master',    name: 'Master',      icon: '\uD83D\uDC8E', desc: 'Reach Level 50' },
+  { level: 55,  themeKey: 'aurora',    name: 'Aurora',      icon: '\uD83C\uDF1F', desc: 'Reach Level 55' },
+  { level: 60,  themeKey: 'nebula',    name: 'Nebula',      icon: '\uD83C\uDF0B', desc: 'Reach Level 60' },
+  { level: 65,  themeKey: 'specter',   name: 'Specter',     icon: '\uD83D\uDC7B', desc: 'Reach Level 65' },
+  { level: 70,  themeKey: 'ember',     name: 'Ember',       icon: '\uD83E\uDEB5', desc: 'Reach Level 70' },
+  { level: 75,  themeKey: 'celestial', name: 'Celestial',   icon: '\u2B50',    desc: 'Reach Level 75'  },
+  { level: 80,  themeKey: 'shadow',    name: 'Shadow',      icon: '\uD83D\uDDA4', desc: 'Reach Level 80' },
+  { level: 85,  themeKey: 'prism',     name: 'Prism',       icon: '\uD83D\uDD2E', desc: 'Reach Level 85' },
+  { level: 90,  themeKey: 'titan',     name: 'Titan',       icon: '\uD83D\uDDFF', desc: 'Reach Level 90' },
+  { level: 95,  themeKey: 'omega',     name: 'Omega',       icon: '\u03A9',    desc: 'Reach Level 95'  },
+  { level: 100, themeKey: 'legendary', name: 'Legendary',   icon: '\u{1F947}', desc: 'Reach Level 100 (Max!)' },
 ];
 
 /**
@@ -310,8 +324,9 @@ function checkLevelUp(oldXP, newXP) {
     coachMarkModeUnlock(newLevel);
   }
 
-  // Update HUD badge
+  // Update HUD badge and XP bar
   updateLevelBadgeHUD();
+  updateXPBarHUD();
   // Re-sync theme buttons in settings (unlock new options)
   if (typeof _syncThemeButtons === 'function') {
     _syncThemeButtons();
@@ -325,6 +340,22 @@ function _showLevelUpToast(level) {
   _levelUpToastQueue.push({ type: 'levelup', level });
   if (!_levelUpToastRunning) _drainLevelUpQueue();
   if (typeof playLevelUpStinger === 'function') playLevelUpStinger();
+  _triggerLevelUpFlash(level);
+}
+
+/**
+ * Trigger a full-screen flash overlay with the new level number.
+ * @param {number} level
+ */
+function _triggerLevelUpFlash(level) {
+  const overlay = document.getElementById('level-up-flash-overlay');
+  if (!overlay) return;
+  const numEl = overlay.querySelector('.lu-flash-level');
+  if (numEl) numEl.textContent = 'LEVEL ' + level + '!';
+  overlay.classList.remove('lu-flash-active');
+  // Force reflow so re-adding the class restarts animation
+  void overlay.offsetWidth;
+  overlay.classList.add('lu-flash-active');
 }
 
 function _showSkinUnlockToast(milestone) {
@@ -446,7 +477,36 @@ function updateLevelBadgeHUD() {
   const level = getLevelFromXP(stats.playerXP || 0);
   el.textContent = getLevelBadgeLabel(level);
   // Give the badge a special class at milestone levels
-  el.className = 'level-badge' + (level >= MAX_LEVEL ? ' level-badge-legendary' : level >= 30 ? ' level-badge-void' : level >= 15 ? ' level-badge-storm' : level >= 5 ? ' level-badge-fossil' : '');
+  el.className = 'level-badge' +
+    (level >= MAX_LEVEL ? ' level-badge-legendary' :
+     level >= 75 ? ' level-badge-celestial' :
+     level >= 50 ? ' level-badge-master' :
+     level >= 30 ? ' level-badge-void' :
+     level >= 15 ? ' level-badge-storm' :
+     level >= 5  ? ' level-badge-fossil' : '');
+}
+
+/**
+ * Update the in-game HUD XP progress bar.
+ * Reads current playerXP from lifetime stats and fills the bar proportionally.
+ */
+function updateXPBarHUD() {
+  const barEl  = document.getElementById('hud-xp-bar-fill');
+  const textEl = document.getElementById('hud-xp-bar-text');
+  if (!barEl) return;
+  if (typeof loadLifetimeStats !== 'function') return;
+  const stats = loadLifetimeStats();
+  const totalXP = stats.playerXP || 0;
+  const level = getLevelFromXP(totalXP);
+  const progress = getXPProgress(totalXP);
+  const pct = progress.needed > 0 ? Math.min(100, (progress.current / progress.needed) * 100) : 100;
+  barEl.style.width = pct + '%';
+  barEl.className = 'hud-xp-bar-fill' + (level >= MAX_LEVEL ? ' hud-xp-bar-fill--max' : '');
+  if (textEl) {
+    textEl.textContent = level >= MAX_LEVEL
+      ? 'MAX'
+      : progress.current + ' / ' + progress.needed + ' XP';
+  }
 }
 
 // ── Tutorial & first-game XP bonuses ─────────────────────────────────────────

@@ -7998,6 +7998,8 @@ body.theme-candy .inv-slot.selected {
 #hud-player-level-badge.level-badge-fossil    { border-color: #d4952e; color: #d4952e; }
 #hud-player-level-badge.level-badge-storm     { border-color: #88bbff; color: #88bbff; }
 #hud-player-level-badge.level-badge-void      { border-color: #bb88ff; color: #bb88ff; }
+#hud-player-level-badge.level-badge-master    { border-color: #22d3ee; color: #22d3ee; box-shadow: 0 0 6px #22d3ee; }
+#hud-player-level-badge.level-badge-celestial { border-color: #a78bfa; color: #a78bfa; box-shadow: 0 0 6px #a78bfa; }
 #hud-player-level-badge.level-badge-legendary {
   border-color: #ffd700;
   color: #ffd700;
@@ -8009,10 +8011,85 @@ body.theme-candy .inv-slot.selected {
   50%       { box-shadow: 0 0 14px #ffd700, 0 0 28px #cc9900; }
 }
 
-/* ── Streak HUD badge (top-left, below level badge) ───────────────────────── */
-#hud-streak-badge {
+/* ── HUD XP bar (top-left, below level badge) ─────────────────────────────── */
+.hud-xp-bar-wrap {
   position: absolute;
   top: 42px;
+  left: 12px;
+  width: 110px;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(0, 255, 0, 0.35);
+  border-radius: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 20;
+}
+.hud-xp-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0f0, #0c0);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.hud-xp-bar-fill--max {
+  background: linear-gradient(90deg, #ffd700, #aa8800);
+  box-shadow: 0 0 4px #ffd700;
+}
+.hud-xp-bar-text {
+  position: absolute;
+  top: 50px;
+  left: 12px;
+  width: 110px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 5px;
+  color: rgba(0, 255, 0, 0.55);
+  pointer-events: none;
+  z-index: 20;
+  text-align: center;
+}
+
+/* ── Level-up full-screen flash overlay ───────────────────────────────────── */
+.lu-flash-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 215, 0, 0);
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+}
+.lu-flash-overlay.lu-flash-active {
+  animation: lu-flash-anim 0.9s ease-out forwards;
+}
+@keyframes lu-flash-anim {
+  0%   { background: rgba(255, 215, 0, 0.55); opacity: 1; }
+  40%  { background: rgba(255, 215, 0, 0.15); opacity: 1; }
+  100% { background: rgba(255, 215, 0, 0);    opacity: 0; }
+}
+.lu-flash-level {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(20px, 5vw, 48px);
+  color: #fff;
+  text-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700;
+  animation: lu-flash-text 0.9s ease-out forwards;
+  opacity: 0;
+}
+.lu-flash-overlay.lu-flash-active .lu-flash-level {
+  animation: lu-flash-text 0.9s ease-out forwards;
+}
+@keyframes lu-flash-text {
+  0%   { transform: scale(1.6); opacity: 1; }
+  50%  { transform: scale(1.0); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+
+/* ── Streak HUD badge (top-left, below XP bar) ────────────────────────────── */
+#hud-streak-badge {
+  position: absolute;
+  top: 60px;
   left: 12px;
   font-family: "Press Start 2P", cursive;
   font-size: 9px;

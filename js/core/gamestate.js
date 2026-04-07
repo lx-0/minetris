@@ -522,7 +522,15 @@ function triggerGameOver() {
     : isWeeklyChallenge ? 'weekly'
     : 'classic';
   const _xpBefore = (loadLifetimeStats().playerXP || 0);
-  const { xpEarned: _xpEarned, streakBonus: _xpStreak } = awardXP(state.score, _xpModeKey);
+  const { xpEarned: _xpEarned, streakBonus: _xpStreak } = awardXP(state.score, _xpModeKey, {
+    linesCleared:     state.linesCleared || 0,
+    tSpins:           typeof sessionTSpins   !== 'undefined' ? sessionTSpins   : 0,
+    tetrises:         typeof sessionTetrises !== 'undefined' ? sessionTetrises : 0,
+    highestCombo:     typeof sessionHighestComboCount !== 'undefined' ? sessionHighestComboCount : 0,
+    durationSecs:     state.elapsedSeconds || 0,
+    isMultiplayerWin: false,
+    isDailyChallenge: !!isDailyChallenge,
+  });
   const goXpEl = document.getElementById('go-xp-earned');
   if (goXpEl) {
     goXpEl.textContent = '+ ' + _xpEarned + ' XP' + (_xpStreak ? '  (Streak Bonus!)' : '');
@@ -533,6 +541,7 @@ function triggerGameOver() {
   const _xpAfter = (loadLifetimeStats().playerXP || 0);
   if (typeof checkLevelUp === 'function') checkLevelUp(_xpBefore, _xpAfter);
   if (typeof updateStreakHUD === 'function') updateStreakHUD();
+  if (typeof updateXPBarHUD === 'function') updateXPBarHUD();
 
   // Coach mark: first game over — explain XP and leveling
   if (typeof coachMarkGameOver === 'function') coachMarkGameOver();

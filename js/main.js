@@ -45,6 +45,7 @@ function init() {
   if (typeof initCaveMouthUI === "function") initCaveMouthUI();
   if (typeof initRecapFromUrl === "function") initRecapFromUrl();
   if (typeof updateLevelBadgeHUD === "function") updateLevelBadgeHUD();
+  if (typeof updateXPBarHUD === "function") updateXPBarHUD();
   if (typeof updateStreakHUD === "function") updateStreakHUD();
 
   scene = new THREE.Scene();

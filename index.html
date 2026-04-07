@@ -667,7 +667,13 @@
       <!-- Player level badge (top-left HUD) -->
       <div id="hud-player-level-badge" class="level-badge"></div>
 
-      <!-- Daily streak badge (top-left HUD, below level badge) -->
+      <!-- XP progress bar (top-left HUD, below level badge) -->
+      <div id="hud-xp-bar" class="hud-xp-bar-wrap">
+        <div id="hud-xp-bar-fill" class="hud-xp-bar-fill"></div>
+      </div>
+      <div id="hud-xp-bar-text" class="hud-xp-bar-text"></div>
+
+      <!-- Daily streak badge (top-left HUD, below XP bar) -->
       <div id="hud-streak-badge" style="display:none;"></div>
 
       <!-- Season HUD badge: shown in-game when < 14 days remain in the active season -->
@@ -2201,6 +2207,11 @@
           <div class="lu-toast-title"></div>
           <div class="lu-toast-body"></div>
         </div>
+      </div>
+
+      <!-- Level-up full-screen flash overlay -->
+      <div id="level-up-flash-overlay" class="lu-flash-overlay" aria-hidden="true">
+        <div class="lu-flash-level"></div>
       </div>
 
       <!-- General notification toasts (top-right, stacked, auto-dismiss) -->
