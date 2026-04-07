@@ -1,6 +1,6 @@
 // MINETRIS Service Worker
 // Cache version — bump this string to trigger an update toast in the game
-const CACHE_VERSION = 'minetris-v6.0';
+const CACHE_VERSION = 'minetris-v6.2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -97,6 +97,7 @@ const STATIC_ASSETS = [
   './js/audio/audio-event.js',
   './js/audio/audio-env.js',
   // JS — UI
+  './js/ui/history.js',
   './js/ui/settings.js',
   './js/ui/tutorial.js',
   './js/ui/coach-marks.js',
@@ -114,6 +115,7 @@ const STATIC_ASSETS = [
   './js/ui/theme-editor.js',
   './js/ui/mini-game.js',
   // JS — social
+  './js/social/chat.js',
   './js/social/community.js',
   './js/social/community-goals.js',
   './js/social/friends.js',
