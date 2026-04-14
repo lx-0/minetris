@@ -161,6 +161,48 @@
       }
       // Render World Card stats panel
       if (typeof renderWorldCard === "function") renderWorldCard();
+      // Populate Mini-Games personal bests
+      (function () {
+        var mgStats = typeof loadMinigameStats === 'function' ? loadMinigameStats() : null;
+        // Sprint mini — reuses standard sprint best
+        var sprintMiniPbEl = document.getElementById('mode-pb-sprint_mini');
+        if (sprintMiniPbEl) {
+          var sBest = typeof loadSprintBest === 'function' ? loadSprintBest() : null;
+          sprintMiniPbEl.textContent = sBest ? 'Best: ' + (typeof fmtSprintTime === 'function' ? fmtSprintTime(sBest.timeMs) : '') : '';
+        }
+        // Cheese Race
+        var crPbEl = document.getElementById('mode-pb-cheese_race');
+        if (crPbEl && mgStats) {
+          crPbEl.textContent = mgStats.cheese_race.bestTimeMs !== null
+            ? 'Best: ' + (typeof fmtMinigameTime === 'function' ? fmtMinigameTime(mgStats.cheese_race.bestTimeMs) : '')
+            : '';
+        }
+        // Block Puzzle Mini
+        var bpPbEl = document.getElementById('mode-pb-block_puzzle_mini');
+        if (bpPbEl && mgStats) {
+          var lv = mgStats.block_puzzle.levelsCompleted || 0;
+          bpPbEl.textContent = lv > 0 ? lv + ' / ' + (typeof BLOCK_PUZZLE_MINI_MAX_LEVEL !== 'undefined' ? BLOCK_PUZZLE_MINI_MAX_LEVEL : 20) + ' levels' : '';
+        }
+        // Dig Mode
+        var digPbEl = document.getElementById('mode-pb-dig_mode');
+        if (digPbEl && mgStats) {
+          var dBest = mgStats.dig.bestTimeSecs;
+          if (dBest !== null) {
+            var dm = Math.floor(dBest / 60).toString().padStart(2, '0');
+            var ds = (dBest % 60).toString().padStart(2, '0');
+            digPbEl.textContent = 'Best: ' + dm + ':' + ds;
+          } else {
+            digPbEl.textContent = '';
+          }
+        }
+        // Ultra Mode
+        var ultraPbEl = document.getElementById('mode-pb-ultra_mode');
+        if (ultraPbEl && mgStats) {
+          ultraPbEl.textContent = mgStats.ultra.bestScore !== null
+            ? 'Best: ' + mgStats.ultra.bestScore.toLocaleString()
+            : '';
+        }
+      })();
       // Apply highlight to the specified mode card
       ["tutorial", "classic", "sprint", "blitz", "marathon", "marathon_endless", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai", "countdown"].forEach(function (mode) {
         const cardEl = document.getElementById("mode-card-" + mode);
@@ -1239,6 +1281,112 @@
     hideModeSelect();
     requestPointerLock();
   });
+})();
+
+// ── Mini-Games card handlers ──────────────────────────────────────────────────
+(function _initMiniGameCards() {
+
+  // Helper: shared game reset + pointer lock entrance
+  function _launchMiniGame(setupFn, modeName) {
+    isDailyChallenge = false;
+    gameRng = null;
+    setupFn();
+    applyWorldModifierHUD();
+    try { localStorage.setItem('mineCtris_lastMode', modeName); } catch (_) {}
+    if (typeof metricsModePlayed === 'function') metricsModePlayed(modeName);
+    hideModeSelect();
+    requestPointerLock();
+  }
+
+  // Sprint Mini — reuses existing sprint mode
+  var sprintMiniCardEl = document.getElementById('mode-card-sprint_mini');
+  if (sprintMiniCardEl) {
+    sprintMiniCardEl.addEventListener('click', function () {
+      _launchMiniGame(function () {
+        isSprintMode         = true;
+        difficultyMultiplier = SPRINT_FIXED_MULTIPLIER;
+        lastDifficultyTier   = 4;
+      }, 'sprint_mini');
+    });
+  }
+
+  // Cheese Race
+  var cheeseCardEl = document.getElementById('mode-card-cheese_race');
+  if (cheeseCardEl) {
+    cheeseCardEl.addEventListener('click', function () {
+      _launchMiniGame(function () {
+        isCheeseRaceMode     = true;
+        difficultyMultiplier = CHEESE_RACE_FIXED_MULTIPLIER;
+        lastDifficultyTier   = 4;
+      }, 'cheese_race');
+    });
+  }
+
+  // Block Puzzle Mini — uses saved current level
+  var bpCardEl = document.getElementById('mode-card-block_puzzle_mini');
+  if (bpCardEl) {
+    bpCardEl.addEventListener('click', function () {
+      _launchMiniGame(function () {
+        var stats = typeof loadMinigameStats === 'function' ? loadMinigameStats() : null;
+        var startLevel = (stats && stats.block_puzzle.currentLevel) || 1;
+        isBlockPuzzleMiniMode = true;
+        blockPuzzleMiniLevel  = startLevel;
+        difficultyMultiplier  = BLOCK_PUZZLE_MINI_FIXED_MULTIPLIER;
+        lastDifficultyTier    = 3;
+      }, 'block_puzzle_mini');
+    });
+  }
+
+  // Dig Mode
+  var digCardEl = document.getElementById('mode-card-dig_mode');
+  if (digCardEl) {
+    digCardEl.addEventListener('click', function () {
+      _launchMiniGame(function () {
+        isDigMode            = true;
+        difficultyMultiplier = DIG_FIXED_MULTIPLIER;
+        lastDifficultyTier   = 4;
+      }, 'dig_mode');
+    });
+  }
+
+  // Ultra Mode
+  var ultraCardEl = document.getElementById('mode-card-ultra_mode');
+  if (ultraCardEl) {
+    ultraCardEl.addEventListener('click', function () {
+      _launchMiniGame(function () {
+        isUltraMode          = true;
+        ultraRemainingMs     = ULTRA_DURATION_MS;
+        ultraBonusActive     = false;
+        difficultyMultiplier = ULTRA_FIXED_MULTIPLIER;
+        lastDifficultyTier   = 4;
+      }, 'ultra_mode');
+    });
+  }
+
+  // Init restart/menu buttons on all mini-game complete overlays
+  if (typeof initMinigameRestartButtons === 'function') {
+    initMinigameRestartButtons();
+  }
+
+  // Expose launch helpers for restart buttons in minigames.js
+  window.launchCheeseRace = function () {
+    var el = document.getElementById('mode-card-cheese_race');
+    if (el) el.click();
+  };
+  window.launchDigMode = function () {
+    var el = document.getElementById('mode-card-dig_mode');
+    if (el) el.click();
+  };
+  window.launchUltraMode = function () {
+    var el = document.getElementById('mode-card-ultra_mode');
+    if (el) el.click();
+  };
+  window.launchBlockPuzzleMini = function (level) {
+    if (typeof blockPuzzleMiniLevel !== 'undefined') blockPuzzleMiniLevel = level || 1;
+    var el = document.getElementById('mode-card-block_puzzle_mini');
+    if (el) el.click();
+  };
+
 })();
 
 // ── Menu click sounds — delegated listener on mode-select panel ───────────────

@@ -630,6 +630,17 @@ function init() {
       if (typeof isTrainingMode !== "undefined" && isTrainingMode) {
         if (typeof setupTrainingGame === "function") setupTrainingGame();
       }
+
+      // Cheese Race: inject 10 garbage rows at game start
+      if (typeof isCheeseRaceMode !== 'undefined' && isCheeseRaceMode) {
+        if (typeof initCheeseRace === 'function') initCheeseRace();
+      }
+
+      // Block Puzzle Mini: inject level-specific garbage rows
+      if (typeof isBlockPuzzleMiniMode !== 'undefined' && isBlockPuzzleMiniMode) {
+        if (typeof initBlockPuzzleMini === 'function') initBlockPuzzleMini();
+      }
+
       // Show equipped power-up HUD badge if applicable
       updatePowerupHUD();
 
@@ -1443,6 +1454,8 @@ function init() {
   document.addEventListener('depthsLaunch', function () {
     isDailyChallenge = false;
     gameRng = null;
+    if (typeof markDungeonTierSeen === 'function') markDungeonTierSeen('free_run');
+    if (typeof startDungeonSession === 'function') startDungeonSession('free_run');
     try { localStorage.setItem('mineCtris_lastMode', 'depths'); } catch (_) {}
     if (typeof metricsModePlayed === 'function') metricsModePlayed('depths');
     requestPointerLock();
@@ -1452,6 +1465,8 @@ function init() {
   document.addEventListener('dailyDepthsLaunch', function () {
     isDailyChallenge = false;
     gameRng = null;
+    if (typeof markDungeonTierSeen === 'function') markDungeonTierSeen('daily_depths');
+    if (typeof startDungeonSession === 'function') startDungeonSession('daily_depths');
     try { localStorage.setItem('mineCtris_lastMode', 'daily_depths'); } catch (_) {}
     if (typeof metricsModePlayed === 'function') metricsModePlayed('daily_depths');
     requestPointerLock();

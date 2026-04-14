@@ -379,6 +379,27 @@ function spawnFallingPiece() {
   if (isDailyChallenge && !dailyTimerActive && !isGameOver) {
     dailyTimerActive = true;
   }
+  // Cheese Race: start timer on first piece drop
+  if (isCheeseRaceMode && !cheeseRaceTimerActive && !cheeseRaceComplete) {
+    cheeseRaceTimerActive = true;
+  }
+  // Dig Mode: start timer on first piece drop
+  if (isDigMode && !digTimerActive) {
+    digTimerActive = true;
+  }
+  // Ultra Mode: start countdown on first piece drop
+  if (isUltraMode && !ultraTimerActive && !ultraComplete) {
+    ultraTimerActive = true;
+  }
+  // Block Puzzle Mini: decrement piece count on each spawn and check failure
+  if (isBlockPuzzleMiniMode && !blockPuzzleMiniComplete) {
+    if (blockPuzzleMiniPiecesLeft <= 0) {
+      // No more pieces — evaluate immediately (will show failure if rows not cleared)
+      if (typeof checkBlockPuzzleMiniCondition === 'function') checkBlockPuzzleMiniCondition();
+      return; // don't spawn another piece
+    }
+    blockPuzzleMiniPiecesLeft--;
+  }
   // Battle / co-op: deliver one queued garbage row before this piece spawns.
   if ((isBattleMode || isCoopMode) && typeof deliverPendingGarbage === 'function') {
     deliverPendingGarbage();

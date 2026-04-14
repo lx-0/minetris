@@ -309,6 +309,19 @@ function updateDifficulty(delta) {
     difficultyMultiplier = BLITZ_FIXED_MULTIPLIER;
     return;
   }
+  // Mini-game modes with fixed speeds: no escalation
+  if (isCheeseRaceMode || isDigMode) {
+    difficultyMultiplier = CHEESE_RACE_FIXED_MULTIPLIER;
+    return;
+  }
+  if (isUltraMode) {
+    difficultyMultiplier = ULTRA_FIXED_MULTIPLIER;
+    return;
+  }
+  if (isBlockPuzzleMiniMode) {
+    difficultyMultiplier = BLOCK_PUZZLE_MINI_FIXED_MULTIPLIER;
+    return;
+  }
   // Marathon: speed is managed by updateMarathonLevel() on each line clear; skip time escalation
   if (isMarathonMode) return;
   // Puzzle mode: fixed slow speed; no escalation

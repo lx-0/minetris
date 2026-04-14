@@ -112,6 +112,48 @@ function updateScoreHUD() {
       "Time: " + sm + ":" + ss;
     scoreEl.querySelector(".hud-stat:nth-child(4)").style.color = "";
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Sprint";
+  } else if (isCheeseRaceMode) {
+    // Cheese Race: show lines cleared progress and elapsed time
+    scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
+      "Lines: " + linesCleared + "/" + CHEESE_RACE_ROWS;
+    const crSecs = Math.floor(cheeseRaceElapsedMs / 1000);
+    const crm = Math.floor(crSecs / 60).toString().padStart(2, "0");
+    const crs = (crSecs % 60).toString().padStart(2, "0");
+    scoreEl.querySelector(".hud-stat:nth-child(4)").textContent =
+      "Time: " + crm + ":" + crs;
+    scoreEl.querySelector(".hud-stat:nth-child(4)").style.color = "#ff9944";
+    scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Cheese Race";
+  } else if (isDigMode) {
+    // Dig Mode: show survival time and lines cleared
+    const digSecs = Math.floor(digElapsedMs / 1000);
+    const digm = Math.floor(digSecs / 60).toString().padStart(2, "0");
+    const digs = (digSecs % 60).toString().padStart(2, "0");
+    scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
+      "Lines: " + linesCleared;
+    scoreEl.querySelector(".hud-stat:nth-child(4)").textContent =
+      "Time: " + digm + ":" + digs;
+    scoreEl.querySelector(".hud-stat:nth-child(4)").style.color = "";
+    scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Dig Mode";
+  } else if (isUltraMode) {
+    // Ultra Mode: show lines and countdown (orange when bonus active)
+    scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
+      "Lines: " + linesCleared;
+    const ultraSecs = Math.max(0, Math.ceil(ultraRemainingMs / 1000));
+    const um = Math.floor(ultraSecs / 60).toString().padStart(2, "0");
+    const us = (ultraSecs % 60).toString().padStart(2, "0");
+    const ultraTimerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
+    ultraTimerEl.textContent = "Time: " + um + ":" + us;
+    ultraTimerEl.style.color = ultraBonusActive ? "#ff6600" : "";
+    scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Ultra";
+  } else if (isBlockPuzzleMiniMode) {
+    // Block Puzzle Mini: show pieces left and lines progress
+    scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
+      "Lines: " + linesCleared + "/" + blockPuzzleMiniRowsTarget;
+    scoreEl.querySelector(".hud-stat:nth-child(4)").textContent =
+      "Pieces: " + blockPuzzleMiniPiecesLeft;
+    scoreEl.querySelector(".hud-stat:nth-child(4)").style.color = blockPuzzleMiniPiecesLeft <= 3 ? "#ff4444" : "";
+    scoreEl.querySelector(".hud-stat:nth-child(5)").textContent =
+      "Puzzle Lv." + blockPuzzleMiniLevel;
   } else if (isComboChallenge) {
     // Combo Challenge: streak in slot 2, lines in slot 3, countdown in slot 4
     const ccSecs = Math.max(0, Math.ceil(comboChallengeRemainingMs / 1000));
@@ -229,8 +271,9 @@ function getMaxBlockHeight() {
 
 /** Show/hide the danger overlay based on current max block height. */
 function updateDangerWarning() {
-  // Sprint, Blitz, Puzzle, Battle, and Zen have no lose-by-height condition displayed here
-  if (isSprintMode || isBlitzMode || isPuzzleMode || isBattleMode || isZenMode) return;
+  // Sprint, Blitz, Puzzle, Battle, Zen, Cheese Race, Ultra, and Block Puzzle have no lose-by-height condition
+  if (isSprintMode || isBlitzMode || isPuzzleMode || isBattleMode || isZenMode ||
+      isCheeseRaceMode || isUltraMode || isBlockPuzzleMiniMode) return;
   const dangerEl = document.getElementById("danger-overlay");
   const dangerTextEl = document.getElementById("danger-text");
   if (!dangerEl || !dangerTextEl) return;
@@ -251,8 +294,9 @@ function updateDangerWarning() {
 
 /** Check if any landed block has reached the game-over height. */
 function checkGameOver() {
-  // Sprint, Blitz, and Zen have no lose condition — blocks can pile indefinitely
-  if (isSprintMode || isBlitzMode || isZenMode) return;
+  // Sprint, Blitz, Zen, Cheese Race, Ultra, and Block Puzzle have no lose condition
+  if (isSprintMode || isBlitzMode || isZenMode ||
+      isCheeseRaceMode || isUltraMode || isBlockPuzzleMiniMode) return;
   if (isGameOver) return;
   const localMaxY = getMaxBlockHeight();
   const authHeight = isCoopMode ? Math.max(localMaxY, coopPartnerMaxY) : localMaxY;
@@ -294,6 +338,8 @@ function triggerGameOver() {
   if (isGameOver) return;
   isGameOver = true;
   gameTimerRunning = false;
+  // Dig Mode: record survival stats before generic game-over handling
+  if (isDigMode && typeof onDigModeEnd === 'function') onDigModeEnd();
   // Haptic feedback on game over.
   if (typeof hapticsOnGameOver === 'function') hapticsOnGameOver();
   // Hide screenshot button once game ends

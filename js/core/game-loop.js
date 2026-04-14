@@ -84,6 +84,35 @@ function animate() {
       sprintElapsedMs += delta * 1000;
     }
 
+    // Cheese Race: tick elapsed timer
+    if (isCheeseRaceMode && cheeseRaceTimerActive && !cheeseRaceComplete) {
+      cheeseRaceElapsedMs += delta * 1000;
+    }
+
+    // Dig Mode: tick timer and inject garbage rows
+    if (isDigMode && digTimerActive && !isGameOver) {
+      if (typeof tickDigMode === 'function') tickDigMode(delta * 1000);
+    }
+
+    // Ultra Mode: tick countdown timer
+    if (isUltraMode && ultraTimerActive && !ultraComplete) {
+      ultraRemainingMs -= delta * 1000;
+      if (ultraRemainingMs <= 0) {
+        ultraRemainingMs = 0;
+        if (typeof triggerUltraComplete === 'function') triggerUltraComplete();
+      } else if (!ultraBonusActive && ultraRemainingMs <= ULTRA_BONUS_THRESHOLD_MS) {
+        // Activate Ultra bonus for final 60 seconds
+        ultraBonusActive = true;
+        if (speedUpBannerEl) {
+          speedUpBannerEl.textContent = '\u26a1 ULTRA BONUS! 2.0\xd7';
+          speedUpBannerEl.style.color = '#ff6600';
+          speedUpBannerEl.style.display = 'block';
+          speedUpBannerTimer = 2.5;
+        }
+        updateScoreHUD();
+      }
+    }
+
     // Daily challenge: end the game when 200 lines are cleared
     if (isDailyChallenge && dailyTimerActive && !isGameOver &&
         linesCleared >= DAILY_LINE_LIMIT) {
@@ -373,9 +402,13 @@ function animate() {
       gameElapsedSeconds += delta;
       const currentSecond = isBlitzMode
         ? Math.ceil(blitzRemainingMs / 1000)
+        : isUltraMode
+          ? Math.ceil(ultraRemainingMs / 1000)
         : isSprintMode
           ? Math.floor(sprintElapsedMs / 1000)
-          : isCountdownMode
+        : isCheeseRaceMode
+          ? Math.floor(cheeseRaceElapsedMs / 1000)
+        : isCountdownMode
             ? Math.floor(countdownElapsedMs / 1000)
             : Math.floor(gameElapsedSeconds);
       if (currentSecond !== lastHudSecond) {
