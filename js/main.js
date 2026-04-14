@@ -1452,6 +1452,8 @@ function init() {
   document.addEventListener('depthsLaunch', function () {
     isDailyChallenge = false;
     gameRng = null;
+    if (typeof markDungeonTierSeen === 'function') markDungeonTierSeen('free_run');
+    if (typeof startDungeonSession === 'function') startDungeonSession('free_run');
     try { localStorage.setItem('mineCtris_lastMode', 'depths'); } catch (_) {}
     if (typeof metricsModePlayed === 'function') metricsModePlayed('depths');
     requestPointerLock();
@@ -1461,6 +1463,8 @@ function init() {
   document.addEventListener('dailyDepthsLaunch', function () {
     isDailyChallenge = false;
     gameRng = null;
+    if (typeof markDungeonTierSeen === 'function') markDungeonTierSeen('daily_depths');
+    if (typeof startDungeonSession === 'function') startDungeonSession('daily_depths');
     try { localStorage.setItem('mineCtris_lastMode', 'daily_depths'); } catch (_) {}
     if (typeof metricsModePlayed === 'function') metricsModePlayed('daily_depths');
     requestPointerLock();
