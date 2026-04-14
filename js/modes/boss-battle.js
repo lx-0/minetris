@@ -16,6 +16,12 @@ let _bossAttackInterval = 20; // seconds between attacks (difficulty-adjusted)
 let _bossDarknessTimer  = 0;  // seconds remaining on warden darkness attack
 let _bossBadgeEl = null;     // cached HUD badge element
 
+// ── Pending setTimeout handles — cleared by resetBossBattle() ────────────────
+let _bossIntroTimer        = null;  // outer intro hide timer (2800ms)
+let _bossBannerTimer       = null;  // attack banner hide timer (2000ms)
+let _bossDarknessHideTimer = null;  // darkness overlay fade-out timer (600ms)
+let _bossVictoryTimer      = null;  // victory screen show timer (800ms)
+
 // ── Boss definitions ──────────────────────────────────────────────────────────
 const BOSS_DEFS = {
   wither: {
@@ -93,6 +99,17 @@ function startBossBattle(bossId) {
 
 // ── Public: reset (called from resetGame) ────────────────────────────────────
 function resetBossBattle() {
+  // Cancel all pending timers before any state changes so stale callbacks
+  // cannot fire on the next battle (e.g. victory screen on a fresh game).
+  clearTimeout(_bossIntroTimer);
+  clearTimeout(_bossBannerTimer);
+  clearTimeout(_bossDarknessHideTimer);
+  clearTimeout(_bossVictoryTimer);
+  _bossIntroTimer        = null;
+  _bossBannerTimer       = null;
+  _bossDarknessHideTimer = null;
+  _bossVictoryTimer      = null;
+
   isBossBattleMode   = false;
   _bossId            = null;
   _bossHP            = 0;
@@ -174,9 +191,9 @@ function _showBossIntro(def) {
 
   el.style.display = 'flex';
   requestAnimationFrame(function () { el.classList.add('boss-intro-visible'); });
-  setTimeout(function () {
+  _bossIntroTimer = setTimeout(function () {
     el.classList.remove('boss-intro-visible');
-    setTimeout(function () { el.style.display = 'none'; }, 600);
+    _bossIntroTimer = setTimeout(function () { el.style.display = 'none'; }, 600);
   }, 2800);
 }
 
@@ -298,7 +315,7 @@ function _hideDarkness() {
   var overlay = document.getElementById('boss-darkness-overlay');
   if (!overlay) return;
   overlay.classList.remove('boss-darkness-active');
-  setTimeout(function () { overlay.style.display = 'none'; }, 600);
+  _bossDarknessHideTimer = setTimeout(function () { overlay.style.display = 'none'; }, 600);
 }
 
 // ── Boss garbage row injection (standalone, for when battle-garbage isn't active) ──
@@ -367,7 +384,7 @@ function _showAttackBanner(label) {
   el.classList.remove('boss-banner-animate');
   void el.offsetWidth;
   el.classList.add('boss-banner-animate');
-  setTimeout(function () {
+  _bossBannerTimer = setTimeout(function () {
     el.style.display = 'none';
     el.classList.remove('boss-banner-animate');
   }, 2000);
@@ -390,7 +407,7 @@ function _triggerBossVictory() {
   var rewards = _grantBossRewards(_bossId);
 
   // Show victory screen
-  setTimeout(function () { _showVictoryScreen(rewards); }, 800);
+  _bossVictoryTimer = setTimeout(function () { _showVictoryScreen(rewards); }, 800);
 }
 
 // Unlock boss cosmetics and return their defs for display
