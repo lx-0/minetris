@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# pre-push hook — runs smoke test and secrets scan before allowing a push.
+# Install with: bash tools/install-hooks.sh
+
+echo "Running smoke test before push..."
+node tools/smoke-test.js
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "Push blocked: smoke test failed. Fix the errors above and try again."
+  exit 1
+fi
+
+echo ""
+echo "Running secrets scan before push..."
+bash tools/scan-secrets.sh
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "Push blocked: secrets detected. Fix the errors above and try again."
+  exit 1
+fi
