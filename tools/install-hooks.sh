@@ -2,59 +2,21 @@
 #
 # Installs git hooks for the MineCtris project.
 # Usage: bash tools/install-hooks.sh
+#
+# Hooks are tracked in .githooks/ and activated via git config core.hooksPath.
+# This avoids permission issues with the .git/hooks/ directory.
 
 set -e
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-HOOKS_DIR="$REPO_ROOT/.git/hooks"
+GITHOOKS_DIR="$REPO_ROOT/.githooks"
 
-# Install pre-push hook
-cat > "$HOOKS_DIR/pre-push" << 'HOOK'
-#!/bin/sh
-#
-# pre-push hook — runs smoke test and secrets scan before allowing a push.
-# Install with: bash tools/install-hooks.sh
+# Ensure hook scripts are executable
+chmod +x "$GITHOOKS_DIR/pre-push"
+chmod +x "$GITHOOKS_DIR/pre-commit"
 
-echo "Running smoke test before push..."
-node tools/smoke-test.js
-
-if [ $? -ne 0 ]; then
-  echo ""
-  echo "Push blocked: smoke test failed. Fix the errors above and try again."
-  exit 1
-fi
-
-echo ""
-echo "Running secrets scan before push..."
-bash tools/scan-secrets.sh
-
-if [ $? -ne 0 ]; then
-  echo ""
-  echo "Push blocked: secrets detected. Fix the errors above and try again."
-  exit 1
-fi
-HOOK
-
-chmod +x "$HOOKS_DIR/pre-push"
-
-# Install pre-commit hook (secrets scan on staged files)
-cat > "$HOOKS_DIR/pre-commit" << 'HOOK'
-#!/bin/sh
-#
-# pre-commit hook — scans staged files for secrets.
-# Install with: bash tools/install-hooks.sh
-
-echo "Scanning staged files for secrets..."
-bash tools/scan-secrets.sh --staged
-
-if [ $? -ne 0 ]; then
-  echo ""
-  echo "Commit blocked: secrets detected. Fix the errors above and try again."
-  exit 1
-fi
-HOOK
-
-chmod +x "$HOOKS_DIR/pre-commit"
+# Point git to the tracked hooks directory
+git -C "$REPO_ROOT" config core.hooksPath .githooks
 
 echo "Git hooks installed successfully."
 echo "  - pre-push: runs smoke test (tools/smoke-test.js) + secrets scan (tools/scan-secrets.sh)"

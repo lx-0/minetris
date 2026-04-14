@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# pre-commit hook — scans staged files for secrets.
+# Install with: bash tools/install-hooks.sh
+
+echo "Scanning staged files for secrets..."
+bash tools/scan-secrets.sh --staged
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "Commit blocked: secrets detected. Fix the errors above and try again."
+  exit 1
+fi
