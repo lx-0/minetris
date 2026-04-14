@@ -26,6 +26,8 @@ const _DUNGEON_MAP = {
   deep_caverns:  'forest',
   abyssal_rift:  'end',
   infinite:      'nether',
+  free_run:      'plains',
+  daily_depths:  'forest',
 };
 
 const _RANDOM_POOL = ['plains', 'forest', 'desert', 'nether', 'end', 'ocean'];
