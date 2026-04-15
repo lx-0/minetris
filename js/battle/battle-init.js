@@ -70,8 +70,9 @@ function _initBattleHandlers() {
               card.className = 'battle-lobby-card' + (full ? ' battle-lobby-card-full' : '');
 
               // Header row: room code + badges
+              var safeCode = _escHtml(room.code || '');
               var header = '<div class="blc-header">' +
-                '<span class="blc-code">' + room.code + '</span>';
+                '<span class="blc-code">' + safeCode + '</span>';
               if (room.isTournament) header += '<span class="blc-badge blc-badge-tournament">&#127942; Tournament</span>';
               var mode = room.mode || (room.isCoop ? 'co-op' : 'battle');
               header += '<span class="blc-badge blc-badge-mode">' + (mode === 'co-op' ? '&#129309; Co-op' : '&#9876; Battle') + '</span>';
@@ -84,13 +85,13 @@ function _initBattleHandlers() {
                 var p2 = room.players[1];
                 players = '<div class="blc-players">' +
                   '<span class="blc-player">' +
-                    '<span class="blc-pname">' + (p1.name || 'Player 1') + '</span>' +
-                    (typeof p1.rating === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + p1.rating + '</span>' : '') +
+                    '<span class="blc-pname">' + _escHtml(p1.name || 'Player 1') + '</span>' +
+                    (typeof p1.rating === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + (+p1.rating | 0) + '</span>' : '') +
                   '</span>' +
                   '<span class="blc-vs">vs</span>' +
                   '<span class="blc-player">' +
-                    '<span class="blc-pname">' + (p2.name || 'Player 2') + '</span>' +
-                    (typeof p2.rating === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + p2.rating + '</span>' : '') +
+                    '<span class="blc-pname">' + _escHtml(p2.name || 'Player 2') + '</span>' +
+                    (typeof p2.rating === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + (+p2.rating | 0) + '</span>' : '') +
                   '</span>' +
                 '</div>';
               } else if (room.playerNames && room.playerNames.length >= 2) {
@@ -98,13 +99,13 @@ function _initBattleHandlers() {
                 var ratings = room.eloRatings || [];
                 players = '<div class="blc-players">' +
                   '<span class="blc-player">' +
-                    '<span class="blc-pname">' + room.playerNames[0] + '</span>' +
-                    (typeof ratings[0] === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + ratings[0] + '</span>' : '') +
+                    '<span class="blc-pname">' + _escHtml(room.playerNames[0]) + '</span>' +
+                    (typeof ratings[0] === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + (+ratings[0] | 0) + '</span>' : '') +
                   '</span>' +
                   '<span class="blc-vs">vs</span>' +
                   '<span class="blc-player">' +
-                    '<span class="blc-pname">' + room.playerNames[1] + '</span>' +
-                    (typeof ratings[1] === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + ratings[1] + '</span>' : '') +
+                    '<span class="blc-pname">' + _escHtml(room.playerNames[1]) + '</span>' +
+                    (typeof ratings[1] === 'number' ? '<span class="blc-prating">&#9733;&nbsp;' + (+ratings[1] | 0) + '</span>' : '') +
                   '</span>' +
                 '</div>';
               }
@@ -124,7 +125,7 @@ function _initBattleHandlers() {
               var footer = '<div class="blc-footer">' +
                 durationStr +
                 '<span class="blc-spectators">&#128065;&nbsp;' + (room.spectatorCount || 0) + ' watching</span>' +
-                '<button class="blc-watch-btn" data-code="' + room.code + '" data-full="' + full + '"' + (full ? ' disabled' : '') + '>' +
+                '<button class="blc-watch-btn" data-code="' + safeCode + '" data-full="' + full + '"' + (full ? ' disabled' : '') + '>' +
                   (full ? 'Full' : 'Watch') +
                 '</button>' +
               '</div>';
@@ -145,7 +146,20 @@ function _initBattleHandlers() {
           });
       }
 
+      function _escHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
       function closeBattleOverlay() {
+        if (typeof _rankedQueueExpandTimer !== 'undefined' && _rankedQueueExpandTimer) {
+          clearInterval(_rankedQueueExpandTimer);
+          _rankedQueueExpandTimer = null;
+        }
         battleOverlay.style.display = "none";
         battle.disconnect();
         blocker.style.display = "flex";
