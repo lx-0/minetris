@@ -1286,6 +1286,12 @@
 // ── Mini-Games card handlers ──────────────────────────────────────────────────
 (function _initMiniGameCards() {
 
+  // When launchBlockPuzzleMini(level) is called programmatically, store the
+  // requested level here so the card-click handler uses it instead of
+  // re-reading currentLevel from localStorage (which is already advanced after
+  // a successful level completion, causing "Play Again" to skip to the next level).
+  var _bpMiniRequestedLevel = null;
+
   // Helper: shared game reset + pointer lock entrance
   function _launchMiniGame(setupFn, modeName) {
     isDailyChallenge = false;
@@ -1322,13 +1328,20 @@
     });
   }
 
-  // Block Puzzle Mini — uses saved current level
+  // Block Puzzle Mini — uses saved current level, or the level explicitly
+  // requested by launchBlockPuzzleMini (e.g. "Play Again" on the same level).
   var bpCardEl = document.getElementById('mode-card-block_puzzle_mini');
   if (bpCardEl) {
     bpCardEl.addEventListener('click', function () {
       _launchMiniGame(function () {
-        var stats = typeof loadMinigameStats === 'function' ? loadMinigameStats() : null;
-        var startLevel = (stats && stats.block_puzzle.currentLevel) || 1;
+        var startLevel;
+        if (_bpMiniRequestedLevel !== null) {
+          startLevel = _bpMiniRequestedLevel;
+          _bpMiniRequestedLevel = null; // consume so direct clicks still read storage
+        } else {
+          var stats = typeof loadMinigameStats === 'function' ? loadMinigameStats() : null;
+          startLevel = (stats && stats.block_puzzle.currentLevel) || 1;
+        }
         isBlockPuzzleMiniMode = true;
         blockPuzzleMiniLevel  = startLevel;
         difficultyMultiplier  = BLOCK_PUZZLE_MINI_FIXED_MULTIPLIER;
@@ -1382,7 +1395,7 @@
     if (el) el.click();
   };
   window.launchBlockPuzzleMini = function (level) {
-    if (typeof blockPuzzleMiniLevel !== 'undefined') blockPuzzleMiniLevel = level || 1;
+    _bpMiniRequestedLevel = (level != null) ? level : null;
     var el = document.getElementById('mode-card-block_puzzle_mini');
     if (el) el.click();
   };
