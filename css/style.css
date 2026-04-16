@@ -2834,6 +2834,52 @@ body.hc-mode .settings-section-heading {
   min-height: 1.2em;
   text-shadow: 0 0 6px rgba(255, 255, 0, 0.5);
 }
+/* Marathon length toggle buttons (29 Levels / Endless) */
+.mar-len-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.40em;
+  padding: 3px 6px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,180,80,0.25);
+  border-radius: 4px;
+  color: #ca9;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  line-height: 1.4;
+}
+.mar-len-btn:hover {
+  background: rgba(255,180,80,0.18);
+  color: #fda;
+  border-color: rgba(255,180,80,0.55);
+}
+.mar-len-btn.mar-len-btn-active {
+  background: rgba(255,180,80,0.22);
+  color: #fda;
+  border-color: rgba(255,180,80,0.7);
+  text-shadow: 0 0 6px rgba(255,180,80,0.6);
+}
+/* Practice scenario picker button */
+.practice-scenario-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.40em;
+  padding: 3px 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(160,220,100,0.25);
+  border-radius: 4px;
+  color: #aca;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.practice-scenario-btn:hover {
+  background: rgba(160,220,100,0.18);
+  color: #bfc;
+  border-color: rgba(160,220,100,0.55);
+}
 /* Gravity mode selector buttons inside the Practice card */
 .grav-btn {
   font-family: "Press Start 2P", cursive;
