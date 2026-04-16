@@ -1,10 +1,17 @@
 // Game reset — resets all state for a new game.
 // Requires: core/gamestate.js loaded first.
 
-function resetGame() {
+/**
+ * @param {Object} [opts]
+ * @param {boolean} [opts.suppressStartScreen=false] - If true, skip showing the
+ *   blocker/start screen after resetting. Used by mini-game restarts that
+ *   immediately re-acquire pointer lock without returning to the menu.
+ */
+function resetGame(opts) {
+  var _suppressStartScreen = opts && opts.suppressStartScreen === true;
   // Decide whether to show a mini-game before returning to the start screen.
   // Only eligible after a real game over (not battle, expedition, or practice transitions).
-  const _mgEligible = isGameOver &&
+  const _mgEligible = !_suppressStartScreen && isGameOver &&
     !isBattleMode &&
     !isPracticeMode &&
     (typeof activeBiomeId === 'undefined' || !activeBiomeId);
@@ -544,6 +551,7 @@ function resetGame() {
     renderHighScoresStart();
   }
 
+  if (_suppressStartScreen) return;
   if (_mgEligible && typeof miniGameShow === 'function') {
     miniGameShow(_showStartScreen);
   } else {

@@ -4,6 +4,12 @@
     function showModeSelect(highlightMode) {
       const modeSelectEl = document.getElementById("mode-select");
       if (!modeSelectEl) return;
+      // If coming from a mini-game completion overlay (isGameOver=true but the
+      // standard resetGame/start-screen path was skipped), silently reset state
+      // so that picking any mode card starts a fresh game.
+      if (typeof isGameOver !== 'undefined' && isGameOver && typeof resetGame === 'function') {
+        resetGame({ suppressStartScreen: true });
+      }
       // Populate Tutorial card state
       (function () {
         var tutCard = document.getElementById('mode-card-tutorial');
@@ -1294,6 +1300,12 @@
 
   // Helper: shared game reset + pointer lock entrance
   function _launchMiniGame(setupFn, modeName) {
+    // If a previous game is over (e.g. "Play Again" from a completion overlay),
+    // reset all game state silently before re-entering. Without this, isGameOver
+    // stays true and the game loop refuses to tick on the next lock.
+    if (typeof isGameOver !== 'undefined' && isGameOver && typeof resetGame === 'function') {
+      resetGame({ suppressStartScreen: true });
+    }
     isDailyChallenge = false;
     gameRng = null;
     setupFn();
