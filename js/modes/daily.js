@@ -309,7 +309,7 @@ function renderDailyBestGameOver(isNewBest) {
         _dcWrap.style.display = 'flex';
       };
       if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(_renderDailyCard);
+        document.fonts.ready.then(_renderDailyCard).catch(_renderDailyCard);
       } else {
         _renderDailyCard();
       }

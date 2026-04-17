@@ -509,7 +509,7 @@
       navigator.clipboard.writeText(url).then(function () {
         const fb = document.getElementById('rooms-copy-feedback');
         if (fb) { fb.textContent = '\u2713 Copied!'; setTimeout(function () { fb.textContent = ''; }, 2000); }
-      });
+      }).catch(function () { window.prompt('Copy invite link:', url); });
     });
   }
 

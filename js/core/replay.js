@@ -450,7 +450,7 @@ function _showReplayShareFlyout(replayData, anchorBtn) {
     navigator.clipboard.writeText(shareText).then(function() {
       anchorBtn.textContent = 'Copied!';
       setTimeout(function() { anchorBtn.textContent = 'Share'; }, 1500);
-    });
+    }).catch(function() {});
   }
 }
 

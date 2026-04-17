@@ -291,7 +291,7 @@
         navigator.clipboard.writeText(tweetText).then(function () {
           copyTxtBtn.textContent = '\u2713 Copied!';
           setTimeout(function () { copyTxtBtn.textContent = '\uD83D\uDD17 Copy Text'; }, 2000);
-        });
+        }).catch(function () { window.prompt('Copy text:', tweetText); });
       } else {
         window.prompt('Copy text:', tweetText);
       }

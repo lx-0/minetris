@@ -81,7 +81,8 @@ function _initBattleSpectator() {
         var overlayEl = document.getElementById("spectator-overlay");
         if (overlayEl) overlayEl.style.display = "none";
 
-        if (_spectatorResultTimer) { clearTimeout(_spectatorResultTimer); _spectatorResultTimer = null; }
+        if (_spectatorResultTimer) { clearInterval(_spectatorResultTimer); _spectatorResultTimer = null; }
+        if (_GARBAGE_DRAIN_INTERVAL) { clearInterval(_GARBAGE_DRAIN_INTERVAL); _GARBAGE_DRAIN_INTERVAL = null; }
         _spectatorStopTimer();
 
         battle.off("spectator_welcome",     _onSpectatorWelcome);

@@ -31,9 +31,10 @@ function addScore(pts) {
 function updateCoopScoreHUD() {
   const el = document.getElementById('coop-score-display');
   if (!el) return;
-  el.querySelector('.coop-combined-score').textContent = coopScore;
-  el.querySelector('.coop-score-sub').textContent =
-    'You: ' + coopMyScore + '  |  Partner: ' + coopPartnerScore;
+  const _combined = el.querySelector('.coop-combined-score');
+  if (_combined) _combined.textContent = coopScore;
+  const _sub = el.querySelector('.coop-score-sub');
+  if (_sub) _sub.textContent = 'You: ' + coopMyScore + '  |  Partner: ' + coopPartnerScore;
 }
 
 /** Update the partner status dot color. */
@@ -64,8 +65,10 @@ function updateScoreHUD() {
     scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
       "Lines: " + linesCleared + "/" + DAILY_LINE_LIMIT;
     const dailyLineEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
-    dailyLineEl.textContent = "Daily #" + (typeof getDailyNumber === 'function' ? getDailyNumber() : '');
-    dailyLineEl.style.color = "";
+    if (dailyLineEl) {
+      dailyLineEl.textContent = "Daily #" + (typeof getDailyNumber === 'function' ? getDailyNumber() : '');
+      dailyLineEl.style.color = "";
+    }
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Daily";
   } else if (isBlitzMode) {
     // Blitz: show lines and countdown timer (gold when bonus active)
@@ -75,8 +78,10 @@ function updateScoreHUD() {
     const bm = Math.floor(blitzSecs / 60).toString().padStart(2, "0");
     const bs = (blitzSecs % 60).toString().padStart(2, "0");
     const timerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
-    timerEl.textContent = "Time: " + bm + ":" + bs;
-    timerEl.style.color = blitzBonusActive ? "#ffd700" : "";
+    if (timerEl) {
+      timerEl.textContent = "Time: " + bm + ":" + bs;
+      timerEl.style.color = blitzBonusActive ? "#ffd700" : "";
+    }
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Blitz";
   } else if (isMarathonMode) {
     // Marathon: show lines within the current level, level number, and LPM
@@ -142,8 +147,10 @@ function updateScoreHUD() {
     const um = Math.floor(ultraSecs / 60).toString().padStart(2, "0");
     const us = (ultraSecs % 60).toString().padStart(2, "0");
     const ultraTimerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
-    ultraTimerEl.textContent = "Time: " + um + ":" + us;
-    ultraTimerEl.style.color = ultraBonusActive ? "#ff6600" : "";
+    if (ultraTimerEl) {
+      ultraTimerEl.textContent = "Time: " + um + ":" + us;
+      ultraTimerEl.style.color = ultraBonusActive ? "#ff6600" : "";
+    }
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Ultra";
   } else if (isBlockPuzzleMiniMode) {
     // Block Puzzle Mini: show pieces left and lines progress
@@ -164,8 +171,10 @@ function updateScoreHUD() {
     scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
       "Lines: " + comboChallengeTotalLines;
     const ccTimerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
-    ccTimerEl.textContent = "Time: " + ccm + ":" + ccs;
-    ccTimerEl.style.color = comboChallengeRemainingMs <= 10000 ? "#ff4444" : "";
+    if (ccTimerEl) {
+      ccTimerEl.textContent = "Time: " + ccm + ":" + ccs;
+      ccTimerEl.style.color = comboChallengeRemainingMs <= 10000 ? "#ff4444" : "";
+    }
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent = "Combo";
   } else if (isCountdownMode) {
     // Countdown: show time survived, lines cleared, stage, and mode label
@@ -175,8 +184,10 @@ function updateScoreHUD() {
     scoreEl.querySelector(".hud-stat:nth-child(2)").textContent = "Blocks: " + blocksMined;
     scoreEl.querySelector(".hud-stat:nth-child(3)").textContent = "Lines: " + linesCleared;
     const cdTimerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
-    cdTimerEl.textContent = "Time: " + cdm + ":" + cds;
-    cdTimerEl.style.color = countdownWarningActive ? "#ff4444" : "";
+    if (cdTimerEl) {
+      cdTimerEl.textContent = "Time: " + cdm + ":" + cds;
+      cdTimerEl.style.color = countdownWarningActive ? "#ff4444" : "";
+    }
     scoreEl.querySelector(".hud-stat:nth-child(5)").textContent =
       "Stage " + countdownSpeedStage + "/" + COUNTDOWN_TOTAL_STAGES;
   } else if (isZenMode) {
@@ -942,7 +953,7 @@ function triggerGameOver() {
       if (result && result.ok && typeof unlockSeasonalEventCosmetics === 'function') {
         unlockSeasonalEventCosmetics();
       }
-    });
+    }).catch(function() {});
   }
 
   // Fade out background music, then play game-over jingle
@@ -1021,7 +1032,7 @@ function triggerGameOver() {
         if (typeof Share !== 'undefined') Share.initGameOverExtras();
       };
       if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(_renderCard);
+        document.fonts.ready.then(_renderCard).catch(_renderCard);
       } else {
         _renderCard();
       }

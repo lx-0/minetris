@@ -1417,6 +1417,8 @@ function _initCloudSyncSection() {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(code).then(function() {
           _showCloudFeedback("Sync code copied!", "#7f7");
+        }).catch(function() {
+          _showCloudFeedback("Code: " + code, "#7f7");
         });
       } else {
         _showCloudFeedback("Code: " + code, "#7f7");

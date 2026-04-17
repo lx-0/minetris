@@ -626,7 +626,7 @@ function initGuildBoardSkin() {
     if (res.ok && res.data && res.data.guild) {
       applyGuildBoardSkin(res.data.guild.activeBoardSkin || null);
     }
-  });
+  }).catch(function() {});
 }
 
 // ── Expedition tab ─────────────────────────────────────────────────────────────

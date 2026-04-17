@@ -395,7 +395,7 @@ function showSeasonRecapModal(card) {
         navigator.clipboard.writeText(shareUrl).then(function () {
           copyBtn.textContent = 'Copied!';
           setTimeout(function () { copyBtn.textContent = 'Copy Link'; }, 2200);
-        });
+        }).catch(function () { window.prompt('Copy link:', shareUrl); });
       } else {
         try { shareInput && shareInput.select(); document.execCommand('copy'); } catch (_) {}
         copyBtn.textContent = 'Copied!';
