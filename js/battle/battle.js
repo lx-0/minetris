@@ -41,6 +41,7 @@ const battle = (function () {
   }
 
   function _startPing() {
+    if (_pingInterval) { clearInterval(_pingInterval); _pingInterval = null; }
     _pingInterval = setInterval(function () {
       if (_ws && _ws.readyState === WebSocket.OPEN) {
         _ws.send(JSON.stringify({ type: 'ping' }));
