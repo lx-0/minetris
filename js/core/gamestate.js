@@ -755,7 +755,7 @@ function triggerGameOver() {
             if (lbBtn) { lbBtn.textContent = 'Submitted!'; lbBtn.disabled = true; }
             // Fetch and render today's top-10 in the results screen
             if (typeof apiFetchLeaderboard === 'function' && typeof renderDailyTop10 === 'function') {
-              apiFetchLeaderboard(_dailyDate || getDailyDateString()).then(function(lbData) {
+              apiFetchLeaderboard(_dailyDate || (typeof getDailyDateString === 'function' ? getDailyDateString() : '')).then(function(lbData) {
                 if (lbData && lbData.entries) {
                   renderDailyTop10(lbData.entries, _lbName);
                 }

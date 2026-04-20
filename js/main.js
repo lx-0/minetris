@@ -705,7 +705,8 @@ function init() {
       if (nudgeHintEl) nudgeHintEl.style.display = "none";
       if (lineClearBannerEl) lineClearBannerEl.style.display = "none";
       if (comboBannerEl) comboBannerEl.style.display = "none";
-      document.getElementById("inventory-hud").style.display = "none";
+      const invHudEl = document.getElementById("inventory-hud");
+      if (invHudEl) invHudEl.style.display = "none";
       const dangerEl = document.getElementById("danger-overlay");
       const dangerTextEl = document.getElementById("danger-text");
       if (dangerEl) dangerEl.style.display = "none";

@@ -547,7 +547,8 @@ function resetGame(opts) {
     instructions.style.display = "";
     crosshair.style.display = "none";
     if (scoreEl) scoreEl.style.display = "none";
-    document.getElementById("inventory-hud").style.display = "none";
+    const invHudResetEl = document.getElementById("inventory-hud");
+    if (invHudResetEl) invHudResetEl.style.display = "none";
     renderHighScoresStart();
   }
 
