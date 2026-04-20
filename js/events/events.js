@@ -297,7 +297,6 @@ function endEvent() {
 // ── Lifecycle callbacks ────────────────────────────────────────────────────────
 
 function _fireOnStart(type) {
-  console.log("[EventEngine] Event started:", type);
   if (type === EVENT_TYPES.PIECE_STORM) _onPieceStormStart();
   if (type === EVENT_TYPES.GOLDEN_HOUR) _onGoldenHourStart();
   if (type === EVENT_TYPES.EARTHQUAKE)  _onEarthquakeStart();
@@ -317,7 +316,6 @@ function _fireOnTick(delta, type) {
 }
 
 function _fireOnEnd(type) {
-  console.log("[EventEngine] Event ended:", type);
   if (type === EVENT_TYPES.PIECE_STORM) _onPieceStormEnd();
   if (type === EVENT_TYPES.GOLDEN_HOUR) _onGoldenHourEnd();
   if (type === EVENT_TYPES.EARTHQUAKE)  _onEarthquakeEnd();

@@ -439,7 +439,6 @@ function initJukebox() {
   // Sync HUD mute button state
   _jbSyncHudMute();
 
-  console.log('[Jukebox] Initialized. Track:', _jbTrack, 'Shuffle:', _jbShuffle);
 }
 
 // ── Playback control ─────────────────────────────────────────────────────────

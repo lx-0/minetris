@@ -332,7 +332,8 @@ function updateSky(elapsedSeconds, delta = 0.016) {
   // World modifier sky override — blend toward modifier fog color
   const _wmodSky = typeof getWorldModifier === 'function' ? getWorldModifier() : null;
   if (_wmodSky && _wmodSky.fogColor !== null) {
-    const _wfc = new THREE.Color(_wmodSky.fogColor);
+    _wmodColor.set(_wmodSky.fogColor);
+    const _wfc = _wmodColor;
     // Zenith: darker tinted version of the fog color; horizon: full fog color
     const _wzen = [_wfc.r * 255 * 0.4, _wfc.g * 255 * 0.4, _wfc.b * 255 * 0.4];
     const _whor = [_wfc.r * 255, _wfc.g * 255, _wfc.b * 255];
@@ -477,11 +478,8 @@ function updateSky(elapsedSeconds, delta = 0.016) {
     const maxH = getMaxBlockHeight();
     const heightFactor = Math.max(0, Math.min(1, maxH / GAME_OVER_HEIGHT));
     let fogDensity = 0.002 + heightFactor * 0.015;
-    let fogColor = new THREE.Color(
-      horArr[0] / 255,
-      horArr[1] / 255,
-      horArr[2] / 255
-    );
+    _fogColor.setRGB(horArr[0] / 255, horArr[1] / 255, horArr[2] / 255);
+    let fogColor = _fogColor;
 
     // Biome fog tint (applied first, takes priority over season)
     if (_biomeSkyTheme && _biomeSkyTheme.fog) {
@@ -503,7 +501,8 @@ function updateSky(elapsedSeconds, delta = 0.016) {
     // World modifier fog tint
     const _wmodFog = typeof getWorldModifier === 'function' ? getWorldModifier() : null;
     if (_wmodFog && _wmodFog.fogColor !== null) {
-      fogColor.lerp(new THREE.Color(_wmodFog.fogColor), 0.65);
+      _wmodColor.set(_wmodFog.fogColor);
+      fogColor.lerp(_wmodColor, 0.65);
       if (_wmodFog.fogDensityBase !== null) {
         fogDensity = Math.max(fogDensity, _wmodFog.fogDensityBase + heightFactor * 0.015);
       }
@@ -523,8 +522,10 @@ function updateSky(elapsedSeconds, delta = 0.016) {
 
 // ── Underground depth effects ─────────────────────────────────────────────────
 
-// Reusable color for underground fog interpolation (avoids per-frame allocation).
+// Reusable colors to avoid per-frame allocations.
 const _ugFogColor = new THREE.Color();
+const _fogColor   = new THREE.Color();
+const _wmodColor  = new THREE.Color();
 
 /**
  * Apply underground ambient dimming and fog colour shift based on camera depth.

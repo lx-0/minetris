@@ -2,7 +2,6 @@
 // Must be loaded last (after all other modules).
 
 function init() {
-  console.log("Initializing game...");
 
   // Assign DOM references (DOM is ready since script runs after </body>)
   rendererContainer = document.getElementById("renderer-container");
@@ -496,7 +495,6 @@ function init() {
     // ─────────────────────────────────────────────────────────────────
 
     controls.addEventListener("lock", function () {
-      console.log("Pointer lock successful ('lock' event fired).");
 
       // ── Editor mode: show editor HUD only, skip game setup ───────────────
       if (isEditorMode) {
@@ -649,7 +647,6 @@ function init() {
     });
 
     controls.addEventListener("unlock", function () {
-      console.log("Pointer lock released ('unlock' event fired).");
       gameTimerRunning = false;
       // Friends presence: return to menu mode on unlock
       if (typeof friendsSetMode === 'function') friendsSetMode('menu');
@@ -1505,7 +1502,6 @@ function init() {
     }
   });
 
-  console.log("Initialization complete. Starting animation loop.");
   animate();
 }
 // initPostProcessing() defined in js/rendering/postprocessing.js

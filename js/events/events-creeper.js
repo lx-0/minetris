@@ -854,6 +854,5 @@ window._debugTriggerEvent = function (type) {
     );
     return;
   }
-  console.log("[EventEngine] Debug trigger:", type);
   startEvent(type);
 };

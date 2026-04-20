@@ -120,7 +120,6 @@ function initAudio() {
     sfx.leafHit   = new Howl({ src: ["sounds/leaf_hit.wav"],   volume: 0.55, preload: true });
     sfx.leafBreak  = new Howl({ src: ["sounds/leaf_break.wav"],  volume: 0.65, preload: true });
     sfx.place     = new Howl({ src: ["sounds/place.wav"],      volume: 0.65, preload: true });
-    console.log("Howler.js SFX preloaded.");
   } else {
     console.warn("Howler.js not loaded — SFX disabled.");
   }
@@ -379,7 +378,6 @@ function initAudio() {
     if (typeof _initEventAudio === 'function') _initEventAudio();
     // Initialize jukebox synthesis now that masterCompressor exists.
     if (typeof initJukebox === 'function') initJukebox();
-    console.log("Tone.js musical bus initialized.");
   } else {
     console.warn("Tone.js not loaded — line-clear music disabled.");
   }

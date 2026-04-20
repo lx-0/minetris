@@ -157,9 +157,6 @@ function onMouseDown(event) {
       return;
     }
     miningProgress++;
-    console.log(
-      `Mining progress on block: ${miningProgress}/${MINING_CLICKS_NEEDED}`
-    );
     let clicksNeeded = targetedBlock.userData.miningClicks || MINING_CLICKS_NEEDED;
     if (pickaxeTier === "stone") clicksNeeded = Math.min(clicksNeeded, 2);
     else if (pickaxeTier === "iron" || pickaxeTier === "diamond") clicksNeeded = 1;
@@ -210,7 +207,6 @@ function onMouseDown(event) {
     }
 
     if (isBreak) {
-      console.log("Block broken!");
       if (typeof tutorialNotify === "function") tutorialNotify("blockMine");
       if (typeof gameTooltipDismiss === 'function') gameTooltipDismiss();
 
@@ -253,10 +249,7 @@ function onMouseDown(event) {
       // ── Rubble mining drop: 50/50 stone or dirt ─────────────────────────────
       if (_isRubble) {
         const _rubbleDropColor = Math.random() < 0.5 ? '#808080' : '#8b4513';
-        const collected = addToInventory(_rubbleDropColor);
-        if (!collected) {
-          console.log("Inventory full — rubble drop discarded.");
-        }
+        addToInventory(_rubbleDropColor);
       } else {
         const blockColor =
           targetedBlock.userData.originalColor ||
@@ -268,11 +261,7 @@ function onMouseDown(event) {
         const _invColor = _dropMat === "obsidian_shard" ? OBSIDIAN_SHARD_COLOR : cssColor;
         const crumbles = targetedBlock.name === "leaf_block" && Math.random() < 0.2;
         if (!crumbles) {
-          const collected = addToInventory(_invColor);
-          if (!collected) {
-            console.log("Inventory full — block discarded.");
-          }
-
+          addToInventory(_invColor);
         }
       }
 
@@ -332,7 +321,6 @@ function onMouseDown(event) {
         });
         if (!_rubbleRemaining) {
           cancelOnePendingGarbage();
-          console.log('Rubble row fully mined — cancelled one pending garbage attack.');
         }
       }
 
