@@ -364,6 +364,7 @@ const battleRoyale = (function () {
      * Server waits for BR_MIN_PLAYERS, starts countdown, locks at BR_MAX_PLAYERS.
      */
     async joinQueue() {
+      if (_ws) { try { _ws.close(); } catch (_) {} _ws = null; }
       const resp = await fetch(BR_WORKER_URL + '/br/queue/join', { method: 'POST' });
       if (!resp.ok) throw new Error('BR queue join failed');
       const data = await resp.json();

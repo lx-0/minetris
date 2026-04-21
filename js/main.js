@@ -343,7 +343,7 @@ function init() {
     const survivalResetYes = document.getElementById("survival-reset-confirm-yes");
     const survivalResetNo = document.getElementById("survival-reset-confirm-no");
 
-    if (survivalResetBtn && survivalResetConfirm) {
+    if (survivalResetBtn && survivalResetConfirm && survivalResetYes && survivalResetNo) {
       survivalResetBtn.addEventListener("click", function (e) {
         e.stopPropagation();
         survivalResetConfirm.style.display = "flex";

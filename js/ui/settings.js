@@ -899,7 +899,8 @@ function _onKeybindBtnClick(e) {
   _kbListeningBtn    = btn;
   btn.textContent = "Press key\u2026";
   btn.classList.add("keybind-key-btn-listening");
-  document.getElementById("keybind-conflict-msg").textContent = "";
+  const _conflictMsg = document.getElementById("keybind-conflict-msg");
+  if (_conflictMsg) _conflictMsg.textContent = "";
 }
 
 function _onKeybindCapture(e) {
