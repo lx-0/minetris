@@ -157,6 +157,60 @@ for (const file of unloaded) {
 }
 
 // ---------------------------------------------------------------------------
+// 6. Cross-file global const/let redeclaration check
+//
+// Classic <script> tags share a single global scope. Declaring the same name
+// with `const` or `let` in two files that are both loaded as plain scripts
+// throws a SyntaxError in the second file (the whole file fails to parse).
+// This catches bugs like the expedition-session.js / expedition-map.js
+// duplicate `const _BIOME_ICONS` that caused MINAA-609.
+// ---------------------------------------------------------------------------
+console.log('\n--- Global Redeclaration Check ---');
+
+// Build the ordered list of scripts actually loaded by the page.
+// Skip type="module" scripts — they have their own scope.
+const loadedScripts = [];
+{
+  const scriptTagRe = /<script([^>]*)>/g;
+  let _m;
+  while ((_m = scriptTagRe.exec(html)) !== null) {
+    const attrs = _m[1];
+    if (/type\s*=\s*["']module["']/.test(attrs)) continue;
+    const srcMatch = /src="js\/([^"]+)"/.exec(attrs);
+    if (srcMatch) loadedScripts.push(srcMatch[1]);
+  }
+}
+
+// Collect all top-level (column-0) const/let declarations across loaded scripts.
+// Column-0 is a reliable heuristic: declarations inside functions/IIFEs are indented.
+const GLOBAL_CONST_LET_RE = /^(const|let)\s+([A-Za-z_$][A-Za-z0-9_$]*)/;
+const globalDeclMap = new Map(); // name -> [{kind, file, line}]
+
+for (const scriptFile of loadedScripts) {
+  const filePath = path.join(JS_DIR, scriptFile);
+  if (!fs.existsSync(filePath)) continue;
+  const lines = fs.readFileSync(filePath, 'utf8').split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const m = GLOBAL_CONST_LET_RE.exec(lines[i]);
+    if (!m) continue;
+    const [, kind, name] = m;
+    if (!globalDeclMap.has(name)) globalDeclMap.set(name, []);
+    globalDeclMap.get(name).push({ kind, file: scriptFile, line: i + 1 });
+  }
+}
+
+let redeclCount = 0;
+for (const [name, decls] of globalDeclMap) {
+  if (decls.length < 2) continue;
+  redeclCount++;
+  const locs = decls.map(d => `js/${d.file}:${d.line}`).join(' AND ');
+  fail(`cross-file global redeclaration: \`${decls[0].kind} ${name}\` — ${locs}`);
+}
+if (redeclCount === 0) {
+  pass(`no cross-file const/let redeclarations (${loadedScripts.length} scripts checked)`);
+}
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 console.log('\n========================================');
