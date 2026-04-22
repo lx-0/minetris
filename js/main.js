@@ -728,6 +728,16 @@ function init() {
     return;
   }
 
+  // Pointer lock denied by browser — restore start screen so the user isn't stranded
+  document.addEventListener("pointerlockerror", function () {
+    const modeSelectEl = document.getElementById("mode-select");
+    if (modeSelectEl) modeSelectEl.style.display = "none";
+    if (blocker) {
+      blocker.style.display = "flex";
+      if (instructions) instructions.style.display = "";
+    }
+  });
+
   document.addEventListener("keydown", onKeyDown);
   document.addEventListener("keyup", onKeyUp);
   window.addEventListener("mousedown", onMouseDown);

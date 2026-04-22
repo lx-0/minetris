@@ -339,7 +339,6 @@
       // Apply progressive mode unlock gates
       if (typeof applyModeUnlockState === 'function') applyModeUnlockState();
 
-      blocker.style.display = "none";
       modeSelectEl.style.display = "flex";
       const notifBellWrap = document.getElementById('notif-bell-wrap');
       if (notifBellWrap) notifBellWrap.style.display = 'block';
