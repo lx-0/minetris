@@ -3882,15 +3882,25 @@
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', function() {
             navigator.serviceWorker.register('./sw.js').then(function(reg) {
+              function _applyUpdate(waitingWorker) {
+                var blockerEl = document.getElementById('blocker');
+                var onStartScreen = blockerEl && getComputedStyle(blockerEl).display !== 'none';
+                if (onStartScreen) {
+                  if (waitingWorker) waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+                  window.location.reload();
+                } else {
+                  showUpdateToast();
+                }
+              }
               // Check for waiting SW (new version installed but waiting)
               if (reg.waiting) {
-                showUpdateToast();
+                _applyUpdate(reg.waiting);
               }
               reg.addEventListener('updatefound', function() {
                 var newWorker = reg.installing;
                 newWorker.addEventListener('statechange', function() {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    showUpdateToast();
+                    _applyUpdate(newWorker);
                   }
                 });
               });
@@ -3901,7 +3911,15 @@
             // Listen for SW_UPDATED message (fired when new SW activates)
             navigator.serviceWorker.addEventListener('message', function(event) {
               if (event.data && event.data.type === 'SW_UPDATED') {
-                showUpdateToast();
+                // Auto-reload while on the start screen so players always run
+                // the latest code without having to notice the toast.
+                var blockerEl = document.getElementById('blocker');
+                var onStartScreen = blockerEl && getComputedStyle(blockerEl).display !== 'none';
+                if (onStartScreen) {
+                  window.location.reload();
+                } else {
+                  showUpdateToast();
+                }
               }
             });
           });
