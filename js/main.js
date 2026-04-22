@@ -496,7 +496,15 @@ function init() {
     }
     // ─────────────────────────────────────────────────────────────────
 
+    // Firefox pointer-lock recovery: track when lock was acquired and whether it
+    // was a new game start (not a resume). If Firefox releases the lock within
+    // 500ms of acquisition (acquire-then-immediate-release), restore the blocker
+    // instead of showing the pause screen.
+    var _lockAcquiredAt = 0;
+    var _lockWasNewGame = false;
+
     controls.addEventListener("lock", function () {
+      console.log('[PL] lock event fired, isPaused:', isPaused);
 
       // ── Editor mode: show editor HUD only, skip game setup ───────────────
       if (isEditorMode) {
@@ -511,13 +519,18 @@ function init() {
       }
       // ─────────────────────────────────────────────────────────────────────
 
+      _lockAcquiredAt = Date.now();
       if (isPaused) {
         // Resuming from pause — hide pause screen, restore paused state
+        _lockWasNewGame = false;
+        console.log('[PL] lock: resuming from pause');
         isPaused = false;
         const pauseScreenEl = document.getElementById("pause-screen");
         if (pauseScreenEl) pauseScreenEl.style.display = "none";
       } else {
         // Starting from start screen
+        _lockWasNewGame = true;
+        console.log('[PL] lock: new game start');
         instructions.style.display = "none";
         blocker.style.display = "none";
         const musicBtnLock = document.getElementById("hud-music-mute-btn");
@@ -651,6 +664,8 @@ function init() {
     });
 
     controls.addEventListener("unlock", function () {
+      var _unlockElapsed = Date.now() - _lockAcquiredAt;
+      console.log('[PL] unlock event fired, _lockWasNewGame:', _lockWasNewGame, 'elapsed since lock:', _unlockElapsed, 'ms, isGameOver:', isGameOver, 'isPaused:', isPaused);
       gameTimerRunning = false;
       // Friends presence: return to menu mode on unlock
       if (typeof friendsSetMode === 'function') friendsSetMode('menu');
@@ -694,14 +709,24 @@ function init() {
         closeCraftingPanel();
         // Don't show start screen if game over — game over overlay handles it
         if (!isGameOver) {
-          // Show pause screen (Escape during active gameplay)
-          isPaused = true;
-          const pauseScreenEl = document.getElementById("pause-screen");
-          if (pauseScreenEl) pauseScreenEl.style.display = "flex";
-          // Flush notifications buffered during gameplay
-          if (typeof notifFlushQueued === 'function') notifFlushQueued();
+          // Detect Firefox acquire-then-immediate-release: lock was for a new game
+          // start and was released within 500ms (before any gameplay could occur).
+          // Instead of showing the pause screen (a dead-end), restore the start screen.
+          if (_lockWasNewGame && _unlockElapsed < 500) {
+            console.log('[PL] immediate release on new game start — restoring start screen');
+            if (blocker) blocker.style.display = 'flex';
+            if (instructions) instructions.style.display = '';
+          } else {
+            // Normal pause: show pause screen (Escape during active gameplay)
+            isPaused = true;
+            const pauseScreenEl = document.getElementById("pause-screen");
+            if (pauseScreenEl) pauseScreenEl.style.display = "flex";
+            // Flush notifications buffered during gameplay
+            if (typeof notifFlushQueued === 'function') notifFlushQueued();
+          }
         }
       }
+      _lockWasNewGame = false;
       crosshair.style.display = "none";
       if (scoreEl) scoreEl.style.display = "none";
       if (nextPiecesEl) nextPiecesEl.style.display = "none";
@@ -734,6 +759,7 @@ function init() {
 
   // Pointer lock denied by browser — restore start screen so the user isn't stranded
   document.addEventListener("pointerlockerror", function () {
+    console.log('[PL] pointerlockerror fired');
     const modeSelectEl = document.getElementById("mode-select");
     if (modeSelectEl) modeSelectEl.style.display = "none";
     if (blocker) {

@@ -484,10 +484,31 @@
     function requestPointerLock() {
       // Call lock() synchronously within the user gesture — async .then() can
       // miss Chrome's transient activation window, causing pointer lock to be denied.
-      controls.lock();
+      console.log('[PL] requestPointerLock called, controls.isLocked:', controls.isLocked);
+      // Focus the canvas before requesting lock so Firefox gesture-origin checks pass.
+      try { if (renderer && renderer.domElement) renderer.domElement.focus(); } catch (_) {}
+      try {
+        controls.lock();
+        console.log('[PL] controls.lock() called');
+      } catch (e) {
+        console.error('[PL] controls.lock() threw:', e);
+      }
       if (typeof Tone !== 'undefined' && Tone.context && Tone.context.state !== 'running') {
         Tone.start().catch(function() {});
       }
+      // Recovery: if Firefox silently denied the lock (no pointerlockerror fired),
+      // restore the start screen after 1.5s so the player isn't stranded.
+      setTimeout(function() {
+        if (!controls.isLocked) {
+          console.log('[PL] recovery: lock not acquired after 1500ms, restoring start screen');
+          var _b = document.getElementById('blocker');
+          var _i = document.getElementById('instructions');
+          if (_b && _b.style.display === 'none') {
+            _b.style.display = 'flex';
+            if (_i) _i.style.display = '';
+          }
+        }
+      }, 1500);
     }
 
     // Show world modifier HUD badge if a non-normal modifier is active.
