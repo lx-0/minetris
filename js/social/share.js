@@ -125,14 +125,16 @@
       if (opts.canvas && navigator.canShare) {
         var tryImageShare = new Promise(function (imgResolve) {
           opts.canvas.toBlob(function (blob) {
-            if (!blob) { imgResolve(false); return; }
-            var file = new File([blob], 'minetris-score.png', { type: 'image/png' });
-            var data = { files: [file], text: opts.text || '', url: opts.url || '' };
-            if (navigator.canShare(data)) {
-              navigator.share(data).then(function () { imgResolve(true); }).catch(function () { imgResolve(false); });
-            } else {
-              imgResolve(false);
-            }
+            try {
+              if (!blob) { imgResolve(false); return; }
+              var file = new File([blob], 'minetris-score.png', { type: 'image/png' });
+              var data = { files: [file], text: opts.text || '', url: opts.url || '' };
+              if (navigator.canShare(data)) {
+                navigator.share(data).then(function () { imgResolve(true); }).catch(function () { imgResolve(false); });
+              } else {
+                imgResolve(false);
+              }
+            } catch (_) { imgResolve(false); }
           }, 'image/png');
         });
 
@@ -142,7 +144,7 @@
           navigator.share({ text: opts.text || '', url: opts.url || '' })
             .then(function () { resolve(true); })
             .catch(function () { resolve(false); });
-        });
+        }).catch(function () { resolve(false); });
         return;
       }
 
