@@ -378,8 +378,8 @@
                   <div class="mode-card-desc" id="mode-marathon-desc">29 levels. Speed up every 10 lines. Reach the kill screen.</div>
                   <div class="mode-card-pb" id="mode-pb-marathon"></div>
 
-                  <!-- Length selector — inline, card-click stopPropagation -->
-                  <div id="marathon-length-selector" style="margin-top:6px;pointer-events:auto;" onclick="event.stopPropagation()">
+                  <!-- Length selector — inline toggle; individual buttons stop propagation -->
+                  <div id="marathon-length-selector" style="margin-top:6px;pointer-events:auto;">
                     <div style="font-size:0.55rem;color:#aaa;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.07em;">Length</div>
                     <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
                       <button class="mar-len-btn mar-len-btn-active" data-mar-len="classic"
@@ -404,7 +404,7 @@
                   <div class="mode-card-name">Practice</div>
                   <div class="mode-card-desc">Sandbox, or pick a scenario drill. Undo, set speed, no scoring.</div>
                   <!-- Gravity mode selector — visible inside the Practice card -->
-                  <div id="gravity-selector" style="margin-top:6px;pointer-events:auto;" onclick="event.stopPropagation()">
+                  <div id="gravity-selector" style="margin-top:6px;pointer-events:auto;">
                     <div style="font-size:0.55rem;color:#aaa;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.07em;">Gravity</div>
                     <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
                       <button class="grav-btn grav-btn-active" data-grav="down"  title="Normal — pieces fall down">&#8595; Down</button>
@@ -414,7 +414,7 @@
                     </div>
                   </div>
                   <!-- Scenario picker button -->
-                  <div id="practice-scenario-selector" style="margin-top:6px;pointer-events:auto;" onclick="event.stopPropagation()">
+                  <div id="practice-scenario-selector" style="margin-top:6px;pointer-events:auto;">
                     <div style="font-size:0.55rem;color:#aaa;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.07em;">Scenario</div>
                     <button id="practice-scenario-open-btn" class="practice-scenario-btn"
                             title="Pick a drill: T-Spin, Combo, Speed, Garbage, Perfect Clear, or a custom board">

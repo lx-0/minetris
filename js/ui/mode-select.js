@@ -88,13 +88,17 @@
           marathonPbEl.textContent = mBest ? "Best: Level " + mBest.level + " (" + mBest.score + ")" : "";
         }
       }
-      // Restore last-picked marathon length
+      // Restore last-picked marathon length (flag prevents auto-launch on programmatic click)
       (function _restoreMarathonLen() {
         try {
           const saved = localStorage.getItem('mineCtris_marathonLastLength');
           if (saved === 'endless') {
             const btn = document.querySelector('.mar-len-btn[data-mar-len="endless"]');
-            if (btn) btn.click();
+            if (btn) {
+              _marLenRestoring = true;
+              btn.click();
+              _marLenRestoring = false;
+            }
           }
         } catch (_) {}
       })();
@@ -551,39 +555,11 @@
         return active ? active.getAttribute('data-mar-len') : 'classic';
       };
 
-      // Length toggle button behavior
-      marathonCardEl.querySelectorAll('.mar-len-btn').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          marathonCardEl.querySelectorAll('.mar-len-btn')
-            .forEach(function (b) { b.classList.remove('mar-len-btn-active'); });
-          btn.classList.add('mar-len-btn-active');
-          const isEndless = btn.getAttribute('data-mar-len') === 'endless';
-          const garbageToggleEl = document.getElementById('me-garbage-toggle');
-          if (garbageToggleEl) garbageToggleEl.style.display = isEndless ? 'block' : 'none';
-          // Swap card copy, leaderboard tab, PB readout, aria-label
-          const descEl = document.getElementById('mode-marathon-desc');
-          const pbEl   = document.getElementById('mode-pb-marathon');
-          const lbBtn  = document.getElementById('mode-marathon-lb-btn');
-          if (isEndless) {
-            if (descEl) descEl.textContent = 'No level cap. Milestones at 50/100/200/500/1000 lines. Garbage starts at 300.';
-            if (lbBtn) lbBtn.setAttribute('data-lb-tab', 'marathon_endless');
-            marathonCardEl.setAttribute('aria-label', 'Marathon Endless — no cap, milestones, optional garbage after 300 lines');
-            const meBest = typeof loadMarathonEndlessBest === 'function' ? loadMarathonEndlessBest() : null;
-            if (pbEl) pbEl.textContent = meBest ? 'Best: ' + meBest.linesCleared + ' lines' : '';
-          } else {
-            if (descEl) descEl.textContent = '29 levels. Speed up every 10 lines. Reach the kill screen.';
-            if (lbBtn) lbBtn.setAttribute('data-lb-tab', 'marathon');
-            marathonCardEl.setAttribute('aria-label', 'Marathon mode — 29 levels, kill screen at level 29');
-            const mBest = typeof loadMarathonBest === 'function' ? loadMarathonBest() : null;
-            if (pbEl) pbEl.textContent = mBest ? 'Best: Level ' + mBest.level + ' (' + mBest.score + ')' : '';
-          }
-          try { localStorage.setItem('mineCtris_marathonLastLength', isEndless ? 'endless' : 'classic'); } catch (_) {}
-        });
-      });
+      // Flag set during programmatic state restore to skip auto-launch
+      var _marLenRestoring = false;
 
-      // Card click — launch the selected variant
-      marathonCardEl.addEventListener("click", function () {
+      // Shared launch — called from both card click and length buttons
+      var _launchMarathon = function() {
         if (_marLen() === 'endless') {
           isDailyChallenge              = false;
           gameRng                       = null;
@@ -616,7 +592,49 @@
         }
         hideModeSelect();
         requestPointerLock();
+      };
+
+      // Prevent the garbage-toggle checkbox/label from bubbling to the card handler
+      var _meGarbageToggleEl = document.getElementById('me-garbage-toggle');
+      if (_meGarbageToggleEl) {
+        _meGarbageToggleEl.addEventListener('click', function (e) { e.stopPropagation(); });
+      }
+
+      // Length toggle buttons — select AND launch immediately
+      marathonCardEl.querySelectorAll('.mar-len-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          marathonCardEl.querySelectorAll('.mar-len-btn')
+            .forEach(function (b) { b.classList.remove('mar-len-btn-active'); });
+          btn.classList.add('mar-len-btn-active');
+          const isEndless = btn.getAttribute('data-mar-len') === 'endless';
+          const garbageToggleEl = document.getElementById('me-garbage-toggle');
+          if (garbageToggleEl) garbageToggleEl.style.display = isEndless ? 'block' : 'none';
+          // Swap card copy, leaderboard tab, PB readout, aria-label
+          const descEl = document.getElementById('mode-marathon-desc');
+          const pbEl   = document.getElementById('mode-pb-marathon');
+          const lbBtn  = document.getElementById('mode-marathon-lb-btn');
+          if (isEndless) {
+            if (descEl) descEl.textContent = 'No level cap. Milestones at 50/100/200/500/1000 lines. Garbage starts at 300.';
+            if (lbBtn) lbBtn.setAttribute('data-lb-tab', 'marathon_endless');
+            marathonCardEl.setAttribute('aria-label', 'Marathon Endless — no cap, milestones, optional garbage after 300 lines');
+            const meBest = typeof loadMarathonEndlessBest === 'function' ? loadMarathonEndlessBest() : null;
+            if (pbEl) pbEl.textContent = meBest ? 'Best: ' + meBest.linesCleared + ' lines' : '';
+          } else {
+            if (descEl) descEl.textContent = '29 levels. Speed up every 10 lines. Reach the kill screen.';
+            if (lbBtn) lbBtn.setAttribute('data-lb-tab', 'marathon');
+            marathonCardEl.setAttribute('aria-label', 'Marathon mode — 29 levels, kill screen at level 29');
+            const mBest = typeof loadMarathonBest === 'function' ? loadMarathonBest() : null;
+            if (pbEl) pbEl.textContent = mBest ? 'Best: Level ' + mBest.level + ' (' + mBest.score + ')' : '';
+          }
+          try { localStorage.setItem('mineCtris_marathonLastLength', isEndless ? 'endless' : 'classic'); } catch (_) {}
+          // Launch unless this click was triggered programmatically to restore state
+          if (!_marLenRestoring) _launchMarathon();
+        });
       });
+
+      // Card click — launch the selected variant
+      marathonCardEl.addEventListener("click", _launchMarathon);
     }
 
     const zenCardEl = document.getElementById("mode-card-zen");
@@ -1251,7 +1269,7 @@ function updatePracticeScenarioLabel() {
   var practiceCardEl = document.getElementById("mode-card-practice");
   if (!practiceCardEl) return;
 
-  // ── Gravity selector ───────────────────────────────────────────────────────
+  // ── Gravity selector — select gravity AND launch sandbox immediately ─────────
   var gravBtns = practiceCardEl.querySelectorAll('.grav-btn');
   gravBtns.forEach(function (btn) {
     btn.addEventListener('click', function (e) {
@@ -1260,6 +1278,7 @@ function updatePracticeScenarioLabel() {
       if (typeof gravityDirection !== 'undefined') gravityDirection = dir;
       gravBtns.forEach(function (b) { b.classList.remove('grav-btn-active'); });
       btn.classList.add('grav-btn-active');
+      _launchPracticeSandbox();
     });
   });
 
