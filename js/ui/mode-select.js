@@ -546,11 +546,11 @@
 
     const marathonCardEl = document.getElementById("mode-card-marathon");
     if (marathonCardEl) {
-      // Helper: read current length selection
-      function _marLen() {
-        const active = marathonCardEl.querySelector('.mar-len-btn-active');
+      // Helper: read current length selection (var to avoid Annex B block-function hoisting)
+      var _marLen = function() {
+        var active = marathonCardEl.querySelector('.mar-len-btn-active');
         return active ? active.getAttribute('data-mar-len') : 'classic';
-      }
+      };
 
       // Length toggle button behavior
       marathonCardEl.querySelectorAll('.mar-len-btn').forEach(function (btn) {
