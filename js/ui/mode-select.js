@@ -839,7 +839,7 @@
     function _showSurvivalTutorialPrompt() {
       var el = document.getElementById("survival-tutorial-prompt");
       if (!el) return;
-      localStorage.setItem("mineCtris_tutorialShown", "1");
+      try { localStorage.setItem("mineCtris_tutorialShown", "1"); } catch (_) {}
       el.style.display = "block";
       // Fade in
       requestAnimationFrame(function () { el.style.opacity = "1"; });
@@ -1055,7 +1055,8 @@
         hideModeSelect();
         requestPointerLock();
         // Show one-time tutorial prompt on first-ever Survival session
-        if (!localStorage.getItem("mineCtris_tutorialShown")) {
+        var _tutShown = false; try { _tutShown = !!localStorage.getItem("mineCtris_tutorialShown"); } catch (_) {}
+        if (!_tutShown) {
           _showSurvivalTutorialPrompt();
         }
       });
