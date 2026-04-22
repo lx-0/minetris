@@ -1,6 +1,15 @@
 // Mode selection screen — show/hide and populate the mode card panel.
 // Requires: state.js, progression/*, modes/* loaded first.
 
+// ── One-time boot shim: rewrite stale sprint_mini lastMode ───────────────────
+(function _shimSprintMiniLastMode() {
+  try {
+    if (localStorage.getItem('mineCtris_lastMode') === 'sprint_mini') {
+      localStorage.setItem('mineCtris_lastMode', 'sprint');
+    }
+  } catch (_) {}
+})();
+
     function showModeSelect(highlightMode) {
       const modeSelectEl = document.getElementById("mode-select");
       if (!modeSelectEl) return;
@@ -66,22 +75,29 @@
           countdownPbEl.textContent = "";
         }
       }
-      // Populate Marathon personal best
+      // Populate Marathon personal best (reflects selected length toggle)
       const marathonPbEl = document.getElementById("mode-pb-marathon");
-      if (marathonPbEl && typeof loadMarathonBest === 'function') {
-        const mBest = loadMarathonBest();
-        marathonPbEl.textContent = mBest
-          ? "Best: Level " + mBest.level + " (" + mBest.score + ")"
-          : "";
+      if (marathonPbEl) {
+        const marActiveBtn = document.querySelector('.mar-len-btn-active');
+        const marLen = marActiveBtn ? marActiveBtn.getAttribute('data-mar-len') : 'classic';
+        if (marLen === 'endless') {
+          const meBest = typeof loadMarathonEndlessBest === 'function' ? loadMarathonEndlessBest() : null;
+          marathonPbEl.textContent = meBest ? "Best: " + meBest.linesCleared + " lines" : "";
+        } else {
+          const mBest = typeof loadMarathonBest === 'function' ? loadMarathonBest() : null;
+          marathonPbEl.textContent = mBest ? "Best: Level " + mBest.level + " (" + mBest.score + ")" : "";
+        }
       }
-      // Populate Marathon Endless personal best
-      const mePbEl = document.getElementById("mode-pb-marathon_endless");
-      if (mePbEl && typeof loadMarathonEndlessBest === 'function') {
-        const meBest = loadMarathonEndlessBest();
-        mePbEl.textContent = meBest
-          ? "Best: " + meBest.linesCleared + " lines"
-          : "";
-      }
+      // Restore last-picked marathon length
+      (function _restoreMarathonLen() {
+        try {
+          const saved = localStorage.getItem('mineCtris_marathonLastLength');
+          if (saved === 'endless') {
+            const btn = document.querySelector('.mar-len-btn[data-mar-len="endless"]');
+            if (btn) btn.click();
+          }
+        } catch (_) {}
+      })();
       // Populate Zen personal best
       const zenPbEl = document.getElementById("mode-pb-zen");
       if (zenPbEl && typeof loadZenBest === 'function') {
@@ -209,8 +225,10 @@
             : '';
         }
       })();
+      // Update scenario label on Practice card
+      if (typeof updatePracticeScenarioLabel === 'function') updatePracticeScenarioLabel();
       // Apply highlight to the specified mode card
-      ["tutorial", "classic", "sprint", "blitz", "marathon", "marathon_endless", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai", "countdown"].forEach(function (mode) {
+      ["tutorial", "classic", "sprint", "blitz", "marathon", "practice", "daily", "weekly", "puzzle", "survival", "endless", "depths", "expedition", "boss_battle", "coop", "battle", "tournament", "local_multi", "vs_ai", "countdown"].forEach(function (mode) {
         const cardEl = document.getElementById("mode-card-" + mode);
         if (cardEl) {
           if (mode === highlightMode) {
@@ -528,46 +546,75 @@
 
     const marathonCardEl = document.getElementById("mode-card-marathon");
     if (marathonCardEl) {
-      marathonCardEl.addEventListener("click", function () {
-        isDailyChallenge    = false;
-        gameRng             = null;
-        isMarathonMode      = true;
-        marathonLevel       = 1;
-        marathonKillScreen  = false;
-        // Start at level 1 speed (base rate, no multiplier)
-        difficultyMultiplier = 1.0;
-        lastDifficultyTier   = 0;
-        applyWorldModifierHUD();
-        try { localStorage.setItem("mineCtris_lastMode", "marathon"); } catch (_) {}
-        if (typeof metricsModePlayed === 'function') metricsModePlayed('marathon');
-        hideModeSelect();
-        requestPointerLock();
-      });
-    }
+      // Helper: read current length selection (var to avoid Annex B block-function hoisting)
+      var _marLen = function() {
+        var active = marathonCardEl.querySelector('.mar-len-btn-active');
+        return active ? active.getAttribute('data-mar-len') : 'classic';
+      };
 
-    const marathonEndlessCardEl = document.getElementById("mode-card-marathon_endless");
-    if (marathonEndlessCardEl) {
-      marathonEndlessCardEl.addEventListener("click", function () {
-        isDailyChallenge         = false;
-        gameRng                  = null;
-        isMarathonEndlessMode    = true;
-        marathonEndlessLevel     = 1;
-        marathonEndlessPeakLPM   = 0;
-        marathonEndlessLastMilestone  = 0;
-        marathonEndlessLastCheckpoint = 0;
-        marathonEndlessGarbageTimer   = 0;
-        // Read garbage toggle from the card checkbox
-        const garbageCb = document.getElementById('me-garbage-toggle-cb');
-        marathonEndlessGarbageEnabled = garbageCb ? garbageCb.checked : true;
-        // Start at level 1 speed
-        difficultyMultiplier = 1.0;
-        lastDifficultyTier   = 0;
-        // Show badge in HUD
-        const meBadgeEl = document.getElementById('marathon-endless-badge');
-        if (meBadgeEl) meBadgeEl.style.display = 'block';
-        applyWorldModifierHUD();
-        try { localStorage.setItem("mineCtris_lastMode", "marathon_endless"); } catch (_) {}
-        if (typeof metricsModePlayed === 'function') metricsModePlayed('marathon_endless');
+      // Length toggle button behavior
+      marathonCardEl.querySelectorAll('.mar-len-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          marathonCardEl.querySelectorAll('.mar-len-btn')
+            .forEach(function (b) { b.classList.remove('mar-len-btn-active'); });
+          btn.classList.add('mar-len-btn-active');
+          const isEndless = btn.getAttribute('data-mar-len') === 'endless';
+          const garbageToggleEl = document.getElementById('me-garbage-toggle');
+          if (garbageToggleEl) garbageToggleEl.style.display = isEndless ? 'block' : 'none';
+          // Swap card copy, leaderboard tab, PB readout, aria-label
+          const descEl = document.getElementById('mode-marathon-desc');
+          const pbEl   = document.getElementById('mode-pb-marathon');
+          const lbBtn  = document.getElementById('mode-marathon-lb-btn');
+          if (isEndless) {
+            if (descEl) descEl.textContent = 'No level cap. Milestones at 50/100/200/500/1000 lines. Garbage starts at 300.';
+            if (lbBtn) lbBtn.setAttribute('data-lb-tab', 'marathon_endless');
+            marathonCardEl.setAttribute('aria-label', 'Marathon Endless — no cap, milestones, optional garbage after 300 lines');
+            const meBest = typeof loadMarathonEndlessBest === 'function' ? loadMarathonEndlessBest() : null;
+            if (pbEl) pbEl.textContent = meBest ? 'Best: ' + meBest.linesCleared + ' lines' : '';
+          } else {
+            if (descEl) descEl.textContent = '29 levels. Speed up every 10 lines. Reach the kill screen.';
+            if (lbBtn) lbBtn.setAttribute('data-lb-tab', 'marathon');
+            marathonCardEl.setAttribute('aria-label', 'Marathon mode — 29 levels, kill screen at level 29');
+            const mBest = typeof loadMarathonBest === 'function' ? loadMarathonBest() : null;
+            if (pbEl) pbEl.textContent = mBest ? 'Best: Level ' + mBest.level + ' (' + mBest.score + ')' : '';
+          }
+          try { localStorage.setItem('mineCtris_marathonLastLength', isEndless ? 'endless' : 'classic'); } catch (_) {}
+        });
+      });
+
+      // Card click — launch the selected variant
+      marathonCardEl.addEventListener("click", function () {
+        if (_marLen() === 'endless') {
+          isDailyChallenge              = false;
+          gameRng                       = null;
+          isMarathonEndlessMode         = true;
+          marathonEndlessLevel          = 1;
+          marathonEndlessPeakLPM        = 0;
+          marathonEndlessLastMilestone  = 0;
+          marathonEndlessLastCheckpoint = 0;
+          marathonEndlessGarbageTimer   = 0;
+          const garbageCb = document.getElementById('me-garbage-toggle-cb');
+          marathonEndlessGarbageEnabled = garbageCb ? garbageCb.checked : true;
+          difficultyMultiplier          = 1.0;
+          lastDifficultyTier            = 0;
+          const meBadgeEl = document.getElementById('marathon-endless-badge');
+          if (meBadgeEl) meBadgeEl.style.display = 'block';
+          applyWorldModifierHUD();
+          try { localStorage.setItem("mineCtris_lastMode", "marathon_endless"); } catch (_) {}
+          if (typeof metricsModePlayed === 'function') metricsModePlayed('marathon_endless');
+        } else {
+          isDailyChallenge    = false;
+          gameRng             = null;
+          isMarathonMode      = true;
+          marathonLevel       = 1;
+          marathonKillScreen  = false;
+          difficultyMultiplier = 1.0;
+          lastDifficultyTier   = 0;
+          applyWorldModifierHUD();
+          try { localStorage.setItem("mineCtris_lastMode", "marathon"); } catch (_) {}
+          if (typeof metricsModePlayed === 'function') metricsModePlayed('marathon');
+        }
         hideModeSelect();
         requestPointerLock();
       });
@@ -792,7 +839,7 @@
     function _showSurvivalTutorialPrompt() {
       var el = document.getElementById("survival-tutorial-prompt");
       if (!el) return;
-      localStorage.setItem("mineCtris_tutorialShown", "1");
+      try { localStorage.setItem("mineCtris_tutorialShown", "1"); } catch (_) {}
       el.style.display = "block";
       // Fade in
       requestAnimationFrame(function () { el.style.opacity = "1"; });
@@ -1008,7 +1055,8 @@
         hideModeSelect();
         requestPointerLock();
         // Show one-time tutorial prompt on first-ever Survival session
-        if (!localStorage.getItem("mineCtris_tutorialShown")) {
+        var _tutShown = false; try { _tutShown = !!localStorage.getItem("mineCtris_tutorialShown"); } catch (_) {}
+        if (!_tutShown) {
           _showSurvivalTutorialPrompt();
         }
       });
@@ -1186,6 +1234,20 @@
 })();
 
 // ── Practice mode card ────────────────────────────────────────────────────────
+function updatePracticeScenarioLabel() {
+  var btn = document.getElementById('practice-scenario-open-btn');
+  if (!btn) return;
+  var label = '\uD83C\uDFAF Sandbox (none) \u25BE';
+  try {
+    var lastScenario = localStorage.getItem('mineCtris_practiceLastScenario');
+    if (lastScenario && typeof TRAINING_SCENARIOS !== 'undefined') {
+      var s = TRAINING_SCENARIOS.find(function (x) { return x.id === lastScenario; });
+      if (s) label = '\uD83C\uDFAF ' + s.name + ' \u25BE';
+    }
+  } catch (_) {}
+  btn.textContent = label;
+}
+
 (function _initPracticeCard() {
   var practiceCardEl = document.getElementById("mode-card-practice");
   if (!practiceCardEl) return;
@@ -1202,22 +1264,30 @@
     });
   });
 
-  practiceCardEl.addEventListener("click", function () {
+  // ── Scenario selector button → hides mode-select and opens training-select ──
+  var scenarioBtn = document.getElementById('practice-scenario-open-btn');
+  if (scenarioBtn) {
+    scenarioBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      hideModeSelect();
+      if (typeof showTrainingSelect === 'function') showTrainingSelect();
+    });
+  }
+
+  // ── Card body click — launch last-used variant (scenario or sandbox) ───────
+  function _launchPracticeSandbox() {
     isPracticeMode       = true;
     isDailyChallenge     = false;
     gameRng              = null;
-    // Start at Level 1 (tier 0) for a clean practice start
     difficultyMultiplier = 1.0;
     lastDifficultyTier   = 0;
-    // Show practice badge in HUD
     var practiceBadgeEl = document.getElementById("practice-badge");
     if (practiceBadgeEl) practiceBadgeEl.style.display = "block";
-    // Show gravity indicator if non-default direction is selected
     var gravIndicatorEl = document.getElementById("gravity-indicator");
     if (gravIndicatorEl) {
       var _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
       if (_grav !== 'down') {
-        var _labels = { up: '↑ UP GRAVITY', left: '← LEFT GRAVITY', right: '→ RIGHT GRAVITY' };
+        var _labels = { up: '\u2191 UP GRAVITY', left: '\u2190 LEFT GRAVITY', right: '\u2192 RIGHT GRAVITY' };
         gravIndicatorEl.textContent = _labels[_grav] || '';
         gravIndicatorEl.style.display = 'block';
       } else {
@@ -1228,6 +1298,17 @@
     if (typeof metricsModePlayed === 'function') metricsModePlayed('practice');
     hideModeSelect();
     requestPointerLock();
+  }
+
+  practiceCardEl.addEventListener("click", function () {
+    var lastScenario = null;
+    try { lastScenario = localStorage.getItem('mineCtris_practiceLastScenario'); } catch (_) {}
+    if (lastScenario && typeof launchTrainingScenario === 'function') {
+      hideModeSelect();
+      launchTrainingScenario(lastScenario);
+    } else {
+      _launchPracticeSandbox();
+    }
   });
 
   // Wire up practice-complete overlay buttons
@@ -1244,31 +1325,6 @@
       if (typeof resetGame === "function") resetGame();
     });
   }
-})();
-
-// ── Training mode card ────────────────────────────────────────────────────────
-(function _initTrainingCard() {
-  var trainingCardEl = document.getElementById('mode-card-training');
-  if (!trainingCardEl) return;
-
-  trainingCardEl.addEventListener('click', function () {
-    hideModeSelect();
-    if (typeof showTrainingSelect === 'function') showTrainingSelect();
-  });
-
-  // Update personal best count on card
-  function _updateTrainingCardPb() {
-    var pbEl = document.getElementById('mode-pb-training');
-    if (!pbEl) return;
-    try {
-      var raw = localStorage.getItem('mineCtris_trainingProgress');
-      var prog = raw ? JSON.parse(raw) : {};
-      var completed = Object.values(prog).filter(function (v) { return v && v.completed; }).length;
-      var total = 10; // number of built-in scenarios
-      pbEl.textContent = completed > 0 ? completed + '/' + total + ' scenarios done' : '';
-    } catch (_) {}
-  }
-  _updateTrainingCardPb();
 })();
 
 // ── Tutorial mode card ────────────────────────────────────────────────────────

@@ -41,12 +41,7 @@ const _BIOME_LORE = {
   ],
 };
 
-const _BIOME_ICONS = {
-  stone:  '&#9935;',    // ⛏
-  forest: '&#127795;',  // 🌳
-  nether: '&#128293;',  // 🔥
-  ice:    '&#10052;',   // ❄
-};
+// _BIOME_ICONS defined in expedition-map.js (loaded first); shared via global scope.
 
 // ── Reward track ──────────────────────────────────────────────────────────────
 // 15-tier per-biome lifetime reward tracks.

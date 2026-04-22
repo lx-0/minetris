@@ -696,6 +696,37 @@ function renderTrainingScenarioList() {
     listEl.appendChild(card);
   });
 
+  // Sandbox tab — single launch button for Practice sandbox
+  if (cat === 'sandbox') {
+    listEl.innerHTML = '';
+    const sandboxCard = document.createElement('div');
+    sandboxCard.className = 'training-scenario-card';
+    sandboxCard.innerHTML =
+      '<div class="tsc-header"><span class="tsc-name">&#129137; Sandbox</span></div>' +
+      '<div class="tsc-desc">Free play. Undo placements, set gravity, no scoring or goal.</div>' +
+      '<button class="tsc-start-btn">&#9654; Start Sandbox</button>';
+    sandboxCard.querySelector('.tsc-start-btn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      hideTrainingSelect();
+      // Clear last scenario so Practice card body click defaults to sandbox next time
+      try { localStorage.removeItem('mineCtris_practiceLastScenario'); } catch (_) {}
+      if (typeof updatePracticeScenarioLabel === 'function') updatePracticeScenarioLabel();
+      // Launch practice sandbox (mode-select already hidden by scenario button click)
+      isPracticeMode       = true;
+      isDailyChallenge     = false;
+      gameRng              = null;
+      difficultyMultiplier = 1.0;
+      lastDifficultyTier   = 0;
+      const practiceBadgeEl = document.getElementById('practice-badge');
+      if (practiceBadgeEl) practiceBadgeEl.style.display = 'block';
+      try { localStorage.setItem('mineCtris_lastMode', 'practice'); } catch (_) {}
+      if (typeof metricsModePlayed === 'function') metricsModePlayed('practice');
+      if (typeof requestPointerLock === 'function') requestPointerLock();
+    });
+    listEl.appendChild(sandboxCard);
+    return;
+  }
+
   // Custom scenarios tab
   if (cat === 'custom') {
     renderTrainingCustomList(listEl, progress);
@@ -772,8 +803,10 @@ function launchTrainingScenario(scenarioId) {
   _trainingGhostEnabled     = true;
   trainingFixedQueue.length = 0;
 
-  // Store scenario in storage so HUD badge can read it
+  // Store scenario in storage so HUD badge can read it, and update Practice card label
   try { localStorage.setItem('mineCtris_lastMode', 'training'); } catch (_) {}
+  try { localStorage.setItem('mineCtris_practiceLastScenario', scenarioId); } catch (_) {}
+  if (typeof updatePracticeScenarioLabel === 'function') updatePracticeScenarioLabel();
   if (typeof metricsModePlayed === 'function') metricsModePlayed('training');
 
   hideTrainingSelect();
