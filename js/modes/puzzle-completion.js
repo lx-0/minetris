@@ -643,10 +643,11 @@ function _renderDailyPuzzleEntry(listEl) {
     if (dateStr) localStorage.setItem(playedKey, "1");
     puzzlePuzzleId = dailyId;
     hidePuzzleSelect();
-    if (typeof Tone !== "undefined" && Tone.context.state !== "running") {
-      Tone.start().then(function () { controls.lock(); }).catch(function () { controls.lock(); });
-    } else if (controls) {
+    if (controls) {
       controls.lock();
+      if (typeof Tone !== "undefined" && Tone.context.state !== "running") {
+        Tone.start().catch(function() {});
+      }
     }
   });
   listEl.appendChild(item);
@@ -713,10 +714,11 @@ function renderPuzzleSelectList(tabOverride) {
       item.addEventListener("click", function () {
         puzzlePuzzleId = puzzle.id;
         hidePuzzleSelect();
-        if (typeof Tone !== "undefined" && Tone.context.state !== "running") {
-          Tone.start().then(function () { controls.lock(); }).catch(function () { controls.lock(); });
-        } else if (controls) {
+        if (controls) {
           controls.lock();
+          if (typeof Tone !== "undefined" && Tone.context.state !== "running") {
+            Tone.start().catch(function() {});
+          }
         }
       });
     }
@@ -981,14 +983,11 @@ function _openPuzzleImportModal() {
 
 /** Lock pointer (start game) from puzzle select context. Handles Tone init. */
 function _puzzleSelectLock() {
-  if (typeof Tone !== "undefined" && Tone.context.state !== "running") {
-    Tone.start().then(function () {
-      if (typeof controls !== "undefined") controls.lock();
-    }).catch(function () {
-      if (typeof controls !== "undefined") controls.lock();
-    });
-  } else if (typeof controls !== "undefined") {
+  if (typeof controls !== "undefined") {
     controls.lock();
+    if (typeof Tone !== "undefined" && Tone.context.state !== "running") {
+      Tone.start().catch(function() {});
+    }
   }
 }
 

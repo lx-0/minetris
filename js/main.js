@@ -818,10 +818,11 @@ function init() {
 
   const pauseResumeBtn = document.getElementById("pause-resume-btn");
   if (pauseResumeBtn) pauseResumeBtn.addEventListener("click", function () {
+    // Firefox: requestPointerLock must be synchronous within the user gesture —
+    // calling it inside Tone.start().then() breaks Firefox's gesture window.
+    controls.lock();
     if (Tone.context.state !== "running") {
-      Tone.start().then(() => controls.lock()).catch(() => controls.lock());
-    } else {
-      controls.lock();
+      Tone.start().catch(function() {});
     }
   });
 
@@ -905,10 +906,10 @@ function init() {
       e.stopPropagation();
       if (typeof hasSaveState !== "function" || !hasSaveState()) return;
       if (typeof restoreGameState === "function") restoreGameState();
+      // Firefox: must call controls.lock() synchronously within the user gesture
+      controls.lock();
       if (Tone.context.state !== "running") {
-        Tone.start().then(() => controls.lock()).catch(() => controls.lock());
-      } else {
-        controls.lock();
+        Tone.start().catch(function() {});
       }
     });
   }
