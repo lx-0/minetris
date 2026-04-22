@@ -33,6 +33,7 @@ const AUTO_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const CLOUD_AUTO_SYNC_KEY   = 'mineCtris_cloudAutoSync';
 
 let _autoSyncTimer = null;
+let _autoSyncCheckInterval = null;
 let _syncInProgress = false;
 
 // ── Encryption (AES-GCM, key derived from player UUID via PBKDF2) ─────────────
@@ -332,8 +333,10 @@ function _notifyAutoSyncResult(ok) {
 function initCloudSync() {
   getCloudPlayerId(); // ensure generated
 
+  if (_autoSyncCheckInterval) return;
+
   // Periodic 24-hour auto-sync: check every hour and push if 24h have elapsed.
-  setInterval(function() {
+  _autoSyncCheckInterval = setInterval(function() {
     if (!isAutoSyncEnabled()) return;
     try {
       const last = localStorage.getItem(CLOUD_LAST_SYNC_KEY);
