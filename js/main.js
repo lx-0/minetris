@@ -490,6 +490,8 @@ function init() {
         hideModeSelect();
         blocker.style.display = "flex";
         instructions.style.display = "";
+        const musicBtnBack = document.getElementById("hud-music-mute-btn");
+        if (musicBtnBack) musicBtnBack.style.display = "none";
       });
     }
     // ─────────────────────────────────────────────────────────────────
@@ -518,6 +520,8 @@ function init() {
         // Starting from start screen
         instructions.style.display = "none";
         blocker.style.display = "none";
+        const musicBtnLock = document.getElementById("hud-music-mute-btn");
+        if (musicBtnLock) musicBtnLock.style.display = "";
         if (typeof startBgMusic === "function") startBgMusic();
         // Transition from menu mood to a mode-specific initial mood
         if (typeof forceAmbientMood === "function") {

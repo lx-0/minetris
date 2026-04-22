@@ -13,6 +13,8 @@
     function showModeSelect(highlightMode) {
       const modeSelectEl = document.getElementById("mode-select");
       if (!modeSelectEl) return;
+      const musicBtnShow = document.getElementById('hud-music-mute-btn');
+      if (musicBtnShow) musicBtnShow.style.display = '';
       // If coming from a mini-game completion overlay (isGameOver=true but the
       // standard resetGame/start-screen path was skipped), silently reset state
       // so that picking any mode card starts a fresh game.
@@ -480,10 +482,11 @@
     }
 
     function requestPointerLock() {
-      if (Tone.context.state !== "running") {
-        Tone.start().then(() => controls.lock()).catch(() => controls.lock());
-      } else {
-        controls.lock();
+      // Call lock() synchronously within the user gesture — async .then() can
+      // miss Chrome's transient activation window, causing pointer lock to be denied.
+      controls.lock();
+      if (typeof Tone !== 'undefined' && Tone.context && Tone.context.state !== 'running') {
+        Tone.start().catch(function() {});
       }
     }
 

@@ -549,6 +549,8 @@ function resetGame(opts) {
     if (scoreEl) scoreEl.style.display = "none";
     const invHudResetEl = document.getElementById("inventory-hud");
     if (invHudResetEl) invHudResetEl.style.display = "none";
+    const musicBtnReset = document.getElementById("hud-music-mute-btn");
+    if (musicBtnReset) musicBtnReset.style.display = "none";
     renderHighScoresStart();
   }
 
