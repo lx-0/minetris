@@ -223,6 +223,7 @@ function getFeaturedPassState() {
 
   var cosmetics = FEATURED_PASS_COSMETIC_TIERS.map(function(tierNum) {
     var def     = _FP_TIER_COSMETICS[tierNum];
+    if (!def) return null;
     var claimed = isFeaturedPassCosmeticClaimed(seasonId, tierNum);
     // Locked = season ended AND not claimed (can no longer earn it)
     var locked  = ended && !claimed;
@@ -236,7 +237,7 @@ function getFeaturedPassState() {
       locked:  locked,
       xpNeeded: _fpXpForTier(tierNum),
     };
-  });
+  }).filter(Boolean);
 
   return {
     seasonId:       seasonId,
