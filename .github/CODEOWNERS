@@ -1,0 +1,5 @@
+# Default reviewers for all files
+* @lx-0
+
+# Worker / service-worker backend code
+/worker/ @lx-0 @gh-yyengineer
