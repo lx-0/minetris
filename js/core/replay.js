@@ -523,6 +523,26 @@ function replayHideMenuPanel() {
   if (panel) panel.style.display = 'none';
 }
 
+// ── Convenience accessors ──────────────────────────────────────────────────────
+
+/** Returns the most recently recorded replay (by date), or null if none saved. */
+function replayGetLatest() {
+  var all = replayLoadAll();
+  if (all.length === 0) return null;
+  return all.slice().sort(function(a, b) {
+    return new Date(b.date || 0) - new Date(a.date || 0);
+  })[0];
+}
+
+/**
+ * Open the replay browse panel from any context (e.g. match history).
+ * Closes the match history overlay first so the panel is visible.
+ */
+function openReplayPanel() {
+  if (typeof closeMatchHistoryOverlay === 'function') closeMatchHistoryOverlay();
+  replayShowMenuPanel();
+}
+
 /** Show import dialog for pasting a shared replay string. */
 function replayShowImportDialog() {
   // Toggle existing modal
