@@ -76,6 +76,7 @@ function clearExpeditionSession() {
 
 let _loreTimer   = null;
 let _loreBeginCb = null;
+let _resGamepadInterval = null;
 
 /**
  * Show the biome lore overlay before starting a game session.
@@ -450,7 +451,6 @@ function initExpeditionSession() {
   }
 
   // Results: basic gamepad polling (A = play again, B = return to map)
-  let _resGamepadInterval = null;
   let _resLastInput = 0;
 
   function _pollResultsGamepad() {
@@ -465,6 +465,6 @@ function initExpeditionSession() {
     if (pad.buttons[1]?.pressed) { _resLastInput = now; if (mapBtn)       mapBtn.click();       }
   }
 
+  if (_resGamepadInterval) clearInterval(_resGamepadInterval);
   _resGamepadInterval = setInterval(_pollResultsGamepad, 100);
-  // (interval runs indefinitely; it self-gates on overlay visibility)
 }
