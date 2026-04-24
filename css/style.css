@@ -387,6 +387,67 @@ body {
   background: transparent;
 }
 
+/* ── Scarcity HUD ── */
+#scarcity-hud {
+  font-family: "Press Start 2P", cursive;
+  pointer-events: none;
+  margin-top: 6px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+.sc-label {
+  font-size: 6px;
+  color: rgba(0, 255, 0, 0.85);
+  text-shadow: 1px 1px 2px #000;
+  text-align: center;
+  margin-bottom: 5px;
+  letter-spacing: 1px;
+  display: block;
+}
+.sc-swatches {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sc-swatch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.sc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.sc-bar-wrap {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  min-width: 28px;
+}
+.sc-bar-fill {
+  height: 100%;
+  background: rgba(0,255,0,0.55);
+  border-radius: 2px;
+  transition: width 1.5s linear;
+}
+.sc-swatch.sc-depleting .sc-dot {
+  animation: sc-deplete-pulse 0.9s ease-in-out infinite;
+}
+.sc-swatch.sc-depleting .sc-bar-fill {
+  background: rgba(255, 200, 0, 0.8);
+}
+@keyframes sc-deplete-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,220,0,0); }
+  50%       { box-shadow: 0 0 0 3px rgba(255,220,0,0.65); }
+}
+
 /* ── Hold-piece panel ── */
 #hold-piece-panel {
   position: absolute;
