@@ -187,6 +187,17 @@ function _randomShapeIndex() {
     return pool[Math.floor(_rng() * pool.length)];
   }
 
+  // Scarcity-weighted distribution: time/tier-driven material waves.
+  // Weekly mods and world modifiers already returned above; scarcity applies to the
+  // baseline distribution only.
+  if (typeof getScarcityWeights === 'function') {
+    const sw = getScarcityWeights();
+    if (sw) {
+      if (!diamondEligible) sw[8] = 0;
+      return worldModifierWeightedIndex(sw, _rng);
+    }
+  }
+
   // Standard pool is indices 1–7; diamond adds index 8.
   const poolSize = diamondEligible ? 8 : 7;
   return Math.floor(_rng() * poolSize) + 1;
@@ -200,6 +211,7 @@ function initPieceQueue() {
     pieceQueue.push({ index: idx, shape: SHAPES[idx] });
   }
   updateNextPiecesHUD();
+  if (typeof updateScarcityHUD === 'function') updateScarcityHUD();
 }
 
 /** Render the queue as mini piece grids inside #next-pieces-panel. */
@@ -579,6 +591,7 @@ function spawnFallingPiece() {
   const newIdx = _randomShapeIndex();
   pieceQueue.push({ index: newIdx, shape: SHAPES[newIdx] });
   updateNextPiecesHUD();
+  if (typeof updateScarcityHUD === 'function') updateScarcityHUD();
   const piece3D = createPiece3D(shape, index);
   const _spawnRange = WORLD_SIZE * 0.8;
   const spawnX = (_rng() - 0.5) * _spawnRange;

@@ -117,6 +117,7 @@ const EXPECTED_IDS = [
   'score-display',
   'hud-level',
   'next-pieces-panel',
+  'scarcity-hud',
   'danger-overlay',
 ];
 
