@@ -39,8 +39,8 @@ assets/       Release assets (itch.io)
 ### Testing
 
 - `node tools/smoke-test.js` — pre-push validation (syntax, DOM IDs, script refs, global conflicts)
-- `npm test` — unit tests (Vitest, when configured)
-- `npm run test:coverage` — coverage report
+- `pnpm test` — unit tests (Vitest); use `pnpm` not `npm` (npm has a env quirk in this container that prevents node_modules creation)
+- `pnpm run test:coverage` — coverage report (lcov + text; threshold 5%)
 
 ## Agent Handoff Policy
 

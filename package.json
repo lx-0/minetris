@@ -1,0 +1,19 @@
+{
+  "name": "minetris",
+  "version": "1.0.0",
+  "description": "Minecraft/Tetris mashup — 3D first-person block-falling game",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lx-0/minetris.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@vitest/coverage-v8": "^1.6.1",
+    "vitest": "^1.6.1"
+  }
+}
