@@ -705,3 +705,17 @@ const BLOCK_PUZZLE_MINI_FIXED_MULTIPLIER = Math.pow(1.1, 3); // Level 4 (slower 
 // Stone pickaxe: consecutive click streak for the cleave-on-every-3rd-click bonus.
 let stonePickaxeClickStreak = 0;
 let stonePickaxeLastClickTime = -1;
+
+// ── Classic mining layer (MINAA-629) ──────────────────────────────────────────
+// true when Classic mode is active — enables stone-tier pickaxe and score-only mining.
+let classicMiningEnabled = false;
+// Current mining streak count (1 = first break, 2+ = consecutive breaks within window).
+let miningStreak = 0;
+// Countdown timer in seconds; resets to MINING_STREAK_WINDOW on each break.
+let miningStreakTimer = 0;
+// clock.getElapsedTime() at last block break (-1 = no break yet this session).
+let lastMineTime = -1;
+// true when checkLineClear is triggered by block physics (not piece landing).
+let isPhysicsCascade = false;
+// Current cascade depth (0-based) when isPhysicsCascade is true.
+let cascadeLevel = 0;

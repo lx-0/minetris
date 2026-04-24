@@ -252,7 +252,32 @@ function onMouseDown(event) {
       // Depth-scaled mining score: basePoints × (1 + depth × 0.05) for underground blocks.
       const _blockDepth = targetedBlock.userData.isUnderground
         ? Math.max(0, -targetedBlock.position.y) : 0;
-      addScore(_blockDepth > 0 ? Math.round(_basePoints * (1 + _blockDepth * 0.05)) : _basePoints);
+      const _rawScore = _blockDepth > 0
+        ? Math.round(_basePoints * (1 + _blockDepth * 0.05)) : _basePoints;
+
+      // Classic mode: update mining streak and apply multiplier to score.
+      let _miningScoreMult = 1.0;
+      if (classicMiningEnabled) {
+        const _now = clock.getElapsedTime();
+        if (lastMineTime >= 0 && (_now - lastMineTime) <= MINING_STREAK_WINDOW) {
+          miningStreak = Math.min(miningStreak + 1, 5);
+        } else {
+          miningStreak = 1;
+        }
+        lastMineTime      = _now;
+        miningStreakTimer = MINING_STREAK_WINDOW;
+        const _sIdx = Math.max(0, Math.min(miningStreak - 1, MINING_STREAK_MULTIPLIERS.length - 1));
+        _miningScoreMult = MINING_STREAK_MULTIPLIERS[_sIdx];
+        if (miningStreak >= 2) {
+          if (typeof updateStreakBanner === 'function') updateStreakBanner(miningStreak);
+          if (typeof playMiningStreakSound === 'function') playMiningStreakSound(miningStreak);
+        }
+        if (miningStreak === 1 && typeof window._dismissClassicMineHint === 'function') {
+          window._dismissClassicMineHint();
+        }
+      }
+
+      addScore(Math.round(_rawScore * _miningScoreMult));
       if (typeof achOnBlockMined === "function") achOnBlockMined(blocksMined, _objType);
       if (typeof onMissionBlockMined === "function") onMissionBlockMined();
       // Seasonal event: track void-adjacent mining
@@ -268,21 +293,21 @@ function onMouseDown(event) {
       const _brokenBlock = pickaxeTier === "diamond" ? _brokenGridPos : null;
 
       // ── Rubble mining drop: 50/50 stone or dirt ─────────────────────────────
-      if (_isRubble) {
-        const _rubbleDropColor = Math.random() < 0.5 ? '#808080' : '#8b4513';
-        addToInventory(_rubbleDropColor);
-      } else {
-        const blockColor =
-          targetedBlock.userData.originalColor ||
-          targetedBlock.material.color;
-        const cssColor = threeColorToCss(blockColor);
-        // Use the dropMaterial color if defined (e.g. obsidian → obsidian_shard)
-        const _matType = targetedBlock.userData.materialType;
-        const _dropMat = _matType && BLOCK_TYPES[_matType] && BLOCK_TYPES[_matType].dropMaterial;
-        const _invColor = _dropMat === "obsidian_shard" ? OBSIDIAN_SHARD_COLOR : cssColor;
-        const crumbles = targetedBlock.name === "leaf_block" && Math.random() < 0.2;
-        if (!crumbles) {
-          addToInventory(_invColor);
+      // Classic mode: score-only — skip inventory drops entirely.
+      if (!classicMiningEnabled) {
+        if (_isRubble) {
+          const _rubbleDropColor = Math.random() < 0.5 ? '#808080' : '#8b4513';
+          addToInventory(_rubbleDropColor);
+        } else {
+          const blockColor =
+            targetedBlock.userData.originalColor ||
+            targetedBlock.material.color;
+          const cssColor = threeColorToCss(blockColor);
+          const _matType = targetedBlock.userData.materialType;
+          const _dropMat = _matType && BLOCK_TYPES[_matType] && BLOCK_TYPES[_matType].dropMaterial;
+          const _invColor = _dropMat === "obsidian_shard" ? OBSIDIAN_SHARD_COLOR : cssColor;
+          const crumbles = targetedBlock.name === "leaf_block" && Math.random() < 0.2;
+          if (!crumbles) addToInventory(_invColor);
         }
       }
 
@@ -314,6 +339,11 @@ function onMouseDown(event) {
       // Save rubble row Y before unregistering (used for full-row check below)
       const _rubbleRowY = _isRubble && targetedBlock.userData.gridPos
         ? targetedBlock.userData.gridPos.y : null;
+
+      // Save grid position for Classic block physics (before unregister clears it).
+      const _physicsGridPos = (classicMiningEnabled && targetedBlock.userData.gridPos)
+        ? { x: targetedBlock.userData.gridPos.x, y: targetedBlock.userData.gridPos.y, z: targetedBlock.userData.gridPos.z }
+        : null;
 
       unregisterBlock(targetedBlock);
       disposeBlock(targetedBlock);
@@ -361,6 +391,10 @@ function onMouseDown(event) {
       // Puzzle / custom puzzle mode: check win/lose after every mined block
       if ((isPuzzleMode || isCustomPuzzleMode) && typeof checkPuzzleConditions === "function") {
         checkPuzzleConditions();
+      }
+      // Classic mode: trigger block physics (column gravity) for blocks above.
+      if (_physicsGridPos && typeof triggerBlockPhysics === 'function') {
+        triggerBlockPhysics(_physicsGridPos.x, _physicsGridPos.y, _physicsGridPos.z, 0);
       }
       targetedBlock = null;
       miningProgress = 0;

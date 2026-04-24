@@ -107,6 +107,13 @@ function resetGame(opts) {
   stonePickaxeClickStreak  = 0;
   stonePickaxeLastClickTime = -1;
   hasCraftingBench   = false;
+  classicMiningEnabled = false;
+  miningStreak         = 0;
+  miningStreakTimer    = 0;
+  lastMineTime         = -1;
+  isPhysicsCascade     = false;
+  cascadeLevel         = 0;
+  if (typeof resetBlockPhysics === 'function') resetBlockPhysics();
   consumables        = { lava_flask: 0, ice_bridge: 0 };
   powerUps           = { row_bomb: 0, slow_down: 0, shield: 0, magnet: 0, time_freeze: 0, sabotage: 0, counter: 0, fortress: 0 };
   iceBridgeSlowActive = false;

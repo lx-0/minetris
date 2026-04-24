@@ -342,6 +342,7 @@ function animate() {
         if ((isPuzzleMode || isCustomPuzzleMode) && typeof updatePuzzleHUD === "function") updatePuzzleHUD();
       }
       updateLineClear(delta);
+      if (typeof updateBlockPhysics === 'function') updateBlockPhysics(delta);
       if (typeof updateParticles === 'function') updateParticles(delta);
       // Training mode: update speed drill HUD every frame
       if (typeof isTrainingMode !== 'undefined' && isTrainingMode && typeof updateTrainingSpeedHUD === 'function') {
