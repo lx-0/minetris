@@ -205,6 +205,9 @@ let lastClearWasDifficult = false;
 // Value: 'full' (3+ corners) | 'mini' (2 corners) | '' (no T-spin).
 // Consumed once by checkLineClear() to tag the current clear event.
 let lastPieceTSpin = '';
+// Mining line-clear: set by placeBlock() when the player places a mined block.
+// Consumed once by checkLineClear() to tag the current clear as mining-triggered.
+let lastBlockWasMined = false;
 
 // ── Co-op mode state ──────────────────────────────────────────────────────────
 // true while a co-op session is active; suppresses local random piece generation.

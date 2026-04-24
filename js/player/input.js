@@ -78,8 +78,10 @@ function placeBlock() {
     }
   }
 
-  // Update HUD and check line-clear
+  // Update HUD and check line-clear.
+  // Tag as mined placement so checkLineClear can apply the mining feedback bonus.
   updateInventoryHUD();
+  if (typeof lastBlockWasMined !== 'undefined') lastBlockWasMined = true;
   checkLineClear([block]);
 
   // Placement sound

@@ -40,6 +40,7 @@ let _lcPhaseAge = 0;
 let _lcNumLines = 0;
 let _lcIsTSpin          = false;  // current clear was triggered by a T-piece
 let _lcIsMiniTSpin      = false;  // current T-spin is a mini T-spin (2 corners)
+let _lcIsMined          = false;  // current clear was triggered by a player-placed mined block
 let _lcPerfectClear     = false;  // board will be empty after this clear
 let _lcPerfectClearBonus = 0;     // bonus score awarded for perfect clear (shown in banner)
 
@@ -263,6 +264,9 @@ function checkLineClear(newBlocks) {
   // Consume T-spin flag immediately — applies whether or not lines are cleared.
   const _tSpinType = (typeof lastPieceTSpin !== 'undefined') ? lastPieceTSpin : '';
   if (typeof lastPieceTSpin !== 'undefined') lastPieceTSpin = '';
+  // Consume mined-block flag — set by placeBlock() for player-placed mined blocks.
+  const _isMinedClear = (typeof lastBlockWasMined !== 'undefined') && lastBlockWasMined;
+  if (typeof lastBlockWasMined !== 'undefined') lastBlockWasMined = false;
 
   // Collect the slab keys touched by the newly landed blocks.
   // Slab key = Y level for down/up gravity; X level for left/right gravity.
@@ -341,6 +345,8 @@ function checkLineClear(newBlocks) {
   // Apply T-spin type from pieces.js (already consumed at top of function).
   _lcIsTSpin     = (_tSpinType !== '');
   _lcIsMiniTSpin = (_tSpinType === 'mini');
+  // Apply mined-block flag (already consumed at top of function).
+  _lcIsMined = _isMinedClear;
   if (_lcIsTSpin) {
     sessionTSpins++;
     if (_lcIsMiniTSpin && typeof sessionMiniTSpins !== 'undefined') sessionMiniTSpins++;
@@ -528,7 +534,8 @@ function checkLineClear(newBlocks) {
     comboChallengeOnLineClear(completeLevels.length);
     _lcPerfectClearBonus = 0;
   } else {
-  const _lcComputedScore = Math.round(baseScore * _b2bMult * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult);
+  const _minedMult = _lcIsMined ? 1.5 : 1.0;
+  const _lcComputedScore = Math.round(baseScore * _b2bMult * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult * _minedMult);
   addScore(_lcComputedScore);
 
   // Perfect Clear bonus: awarded on top of regular line-clear score.
@@ -617,11 +624,11 @@ function checkLineClear(newBlocks) {
       baseLabel = labels[Math.min(completeLevels.length, 4)];
     }
     const _b2bPrefix = _isB2B ? 'B2B ' : '';
-    const goldenLabel = (typeof goldenHourActive !== "undefined" && goldenHourActive)
-      ? _b2bPrefix + baseLabel + "  3\xd7"
-      : _b2bPrefix + baseLabel;
-    lineClearBannerEl.textContent = goldenLabel;
-    lineClearBannerEl.style.color = _lcIsTSpin ? '#cc44ff' : (_isB2B ? '#ffaa00' : '');
+    const _goldenSuffix = (typeof goldenHourActive !== "undefined" && goldenHourActive) ? "  3\xd7" : '';
+    const _minedSuffix = _lcIsMined ? '  MINED! 1.5\xd7' : '';
+    lineClearBannerEl.textContent = _b2bPrefix + baseLabel + _goldenSuffix + _minedSuffix;
+    lineClearBannerEl.style.color = _lcIsMined ? '#ffb300'
+      : _lcIsTSpin ? '#cc44ff' : (_isB2B ? '#ffaa00' : '');
     lineClearBannerEl.style.display = "block";
     bannerTimer = 1.5;
   }
@@ -937,6 +944,8 @@ function _lcDetonate() {
   const _flashColor = _cel ? _cel.getFlashColor(dominantColor) : '#ffffff';
 
   fragMult *= _comboIntensityMult * _biomeIntensity;
+  // Mined line-clear: 3× fragment density for extra visceral payoff.
+  if (_lcIsMined) fragMult *= 3.0;
 
   const fragsPerBlock = Math.round(8 * fragMult);
 
@@ -1105,13 +1114,17 @@ function _lcDetonate() {
   _lcJoltAge = 0;  // update loop skips actual movement when reducedMotion is on
 
   // 7. Screen flash — tier-aware color and intensity ────────────────────────
-  if (doFlash && !_reducedMotion) {
+  // Mined clears: force amber flash at 0.55 opacity even on low line counts.
+  const _shouldFlash = doFlash || _lcIsMined;
+  const _actualFlashColor = _lcIsMined ? '#ffb300' : _flashColor;
+  const _actualFlashAmt   = _lcIsMined ? Math.max(flashAmt, 0.55) : flashAmt;
+  if (_shouldFlash && !_reducedMotion) {
     const el = document.getElementById("lc-flash-overlay");
     if (el) {
-      el.style.backgroundColor = _flashColor;
+      el.style.backgroundColor = _actualFlashColor;
       el.style.transition = "none";
-      el.style.opacity = flashAmt;
-      void el.offsetHeight;  // force reflow so CSS transition fires from flashAmt
+      el.style.opacity = _actualFlashAmt;
+      void el.offsetHeight;  // force reflow so CSS transition fires from _actualFlashAmt
       el.style.transition = "opacity 0.45s ease-out";
       el.style.opacity = "0";
     }
@@ -1125,14 +1138,19 @@ function _lcDetonate() {
   }
 
   // 9. Screen shake — tier-driven duration (double=slight, triple=medium, tetris=strong)
-  if (doShake && !_reducedMotion) {
+  // Mined clears: always shake at 0.40 s — player deserves the camera impact.
+  const _shouldShake = doShake || _lcIsMined;
+  const _actualShakeDur = _lcIsMined ? Math.max(shakeDur, 0.40) : shakeDur;
+  if (_shouldShake && !_reducedMotion) {
     _lcShakeAge = 0;
-    _lcShakeDur = shakeDur;
+    _lcShakeDur = _actualShakeDur;
   }
 
   // 10. T-spin / Perfect Clear — firework burst ─────────────────────────────
   // T-spin: play enchantment SFX
   if (_lcIsTSpin && typeof playTSpinSound === 'function') playTSpinSound();
+  // Mined line-clear: distinct metallic SFX layered on top of the standard anvil hit.
+  if (_lcIsMined && typeof playMinedLineClearSound === 'function') playMinedLineClearSound(numLines);
   // Spawn a radial burst of festive fragments around the board center.
   if (_lcIsTSpin || _lcPerfectClear) {
     const _fwCount  = _lcPerfectClear ? 48 : 24;
