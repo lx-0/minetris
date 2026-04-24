@@ -41,6 +41,105 @@ function _applyDiamondAOE(origin) {
 }
 
 /**
+ * Stone pickaxe cleave: triggered on every 3rd consecutive click.
+ * Breaks one randomly-chosen cardinal-adjacent block at the same Y level.
+ * @param {{ x:number, y:number, z:number }} origin  Grid position of the primary target.
+ */
+function _applyStonePickaxeCleave(origin) {
+  const offsets = [[-1,0],[1,0],[0,-1],[0,1]];
+  for (let i = offsets.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = offsets[i]; offsets[i] = offsets[j]; offsets[j] = tmp;
+  }
+  for (const [dx, dz] of offsets) {
+    const neighbor = _findBlockAtGrid(origin.x + dx, origin.y, origin.z + dz);
+    if (!neighbor) continue;
+    if (neighbor.material) {
+      neighbor.material.emissive.setRGB(0.55, 0.35, 0.0);
+      neighbor.material.needsUpdate = true;
+    }
+    spawnDustParticles(neighbor, { breakBurst: true });
+    blocksMined++;
+    if (isCoopMode) coopMyBlocksMined++;
+    const nobjType = neighbor.userData.objectType;
+    const nmatName = neighbor.userData.materialType ||
+      (nobjType ? OBJECT_TYPE_TO_MATERIAL[nobjType] : null);
+    addScore(nmatName && BLOCK_TYPES[nmatName] ? BLOCK_TYPES[nmatName].points : 10);
+    if (typeof achOnBlockMined === "function") achOnBlockMined(blocksMined, nobjType);
+    if (typeof onMissionBlockMined === "function") onMissionBlockMined();
+    const nColor = neighbor.userData.originalColor || neighbor.material.color;
+    addToInventory(threeColorToCss(nColor));
+    unregisterBlock(neighbor);
+    disposeBlock(neighbor);
+    worldGroup.remove(neighbor);
+    return;
+  }
+}
+
+/**
+ * Iron pickaxe penetration: after breaking a block, automatically breaks the next block
+ * directly behind it (in the player's mining direction, opposite the face normal).
+ * @param {{ x:number, y:number, z:number }} origin      Grid position of the broken block.
+ * @param {THREE.Vector3}                    faceNormal  Snapped axis-aligned face normal.
+ */
+function _applyIronPickaxePenetration(origin, faceNormal) {
+  const dx = -Math.round(faceNormal.x);
+  const dy = -Math.round(faceNormal.y);
+  const dz = -Math.round(faceNormal.z);
+  const behind = _findBlockAtGrid(origin.x + dx, origin.y + dy, origin.z + dz);
+  if (!behind) return;
+  if (behind.material) {
+    behind.material.emissive.setRGB(0.6, 0.85, 1.0);
+    behind.material.needsUpdate = true;
+  }
+  spawnDustParticles(behind, { breakBurst: true });
+  blocksMined++;
+  if (isCoopMode) coopMyBlocksMined++;
+  const bobjType = behind.userData.objectType;
+  const bmatName = behind.userData.materialType ||
+    (bobjType ? OBJECT_TYPE_TO_MATERIAL[bobjType] : null);
+  addScore(bmatName && BLOCK_TYPES[bmatName] ? BLOCK_TYPES[bmatName].points : 10);
+  if (typeof achOnBlockMined === "function") achOnBlockMined(blocksMined, bobjType);
+  if (typeof onMissionBlockMined === "function") onMissionBlockMined();
+  const bColor = behind.userData.originalColor || behind.material.color;
+  addToInventory(threeColorToCss(bColor));
+  unregisterBlock(behind);
+  disposeBlock(behind);
+  worldGroup.remove(behind);
+}
+
+/**
+ * Diamond pickaxe resource magnet: after the AOE cross, also breaks the 4 diagonal
+ * neighbors at the same Y level with a blue magnetic-pull flash (full 3×3 clear).
+ * @param {{ x:number, y:number, z:number }} origin  Grid position of the primary broken block.
+ */
+function _applyDiamondMagnet(origin) {
+  const diagonals = [[-1,-1],[-1,1],[1,-1],[1,1]];
+  diagonals.forEach(([dx, dz]) => {
+    const neighbor = _findBlockAtGrid(origin.x + dx, origin.y, origin.z + dz);
+    if (!neighbor) return;
+    if (neighbor.material) {
+      neighbor.material.emissive.setRGB(0.1, 0.45, 0.95);
+      neighbor.material.needsUpdate = true;
+    }
+    spawnDustParticles(neighbor, { breakBurst: true });
+    blocksMined++;
+    if (isCoopMode) coopMyBlocksMined++;
+    const nobjType = neighbor.userData.objectType;
+    const nmatName = neighbor.userData.materialType ||
+      (nobjType ? OBJECT_TYPE_TO_MATERIAL[nobjType] : null);
+    addScore(nmatName && BLOCK_TYPES[nmatName] ? BLOCK_TYPES[nmatName].points : 10);
+    if (typeof achOnBlockMined === "function") achOnBlockMined(blocksMined, nobjType);
+    if (typeof onMissionBlockMined === "function") onMissionBlockMined();
+    const nColor = neighbor.userData.originalColor || neighbor.material.color;
+    addToInventory(threeColorToCss(nColor));
+    unregisterBlock(neighbor);
+    disposeBlock(neighbor);
+    worldGroup.remove(neighbor);
+  });
+}
+
+/**
  * Lava Flask activation: removes all blocks on the lowest occupied Y layer.
  * Activated via keyboard shortcut F.
  */

@@ -76,9 +76,9 @@ function renderCraftingPanel() {
   if (tierEl) {
     const tierLabels = {
       none:    "Default Pickaxe",
-      stone:   "Stone Pickaxe (max 2 hits)",
-      iron:    "Iron Pickaxe (1-hit)",
-      diamond: "Diamond Pickaxe (1-hit + AOE)",
+      stone:   "Stone Pickaxe (cleave on every 3rd click)",
+      iron:    "Iron Pickaxe (pierces 2 blocks in a line)",
+      diamond: "Diamond Pickaxe (AOE cross + diagonal magnet)",
     };
     const tierColors = {
       none:    "rgba(255,255,255,0.4)",
