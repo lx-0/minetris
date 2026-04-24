@@ -171,6 +171,37 @@ function playLineClearSound(numLines) {
   }
 }
 
+/**
+ * Mining-triggered line-clear: crisp pickaxe-strike overtone + bright ascending sting.
+ * Layered on top of the standard anvil+glass hit — fires in _lcDetonate so it
+ * cuts through as the particle explosion peaks.
+ * @param {number} numLines  1–4 lines cleared
+ */
+function playMinedLineClearSound(numLines) {
+  if (!audioReady) return;
+  const now = Tone.now();
+  // Bright metallic ping — higher pitch than the standard anvil (reward feel)
+  if (anvilSynth) {
+    const pingPitch = numLines >= 4 ? 'E3' : numLines === 3 ? 'G3' : numLines === 2 ? 'B3' : 'D4';
+    const pingVol = -8 + numLines * 1.5;
+    anvilSynth.volume.value = pingVol;
+    try { anvilSynth.triggerAttackRelease(pingPitch, '16n', now + 0.03); } catch (_e) {}
+    // Second harmonic overtone for sparkle
+    anvilSynth.volume.value = pingVol - 5;
+    try { anvilSynth.triggerAttackRelease(pingPitch, '32n', now + 0.10); } catch (_e) {}
+    anvilSynth.volume.value = pingVol; // restore
+  }
+  // Rising A-major arpeggio — bright, decisive, distinct from the standard sweep
+  if (clearSynth) {
+    const arpeggioNotes = numLines >= 3
+      ? ['A4', 'C#5', 'E5', 'A5']
+      : ['A4', 'C#5', 'E5'];
+    arpeggioNotes.forEach(function (note, i) {
+      try { clearSynth.triggerAttackRelease(note, '16n', now + 0.04 + i * 0.07, 0.40 - i * 0.05); } catch (_e) {}
+    });
+  }
+}
+
 // ── Tetris celebration fanfare ────────────────────────────────────────────────
 
 /**
