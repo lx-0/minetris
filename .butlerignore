@@ -1,0 +1,16 @@
+node_modules/
+worker/
+tools/
+tests/
+coverage/
+docs/
+assets/
+.git/
+.github/
+CLAUDE.md
+README.md
+package.json
+package-lock.json
+pnpm-lock.yaml
+vitest.config.js
+.butlerignore
