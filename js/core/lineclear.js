@@ -538,6 +538,17 @@ function checkLineClear(newBlocks) {
   const _lcComputedScore = Math.round(baseScore * _b2bMult * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult * _minedMult);
   addScore(_lcComputedScore);
 
+  // Classic mining cascade: award chain reaction + cascade bonuses.
+  if (typeof isPhysicsCascade !== 'undefined' && isPhysicsCascade) {
+    const _cDepth = (typeof cascadeLevel !== 'undefined') ? cascadeLevel : 0;
+    const _cascadeBonus = (typeof CASCADE_BONUS_PER_LEVEL !== 'undefined' ? CASCADE_BONUS_PER_LEVEL : 50) * (_cDepth + 1);
+    const _chainBonus   = (typeof CHAIN_REACTION_BONUS !== 'undefined' ? CHAIN_REACTION_BONUS : 200) * completeLevels.length;
+    addScore(_cascadeBonus + _chainBonus);
+    if (typeof showChainReactionBanner === 'function') {
+      showChainReactionBanner(_cascadeBonus + _chainBonus);
+    }
+  }
+
   // Perfect Clear bonus: awarded on top of regular line-clear score.
   // Bonus tiers (× level): 1-line=800, 2-line=1200, 3-line=1800, 4-line=2000.
   // All active multipliers (blitz, gold rush, golden hour, depth) also apply.
@@ -623,12 +634,17 @@ function checkLineClear(newBlocks) {
       const labels = ["", "LINE CLEAR!", "DOUBLE!", "TRIPLE!", "TETRIS!"];
       baseLabel = labels[Math.min(completeLevels.length, 4)];
     }
+    // Classic mining cascade: prefix with "CASCADE" label.
+    if (typeof isPhysicsCascade !== 'undefined' && isPhysicsCascade) {
+      baseLabel = 'CASCADE  ' + baseLabel;
+    }
     const _b2bPrefix = _isB2B ? 'B2B ' : '';
     const _goldenSuffix = (typeof goldenHourActive !== "undefined" && goldenHourActive) ? "  3\xd7" : '';
     const _minedSuffix = _lcIsMined ? '  MINED! 1.5\xd7' : '';
     lineClearBannerEl.textContent = _b2bPrefix + baseLabel + _goldenSuffix + _minedSuffix;
+    const _cascadeColor = (typeof isPhysicsCascade !== 'undefined' && isPhysicsCascade) ? '#ff9800' : '';
     lineClearBannerEl.style.color = _lcIsMined ? '#ffb300'
-      : _lcIsTSpin ? '#cc44ff' : (_isB2B ? '#ffaa00' : '');
+      : _lcIsTSpin ? '#cc44ff' : (_isB2B ? '#ffaa00' : _cascadeColor);
     lineClearBannerEl.style.display = "block";
     bannerTimer = 1.5;
   }

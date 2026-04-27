@@ -1183,3 +1183,13 @@ const MOBILE_OVERRIDES = {
 };
 
 const GAME_VERSION = "7.1";
+
+// ── Classic mining layer (MINAA-629) ──────────────────────────────────────────
+// Mining streak: seconds between breaks to keep streak alive.
+const MINING_STREAK_WINDOW = 1.5;
+// Multipliers indexed by streak count (0=no streak, 1=first mine, 2=second, …, 5+=cap).
+const MINING_STREAK_MULTIPLIERS = [1.0, 1.0, 1.5, 2.0, 2.5, 3.0];
+// Bonus per cascade depth level (additive, depth 0-based).
+const CASCADE_BONUS_PER_LEVEL = 50;
+// Flat bonus per line cleared by physics cascade (not by piece landing).
+const CHAIN_REACTION_BONUS = 200;

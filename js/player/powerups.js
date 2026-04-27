@@ -67,11 +67,20 @@ function _applyStonePickaxeCleave(origin) {
     addScore(nmatName && BLOCK_TYPES[nmatName] ? BLOCK_TYPES[nmatName].points : 10);
     if (typeof achOnBlockMined === "function") achOnBlockMined(blocksMined, nobjType);
     if (typeof onMissionBlockMined === "function") onMissionBlockMined();
-    const nColor = neighbor.userData.originalColor || neighbor.material.color;
-    addToInventory(threeColorToCss(nColor));
+    if (typeof classicMiningEnabled === 'undefined' || !classicMiningEnabled) {
+      const nColor = neighbor.userData.originalColor || neighbor.material.color;
+      addToInventory(threeColorToCss(nColor));
+    }
+    const _cleaveGridPos = neighbor.userData.gridPos
+      ? { x: neighbor.userData.gridPos.x, y: neighbor.userData.gridPos.y, z: neighbor.userData.gridPos.z }
+      : null;
     unregisterBlock(neighbor);
     disposeBlock(neighbor);
     worldGroup.remove(neighbor);
+    if (_cleaveGridPos && typeof classicMiningEnabled !== 'undefined' && classicMiningEnabled &&
+        typeof triggerBlockPhysics === 'function') {
+      triggerBlockPhysics(_cleaveGridPos.x, _cleaveGridPos.y, _cleaveGridPos.z, 0);
+    }
     return;
   }
 }

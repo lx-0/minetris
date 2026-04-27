@@ -24967,3 +24967,51 @@ body.ui-theme-retro .notif-toast {
   background: rgba(0,0,0,0.75) !important;
   opacity: 1;
 }
+
+/* ── Classic mining banners (MINAA-629) ─────────────────────────────────────── */
+@keyframes streak-bounce {
+  0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  55%  { transform: translate(-50%, -50%) scale(1.20); opacity: 1; }
+  80%  { transform: translate(-50%, -50%) scale(0.95); }
+  100% { transform: translate(-50%, -50%) scale(1.0);  opacity: 1; }
+}
+#mining-streak-banner {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "Press Start 2P", cursive;
+  font-size: 18px;
+  color: #ffd700;
+  text-shadow: 2px 2px 4px #000, 0 0 10px #ff8c00;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: streak-bounce 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+#chain-reaction-banner {
+  position: absolute;
+  top: 47%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "Press Start 2P", cursive;
+  font-size: 16px;
+  color: #ff9800;
+  text-shadow: 2px 2px 4px #000, 0 0 12px #ff6600;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#classic-mine-hint {
+  position: absolute;
+  top: 58%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.60);
+  color: #fff;
+  font-size: 15px;
+  padding: 10px 22px;
+  border-radius: 6px;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: opacity 0.4s ease;
+  z-index: 900;
+}

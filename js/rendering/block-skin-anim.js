@@ -359,11 +359,11 @@ function initAnimatedSkinStrip() {
   // Animate all canvases in the strip.
   var startMs = performance.now();
   if (_stripRafId) cancelAnimationFrame(_stripRafId);
+  var _stripCanvases = strip.querySelectorAll('.skin-preview-canvas[data-animated-skin]');
+  if (!_stripCanvases.length) return;
   function tick() {
     var elapsed = performance.now() - startMs;
-    var canvases = strip.querySelectorAll('.skin-preview-canvas[data-animated-skin]');
-    if (!canvases.length) { _stripRafId = null; return; }
-    canvases.forEach(function(canvas) {
+    _stripCanvases.forEach(function(canvas) {
       drawSkinPreviewFrame(canvas, canvas.getAttribute('data-animated-skin'), elapsed);
     });
     _stripRafId = requestAnimationFrame(tick);

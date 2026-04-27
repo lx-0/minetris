@@ -524,13 +524,35 @@
       classicCardEl.addEventListener("click", function () {
         isDailyChallenge = false;
         gameRng = null;
+        pickaxeTier = "stone";
+        classicMiningEnabled = true;
         applyWorldModifierHUD();
         try { localStorage.setItem("mineCtris_lastMode", "classic"); } catch (_) {}
         if (typeof metricsModePlayed === 'function') metricsModePlayed('classic');
+        _maybeShowClassicMineHint();
         hideModeSelect();
         requestPointerLock();
       });
     }
+
+    function _maybeShowClassicMineHint() {
+      try { if (localStorage.getItem('mineCtris_classicMineHintSeen') === '1') return; } catch (_) {}
+      var el = document.getElementById('classic-mine-hint');
+      if (!el) return;
+      el.style.display = 'block';
+      requestAnimationFrame(function () { el.style.opacity = '1'; });
+      var _hintTimer = setTimeout(function () { _dismissClassicMineHint(); }, 10000);
+      el._hintTimer = _hintTimer;
+    }
+
+    window._dismissClassicMineHint = function _dismissClassicMineHint() {
+      var el = document.getElementById('classic-mine-hint');
+      if (!el || el.style.display === 'none') return;
+      if (el._hintTimer) { clearTimeout(el._hintTimer); el._hintTimer = null; }
+      el.style.opacity = '0';
+      setTimeout(function () { el.style.display = 'none'; }, 400);
+      try { localStorage.setItem('mineCtris_classicMineHintSeen', '1'); } catch (_) {}
+    };
 
     const sprintCardEl = document.getElementById("mode-card-sprint");
     if (sprintCardEl) {

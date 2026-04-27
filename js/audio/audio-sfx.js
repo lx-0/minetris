@@ -694,6 +694,50 @@ function playCountdownStageUp() {
   }
 }
 
+// ── Classic mining streak sounds (MINAA-629) ──────────────────────────────────
+
+/**
+ * Ascending chime on each mining streak increment (streak ≥ 2).
+ * C4 on 2nd break, +2 semitones per subsequent break up to F#4 / G#4.
+ * @param {number} streak   current streak count (2–5+)
+ */
+function playMiningStreakSound(streak) {
+  if (!audioReady || !comboChimeSynth) return;
+  // Semitone offsets from C4: 0(C4), 2(D4), 4(E4), 6(F#4), 8(G#4)
+  const _semis = [0, 2, 4, 6, 8];
+  const _idx   = Math.min(streak - 2, _semis.length - 1);
+  const _notes = ['C4', 'D4', 'E4', 'F#4', 'G#4'];
+  const note   = _notes[_idx] || 'G#4';
+  const vel    = 0.35 + _idx * 0.08;
+  comboChimeSynth.volume.value = -14 + _idx * 1.5;
+  try { comboChimeSynth.triggerAttackRelease(note, '8n', Tone.now(), Math.min(vel, 0.75)); } catch (_e) {}
+}
+
+/**
+ * Low cascade rumble when block physics column fall begins.
+ */
+function playCascadeRumble() {
+  if (!audioReady || !rumbleSynth) return;
+  try { rumbleSynth.triggerAttackRelease('D2', '8n', Tone.now(), 0.30); } catch (_e) {}
+}
+
+/**
+ * Chain reaction impact — anvil at +3 semitones (brighter), played on cascade line clear.
+ */
+function playChainReactionImpact() {
+  if (!audioReady || !anvilSynth) return;
+  const now = Tone.now();
+  try {
+    anvilSynth.volume.value = -4;
+    anvilSynth.triggerAttackRelease('E2', '8n', now);
+    // Bright overtone tap
+    if (comboChimeSynth) {
+      comboChimeSynth.volume.value = -8;
+      try { comboChimeSynth.triggerAttackRelease('G5', '16n', now + 0.07, 0.55); } catch (_ee) {}
+    }
+  } catch (_e) {}
+}
+
 function playAchievementUnlockSfx() {
   if (!audioReady) return;
   const now = Tone.now();

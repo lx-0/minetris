@@ -9,6 +9,7 @@ let _lavaLightAcc      = 0;       // accumulator for lava block sort (target: 1/
 let _cachedLavaBlocks  = [];      // sorted nearest-lava cache, rebuilt at 10fps
 const _BG_INTERVAL     = 1 / 30; // ~33 ms
 const _LAVA_INTERVAL   = 1 / 10; // 100 ms
+let _dangerEl          = null;    // cached once on first frame (DOM doesn't recreate it)
 
 function animate() {
   requestAnimationFrame(animate);
@@ -222,7 +223,7 @@ function animate() {
       }
 
       // ── Danger edge glow — red pulse on top edge when stack is high ──────────
-      var _dangerEl = document.getElementById("board-danger-overlay");
+      if (!_dangerEl) _dangerEl = document.getElementById("board-danger-overlay");
       if (_dangerEl && typeof boardGlowIntensity !== 'undefined') {
         var _dangerZoneStart = GAME_OVER_HEIGHT - 4;
         var _maxH = getMaxBlockHeight();
@@ -342,6 +343,7 @@ function animate() {
         if ((isPuzzleMode || isCustomPuzzleMode) && typeof updatePuzzleHUD === "function") updatePuzzleHUD();
       }
       updateLineClear(delta);
+      if (typeof updateBlockPhysics === 'function') updateBlockPhysics(delta);
       if (typeof updateParticles === 'function') updateParticles(delta);
       // Training mode: update speed drill HUD every frame
       if (typeof isTrainingMode !== 'undefined' && isTrainingMode && typeof updateTrainingSpeedHUD === 'function') {
