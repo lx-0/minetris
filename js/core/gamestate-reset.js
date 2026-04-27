@@ -103,7 +103,9 @@ function resetGame(opts) {
   updateInventoryHUD();
 
   // Reset crafting state
-  pickaxeTier        = "none";
+  pickaxeTier             = "none";
+  stonePickaxeClickStreak  = 0;
+  stonePickaxeLastClickTime = -1;
   hasCraftingBench   = false;
   consumables        = { lava_flask: 0, ice_bridge: 0 };
   powerUps           = { row_bomb: 0, slow_down: 0, shield: 0, magnet: 0, time_freeze: 0, sabotage: 0, counter: 0, fortress: 0 };
@@ -400,6 +402,9 @@ function resetGame(opts) {
   if (typeof resetWorldModifier === 'function') resetWorldModifier();
   const worldModBadgeEl = document.getElementById('world-modifier-badge');
   if (worldModBadgeEl) worldModBadgeEl.style.display = 'none';
+
+  // Reset scarcity HUD (hides it when switching away from Survival)
+  if (typeof resetScarcityHUD === 'function') resetScarcityHUD();
 
   // Reset dungeon modifier state (Entropy and session tracking)
   if (typeof resetDungeonModifiers === 'function') resetDungeonModifiers();
