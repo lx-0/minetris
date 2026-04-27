@@ -889,11 +889,14 @@ function _onKeybindBtnClick(e) {
   const btn    = e.currentTarget;
   const action = btn.dataset.action;
   if (_kbListeningAction) {
-    // Cancel previous listening state.
+    // Cancel previous listening state; listener already attached, keep it.
     if (_kbListeningBtn) {
       _kbListeningBtn.textContent = _kbDisplayCode(getKeyBinding(_kbListeningBtn.dataset.action));
       _kbListeningBtn.classList.remove("keybind-key-btn-listening");
     }
+  } else {
+    // Attach capture listener only while actively waiting for a key press.
+    document.addEventListener("keydown", _onKeybindCapture, true);
   }
   _kbListeningAction = action;
   _kbListeningBtn    = btn;
@@ -916,6 +919,7 @@ function _onKeybindCapture(e) {
     _kbListeningBtn.classList.remove("keybind-key-btn-listening");
     _kbListeningAction = null;
     _kbListeningBtn    = null;
+    document.removeEventListener("keydown", _onKeybindCapture, true);
     return;
   }
   const displaced = setKeyBinding(_kbListeningAction, code);
@@ -931,6 +935,7 @@ function _onKeybindCapture(e) {
   _kbListeningBtn.classList.remove("keybind-key-btn-listening");
   _kbListeningAction = null;
   _kbListeningBtn    = null;
+  document.removeEventListener("keydown", _onKeybindCapture, true);
   _syncKeybindTable();
 }
 
@@ -1013,9 +1018,6 @@ function _initControlsTab() {
     const msg = document.getElementById("keybind-conflict-msg");
     if (msg) msg.textContent = "";
   });
-
-  // Global key capture listener (only active when listening for a rebind).
-  document.addEventListener("keydown", _onKeybindCapture, true);
 
   // Initialise DAS/ARR sliders in the controls pane.
   _initDasSettingsUI();
@@ -2380,7 +2382,7 @@ function applyBlockSkin(cosmeticId) {
 
 /** Hide the settings overlay and invoke the close callback if any. */
 function closeSettings() {
-  // Cancel any pending keybind capture.
+  // Cancel any pending keybind capture and remove the transient listener.
   if (_kbListeningAction) {
     if (_kbListeningBtn) {
       _kbListeningBtn.textContent = _kbDisplayCode(getKeyBinding(_kbListeningBtn.dataset.action));
@@ -2388,6 +2390,7 @@ function closeSettings() {
     }
     _kbListeningAction = null;
     _kbListeningBtn    = null;
+    document.removeEventListener("keydown", _onKeybindCapture, true);
   }
   // Release focus trap and restore focus to the element that opened settings.
   if (typeof releaseFocusTrap === 'function') releaseFocusTrap();
