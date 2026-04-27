@@ -700,3 +700,8 @@ let blockPuzzleMiniComplete  = false;
 let blockPuzzleMiniSuccess   = false; // true on win, false on fail/timeout
 const BLOCK_PUZZLE_MINI_MAX_LEVEL = 20;
 const BLOCK_PUZZLE_MINI_FIXED_MULTIPLIER = Math.pow(1.1, 3); // Level 4 (slower for puzzling)
+
+// ── Tool tier abilities (MINAA-630) ───────────────────────────────────────────
+// Stone pickaxe: consecutive click streak for the cleave-on-every-3rd-click bonus.
+let stonePickaxeClickStreak = 0;
+let stonePickaxeLastClickTime = -1;

@@ -159,6 +159,15 @@ function onMouseDown(event) {
       return;
     }
     miningProgress++;
+    // Stone pickaxe: track consecutive click streak (resets after STONE_PICKAXE_STREAK_WINDOW idle)
+    if (pickaxeTier === "stone") {
+      const _clickNow = clock.getElapsedTime();
+      if (stonePickaxeLastClickTime >= 0 && (_clickNow - stonePickaxeLastClickTime) > STONE_PICKAXE_STREAK_WINDOW) {
+        stonePickaxeClickStreak = 0;
+      }
+      stonePickaxeClickStreak++;
+      stonePickaxeLastClickTime = _clickNow;
+    }
     let clicksNeeded = targetedBlock.userData.miningClicks || MINING_CLICKS_NEEDED;
     if (pickaxeTier === "stone") clicksNeeded = Math.min(clicksNeeded, 2);
     else if (pickaxeTier === "iron" || pickaxeTier === "diamond") clicksNeeded = 1;
@@ -206,6 +215,14 @@ function onMouseDown(event) {
         targetedBlock.material.needsUpdate = true;
         targetedBlock.userData.fractured = true;
       }
+      // Stone pickaxe cleave: fires on every 3rd consecutive click (non-breaking hits)
+      if (pickaxeTier === "stone" && stonePickaxeClickStreak % 3 === 0 && targetedBlock.userData.gridPos) {
+        _applyStonePickaxeCleave({
+          x: targetedBlock.userData.gridPos.x,
+          y: targetedBlock.userData.gridPos.y,
+          z: targetedBlock.userData.gridPos.z
+        });
+      }
     }
 
     if (isBreak) {
@@ -243,10 +260,12 @@ function onMouseDown(event) {
           typeof isAdjacentToVoid === 'function' && isAdjacentToVoid(targetedBlock.userData.gridPos)) {
         recordVoidAdjacentMined();
       }
-      // Save grid pos for diamond AOE (before block is removed from world)
-      const _brokenBlock = pickaxeTier === "diamond" ? (targetedBlock.userData.gridPos
+      // Save grid pos and face normal before block is removed (used by all tier abilities)
+      const _brokenGridPos = targetedBlock.userData.gridPos
         ? { x: targetedBlock.userData.gridPos.x, y: targetedBlock.userData.gridPos.y, z: targetedBlock.userData.gridPos.z }
-        : null) : null;
+        : null;
+      const _savedFaceNormal = targetedFaceNormal ? targetedFaceNormal.clone() : null;
+      const _brokenBlock = pickaxeTier === "diamond" ? _brokenGridPos : null;
 
       // ── Rubble mining drop: 50/50 stone or dirt ─────────────────────────────
       if (_isRubble) {
@@ -326,9 +345,18 @@ function onMouseDown(event) {
         }
       }
 
-      // Diamond Pickaxe AOE — mine up to 4 adjacent blocks in a cross pattern
-      if (pickaxeTier === "diamond" && _brokenBlock) {
-        _applyDiamondAOE(_brokenBlock);
+      // Diamond Pickaxe: AOE cross (4 cardinal) + resource magnet (4 diagonal)
+      if (pickaxeTier === "diamond" && _brokenGridPos) {
+        _applyDiamondAOE(_brokenGridPos);
+        _applyDiamondMagnet(_brokenGridPos);
+      }
+      // Iron Pickaxe: mine through the next block in the same direction
+      if (pickaxeTier === "iron" && _brokenGridPos && _savedFaceNormal) {
+        _applyIronPickaxePenetration(_brokenGridPos, _savedFaceNormal);
+      }
+      // Stone Pickaxe: cleave an adjacent block on every 3rd consecutive click (breaking hit)
+      if (pickaxeTier === "stone" && _brokenGridPos && stonePickaxeClickStreak % 3 === 0) {
+        _applyStonePickaxeCleave(_brokenGridPos);
       }
       // Puzzle / custom puzzle mode: check win/lose after every mined block
       if ((isPuzzleMode || isCustomPuzzleMode) && typeof checkPuzzleConditions === "function") {

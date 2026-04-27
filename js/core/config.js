@@ -13,6 +13,7 @@ const MINING_RANGE = 4.5 * BLOCK_SIZE;
 const MINING_CLICKS_NEEDED = 3;
 const PICKAXE_ANIMATION_DURATION = 0.15;
 const PICKAXE_ANIMATION_ANGLE = Math.PI / 6;
+const STONE_PICKAXE_STREAK_WINDOW = 2.0; // max seconds between clicks to maintain cleave streak
 
 const INV_MAX_PER_TYPE = 64;
 const INV_MAX_TOTAL = 256;
