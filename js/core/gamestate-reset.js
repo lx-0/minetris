@@ -40,6 +40,9 @@ function resetGame(opts) {
     (c) => c.name === "landed_block"
   );
   toRemove.forEach((b) => worldGroup.remove(b));
+  // Clear obsidian tracking array — meshes were just removed from the scene;
+  // without this the game-loop animates stale refs from previous sessions.
+  obsidianBlocks.length = 0;
 
   // Clear falling pieces
   fallingPieces.forEach((p) => fallingPiecesGroup.remove(p));
