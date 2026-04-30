@@ -41,6 +41,16 @@ const SCARCITY_MODE_CONFIG = {
   countdown:        { enabled: true },
   ultra:            { enabled: true },
   dig:              { enabled: true },
+  // Expedition: mining-primary mode — faster depletion, elevated lava, earlier diamond.
+  expedition: {
+    enabled: true,
+    curves: {
+      3: { curve: [[0, 4], [120, 4], [200, 2], [300, 1], [420, 0]], peak: 4 },
+      7: { curve: [[0, 2], [180, 3], [300, 4], [480, 2], [600, 1]], peak: 4 },
+      6: { curve: [[0, 2], [240, 4], [480, 5]], peak: 5 },
+      8: { curve: [[0, 0], [300, 0], [420, 2], [600, 3]], peak: 3 },
+    },
+  },
   // sprint, blitz, zen, practice, training, combo, battle, coop, puzzle: disabled
 };
 
@@ -63,6 +73,7 @@ function _scarcityModeId() {
   if (typeof isCountdownMode !== 'undefined' && isCountdownMode) return 'countdown';
   if (typeof isUltraMode !== 'undefined' && isUltraMode) return 'ultra';
   if (typeof isDigMode !== 'undefined' && isDigMode) return 'dig';
+  if (typeof isExpeditionMode !== 'undefined' && isExpeditionMode) return 'expedition';
   if (typeof isComboChallenge !== 'undefined' && isComboChallenge) return 'combo';
   if (typeof isBattleMode !== 'undefined' && isBattleMode) return 'battle';
   if (typeof isCoopMode !== 'undefined' && isCoopMode) return 'coop';

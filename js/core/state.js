@@ -518,6 +518,10 @@ let _creeperHitPulseTime = 0;
 // Walk cycle phase for leg animation (radians).
 let _creeperWalkPhase = 0;
 
+// ── Expedition mode state ─────────────────────────────────────────────────────
+// true while a biome-themed Expedition session is active (set by biome-themes.js).
+let isExpeditionMode    = false;
+
 // ── Survival mode state ───────────────────────────────────────────────────────
 // isSurvivalMode: true while a Survival session is active.
 // survivalSessionNumber: increments each time the player continues on the same world.

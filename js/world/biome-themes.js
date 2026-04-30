@@ -64,6 +64,7 @@ function getActiveBiomeSkyTheme() {
 function applyBiomeTheme(biomeId) {
   if (!biomeId) return;
   activeBiomeId = biomeId;
+  if (typeof isExpeditionMode !== 'undefined') isExpeditionMode = true;
 
   const palette = _getBiomePalette(biomeId);
 
@@ -108,6 +109,7 @@ function applyBiomeTheme(biomeId) {
 function clearBiomeTheme() {
   if (!activeBiomeId) return;
   activeBiomeId = null;
+  if (typeof isExpeditionMode !== 'undefined') isExpeditionMode = false;
 
   // Clear biome gameplay rules
   if (typeof clearBiomeRules === 'function') clearBiomeRules();
