@@ -24968,6 +24968,26 @@ body.ui-theme-retro .notif-toast {
   opacity: 1;
 }
 
+/* ── Tool tier ability banner (MINAA-671) ────────────────────────────────────── */
+@keyframes tier-ability-bounce {
+  0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  55%  { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
+  80%  { transform: translate(-50%, -50%) scale(0.92); }
+  100% { transform: translate(-50%, -50%) scale(1.0);  opacity: 1; }
+}
+#tier-ability-banner {
+  position: absolute;
+  top: 27%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "Press Start 2P", cursive;
+  font-size: 20px;
+  text-shadow: 2px 2px 4px #000;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: tier-ability-bounce 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
 /* ── Classic mining banners (MINAA-629) ─────────────────────────────────────── */
 @keyframes streak-bounce {
   0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
