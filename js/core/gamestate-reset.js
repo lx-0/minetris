@@ -135,6 +135,8 @@ function resetGame(opts) {
   fortressActive = false;
   fortressTimer  = 0.0;
   obsidianPickaxeActive = false;
+  const shieldOverlayEl = document.getElementById("shield-overlay");
+  if (shieldOverlayEl) { shieldOverlayEl.classList.remove("absorb"); shieldOverlayEl.style.display = "none"; }
   const powerupHudEl = document.getElementById("powerup-hud");
   if (powerupHudEl) powerupHudEl.style.display = "none";
   closeCraftingPanel();
