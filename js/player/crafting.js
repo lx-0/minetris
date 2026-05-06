@@ -333,6 +333,7 @@ function craftRecipe(recipe) {
   showCraftedBanner(recipe.name);
   closeCraftingPanel();
   sessionCrafts++;
+  totalItemsCrafted++;
   if (typeof isCoopMode !== 'undefined' && isCoopMode) coopMyCraftsMade++;
   if (typeof onMissionItemCrafted === "function") onMissionItemCrafted(recipe.id);
   if (typeof _onPuzzleCraftUsed === "function") _onPuzzleCraftUsed();

@@ -229,6 +229,12 @@ function getGameState() {
     score,
     blocksMined,
     linesCleared,
+    oreMined,
+    minedLineClears,
+    minedClearBonusScore,
+    totalItemsCrafted,
+    miningScore,
+    lineClearScore,
     elapsedSeconds: _dur,
     finesseTotalFaults:       (typeof finesseTotalFaults       !== 'undefined') ? finesseTotalFaults       : 0,
     finessePercentage:        (typeof finesseGetPercentage     === 'function')  ? finesseGetPercentage()   : 100,
@@ -988,7 +994,18 @@ function triggerGameOver() {
     startGameOverSequence(
       state.score,
       _isPB,
-      { linesCleared: state.linesCleared, blocksMined: state.blocksMined, timeStr: mm + ':' + ss },
+      {
+        linesCleared: state.linesCleared,
+        blocksMined: state.blocksMined,
+        timeStr: mm + ':' + ss,
+        oreMined: state.oreMined,
+        pickaxeTier: pickaxeTier,
+        minedLineClears: state.minedLineClears,
+        minedClearBonusScore: state.minedClearBonusScore,
+        totalItemsCrafted: state.totalItemsCrafted,
+        miningScore: state.miningScore,
+        totalScore: state.score
+      },
       _showGameOverEl
     );
   } else {
