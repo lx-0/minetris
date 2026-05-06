@@ -79,7 +79,7 @@
     rubble:  { icon: '○', color: '#9e9e9e' },
   };
   var _TIER_COLORS  = { none: '#888', stone: '#aaa', iron: '#b0b0b0', diamond: '#4fc3f7', obsidian: '#7c4dff' };
-  var _TIER_LABELS  = { none: 'None', stone: 'Stone', iron: 'Iron', diamond: 'Diamond', obsidian: 'Obsidian' };
+  var _TIER_LABELS  = { none: 'No', stone: 'Stone', iron: 'Iron', diamond: 'Diamond', obsidian: 'Obsidian' };
 
   function _buildMiningHtml(stats) {
     var tier  = stats.pickaxeTier || 'none';
@@ -97,11 +97,15 @@
         return pb - pa;
       });
       html += '<div class="gos-ore-grid">';
-      oreKeys.slice(0, 6).forEach(function (mat, i) {
+      oreKeys.slice(0, 5).forEach(function (mat, i) {
         var info = _ORE_ICON_MAP[mat] || { icon: '■', color: '#ccc' };
         html += '<div class="gos-ore-item" style="color:' + info.color + ';animation-delay:' + (i * 80) + 'ms">' +
                   info.icon + '&nbsp;×' + oreMined[mat] + '</div>';
       });
+      if (oreKeys.length > 5) {
+        html += '<div class="gos-ore-item" style="color:#888;animation-delay:' + (5 * 80) + 'ms">' +
+                  '■&nbsp;Other&nbsp;×' + (oreKeys.length - 5) + '</div>';
+      }
       html += '</div>';
     } else {
       html += '<div class="gos-ore-none">No ores mined</div>';
