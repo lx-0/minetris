@@ -1,6 +1,39 @@
 // Power-up activation logic and HUD management.
 // Requires: state.js, core/gamestate.js loaded first.
 
+let _tabEl = null;
+let _tabTimer = null;
+
+function _getTierAbilityBannerEl() {
+  if (!_tabEl) _tabEl = document.getElementById('tier-ability-banner');
+  return _tabEl;
+}
+
+/**
+ * Show the tier-ability banner with the given text and color for 1 second.
+ * Uses a dedicated element so it stacks above streak/chain banners without conflict.
+ * @param {string} text   Banner label, e.g. "CLEAVE!"
+ * @param {string} color  CSS color string for text and glow
+ */
+function showTierAbilityBanner(text, color) {
+  const el = _getTierAbilityBannerEl();
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = color;
+  el.style.textShadow = '2px 2px 4px #000, 0 0 14px ' + color;
+  // Restart CSS animation via forced reflow
+  el.style.animation = 'none';
+  el.style.display = 'none';
+  void el.offsetHeight;
+  el.style.animation = '';
+  el.style.display = 'block';
+  if (_tabTimer) clearTimeout(_tabTimer);
+  _tabTimer = setTimeout(function () {
+    el.style.display = 'none';
+    _tabTimer = null;
+  }, 1000);
+}
+
 /**
  * Find a landed block at the given grid coordinates (integer X/Y/Z).
  * Only searches blocks that have a valid gridPos.
@@ -19,6 +52,8 @@ function _findBlockAtGrid(gx, gy, gz) {
  * @param {{ x:number, y:number, z:number }} origin  The grid position of the primary broken block.
  */
 function _applyDiamondAOE(origin) {
+  showTierAbilityBanner('BLAST!', '#5c6bc0');
+  if (typeof playTierAbilitySound === 'function') playTierAbilitySound('diamond');
   const offsets = [[-1,0],[1,0],[0,-1],[0,1]];
   offsets.forEach(([dx, dz]) => {
     const neighbor = _findBlockAtGrid(origin.x + dx, origin.y, origin.z + dz);
@@ -64,6 +99,8 @@ function _applyStonePickaxeCleave(origin) {
       neighbor.material.emissive.setRGB(0.55, 0.35, 0.0);
       neighbor.material.needsUpdate = true;
     }
+    showTierAbilityBanner('CLEAVE!', '#e08a00');
+    if (typeof playTierAbilitySound === 'function') playTierAbilitySound('stone');
     spawnDustParticles(neighbor, { breakBurst: true });
     blocksMined++;
     if (!neighbor.userData.isHazard && !neighbor.userData.isBedrock) {
@@ -109,6 +146,8 @@ function _applyIronPickaxePenetration(origin, faceNormal) {
   const dz = -Math.round(faceNormal.z);
   const behind = _findBlockAtGrid(origin.x + dx, origin.y + dy, origin.z + dz);
   if (!behind) return;
+  showTierAbilityBanner('PIERCE!', '#4dd0e1');
+  if (typeof playTierAbilitySound === 'function') playTierAbilitySound('iron');
   if (behind.material) {
     behind.material.emissive.setRGB(0.6, 0.85, 1.0);
     behind.material.needsUpdate = true;

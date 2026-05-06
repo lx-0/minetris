@@ -281,6 +281,44 @@ function playVictoryFanfare() {
   }
 }
 
+// ── Tool tier ability sounds (MINAA-671) ──────────────────────────────────────
+
+/**
+ * Play a sound cue when a pickaxe tier ability activates.
+ * @param {'stone'|'iron'|'diamond'} tier
+ */
+function playTierAbilitySound(tier) {
+  if (!audioReady) return;
+  const now = Tone.now();
+  if (tier === 'stone') {
+    // Sharp stone-crack at higher pitch (spec: stoneHit at 0.8×)
+    _playSfx('stoneHit', 0.78, 0.82);
+    if (blockBreakSynth) {
+      try { blockBreakSynth.triggerAttackRelease('G5', '32n', now); } catch (_e) {}
+    }
+  } else if (tier === 'iron') {
+    // Metallic ping with short reverb
+    if (anvilSynth) {
+      const _prevVol = anvilSynth.volume.value;
+      anvilSynth.volume.value = -10;
+      try { anvilSynth.triggerAttackRelease('D5', '16n', now); } catch (_e) {}
+      anvilSynth.volume.value = -16;
+      try { anvilSynth.triggerAttackRelease('A5', '32n', now + 0.05); } catch (_e) {}
+      anvilSynth.volume.value = _prevVol;
+    }
+  } else if (tier === 'diamond') {
+    // Deep crystalline boom: bass rumble + ascending shimmer
+    if (rumbleSynth) {
+      try { rumbleSynth.triggerAttackRelease('A1', '8n', now); } catch (_e) {}
+    }
+    if (clearSynth) {
+      try { clearSynth.triggerAttackRelease('E5', '16n', now + 0.08, 0.45); } catch (_e) {}
+      try { clearSynth.triggerAttackRelease('B5', '16n', now + 0.16, 0.35); } catch (_e) {}
+      try { clearSynth.triggerAttackRelease('E6', '32n', now + 0.24, 0.25); } catch (_e) {}
+    }
+  }
+}
+
 // ── Golden Hour sounds ────────────────────────────────────────────────────────
 
 /** Ascending angelic chime arpeggio played when Golden Hour begins. */
