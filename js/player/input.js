@@ -240,6 +240,10 @@ function onMouseDown(event) {
       // Break burst particles (rubble gets orange crack burst)
       spawnDustParticles(targetedBlock, { breakBurst: true });
       blocksMined++;
+      if (!_isRubble && !targetedBlock.userData.isHazard && !targetedBlock.userData.isBedrock) {
+        const _oreMatName = targetedBlock.userData.materialType;
+        if (_oreMatName) oreMined[_oreMatName] = (oreMined[_oreMatName] || 0) + 1;
+      }
       if (isCoopMode) coopMyBlocksMined++;
       if (isBattleMode && _isRubble) {
         battleRubbleMined++;
@@ -277,7 +281,9 @@ function onMouseDown(event) {
         }
       }
 
-      addScore(Math.round(_rawScore * _miningScoreMult));
+      const _miningPts = Math.round(_rawScore * _miningScoreMult);
+      addScore(_miningPts);
+      miningScore += _miningPts;
       if (typeof achOnBlockMined === "function") achOnBlockMined(blocksMined, _objType);
       if (typeof onMissionBlockMined === "function") onMissionBlockMined();
       // Seasonal event: track void-adjacent mining

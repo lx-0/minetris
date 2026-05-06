@@ -347,6 +347,7 @@ function checkLineClear(newBlocks) {
   _lcIsMiniTSpin = (_tSpinType === 'mini');
   // Apply mined-block flag (already consumed at top of function).
   _lcIsMined = _isMinedClear;
+  if (_lcIsMined) minedLineClears++;
   if (_lcIsTSpin) {
     sessionTSpins++;
     if (_lcIsMiniTSpin && typeof sessionMiniTSpins !== 'undefined') sessionMiniTSpins++;
@@ -537,6 +538,10 @@ function checkLineClear(newBlocks) {
   const _minedMult = _lcIsMined ? 1.5 : 1.0;
   const _lcComputedScore = Math.round(baseScore * _b2bMult * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult * _minedMult);
   addScore(_lcComputedScore);
+  lineClearScore += _lcComputedScore;
+  if (_lcIsMined) {
+    minedClearBonusScore += Math.round(baseScore * _b2bMult * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult * 0.5);
+  }
 
   // Classic mining cascade: award chain reaction + cascade bonuses.
   if (typeof isPhysicsCascade !== 'undefined' && isPhysicsCascade) {

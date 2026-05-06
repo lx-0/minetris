@@ -25,6 +25,10 @@ function _applyDiamondAOE(origin) {
     if (!neighbor) return;
     spawnDustParticles(neighbor, { breakBurst: true });
     blocksMined++;
+    if (!neighbor.userData.isHazard && !neighbor.userData.isBedrock) {
+      const _aoeOreMatName = neighbor.userData.materialType;
+      if (_aoeOreMatName) oreMined[_aoeOreMatName] = (oreMined[_aoeOreMatName] || 0) + 1;
+    }
     if (isCoopMode) coopMyBlocksMined++;
     const nobjType = neighbor.userData.objectType;
     const nmatName = neighbor.userData.materialType ||

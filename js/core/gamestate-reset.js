@@ -66,6 +66,12 @@ function resetGame(opts) {
   if (typeof acSetScore === 'function') acSetScore(0);
   blocksMined = 0;
   linesCleared = 0;
+  oreMined = {};
+  minedLineClears = 0;
+  minedClearBonusScore = 0;
+  totalItemsCrafted = 0;
+  miningScore = 0;
+  lineClearScore = 0;
   gameElapsedSeconds = 0;
   lastHudSecond = -1;
 
