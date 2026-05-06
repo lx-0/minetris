@@ -193,11 +193,20 @@ Tracked here for visibility. Items move to milestone feature tables when schedul
 |:----------|:---------|:------|
 | Mining-primary modes at 15% (4/26) | High | Thesis says mining is identity — mode ratio should reflect that |
 | 3 coexisting season pass systems | High | Player confusion risk; engineering maintenance burden |
+| Results screen ignores mining identity (MINAA-690) | High | Game-over shows "Blocks: N" only — no ore breakdown, pickaxe tier, or crafting summary |
+| Tool tier feedback unmerged (MINAA-671, PR #22) | High | Banners+sounds implemented, CI green, approved — sitting unmerged since Apr 30 |
 | Prestige trigger mismatch (MAX_LEVEL=100 vs doc L50) | Medium | Contradictory behavior depending on which code path runs |
+| Mining modes not distinguished in mode-select (MINAA-672) | Medium | No visual badges differentiating mining-primary from Tetris modes |
+| Mastery progress invisible during gameplay (MINAA-673) | Medium | Post-game only; no in-run HUD showing challenge progress |
+| Mastery count mismatch (code: 40, docs: 35) | Medium | 8 modes × 5 tiers in code vs 7 × 5 in FEATURE-MAP |
+| Cascade celebration flat across depths (MINAA-691) | Medium | Levels 1-4 use identical visual/audio intensity |
 | Monolithic UI modules (4 files >1,300 LOC) | Medium | Slows iteration; increases merge conflict risk |
+| Mining-first onboarding not started | Medium | v7.3 P2 — tutorial teaches mining but pieces fall immediately |
+| Material recipes not started | Medium | v7.3 P2 — specific ores unlock specific crafting paths |
 | 189+ localStorage keys | Medium | Schema registry shipped but key consolidation pending |
-| Dead code in bundle (4 files) | Low | loot-tables.js, 3 test files |
-| Boss Battle mode is minimal | Low | Mode card exists but implementation is a stub |
+| Scarcity HUD lacks warning states (MINAA-692) | Low | No audio/visual alerts at depletion threshold |
+| Boss Battle mode is minimal | Low | Mode card exists but mining integration is light |
+| FEATURE-MAP.md incomplete | Low | Documents ~11 modes; game has 26+ |
 
 ---
 
