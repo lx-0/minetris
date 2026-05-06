@@ -79,7 +79,7 @@
     rubble:  { icon: '○', color: '#9e9e9e' },
   };
   var _TIER_COLORS  = { none: '#888', stone: '#aaa', iron: '#b0b0b0', diamond: '#4fc3f7', obsidian: '#7c4dff' };
-  var _TIER_LABELS  = { none: 'None', stone: 'Stone', iron: 'Iron', diamond: 'Diamond', obsidian: 'Obsidian' };
+  var _TIER_LABELS  = { none: 'No', stone: 'Stone', iron: 'Iron', diamond: 'Diamond', obsidian: 'Obsidian' };
 
   function _buildMiningHtml(stats) {
     var tier  = stats.pickaxeTier || 'none';
