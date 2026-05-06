@@ -559,16 +559,76 @@ body.preview-panel-left #hold-piece-panel {
   transform: translateY(8px);
 }
 #go-seq-reveal.gos-visible .gos-stat-1 {
-  animation: gos-stat-in 0.3s 0.15s ease-out forwards;
+  animation: gos-stat-in 0.3s 1.0s ease-out forwards;
 }
 #go-seq-reveal.gos-visible .gos-stat-2 {
-  animation: gos-stat-in 0.3s 0.25s ease-out forwards;
-}
-#go-seq-reveal.gos-visible .gos-stat-3 {
-  animation: gos-stat-in 0.3s 0.35s ease-out forwards;
+  animation: gos-stat-in 0.3s 1.1s ease-out forwards;
 }
 @keyframes gos-stat-in {
   to { opacity: 1; transform: translateY(0); }
+}
+/* Mining section */
+.gos-mining-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #ffb30044;
+  background: rgba(255, 179, 0, 0.06);
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  opacity: 0;
+}
+#go-seq-reveal.gos-visible .gos-mining-section {
+  animation: gos-mining-in 0.4s 0.5s ease-out forwards;
+}
+@keyframes gos-mining-in {
+  to { opacity: 1; }
+}
+.gos-mining-header {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(7px, 1.5vw, 10px);
+  color: #ffb300;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.gos-pickaxe-badge {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(7px, 1.5vw, 9px);
+}
+.gos-ore-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  justify-content: center;
+  max-width: 320px;
+}
+.gos-ore-item {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(7px, 1.5vw, 9px);
+  opacity: 0;
+}
+#go-seq-reveal.gos-visible .gos-ore-item {
+  animation: gos-ore-item-in 0.25s ease-out forwards;
+}
+@keyframes gos-ore-item-in {
+  to { opacity: 1; }
+}
+.gos-ore-none {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(6px, 1.2vw, 8px);
+  color: #666;
+}
+.gos-mining-stat {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(6px, 1.3vw, 8px);
+  color: #ccc;
+}
+.gos-mining-contribution {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(7px, 1.4vw, 10px);
+  color: #ffb300;
 }
 /* ── End Game-Over Sequence ─────────────────────────────────── */
 

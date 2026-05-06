@@ -60,6 +60,72 @@
     }
   }
 
+  // ── Mining section builder ─────────────────────────────────────────────────
+
+  var _ORE_ICON_MAP = {
+    diamond: { icon: '◆', color: '#4fc3f7' },
+    obsidian: { icon: '▣', color: '#7c4dff' },
+    gold:    { icon: '◆', color: '#ffd700' },
+    crystal: { icon: '✦', color: '#00bcd4' },
+    lava:    { icon: '◈', color: '#ff5722' },
+    moss:    { icon: '●', color: '#4caf50' },
+    rock:    { icon: '◼', color: '#78909c' },
+    stone:   { icon: '●', color: '#b0bec5' },
+    wood:    { icon: '▪', color: '#8d6e63' },
+    ice:     { icon: '◇', color: '#b3e5fc' },
+    dirt:    { icon: '○', color: '#a1887f' },
+    leaf:    { icon: '◦', color: '#81c784' },
+    plank:   { icon: '▫', color: '#d4a56a' },
+    rubble:  { icon: '○', color: '#9e9e9e' },
+  };
+  var _TIER_COLORS  = { none: '#888', stone: '#aaa', iron: '#b0b0b0', diamond: '#4fc3f7', obsidian: '#7c4dff' };
+  var _TIER_LABELS  = { none: 'None', stone: 'Stone', iron: 'Iron', diamond: 'Diamond', obsidian: 'Obsidian' };
+
+  function _buildMiningHtml(stats) {
+    var tier  = stats.pickaxeTier || 'none';
+    var html  = '<div class="gos-mining-section">';
+    html += '<div class="gos-mining-header">MINING</div>';
+    html += '<div class="gos-pickaxe-badge" style="color:' + (_TIER_COLORS[tier] || '#888') + '">' +
+              (_TIER_LABELS[tier] || tier) + ' Pickaxe</div>';
+
+    var oreMined = stats.oreMined || {};
+    var oreKeys  = Object.keys(oreMined).filter(function (k) { return oreMined[k] > 0; });
+    if (oreKeys.length > 0) {
+      oreKeys.sort(function (a, b) {
+        var pa = (typeof BLOCK_TYPES !== 'undefined' && BLOCK_TYPES[a]) ? BLOCK_TYPES[a].points : 0;
+        var pb = (typeof BLOCK_TYPES !== 'undefined' && BLOCK_TYPES[b]) ? BLOCK_TYPES[b].points : 0;
+        return pb - pa;
+      });
+      html += '<div class="gos-ore-grid">';
+      oreKeys.slice(0, 6).forEach(function (mat, i) {
+        var info = _ORE_ICON_MAP[mat] || { icon: '■', color: '#ccc' };
+        html += '<div class="gos-ore-item" style="color:' + info.color + ';animation-delay:' + (i * 80) + 'ms">' +
+                  info.icon + '&nbsp;×' + oreMined[mat] + '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="gos-ore-none">No ores mined</div>';
+    }
+
+    if (stats.minedLineClears > 0) {
+      var bonus = stats.minedClearBonusScore || 0;
+      html += '<div class="gos-mining-stat">Mined Clears:&nbsp;' + stats.minedLineClears +
+              (bonus > 0 ? '&nbsp;(+' + bonus + ' pts)' : '') + '</div>';
+    }
+    if (stats.totalItemsCrafted > 0) {
+      html += '<div class="gos-mining-stat">Items Crafted:&nbsp;' + stats.totalItemsCrafted + '</div>';
+    }
+    if (stats.totalScore > 0 && stats.miningScore > 0) {
+      var pct = Math.round(stats.miningScore / stats.totalScore * 100);
+      if (pct > 10) {
+        html += '<div class="gos-mining-contribution">Mining:&nbsp;' + pct + '% of your score</div>';
+      }
+    }
+
+    html += '</div>';
+    return html;
+  }
+
   // ── Skip ───────────────────────────────────────────────────────────────────
 
   function _skipHandler() {
@@ -216,10 +282,10 @@
         '<div class="gos-score" id="gos-score-num">0</div>' +
         '<div class="gos-score-label">SCORE</div>' +
       '</div>' +
+      _buildMiningHtml(stats) +
       '<div class="gos-stats-wrap">' +
         '<div class="gos-stat gos-stat-1">Lines:&nbsp;' + (stats.linesCleared || 0) + '</div>' +
-        '<div class="gos-stat gos-stat-2">Blocks:&nbsp;' + (stats.blocksMined || 0) + '</div>' +
-        '<div class="gos-stat gos-stat-3">Time:&nbsp;' + mm + '</div>' +
+        '<div class="gos-stat gos-stat-2">Time:&nbsp;' + mm + '</div>' +
       '</div>';
     // Re-apply data attr after innerHTML overwrite
     _revealEl.dataset.finalScore = String(finalScore);
