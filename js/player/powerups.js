@@ -33,7 +33,9 @@ function _applyDiamondAOE(origin) {
     const nobjType = neighbor.userData.objectType;
     const nmatName = neighbor.userData.materialType ||
       (nobjType ? OBJECT_TYPE_TO_MATERIAL[nobjType] : null);
-    addScore(nmatName && BLOCK_TYPES[nmatName] ? BLOCK_TYPES[nmatName].points : 10);
+    const _aoePts = nmatName && BLOCK_TYPES[nmatName] ? BLOCK_TYPES[nmatName].points : 10;
+    addScore(_aoePts);
+    miningScore += _aoePts;
     if (typeof achOnBlockMined === "function") achOnBlockMined(blocksMined, nobjType);
     if (typeof onMissionBlockMined === "function") onMissionBlockMined();
     const nColor = neighbor.userData.originalColor || neighbor.material.color;
@@ -64,11 +66,17 @@ function _applyStonePickaxeCleave(origin) {
     }
     spawnDustParticles(neighbor, { breakBurst: true });
     blocksMined++;
+    if (!neighbor.userData.isHazard && !neighbor.userData.isBedrock) {
+      const _cleaveOreMatName = neighbor.userData.materialType;
+      if (_cleaveOreMatName) oreMined[_cleaveOreMatName] = (oreMined[_cleaveOreMatName] || 0) + 1;
+    }
     if (isCoopMode) coopMyBlocksMined++;
     const nobjType = neighbor.userData.objectType;
     const nmatName = neighbor.userData.materialType ||
       (nobjType ? OBJECT_TYPE_TO_MATERIAL[nobjType] : null);
-    addScore(nmatName && BLOCK_TYPES[nmatName] ? BLOCK_TYPES[nmatName].points : 10);
+    const _cleavePts = nmatName && BLOCK_TYPES[nmatName] ? BLOCK_TYPES[nmatName].points : 10;
+    addScore(_cleavePts);
+    miningScore += _cleavePts;
     if (typeof achOnBlockMined === "function") achOnBlockMined(blocksMined, nobjType);
     if (typeof onMissionBlockMined === "function") onMissionBlockMined();
     if (typeof classicMiningEnabled === 'undefined' || !classicMiningEnabled) {
@@ -107,11 +115,17 @@ function _applyIronPickaxePenetration(origin, faceNormal) {
   }
   spawnDustParticles(behind, { breakBurst: true });
   blocksMined++;
+  if (!behind.userData.isHazard && !behind.userData.isBedrock) {
+    const _penOreMatName = behind.userData.materialType;
+    if (_penOreMatName) oreMined[_penOreMatName] = (oreMined[_penOreMatName] || 0) + 1;
+  }
   if (isCoopMode) coopMyBlocksMined++;
   const bobjType = behind.userData.objectType;
   const bmatName = behind.userData.materialType ||
     (bobjType ? OBJECT_TYPE_TO_MATERIAL[bobjType] : null);
-  addScore(bmatName && BLOCK_TYPES[bmatName] ? BLOCK_TYPES[bmatName].points : 10);
+  const _penPts = bmatName && BLOCK_TYPES[bmatName] ? BLOCK_TYPES[bmatName].points : 10;
+  addScore(_penPts);
+  miningScore += _penPts;
   if (typeof achOnBlockMined === "function") achOnBlockMined(blocksMined, bobjType);
   if (typeof onMissionBlockMined === "function") onMissionBlockMined();
   const bColor = behind.userData.originalColor || behind.material.color;
@@ -137,11 +151,17 @@ function _applyDiamondMagnet(origin) {
     }
     spawnDustParticles(neighbor, { breakBurst: true });
     blocksMined++;
+    if (!neighbor.userData.isHazard && !neighbor.userData.isBedrock) {
+      const _magnetOreMatName = neighbor.userData.materialType;
+      if (_magnetOreMatName) oreMined[_magnetOreMatName] = (oreMined[_magnetOreMatName] || 0) + 1;
+    }
     if (isCoopMode) coopMyBlocksMined++;
     const nobjType = neighbor.userData.objectType;
     const nmatName = neighbor.userData.materialType ||
       (nobjType ? OBJECT_TYPE_TO_MATERIAL[nobjType] : null);
-    addScore(nmatName && BLOCK_TYPES[nmatName] ? BLOCK_TYPES[nmatName].points : 10);
+    const _magnetPts = nmatName && BLOCK_TYPES[nmatName] ? BLOCK_TYPES[nmatName].points : 10;
+    addScore(_magnetPts);
+    miningScore += _magnetPts;
     if (typeof achOnBlockMined === "function") achOnBlockMined(blocksMined, nobjType);
     if (typeof onMissionBlockMined === "function") onMissionBlockMined();
     const nColor = neighbor.userData.originalColor || neighbor.material.color;
@@ -177,10 +197,16 @@ function activateLavaFlask() {
   toRemove.forEach(block => {
     spawnDustParticles(block, { breakBurst: true });
     blocksMined++;
+    if (!block.userData.isHazard && !block.userData.isBedrock) {
+      const _flaskOreMatName = block.userData.materialType;
+      if (_flaskOreMatName) oreMined[_flaskOreMatName] = (oreMined[_flaskOreMatName] || 0) + 1;
+    }
     if (isCoopMode) coopMyBlocksMined++;
     const oType = block.userData.objectType;
     const mName = block.userData.materialType || (oType ? OBJECT_TYPE_TO_MATERIAL[oType] : null);
-    addScore(mName && BLOCK_TYPES[mName] ? BLOCK_TYPES[mName].points : 10);
+    const _flaskPts = mName && BLOCK_TYPES[mName] ? BLOCK_TYPES[mName].points : 10;
+    addScore(_flaskPts);
+    miningScore += _flaskPts;
     unregisterBlock(block);
     disposeBlock(block);
     worldGroup.remove(block);
