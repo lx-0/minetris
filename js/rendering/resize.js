@@ -83,7 +83,7 @@ function getTouchAdjustedSize() {
   }
 
   dismissBtn.addEventListener('click', function () {
-    localStorage.setItem(STORAGE_KEY, '1');
+    try { localStorage.setItem(STORAGE_KEY, '1'); } catch (_) {}
     overlay.classList.remove('os-visible');
   });
 
