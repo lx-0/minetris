@@ -640,7 +640,7 @@ function _renderDailyPuzzleEntry(listEl) {
     '<div class="puzzle-list-stars">' + '\u2605'.repeat(stars) + '\u2606'.repeat(3 - stars) + '</div>';
 
   item.addEventListener("click", function () {
-    if (dateStr) localStorage.setItem(playedKey, "1");
+    if (dateStr) try { localStorage.setItem(playedKey, "1"); } catch (_) {}
     puzzlePuzzleId = dailyId;
     hidePuzzleSelect();
     if (controls) {
