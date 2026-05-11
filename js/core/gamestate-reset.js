@@ -146,6 +146,7 @@ function resetGame(opts) {
   const powerupHudEl = document.getElementById("powerup-hud");
   if (powerupHudEl) powerupHudEl.style.display = "none";
   closeCraftingPanel();
+  if (typeof resetPickaxeTierCelebrations === 'function') resetPickaxeTierCelebrations();
   if (typeof resetOreCrafting === 'function') resetOreCrafting();
 
   // Clear tree respawn queue

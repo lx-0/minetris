@@ -5,6 +5,16 @@
 let craftingPanelOpen = false;
 let craftingBannerTimer = 0;
 
+// ── Pickaxe tier-up celebration (MINAA-746) ──────────────────────────────────
+var _pickaxeTierCelebrated = { stone: false, iron: false, diamond: false, obsidian: false };
+
+var _PICKAXE_TIER_CELEBRATION = {
+  stone:    { icon: '⛏', color: '#a0826d', ability: 'CLEAVE',  desc: 'Every 3rd hit breaks an adjacent block', notes: 3, noteDur: 0.12 },
+  iron:     { icon: '⚒', color: '#b0b0b0', ability: 'PIERCE',  desc: 'Each break also breaks the block behind it', notes: 4, noteDur: 0.14 },
+  diamond:  { icon: '💎', color: '#4dd0e1', ability: 'BLAST',   desc: 'Each break triggers a cross-pattern AOE', notes: 5, noteDur: 0.16 },
+  obsidian: { icon: '◆', color: '#7c3aed', ability: 'FORTIFY', desc: 'Reduces all block hit counts by 1', notes: 6, noteDur: 0.18 },
+};
+
 // Active crafting tab: 'general' | 'battle'
 // 'battle' tab is only shown (and defaults to) when in battle mode.
 let _craftingTab = 'general';
@@ -330,7 +340,13 @@ function craftRecipe(recipe) {
   }
 
   updateInventoryHUD();
-  showCraftedBanner(recipe.name);
+  if (recipe.outputType === 'tool' && recipe.toolTier &&
+      _PICKAXE_TIER_CELEBRATION[recipe.toolTier] && !_pickaxeTierCelebrated[recipe.toolTier]) {
+    _pickaxeTierCelebrated[recipe.toolTier] = true;
+    _showPickaxeUpgradeOverlay(recipe.toolTier);
+  } else {
+    showCraftedBanner(recipe.name);
+  }
   closeCraftingPanel();
   sessionCrafts++;
   totalItemsCrafted++;
@@ -358,4 +374,107 @@ function updateCraftingBanner(delta) {
       craftingBannerTimer = 0;
     }
   }
+}
+
+// ── Pickaxe tier-up celebration overlay (MINAA-746) ──────────────────────────
+
+function _showPickaxeUpgradeOverlay(tierName) {
+  var info = _PICKAXE_TIER_CELEBRATION[tierName];
+  if (!info) return;
+
+  var overlay = document.getElementById('pickaxe-upgrade-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'pickaxe-upgrade-overlay';
+    overlay.innerHTML =
+      '<div class="puo-backdrop"></div>' +
+      '<div class="puo-panel">' +
+        '<div class="puo-tier-icon"></div>' +
+        '<div class="puo-header">PICKAXE UPGRADED</div>' +
+        '<div class="puo-name"></div>' +
+        '<div class="puo-ability"></div>' +
+        '<div class="puo-desc"></div>' +
+        '<button class="puo-dismiss-btn">TAP TO CONTINUE</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('.puo-dismiss-btn').addEventListener('click', function () {
+      _hidePickaxeUpgradeOverlay();
+    });
+    overlay.querySelector('.puo-backdrop').addEventListener('click', function () {
+      _hidePickaxeUpgradeOverlay();
+    });
+  }
+
+  var tierLabel = tierName.charAt(0).toUpperCase() + tierName.slice(1) + ' Pickaxe';
+  overlay.querySelector('.puo-tier-icon').textContent = info.icon;
+  overlay.querySelector('.puo-tier-icon').style.textShadow = '0 0 18px ' + info.color;
+  overlay.querySelector('.puo-header').style.color = info.color;
+  overlay.querySelector('.puo-header').style.textShadow = '0 0 10px ' + info.color + '99';
+  overlay.querySelector('.puo-name').textContent = tierLabel;
+  overlay.querySelector('.puo-ability').textContent = '— ' + info.ability + ' —';
+  overlay.querySelector('.puo-ability').style.color = info.color;
+  overlay.querySelector('.puo-desc').textContent = info.desc;
+
+  var panel = overlay.querySelector('.puo-panel');
+  if (panel) {
+    panel.style.borderColor = info.color;
+    panel.style.boxShadow = '0 0 30px ' + info.color + '40';
+  }
+
+  _playPickaxeUpgradeChime(tierName);
+
+  overlay.classList.remove('puo-visible');
+  void overlay.offsetWidth;
+  overlay.classList.add('puo-visible');
+
+  clearTimeout(overlay._hideTimer);
+  overlay._hideTimer = setTimeout(function () {
+    _hidePickaxeUpgradeOverlay();
+  }, 3000);
+}
+
+function _hidePickaxeUpgradeOverlay() {
+  var overlay = document.getElementById('pickaxe-upgrade-overlay');
+  if (overlay) {
+    clearTimeout(overlay._hideTimer);
+    overlay.classList.remove('puo-visible');
+  }
+}
+
+function _playPickaxeUpgradeChime(tierName) {
+  try {
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    var ctx = new AudioCtx();
+    var info = _PICKAXE_TIER_CELEBRATION[tierName];
+    if (!info) return;
+
+    var noteCount = info.notes;
+    var noteDur = info.noteDur;
+    var baseFreq = 440;
+    var scale = [1, 1.125, 1.25, 1.333, 1.5, 1.667, 1.875, 2];
+    var now = ctx.currentTime;
+
+    for (var i = 0; i < noteCount; i++) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = baseFreq * scale[i % scale.length];
+      var t = now + i * noteDur;
+      gain.gain.setValueAtTime(0.28, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + noteDur * 0.9);
+      osc.start(t);
+      osc.stop(t + noteDur);
+    }
+  } catch (_) {}
+}
+
+function resetPickaxeTierCelebrations() {
+  _pickaxeTierCelebrated.stone = false;
+  _pickaxeTierCelebrated.iron = false;
+  _pickaxeTierCelebrated.diamond = false;
+  _pickaxeTierCelebrated.obsidian = false;
 }
