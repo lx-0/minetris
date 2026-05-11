@@ -159,6 +159,22 @@ function getNewlyUnlockedModes(oldLevel, newLevel) {
 
 // ── UI: apply lock/unlock state to mode select screen ───────────────────────
 
+/** Mining-first incentive text shown on locked mode overlays. */
+var _LOCK_INCENTIVE = {
+  sprint:     'Mine against the clock',
+  blitz:      'Score big, dig fast',
+  puzzle:     'Mining puzzles challenge your thinking',
+  daily:      'One shot at today\'s ore seed',
+  weekly:     'This week\'s mining challenge awaits',
+  survival:   'Unlocks your persistent mine world',
+  battle:     'Mine faster than your rival',
+  expedition: 'Dig deep into unmapped biomes',
+  depths:     'The deepest ore veins hide here',
+  coop:       'Two miners, one world',
+  boss_battle:'Slay bosses with your mining skill',
+  editor:     'Design your own mining puzzles',
+};
+
 /** Human-readable mode names for tooltips. */
 var _MODE_DISPLAY_NAMES = {
   classic: 'Classic', sprint: 'Sprint', blitz: 'Blitz', puzzle: 'Puzzle',
@@ -225,7 +241,10 @@ function _applyLockToElement(el, mode, playerLevel, unlocked) {
     if (!el.querySelector('.mode-lock-overlay')) {
       var overlay = document.createElement('div');
       overlay.className = 'mode-lock-overlay';
-      overlay.innerHTML = '<span class="mode-lock-icon">&#128274;</span><span class="mode-lock-text">Level ' + reqLevel + '</span>';
+      var incentive = _LOCK_INCENTIVE[mode] || '';
+      overlay.innerHTML = '<span class="mode-lock-icon">&#128274;</span>' +
+        (incentive ? '<span class="mode-lock-incentive">' + incentive + '</span>' : '') +
+        '<span class="mode-lock-text">Level ' + reqLevel + '</span>';
       el.appendChild(overlay);
     }
   }

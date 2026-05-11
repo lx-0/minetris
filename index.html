@@ -120,11 +120,11 @@
           "Hold your pickaxe tier in mind \u2014 higher tiers mine faster and farther.",
           "Tap F to activate an equipped Power-Up at the critical moment.",
           // Mode-specific
-          "Sprint mode: race to clear 40 lines as fast as you can.",
-          "Blitz mode: score as many points as possible in 2 minutes.",
-          "Daily Challenge uses a fixed seed \u2014 everyone gets the same pieces!",
+          "Sprint mode: mine fast \u2014 race to clear 40 lines before time runs out.",
+          "Blitz mode: mine and score as high as you can in 2 minutes.",
+          "Daily Challenge uses a fixed ore seed \u2014 every miner on Earth gets the same pieces!",
           "Expedition mode sends you deep underground for rare ore rewards.",
-          "Survival mode ramps up speed over time \u2014 stay calm under pressure.",
+          "Survival mode: your mine world persists \u2014 build deep and survive the rising tide.",
           // Minecraft flavour
           "Obsidian blocks fall slowly but are worth triple points when cleared.",
           "Diamond ore pieces are rare and score big \u2014 plan for them!",
@@ -350,33 +350,33 @@
             <div class="mode-section">
               <div class="mode-section-header">CORE</div>
               <div class="mode-section-cards">
-                <div class="mode-card" id="mode-card-classic" data-mode="classic" tabindex="0" role="button" aria-label="Classic mode — Endless mode with progressive difficulty">
+                <div class="mode-card" id="mode-card-classic" data-mode="classic" tabindex="0" role="button" aria-label="Classic mode — Endless mining run with rising speed and ore cascades">
                   <div class="mode-card-icon">&#8734;</div>
                   <div class="mode-card-name">Classic</div>
-                  <div class="mode-card-desc">Endless mode. Speed increases every level.</div>
+                  <div class="mode-card-desc">Endless mining runs. Ore blocks cascade as speed climbs — how deep can you dig?</div>
                   <div class="mode-card-pb" id="mode-pb-classic"></div>
                   <div class="mode-card-mining-accent">⛏ Mining Enhanced</div>
                   <button class="mode-card-lb-btn" data-lb-tab="classic" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card" id="mode-card-sprint" data-mode="sprint" tabindex="0" role="button" aria-label="Sprint mode — Clear 40 lines as fast as possible">
+                <div class="mode-card" id="mode-card-sprint" data-mode="sprint" tabindex="0" role="button" aria-label="Sprint mode — Race to mine and clear 40 lines as fast as possible">
                   <div class="mode-card-icon">&#9201;</div>
                   <div class="mode-card-name">Sprint</div>
-                  <div class="mode-card-desc">Clear 40 lines. Beat the clock.</div>
+                  <div class="mode-card-desc">Race the clock. Mine and clear 40 lines as fast as possible.</div>
                   <div class="mode-card-pb" id="mode-pb-sprint"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="sprint" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card" id="mode-card-blitz" data-mode="blitz" tabindex="0" role="button" aria-label="Blitz mode — 2 minutes, maximum score">
+                <div class="mode-card" id="mode-card-blitz" data-mode="blitz" tabindex="0" role="button" aria-label="Blitz mode — 2 minutes, mine fast for maximum score">
                   <div class="mode-card-icon">&#9889;</div>
                   <div class="mode-card-name">Blitz</div>
-                  <div class="mode-card-desc">2 minutes. Maximum score.</div>
+                  <div class="mode-card-desc">2 minutes. Mine fast, score higher.</div>
                   <div class="mode-card-pb" id="mode-pb-blitz"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="blitz" title="Leaderboard">&#127942;</button>
                 </div>
                 <div class="mode-card" id="mode-card-marathon" data-mode="marathon" tabindex="0" role="button"
-                     aria-label="Marathon mode — 29 levels, or Endless with milestones">
+                     aria-label="Marathon mode — 29-level mine run or Endless with ore milestones">
                   <div class="mode-card-icon">&#127939;</div>
                   <div class="mode-card-name">Marathon</div>
-                  <div class="mode-card-desc" id="mode-marathon-desc">29 levels. Speed up every 10 lines. Reach the kill screen.</div>
+                  <div class="mode-card-desc" id="mode-marathon-desc">29 levels through the mine shaft. Speed climbs every 10 lines. Reach the kill screen.</div>
                   <div class="mode-card-pb" id="mode-pb-marathon"></div>
 
                   <!-- Length selector — inline toggle; individual buttons stop propagation -->
@@ -400,10 +400,10 @@
                   <button class="mode-card-lb-btn" id="mode-marathon-lb-btn"
                           data-lb-tab="marathon" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card mode-card-practice" id="mode-card-practice" data-mode="practice" tabindex="0" role="button" aria-label="Practice mode — Sandbox or scenario drills">
+                <div class="mode-card mode-card-practice" id="mode-card-practice" data-mode="practice" tabindex="0" role="button" aria-label="Practice mode — Sandbox mining drills or scenario training">
                   <div class="mode-card-icon">&#127979;</div>
                   <div class="mode-card-name">Practice</div>
-                  <div class="mode-card-desc">Sandbox, or pick a scenario drill. Undo, set speed, no scoring.</div>
+                  <div class="mode-card-desc">Sandbox drills. Mine, nudge, and set up combos without scoring pressure.</div>
                   <!-- Gravity mode selector — visible inside the Practice card -->
                   <div id="gravity-selector" style="margin-top:6px;pointer-events:auto;">
                     <div style="font-size:0.55rem;color:#aaa;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.07em;">Gravity</div>
@@ -436,10 +436,10 @@
             <div class="mode-section">
               <div class="mode-section-header">CHALLENGE</div>
               <div class="mode-section-cards">
-                <div class="mode-card mode-card-daily" id="mode-card-daily" data-mode="daily" tabindex="0" role="button" aria-label="Daily mode — Today's seed, everyone gets the same pieces">
+                <div class="mode-card mode-card-daily" id="mode-card-daily" data-mode="daily" tabindex="0" role="button" aria-label="Daily mode — Mine today's shared ore seed alongside every other player">
                   <div class="mode-card-icon">&#128197;</div>
                   <div class="mode-card-name">Daily</div>
-                  <div class="mode-card-desc" id="mode-daily-desc">Today's seed. Everyone gets the same pieces.</div>
+                  <div class="mode-card-desc" id="mode-daily-desc">Mine today's seed. Same ore layout for every miner on Earth.</div>
                   <div class="mode-card-pb" id="mode-pb-daily"></div>
                   <div id="mode-daily-streak" style="display:none;font-size:0.55rem;color:#fbbf24;margin-top:2px;"></div>
                   <div class="mode-card-daily-actions">
@@ -447,30 +447,30 @@
                     <button class="mode-card-cal-btn" id="mode-daily-cal-btn" title="View past results">&#128202;</button>
                   </div>
                 </div>
-                <div class="mode-card mode-card-weekly" id="mode-card-weekly" data-mode="weekly" tabindex="0" role="button" aria-label="Weekly mode — This week's challenge with a special modifier">
+                <div class="mode-card mode-card-weekly" id="mode-card-weekly" data-mode="weekly" tabindex="0" role="button" aria-label="Weekly mode — This week's mining challenge with a special modifier">
                   <div class="mode-card-icon">&#127381;</div>
                   <div class="mode-card-name">Weekly</div>
-                  <div class="mode-card-desc" id="mode-weekly-modifier-desc">This week's challenge.</div>
+                  <div class="mode-card-desc" id="mode-weekly-modifier-desc">This week's mining challenge.</div>
                   <div class="mode-card-pb" id="mode-pb-weekly"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="thisweek" title="Leaderboard">&#127942;</button>
                 </div>
                 <div class="mode-card mode-card-puzzle" id="mode-card-puzzle" data-mode="puzzle" tabindex="0" role="button" aria-label="Puzzle mode — 50 curated mining puzzles across Easy, Medium, Hard, Expert, and Master">
                   <div class="mode-card-icon">&#129513;</div>
                   <div class="mode-card-name">Puzzle</div>
-                  <div class="mode-card-desc">50 puzzles across 5 tiers. Daily puzzle every day.</div>
+                  <div class="mode-card-desc">50 mining puzzles across 5 tiers. Clear the ore in as few moves as possible.</div>
                   <div class="mode-card-pb" id="mode-pb-puzzle"></div>
                 </div>
-                <div class="mode-card mode-card-combo_challenge" id="mode-card-combo_challenge" data-mode="combo_challenge" tabindex="0" role="button" aria-label="Combo Challenge — Chain line clears for massive multipliers! 60 seconds on the clock.">
+                <div class="mode-card mode-card-combo_challenge" id="mode-card-combo_challenge" data-mode="combo_challenge" tabindex="0" role="button" aria-label="Combo Challenge — Chain ore clears for massive multipliers in 60 seconds">
                   <div class="mode-card-icon">&#128293;</div>
                   <div class="mode-card-name">Combo Challenge</div>
-                  <div class="mode-card-desc">Chain line clears for massive multipliers! 60 seconds on the clock.</div>
+                  <div class="mode-card-desc">Chain ore clears for massive multipliers! 60 seconds on the mining clock.</div>
                   <div class="mode-card-pb" id="mode-pb-combo_challenge"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="combo_challenge" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card mode-card-countdown" id="mode-card-countdown" data-mode="countdown" tabindex="0" role="button" aria-label="Countdown — Survive 10 speed stages as gravity accelerates every 30 seconds">
+                <div class="mode-card mode-card-countdown" id="mode-card-countdown" data-mode="countdown" tabindex="0" role="button" aria-label="Countdown — Survive 10 speed stages as the mine shaft fills around you">
                   <div class="mode-card-icon">&#9203;</div>
                   <div class="mode-card-name">Countdown</div>
-                  <div class="mode-card-desc">Survive 10 speed stages. How long can you last?</div>
+                  <div class="mode-card-desc">Survive 10 speed stages as the mine shaft fills. How long can you dig?</div>
                   <div class="mode-card-pb" id="mode-pb-countdown"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="countdown" title="Leaderboard">&#127942;</button>
                 </div>
@@ -498,28 +498,28 @@
                   <div id="survival-world-card" class="survival-world-card"></div>
                   <button id="survival-reset-btn" class="survival-reset-btn" style="display:none;">&#128465; Reset World</button>
                 </div>
-                <div class="mode-card mode-card-endless" id="mode-card-endless" data-mode="endless" tabindex="0" role="button" aria-label="Endless Survival mode — Single run with a new random modifier every 60 seconds">
+                <div class="mode-card mode-card-endless" id="mode-card-endless" data-mode="endless" tabindex="0" role="button" aria-label="Endless Survival mode — single run, stacking mining hazards, dig as deep as you can">
                   <div class="mode-card-icon">&#9854;</div>
                   <div class="mode-card-name">Endless Survival</div>
-                  <div class="mode-card-desc">Single run. New modifier every 60s. How many can you survive?</div>
+                  <div class="mode-card-desc">Single run. Random mining hazards stack every 60s. Dig as deep as you can.</div>
                   <div class="mode-card-pb" id="mode-pb-endless"></div>
                   <button class="mode-card-lb-btn" data-lb-tab="endless" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card mode-card-depths" id="mode-card-depths" data-mode="depths" tabindex="0" role="button" aria-label="The Depths mode — Roguelike dungeon descent through procedural floors">
+                <div class="mode-card mode-card-depths" id="mode-card-depths" data-mode="depths" tabindex="0" role="button" aria-label="The Depths mode — Roguelike mining descent through procedural ore floors">
                   <div class="mode-card-icon">&#9935;</div>
                   <div class="mode-card-name">The Depths</div>
-                  <div class="mode-card-desc">Descend floor by floor. Each dungeon, a new map. How deep can you go?</div>
+                  <div class="mode-card-desc">Descend into the mine. Each dungeon floor brings new ore veins. How deep can you dig?</div>
                   <button class="mode-card-lb-btn" data-lb-tab="depths" title="Leaderboard">&#127942;</button>
                 </div>
-                <div class="mode-card mode-card-expedition" id="mode-card-expedition" data-mode="expedition" tabindex="0" role="button" aria-label="Expeditions mode — Explore biomes, gather resources, build your world">
-                  <div class="mode-card-icon">&#127758;</div>
+                <div class="mode-card mode-card-expedition" id="mode-card-expedition" data-mode="expedition" tabindex="0" role="button" aria-label="Expeditions mode — Mine unmapped biomes, dig for rare ores, build your world">
+<div class="mode-card-icon">&#127758;</div>
                   <div class="mode-card-name">Expeditions</div>
-                  <div class="mode-card-desc">Explore biomes. Gather resources. Build your world.</div>
+                  <div class="mode-card-desc">Mine into unmapped biomes. Dig for rare ores and build your world.</div>
                 </div>
-                <div class="mode-card mode-card-boss-battle" id="mode-card-boss_battle" data-mode="boss_battle" tabindex="0" role="button" aria-label="Boss Battle mode — Defeat Minecraft bosses through Tetris skill">
-                  <div class="mode-card-icon">&#128081;</div>
+                <div class="mode-card mode-card-boss-battle" id="mode-card-boss_battle" data-mode="boss_battle" tabindex="0" role="button" aria-label="Boss Battle mode — Defeat Minecraft bosses by mining lines with Tetris skill">
+<div class="mode-card-icon">&#128081;</div>
                   <div class="mode-card-name">Boss Battle</div>
-                  <div class="mode-card-desc">Clear lines to slay the Wither, Ender Dragon, and Warden. Earn exclusive skins.</div>
+                  <div class="mode-card-desc">Mine lines to damage the Wither, Ender Dragon, and Warden. Earn exclusive skins.</div>
                   <div class="mode-card-pb" id="mode-pb-boss_battle"></div>
                 </div>
               </div>

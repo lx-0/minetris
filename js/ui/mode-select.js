@@ -130,7 +130,7 @@
         const dailyBest = loadDailyBest();
         const dailyStars = (dailyBest && typeof getDailyStarString === 'function') ? getDailyStarString(dailyBest.score) : '';
         if (dailyPbEl) dailyPbEl.textContent = getTodayLabel() + " \u2014 " + (dailyBest ? dailyBest.score + (dailyStars ? ' ' + dailyStars : '') : "Done");
-        if (dailyDescEl) dailyDescEl.textContent = "Come back tomorrow for a new challenge!";
+        if (dailyDescEl) dailyDescEl.textContent = "The vein is tapped. Come back tomorrow for a fresh ore seed!";
         if (dailyCardEl2) dailyCardEl2.classList.add("mode-card-daily-done");
       } else {
         const dailyBest = loadDailyBest();
@@ -656,15 +656,15 @@
           const pbEl   = document.getElementById('mode-pb-marathon');
           const lbBtn  = document.getElementById('mode-marathon-lb-btn');
           if (isEndless) {
-            if (descEl) descEl.textContent = 'No level cap. Milestones at 50/100/200/500/1000 lines. Garbage starts at 300.';
+            if (descEl) descEl.textContent = 'No cap on the mine shaft. Ore milestones at 50/100/200/500/1000 lines. Garbage debris starts at 300.';
             if (lbBtn) lbBtn.setAttribute('data-lb-tab', 'marathon_endless');
-            marathonCardEl.setAttribute('aria-label', 'Marathon Endless — no cap, milestones, optional garbage after 300 lines');
+            marathonCardEl.setAttribute('aria-label', 'Marathon Endless — no cap, ore milestones, optional garbage debris after 300 lines');
             const meBest = typeof loadMarathonEndlessBest === 'function' ? loadMarathonEndlessBest() : null;
             if (pbEl) pbEl.textContent = meBest ? 'Best: ' + meBest.linesCleared + ' lines' : '';
           } else {
-            if (descEl) descEl.textContent = '29 levels. Speed up every 10 lines. Reach the kill screen.';
+            if (descEl) descEl.textContent = '29 levels through the mine shaft. Speed climbs every 10 lines. Reach the kill screen.';
             if (lbBtn) lbBtn.setAttribute('data-lb-tab', 'marathon');
-            marathonCardEl.setAttribute('aria-label', 'Marathon mode — 29 levels, kill screen at level 29');
+            marathonCardEl.setAttribute('aria-label', 'Marathon mode — 29-level mine run, kill screen at level 29');
             const mBest = typeof loadMarathonBest === 'function' ? loadMarathonBest() : null;
             if (pbEl) pbEl.textContent = mBest ? 'Best: Level ' + mBest.level + ' (' + mBest.score + ')' : '';
           }
