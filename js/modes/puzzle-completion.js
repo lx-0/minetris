@@ -624,7 +624,8 @@ function _renderDailyPuzzleEntry(listEl) {
 
   const stars = getPuzzleStars(dailyId);
   const playedKey = "mineCtris_dailyPuzzlePlayed_" + dateStr;
-  const played = dateStr ? localStorage.getItem(playedKey) : null;
+  let played = null;
+  try { if (dateStr) played = localStorage.getItem(playedKey); } catch (_) {}
   const diffLabel = puzzle.difficulty.charAt(0).toUpperCase() + puzzle.difficulty.slice(1);
 
   const item = document.createElement("div");
