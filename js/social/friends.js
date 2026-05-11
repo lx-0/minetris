@@ -109,8 +109,10 @@ let _friendsPresenceTmr  = null;
 let _friendsCurrentMode  = 'menu';
 
 function _friendsMyName() {
+  var _lsName = null;
+  try { _lsName = localStorage.getItem('mineCtris_displayName'); } catch (_) {}
   return (typeof loadDisplayName === 'function' ? loadDisplayName() : null)
-    || localStorage.getItem('mineCtris_displayName')
+    || _lsName
     || friendsGetMyCode();
 }
 

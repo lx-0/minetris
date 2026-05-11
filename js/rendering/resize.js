@@ -67,7 +67,7 @@ function getTouchAdjustedSize() {
   if (!overlay || !dismissBtn) return;
 
   function shouldShow() {
-    if (localStorage.getItem(STORAGE_KEY)) return false;
+    try { if (localStorage.getItem(STORAGE_KEY)) return false; } catch (_) { return false; }
     const isTouch = window.matchMedia('(hover: none)').matches;
     const isPortrait = window.innerHeight > window.innerWidth;
     const isNarrow = window.innerWidth < 768;

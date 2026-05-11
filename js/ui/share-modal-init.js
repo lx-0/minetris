@@ -46,13 +46,14 @@ function _initShareModal() {
         var code = decodeURIComponent(puzzleParam);
 
         // Get or generate creator ID
-        var creatorId = localStorage.getItem("mineCtris_creatorId");
+        var creatorId;
+        try { creatorId = localStorage.getItem("mineCtris_creatorId"); } catch (_) {}
         if (!creatorId) {
           creatorId = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
             var r = Math.random() * 16 | 0;
             return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
           });
-          localStorage.setItem("mineCtris_creatorId", creatorId);
+          try { localStorage.setItem("mineCtris_creatorId", creatorId); } catch (_) {}
         }
 
         publishBtn.textContent = "Publishing\u2026";
@@ -76,7 +77,7 @@ function _initShareModal() {
             try { published = JSON.parse(localStorage.getItem("mineCtris_publishedPuzzles") || "[]"); } catch (_) { published = []; }
             if (published.indexOf(data.id) === -1) {
               published.push(data.id);
-              localStorage.setItem("mineCtris_publishedPuzzles", JSON.stringify(published));
+              try { localStorage.setItem("mineCtris_publishedPuzzles", JSON.stringify(published)); } catch (_) {}
             }
             // Unlock Workshop Owner achievement
             if (typeof achOnPuzzlePublished === "function") achOnPuzzlePublished();
