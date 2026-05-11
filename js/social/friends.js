@@ -12,13 +12,14 @@ const FRIENDS_CODE_CHARS  = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/1/I/O fo
 // ── Friend code ───────────────────────────────────────────────────────────────
 
 function friendsGetMyCode() {
-  let code = localStorage.getItem(FRIENDS_LS_CODE);
+  let code;
+  try { code = localStorage.getItem(FRIENDS_LS_CODE); } catch (_) {}
   if (code && /^[A-Z2-9]{6}$/.test(code)) return code;
   code = '';
   for (let i = 0; i < 6; i++) {
     code += FRIENDS_CODE_CHARS[Math.floor(Math.random() * FRIENDS_CODE_CHARS.length)];
   }
-  localStorage.setItem(FRIENDS_LS_CODE, code);
+  try { localStorage.setItem(FRIENDS_LS_CODE, code); } catch (_) {}
   return code;
 }
 
@@ -30,7 +31,7 @@ function friendsGetList() {
 }
 
 function _friendsSaveList(list) {
-  localStorage.setItem(FRIENDS_LS_LIST, JSON.stringify(list));
+  try { localStorage.setItem(FRIENDS_LS_LIST, JSON.stringify(list)); } catch (_) {}
 }
 
 // Returns null on success, or an error string.

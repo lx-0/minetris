@@ -10,15 +10,17 @@ var SHOWCASE_FEATURED_KEY = 'mineCtris_featuredBadge';
 // ── Featured badge storage ────────────────────────────────────────────────────
 
 function loadFeaturedBadge() {
-  return localStorage.getItem(SHOWCASE_FEATURED_KEY) || null;
+  try { return localStorage.getItem(SHOWCASE_FEATURED_KEY) || null; } catch (_) { return null; }
 }
 
 function saveFeaturedBadge(id) {
-  if (id) {
-    localStorage.setItem(SHOWCASE_FEATURED_KEY, id);
-  } else {
-    localStorage.removeItem(SHOWCASE_FEATURED_KEY);
-  }
+  try {
+    if (id) {
+      localStorage.setItem(SHOWCASE_FEATURED_KEY, id);
+    } else {
+      localStorage.removeItem(SHOWCASE_FEATURED_KEY);
+    }
+  } catch (_) {}
 }
 
 // ── Data helpers ──────────────────────────────────────────────────────────────
@@ -275,7 +277,7 @@ function _showcaseSaveName(rawVal, nameDisplay, nameInput, editBtn, saveBtn) {
   if (typeof saveDisplayName === 'function') {
     saveDisplayName(val);
   } else {
-    localStorage.setItem('mineCtris_displayName', val);
+    try { localStorage.setItem('mineCtris_displayName', val); } catch (_) {}
   }
   nameDisplay.textContent = val;
   nameDisplay.style.display = 'inline';
