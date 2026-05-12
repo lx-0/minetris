@@ -520,7 +520,7 @@ function _renderHomeView(content) {
       const minute = document.getElementById('war-minute-select').value;
       const iso    = `${date}T${hour}:${minute}:00.000Z`;
       const errEl  = document.getElementById('war-challenge-error');
-      errEl.style.display = 'none';
+      if (errEl) errEl.style.display = 'none';
 
       e.currentTarget.disabled = true;
       const res = await apiSendWarChallenge(myGuildId, targetId, iso);
@@ -529,8 +529,10 @@ function _renderHomeView(content) {
       if (res.ok) {
         _loadWarsTab();
       } else {
-        errEl.textContent = res.data.error || 'Failed to send challenge.';
-        errEl.style.display = '';
+        if (errEl) {
+          errEl.textContent = res.data.error || 'Failed to send challenge.';
+          errEl.style.display = '';
+        }
       }
     });
   }

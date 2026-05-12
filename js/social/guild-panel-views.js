@@ -78,7 +78,8 @@ function _showMemberCard(content, target, guildId, me, members, guild) {
         overlay.style.display = 'none';
         _renderHomeView(content);
       } else {
-        document.getElementById('card-status').textContent = res.data.error || 'Kick failed';
+        const cardStatus = document.getElementById('card-status');
+        if (cardStatus) cardStatus.textContent = res.data.error || 'Kick failed';
         kickBtn.disabled = false;
       }
     });
@@ -95,7 +96,8 @@ function _showMemberCard(content, target, guildId, me, members, guild) {
         overlay.style.display = 'none';
         _renderHomeView(content);
       } else {
-        document.getElementById('card-status').textContent = res.data.error || 'Promote failed';
+        const cardStatus = document.getElementById('card-status');
+        if (cardStatus) cardStatus.textContent = res.data.error || 'Promote failed';
         promoteBtn.disabled = false;
       }
     });
@@ -112,7 +114,8 @@ function _showMemberCard(content, target, guildId, me, members, guild) {
         overlay.style.display = 'none';
         _renderHomeView(content);
       } else {
-        document.getElementById('card-status').textContent = res.data.error || 'Demote failed';
+        const cardStatus = document.getElementById('card-status');
+        if (cardStatus) cardStatus.textContent = res.data.error || 'Demote failed';
         demoteBtn.disabled = false;
       }
     });
@@ -130,7 +133,8 @@ function _showMemberCard(content, target, guildId, me, members, guild) {
         overlay.style.display = 'none';
         _renderHomeView(content);
       } else {
-        document.getElementById('card-status').textContent = res.data.error || 'Transfer failed';
+        const cardStatus = document.getElementById('card-status');
+        if (cardStatus) cardStatus.textContent = res.data.error || 'Transfer failed';
         transferBtn.disabled = false;
       }
     });
@@ -374,7 +378,8 @@ function _renderManageView(content) {
         _guildView = 'browse';
         _renderGuildPanel();
       } else {
-        document.getElementById('gm-status').textContent = res.data.error || 'Disband failed.';
+        const gmStatus = document.getElementById('gm-status');
+        if (gmStatus) gmStatus.textContent = res.data.error || 'Disband failed.';
       }
     });
   }
