@@ -786,7 +786,7 @@ function playInventoryFullSound() {
   var now = performance.now();
   if (now - _lastInvFullSoundTime < INV_REJECT_AUDIO_COOLDOWN_MS) return;
   _lastInvFullSoundTime = now;
-  try { invFullSynth.triggerAttackRelease(Tone.now()); } catch (_e) {}
+  try { invFullSynth.triggerAttackRelease(80, '16n', Tone.now()); } catch (_e) {}
 }
 
 function playAchievementUnlockSfx() {
