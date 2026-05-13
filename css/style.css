@@ -6744,6 +6744,96 @@ tr.dgo-top10-me .dgo-top10-score { color: #0cf; }
   to   { opacity: 1; transform: scale(1); }
 }
 
+/* ── Pickaxe tier-up celebration overlay (MINAA-746) ────────────────────────── */
+#pickaxe-upgrade-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+#pickaxe-upgrade-overlay.puo-visible {
+  display: flex;
+  pointer-events: all;
+}
+.puo-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  animation: muo-fade-in 0.3s ease;
+}
+.puo-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 36px;
+  background: rgba(10, 10, 20, 0.97);
+  border: 3px solid #a0826d;
+  border-radius: 10px;
+  min-width: 260px;
+  max-width: 340px;
+  animation: puo-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 30px rgba(160, 130, 109, 0.25);
+}
+.puo-tier-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+.puo-header {
+  font-family: "Press Start 2P", cursive;
+  font-size: 14px;
+  color: #a0826d;
+  text-shadow: 0 0 10px rgba(160, 130, 109, 0.6);
+  text-align: center;
+  letter-spacing: 1px;
+}
+.puo-name {
+  font-family: "Press Start 2P", cursive;
+  font-size: 11px;
+  color: #fff;
+  text-align: center;
+}
+.puo-ability {
+  font-family: "Press Start 2P", cursive;
+  font-size: 12px;
+  color: #a0826d;
+  text-align: center;
+  letter-spacing: 1px;
+}
+.puo-desc {
+  font-family: "Press Start 2P", cursive;
+  font-size: 8px;
+  color: #ccc;
+  text-align: center;
+  max-width: 280px;
+  line-height: 1.5;
+}
+.puo-dismiss-btn {
+  font-family: "Press Start 2P", cursive;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 6px 14px;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.puo-dismiss-btn:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+@keyframes puo-pop-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 /* ── Mode card mastery badge ────────────────────────────────────────────────── */
 .mode-card-mastery-badge {
   position: absolute;

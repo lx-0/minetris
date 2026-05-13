@@ -1518,13 +1518,12 @@ function initSettings() {
   _loadGlowIntensity();
   _loadParticleIntensity();
   // Auto-enable reduced motion if the OS requests it (only when user has no saved pref)
-  if (!localStorage.getItem(REDUCED_MOTION_KEY)) {
-    try {
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        reducedMotionEnabled = true;
-      }
-    } catch (_) {}
-  }
+  try {
+    if (!localStorage.getItem(REDUCED_MOTION_KEY) &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      reducedMotionEnabled = true;
+    }
+  } catch (_) {}
   _loadColorblindMode();
   _loadHighContrast();
   _loadLockDelay();
