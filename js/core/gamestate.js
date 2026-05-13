@@ -380,6 +380,8 @@ function triggerGameOver() {
   if (typeof isReplayMode !== 'undefined' && isReplayMode && typeof replayStopPlayback === 'function') {
     replayStopPlayback();
   }
+  // Dismiss pickaxe upgrade overlay if it's showing (z-index: 99998 would block game-over screen)
+  if (typeof _hidePickaxeUpgradeOverlay === 'function') _hidePickaxeUpgradeOverlay();
   // Contextual game tooltip: first game over (dismiss any active tooltip first)
   if (typeof gameTooltipDismiss === 'function') gameTooltipDismiss();
   if (typeof gameTooltip === 'function') gameTooltip('gameOver', { score: score });
