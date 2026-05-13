@@ -272,7 +272,14 @@ var coopTrade = (function () {
         coop.send({ type: 'trade_accept', material: mat, quantity: added });
       }
       var label = _getMaterialLabel(mat);
-      _showStatusToast('+' + added + 'x ' + label + ' received!');
+      if (added < qty) {
+        // Partial fill due to inventory full — notify with specific message
+        if (typeof notifPush === 'function') {
+          notifPush('system', '📦', 'Inventory full — only received ' + added + ' of ' + qty + ' blocks.');
+        }
+      } else {
+        _showStatusToast('+' + added + 'x ' + label + ' received!');
+      }
       if (typeof coopMyTradesCompleted !== 'undefined') {
         coopMyTradesCompleted++;
         if (typeof achOnCoopTradeComplete === 'function') achOnCoopTradeComplete(coopMyTradesCompleted);
