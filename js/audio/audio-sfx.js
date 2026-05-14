@@ -780,11 +780,16 @@ function playChainReactionImpact() {
 
 let _lastInvFullSoundTime = 0;
 
-/** Dull low-pitched clunk on inventory-full rejection. Max once per 300ms. */
+/**
+ * Dull low-pitched clunk on inventory-full rejection.
+ * Throttled to INV_REJECT_AUDIO_COOLDOWN_MS to prevent stacking during
+ * burst events (Earthquake, Magnet clearing many blocks at once).
+ */
 function playInventoryFullSound() {
   if (!audioReady || !invFullSynth) return;
   var now = performance.now();
-  if (now - _lastInvFullSoundTime < INV_REJECT_AUDIO_COOLDOWN_MS) return;
+  var cooldown = (typeof INV_REJECT_AUDIO_COOLDOWN_MS !== 'undefined') ? INV_REJECT_AUDIO_COOLDOWN_MS : 300;
+  if (now - _lastInvFullSoundTime < cooldown) return;
   _lastInvFullSoundTime = now;
   try { invFullSynth.triggerAttackRelease(80, '16n', Tone.now()); } catch (_e) {}
 }

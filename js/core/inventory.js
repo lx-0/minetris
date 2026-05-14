@@ -104,7 +104,6 @@ function updateInventoryHUD() {
     hud.style.display = "flex";
   }
   totalEl.textContent = "Inventar: " + total + "/" + INV_MAX_TOTAL;
-
   // Amber warning when at or above 90% capacity
   var warnThreshold = Math.floor(INV_MAX_TOTAL * INV_WARN_THRESHOLD);
   if (total >= warnThreshold) {
