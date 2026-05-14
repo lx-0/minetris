@@ -528,6 +528,9 @@ function resetGame(opts) {
   if (comboBannerEl) comboBannerEl.style.display = "none";
   lastClearWasTetris = false;
   if (typeof lastClearWasDifficult !== 'undefined') lastClearWasDifficult = false;
+  comboShakeActive = false;
+  comboShakeStart = 0;
+  comboShakeStrength = 0;
 
   // Reset player
   if (controls) {

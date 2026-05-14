@@ -487,4 +487,5 @@ function resetPickaxeTierCelebrations() {
   _pickaxeTierCelebrated.iron = false;
   _pickaxeTierCelebrated.diamond = false;
   _pickaxeTierCelebrated.obsidian = false;
+  _hidePickaxeUpgradeOverlay();
 }
