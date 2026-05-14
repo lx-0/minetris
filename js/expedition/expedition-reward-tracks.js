@@ -323,14 +323,22 @@ function loadAndClearMaterialStash() {
   var colors = Object.keys(stash);
   if (!colors.length) return;
   if (typeof addToInventory !== 'function') return;
+  var lost = 0;
   for (var i = 0; i < colors.length; i++) {
     var color = colors[i];
     var count = stash[color] || 0;
     for (var n = 0; n < count; n++) {
-      addToInventory(color);
+      if (!addToInventory(color)) lost++;
     }
   }
   _saveMaterialStash({});
+  if (lost > 0 && typeof notifPush === 'function') {
+    notifPush(
+      NOTIF_TYPES.MISSION,
+      '⚠️',
+      'Inventory full — ' + lost + ' expedition block' + (lost === 1 ? '' : 's') + " couldn't be stored."
+    );
+  }
 }
 
 /**

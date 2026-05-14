@@ -273,6 +273,9 @@ var coopTrade = (function () {
       }
       var label = _getMaterialLabel(mat);
       _showStatusToast('+' + added + 'x ' + label + ' received!');
+      if (added < qty) {
+        _showStatusToast('Inventory full — only received ' + added + ' of ' + qty + ' blocks.');
+      }
       if (typeof coopMyTradesCompleted !== 'undefined') {
         coopMyTradesCompleted++;
         if (typeof achOnCoopTradeComplete === 'function') achOnCoopTradeComplete(coopMyTradesCompleted);

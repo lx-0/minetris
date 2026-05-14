@@ -776,6 +776,26 @@ function playChainReactionImpact() {
   } catch (_e) {}
 }
 
+// ── Inventory rejection clunk ─────────────────────────────────────────────────
+
+let _lastInvRejectSoundTime = 0;
+
+/**
+ * Short low-pitched FMSynth thud signalling an inventory rejection.
+ * Throttled to INV_REJECT_AUDIO_COOLDOWN_MS to prevent stacking during
+ * burst events (Earthquake, Magnet clearing many blocks at once).
+ */
+function playInventoryFullSound() {
+  if (!audioReady || !invRejectSynth) return;
+  var now = performance.now();
+  var cooldown = (typeof INV_REJECT_AUDIO_COOLDOWN_MS !== 'undefined') ? INV_REJECT_AUDIO_COOLDOWN_MS : 300;
+  if (now - _lastInvRejectSoundTime < cooldown) return;
+  _lastInvRejectSoundTime = now;
+  try {
+    invRejectSynth.triggerAttackRelease('A1', '32n', Tone.now());
+  } catch (_e) {}
+}
+
 function playAchievementUnlockSfx() {
   if (!audioReady) return;
   const now = Tone.now();

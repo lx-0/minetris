@@ -17,6 +17,9 @@ const STONE_PICKAXE_STREAK_WINDOW = 2.0; // max seconds between clicks to mainta
 
 const INV_MAX_PER_TYPE = 64;
 const INV_MAX_TOTAL = 256;
+const INV_WARN_THRESHOLD = 0.9;
+const INV_REJECT_AUDIO_COOLDOWN_MS = 300;
+const INV_REJECT_FLASH_MS = 500;
 
 const SPAWN_INTERVAL = 2;
 

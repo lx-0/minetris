@@ -46,6 +46,7 @@ let notifChimeSynth     = null;   // soft two-note sparkle for notification toas
 let moveSynth           = null;   // subtle click for piece lateral move
 let softDropSynth       = null;   // short tick for soft drop activation
 let lockClunkSynth      = null;   // deep clunk for piece lock
+let invRejectSynth   = null;   // short FMSynth clunk for inventory rejection
 let masterCompressor = null;
 let masterReverb = null;
 let masterLimiter = null;
@@ -216,6 +217,16 @@ function initAudio() {
       envelope: { attack: 0.05, decay: 0.4, sustain: 0.1, release: 0.6 },
     }).connect(sfxGain);
     voidHumSynth.volume.value = -16;
+
+    // Inventory rejection clunk — low FMSynth thud (denied, not musical)
+    invRejectSynth = new Tone.FMSynth({
+      harmonicity: 4,
+      modulationIndex: 4,
+      envelope: { attack: 0.001, decay: 0.08, sustain: 0.0, release: 0.05 },
+      modulation: { type: 'square' },
+      modulationEnvelope: { attack: 0.001, decay: 0.05, sustain: 0.0, release: 0.03 },
+    }).connect(sfxGain);
+    invRejectSynth.volume.value = -6;
 
     // Entropy dissolve — ethereal crystalline shimmer on block decay
     entropyDissolveSynth = new Tone.PolySynth(Tone.Synth, {
