@@ -273,8 +273,8 @@ var coopTrade = (function () {
       }
       var label = _getMaterialLabel(mat);
       _showStatusToast('+' + added + 'x ' + label + ' received!');
-      if (added < qty) {
-        _showStatusToast('Inventory full — only received ' + added + ' of ' + qty + ' blocks.');
+      if (added < qty && typeof notifPush === 'function') {
+        notifPush(NOTIF_TYPES.MISSION, '⚠️', 'Inventory full — only received ' + added + ' of ' + qty + ' blocks.');
       }
       if (typeof coopMyTradesCompleted !== 'undefined') {
         coopMyTradesCompleted++;
