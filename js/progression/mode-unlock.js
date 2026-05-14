@@ -209,6 +209,21 @@ function applyModeUnlockState() {
   }
 }
 
+var _MODE_LOCK_INCENTIVES = {
+  sprint:     'Speed mining unlocked',
+  blitz:      'Timed mining unlocked',
+  puzzle:     'Mining puzzles unlocked',
+  daily:      'Daily mine challenge unlocked',
+  weekly:     'Weekly modified mines unlocked',
+  survival:   'Unlocks your persistent mine world',
+  battle:     'Competitive mining unlocked',
+  expedition: 'Biome mining expeditions unlocked',
+  depths:     'Dungeon mining descent unlocked',
+  coop:       'Co-op mining unlocked',
+  boss_battle:'Boss mining battles unlocked',
+  editor:     'Mine puzzle editor unlocked',
+};
+
 function _applyLockToElement(el, mode, playerLevel, unlocked) {
   if (unlocked) {
     el.classList.remove('mode-card-locked');
@@ -219,13 +234,19 @@ function _applyLockToElement(el, mode, playerLevel, unlocked) {
   } else {
     el.classList.add('mode-card-locked');
     var reqLevel = getModeUnlockLevel(mode);
-    var tooltip = 'Unlocks at Level ' + reqLevel;
+    var incentive = _MODE_LOCK_INCENTIVES[mode] || '';
+    var tooltip = incentive
+      ? 'Unlocks at Level ' + reqLevel + ' — ' + incentive
+      : 'Unlocks at Level ' + reqLevel;
     el.setAttribute('data-lock-tooltip', tooltip);
     // Add lock overlay if not present
     if (!el.querySelector('.mode-lock-overlay')) {
       var overlay = document.createElement('div');
       overlay.className = 'mode-lock-overlay';
-      overlay.innerHTML = '<span class="mode-lock-icon">&#128274;</span><span class="mode-lock-text">Level ' + reqLevel + '</span>';
+      var incentiveHTML = incentive
+        ? '<span class="mode-lock-incentive">' + incentive + '</span>'
+        : '';
+      overlay.innerHTML = '<span class="mode-lock-icon">&#128274;</span><span class="mode-lock-text">Level ' + reqLevel + '</span>' + incentiveHTML;
       el.appendChild(overlay);
     }
   }
