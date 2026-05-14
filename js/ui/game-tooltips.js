@@ -28,6 +28,18 @@ const GAME_TOOLTIPS = {
     text: 'Game over. Your score: {score}. Play again to unlock new modes!',
     key: 'gameOver',
   },
+  inventoryFull: {
+    text: 'Inventory full! Craft items or place blocks to make room.',
+    key: 'inventoryFull',
+  },
+  inventoryTypeFull: {
+    text: 'Max blocks of this type! Try mining different materials.',
+    key: 'inventoryTypeFull',
+  },
+  craftingInventoryFull: {
+    text: 'Not enough inventory space for crafting output.',
+    key: 'craftingInventoryFull',
+  },
 };
 
 let _gtActiveTooltip = null; // { key, timerId }

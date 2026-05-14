@@ -5,12 +5,42 @@ function inventoryTotal() {
   return Object.values(inventory).reduce((sum, n) => sum + n, 0);
 }
 
+/**
+ * Rejection feedback — flash the inventory bar, play audio clunk, fire one-time tooltip.
+ * @param {'total_full'|'type_full'} reason
+ */
+function _onInventoryRejected(reason) {
+  // Audio clunk (cooled internally in playInventoryFullSound)
+  if (typeof playInventoryFullSound === 'function') playInventoryFullSound();
+
+  // Red border flash on #inventory-hud — re-trigger on rapid rejections
+  var hudEl = document.getElementById('inventory-hud');
+  if (hudEl) {
+    hudEl.classList.remove('inv-full-flash');
+    // Force reflow so the animation restarts cleanly when already flashing
+    void hudEl.offsetWidth;
+    hudEl.classList.add('inv-full-flash');
+    setTimeout(function () { hudEl.classList.remove('inv-full-flash'); }, INV_REJECT_FLASH_MS);
+  }
+
+  // One-time educational tooltip keyed on reason
+  if (typeof gameTooltip === 'function') {
+    gameTooltip(reason === 'type_full' ? 'inventoryTypeFull' : 'inventoryFull');
+  }
+}
+
 /** Add one block of the given CSS hex color to inventory.
  *  Returns true if added, false if caps were reached. */
 function addToInventory(cssColor) {
-  if (inventoryTotal() >= INV_MAX_TOTAL) return false;
+  if (inventoryTotal() >= INV_MAX_TOTAL) {
+    _onInventoryRejected('total_full');
+    return false;
+  }
   const current = inventory[cssColor] || 0;
-  if (current >= INV_MAX_PER_TYPE) return false;
+  if (current >= INV_MAX_PER_TYPE) {
+    _onInventoryRejected('type_full');
+    return false;
+  }
   inventory[cssColor] = current + 1;
   // Auto-select first block type collected
   if (!selectedBlockColor) selectedBlockColor = cssColor;
@@ -74,6 +104,14 @@ function updateInventoryHUD() {
     hud.style.display = "flex";
   }
   totalEl.textContent = "Inventar: " + total + "/" + INV_MAX_TOTAL;
+
+  // Amber warning when at or above 90% capacity
+  var warnThreshold = Math.floor(INV_MAX_TOTAL * INV_WARN_THRESHOLD);
+  if (total >= warnThreshold) {
+    totalEl.classList.add('inv-warning');
+  } else {
+    totalEl.classList.remove('inv-warning');
+  }
 
   slotsEl.innerHTML = "";
   const currentSelected = getSelectedColor();

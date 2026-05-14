@@ -46,6 +46,7 @@ let notifChimeSynth     = null;   // soft two-note sparkle for notification toas
 let moveSynth           = null;   // subtle click for piece lateral move
 let softDropSynth       = null;   // short tick for soft drop activation
 let lockClunkSynth      = null;   // deep clunk for piece lock
+let invFullSynth        = null;   // dull rejection clunk for inventory-full
 let masterCompressor = null;
 let masterReverb = null;
 let masterLimiter = null;
@@ -372,6 +373,14 @@ function initAudio() {
       envelope: { attack: 0.001, decay: 0.12, sustain: 0.0, release: 0.08 },
     }).connect(sfxGain);
     lockClunkSynth.volume.value = -8;
+
+    // Inventory-full rejection clunk — dull low FM thud, intentionally unpleasant
+    invFullSynth = new Tone.FMSynth({
+      frequency:       80,
+      modulationIndex: 4,
+      envelope:        { attack: 0.001, decay: 0.08, sustain: 0.0, release: 0.05 },
+    }).connect(sfxGain);
+    invFullSynth.volume.value = -6;
 
     _initBgMusic();
     _initEnvironmentalAudio();

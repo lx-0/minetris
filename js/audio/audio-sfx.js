@@ -776,6 +776,19 @@ function playChainReactionImpact() {
   } catch (_e) {}
 }
 
+// ── Inventory full rejection sound ────────────────────────────────────────────
+
+let _lastInvFullSoundTime = 0;
+
+/** Dull low-pitched clunk on inventory-full rejection. Max once per 300ms. */
+function playInventoryFullSound() {
+  if (!audioReady || !invFullSynth) return;
+  var now = performance.now();
+  if (now - _lastInvFullSoundTime < INV_REJECT_AUDIO_COOLDOWN_MS) return;
+  _lastInvFullSoundTime = now;
+  try { invFullSynth.triggerAttackRelease(80, '16n', Tone.now()); } catch (_e) {}
+}
+
 function playAchievementUnlockSfx() {
   if (!audioReady) return;
   const now = Tone.now();

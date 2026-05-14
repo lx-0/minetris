@@ -18,6 +18,10 @@ const STONE_PICKAXE_STREAK_WINDOW = 2.0; // max seconds between clicks to mainta
 const INV_MAX_PER_TYPE = 64;
 const INV_MAX_TOTAL = 256;
 
+const INV_WARN_THRESHOLD          = 0.9;  // amber HUD warning at 90% capacity
+const INV_REJECT_AUDIO_COOLDOWN_MS = 300; // max one rejection clunk per 300ms
+const INV_REJECT_FLASH_MS          = 500; // red border flash duration
+
 const SPAWN_INTERVAL = 2;
 
 const MINING_SHAKE_DURATION = 0.1;

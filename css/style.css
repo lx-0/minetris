@@ -272,6 +272,25 @@ body {
   color: rgba(255, 255, 255, 0.7);
   text-shadow: 1px 1px 2px #000;
 }
+
+/* Inventory full-state feedback (MINAA-767) */
+#inventory-total.inv-warning {
+  color: #ffaa00;
+  text-shadow: 0 0 6px rgba(255, 170, 0, 0.5);
+  animation: inv-warn-pulse 1.5s ease-in-out infinite;
+}
+@keyframes inv-warn-pulse {
+  0%, 100% { text-shadow: 0 0 6px rgba(255, 170, 0, 0.3); }
+  50%       { text-shadow: 0 0 12px rgba(255, 170, 0, 0.7); }
+}
+#inventory-hud.inv-full-flash {
+  animation: inv-reject-flash 0.5s ease-out;
+}
+@keyframes inv-reject-flash {
+  0%   { border-color: #ff2222; box-shadow: 0 0 14px rgba(255, 34, 34, 0.7); }
+  100% { border-color: inherit; box-shadow: none; }
+}
+
 #inventory-slots {
   display: flex;
   gap: 6px;
