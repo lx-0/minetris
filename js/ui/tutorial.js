@@ -401,11 +401,11 @@ function _buildHighlightHTML(key, step) {
 
 function _buildModesHTML() {
   var modes = [
-    { icon: '\u221E', name: 'Classic', desc: 'Endless play, rising speed' },
-    { icon: '\u23F1', name: 'Sprint', desc: 'Clear 40 lines fastest' },
-    { icon: '\u26A1', name: 'Blitz', desc: '2 min, max score' },
-    { icon: '\uD83D\uDCC5', name: 'Daily', desc: 'Same seed as everyone' },
-    { icon: '\uD83D\uDC80', name: 'Survival', desc: 'Permadeath world' },
+    { icon: '\u221E', name: 'Classic', desc: 'Endless mine, rising speed' },
+    { icon: '\u23F1', name: 'Sprint', desc: 'Mine 40 lines fastest' },
+    { icon: '\u26A1', name: 'Blitz', desc: '2 min, max mine score' },
+    { icon: '\uD83D\uDCC5', name: 'Daily', desc: 'Same mine as everyone' },
+    { icon: '\uD83D\uDC80', name: 'Survival', desc: 'Permadeath mine world' },
     { icon: '\uD83D\uDC65', name: 'Co-op', desc: 'Mine with a partner' },
   ];
   var html = '<div class="thl-modes-grid">';
