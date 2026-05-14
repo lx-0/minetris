@@ -298,11 +298,14 @@ function renderCraftingPanel() {
 function craftRecipe(recipe) {
   if (!canCraftRecipe(recipe)) return false;
 
-  // Pre-check: block outputs need space before we consume ingredients
-  if (recipe.outputType === 'block' &&
-      inventoryTotal() + recipe.outputCount > INV_MAX_TOTAL) {
-    if (typeof gameTooltip === 'function') gameTooltip('craftingInventoryFull');
-    return false;
+  // Pre-check: block recipes must fit in remaining inventory space to avoid consuming
+  // ingredients and silently discarding output (data-loss prevention).
+  if (recipe.outputType === 'block') {
+    var space = INV_MAX_TOTAL - inventoryTotal();
+    if (recipe.outputCount > space) {
+      if (typeof gameTooltip === 'function') gameTooltip('craftingInventoryFull');
+      return false;
+    }
   }
 
   // Consume ingredients (apply co-op discount when active)

@@ -46,7 +46,7 @@ let notifChimeSynth     = null;   // soft two-note sparkle for notification toas
 let moveSynth           = null;   // subtle click for piece lateral move
 let softDropSynth       = null;   // short tick for soft drop activation
 let lockClunkSynth      = null;   // deep clunk for piece lock
-let invRejectSynth   = null;   // short FMSynth clunk for inventory rejection
+let invFullSynth        = null;   // dull rejection clunk for inventory-full
 let masterCompressor = null;
 let masterReverb = null;
 let masterLimiter = null;
@@ -218,16 +218,6 @@ function initAudio() {
     }).connect(sfxGain);
     voidHumSynth.volume.value = -16;
 
-    // Inventory rejection clunk — low FMSynth thud (denied, not musical)
-    invRejectSynth = new Tone.FMSynth({
-      harmonicity: 4,
-      modulationIndex: 4,
-      envelope: { attack: 0.001, decay: 0.08, sustain: 0.0, release: 0.05 },
-      modulation: { type: 'square' },
-      modulationEnvelope: { attack: 0.001, decay: 0.05, sustain: 0.0, release: 0.03 },
-    }).connect(sfxGain);
-    invRejectSynth.volume.value = -6;
-
     // Entropy dissolve — ethereal crystalline shimmer on block decay
     entropyDissolveSynth = new Tone.PolySynth(Tone.Synth, {
       maxPolyphony: 3,
@@ -383,6 +373,14 @@ function initAudio() {
       envelope: { attack: 0.001, decay: 0.12, sustain: 0.0, release: 0.08 },
     }).connect(sfxGain);
     lockClunkSynth.volume.value = -8;
+
+    // Inventory-full rejection clunk — dull low FM thud, intentionally unpleasant
+    invFullSynth = new Tone.FMSynth({
+      frequency:       80,
+      modulationIndex: 4,
+      envelope:        { attack: 0.001, decay: 0.08, sustain: 0.0, release: 0.05 },
+    }).connect(sfxGain);
+    invFullSynth.volume.value = -6;
 
     _initBgMusic();
     _initEnvironmentalAudio();
