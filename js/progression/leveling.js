@@ -1,4 +1,4 @@
-// Player leveling system — 50 levels, milestone skin unlocks, level badge, prestige.
+// Player leveling system — 100 levels, milestone skin unlocks, level badge, prestige at L50.
 // Requires: stats.js (loadLifetimeStats, saveLifetimeStats)
 
 // ── Level curve ───────────────────────────────────────────────────────────────
@@ -19,9 +19,10 @@
 // CUMULATIVE_XP[0] = 0 (starting XP for level 1).
 
 const MAX_LEVEL = 100;
+const PRESTIGE_LEVEL = 50;
 
 // ── Prestige system ──────────────────────────────────────────────────────────
-// At level 50, players can prestige: reset XP/level to 0 for permanent bonuses.
+// At PRESTIGE_LEVEL (50), players can prestige: reset XP/level to 0 for permanent bonuses.
 
 const PRESTIGE_KEY = 'mineCtris_prestige';
 const PRESTIGE_TOTAL_XP_KEY = 'mineCtris_prestigeTotalXP';
@@ -98,7 +99,7 @@ function performPrestige() {
   if (typeof loadLifetimeStats !== 'function') return 0;
   var stats = loadLifetimeStats();
   var currentLevel = getLevelFromXP(stats.playerXP || 0);
-  if (currentLevel < MAX_LEVEL) return getPrestigeLevel(); // not eligible
+  if (currentLevel < PRESTIGE_LEVEL) return getPrestigeLevel(); // not eligible
 
   // Track total XP across all prestiges
   var totalXP = getPrestigeTotalXP() + (stats.playerXP || 0);
@@ -135,7 +136,7 @@ function performPrestige() {
 
 /** Check if the player can prestige right now. */
 function canPrestige() {
-  return getPlayerLevel() >= MAX_LEVEL;
+  return getPlayerLevel() >= PRESTIGE_LEVEL;
 }
 
 function _showPrestigeToast(prestigeLevel) {
@@ -240,6 +241,28 @@ function getPrestigeStarsHtml() {
     '\u2B50'.repeat(pLevel) + '</span>';
 }
 
+// ── Persistent skin unlock tracking ──────────────────────────────────────────
+// Skins earned before prestige must remain accessible after XP resets.
+
+const UNLOCKED_SKINS_KEY = 'mineCtris_unlockedSkins';
+
+function _loadUnlockedSkins() {
+  try {
+    var raw = localStorage.getItem(UNLOCKED_SKINS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (_) { return []; }
+}
+
+function _persistSkinUnlock(themeKey) {
+  try {
+    var skins = _loadUnlockedSkins();
+    if (skins.indexOf(themeKey) === -1) {
+      skins.push(themeKey);
+      localStorage.setItem(UNLOCKED_SKINS_KEY, JSON.stringify(skins));
+    }
+  } catch (_) {}
+}
+
 // ── Milestone skins ───────────────────────────────────────────────────────────
 
 const LEVEL_SKIN_MILESTONES = [
@@ -266,14 +289,16 @@ const LEVEL_SKIN_MILESTONES = [
 ];
 
 /**
- * Return true if the given theme key is unlocked by the player's level.
+ * Return true if the given theme key is unlocked by the player's level or
+ * was previously earned and persisted (survives prestige resets).
  * @param {string} themeKey
  * @returns {boolean}
  */
 function isLevelThemeUnlocked(themeKey) {
   const milestone = LEVEL_SKIN_MILESTONES.find(m => m.themeKey === themeKey);
   if (!milestone) return false;
-  return getPlayerLevel() >= milestone.level;
+  if (getPlayerLevel() >= milestone.level) return true;
+  return _loadUnlockedSkins().indexOf(themeKey) !== -1;
 }
 
 // ── Level-up detection & celebration ─────────────────────────────────────────
@@ -310,6 +335,7 @@ function checkLevelUp(oldXP, newXP) {
   // Check milestone skin unlocks
   for (const m of LEVEL_SKIN_MILESTONES) {
     if (m.level > oldLevel && m.level <= newLevel) {
+      _persistSkinUnlock(m.themeKey);
       _showSkinUnlockToast(m);
     }
   }
