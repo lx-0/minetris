@@ -26,7 +26,7 @@ Minetris has grown from a tech demo into a feature-rich browser game with **26 p
 |:-------|:------|
 | **Game Modes** | 26 modes across 5 categories (Learn, Core, Adventure, Minigames, Multiplayer) |
 | **Core Loop** | Mining (14 block types + 6 hazards), line-clear with combo system, crafting (13 recipes), pickaxe tiers (4), piece nudging |
-| **Progression** | 50 levels + 10 prestige tiers, 58 achievements, 35 mastery challenges (7 modes x 5 tiers), daily missions (33 templates), season missions |
+| **Progression** | 100 levels + 10 prestige tiers (prestige at L50), 58 achievements, 40 mastery challenges (8 modes x 5 tiers), daily missions (33 templates), season missions |
 | **Social** | Co-op, ranked Battle (Elo), guilds, clan wars, tournaments, community puzzles, community goals |
 | **Expedition** | 4 biomes (Stone, Forest, Nether, Ice) with 15-tier reward tracks, featured season pass (50 tiers) |
 | **Rendering** | Per-face lighting, PBR materials, bloom + color grading, biome skies, particle systems, aura effects |
@@ -100,7 +100,7 @@ The thesis is clear: differentiation is the moat. v7.3 invests in the mining pri
 | Item | Priority | Description |
 |:-----|:---------|:------------|
 | **Season pass consolidation** | P0 | Three coexisting season pass systems (season-pass.js legacy, xp-season-pass.js, featured-season-pass.js) → one unified system. Players shouldn't need to understand three reward tracks. |
-| **Prestige trigger fix** | P1 | MAX_LEVEL=100 in code vs documented prestige at L50. Reconcile — pick one source of truth and enforce it. |
+| **Prestige trigger fix** | P1 | ~~Resolved in MINAA-780~~ — `PRESTIGE_LEVEL=50` decoupled from `MAX_LEVEL=100`; all docs updated. |
 | **Dead code removal** | P1 | loot-tables.js (1 line), 3 test files in bundle (biome-rules-test.js, story-fragments-test.js, underground-test.js). Small wins, cleaner bundle. |
 | **UI module decomposition** | P2 | settings.js (2,404 LOC), leaderboard.js (1,521), mode-select.js (1,488), profile-page.js (1,350) — each should be split into focused modules. Not blocking features but slowing iteration. |
 | **localStorage audit** | P2 | 189+ unique keys. Cloud save schema (MINAA-565) shipped but key consolidation hasn't happened. Reduce key count, namespace consistently. |
@@ -195,10 +195,8 @@ Tracked here for visibility. Items move to milestone feature tables when schedul
 | 3 coexisting season pass systems | High | Player confusion risk; engineering maintenance burden |
 | Results screen ignores mining identity (MINAA-690) | High | Game-over shows "Blocks: N" only — no ore breakdown, pickaxe tier, or crafting summary |
 | Tool tier feedback unmerged (MINAA-671, PR #22) | High | Banners+sounds implemented, CI green, approved — sitting unmerged since Apr 30 |
-| Prestige trigger mismatch (MAX_LEVEL=100 vs doc L50) | Medium | Contradictory behavior depending on which code path runs |
 | Mining modes not distinguished in mode-select (MINAA-672) | Medium | No visual badges differentiating mining-primary from Tetris modes |
 | Mastery progress invisible during gameplay (MINAA-673) | Medium | Post-game only; no in-run HUD showing challenge progress |
-| Mastery count mismatch (code: 40, docs: 35) | Medium | 8 modes × 5 tiers in code vs 7 × 5 in FEATURE-MAP |
 | Cascade celebration flat across depths (MINAA-691) | Medium | Levels 1-4 use identical visual/audio intensity |
 | Monolithic UI modules (4 files >1,300 LOC) | Medium | Slows iteration; increases merge conflict risk |
 | Mining-first onboarding not started | Medium | v7.3 P2 — tutorial teaches mining but pieces fall immediately |

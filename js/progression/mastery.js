@@ -1,5 +1,5 @@
 // Mastery System — tracking engine, data model, and challenge definitions.
-// 7 modes × 5 tiers (Bronze → Silver → Gold → Diamond → Obsidian) = 35 challenges.
+// 8 modes × 5 tiers (Bronze → Silver → Gold → Diamond → Obsidian) = 40 challenges.
 //
 // Requires: (none — pure localStorage + optional notification DOM)
 // Called by: gamestate.js, sprint.js, blitz.js, main.js,

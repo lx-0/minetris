@@ -115,19 +115,19 @@ The second-to-second gameplay that everything else is built on.
 
 ### 2.5 PROGRESSION SYSTEMS
 
-#### Leveling (50 Levels + Prestige)
+#### Leveling (100 Levels + Prestige at L50)
 
 ```
-L0 ──── L2 ──── L4 ──── L6 ──── L8 ──── L10 ──── L12 ──── L16 ──── L20 ──── L50
-│       │       │       │       │       │        │        │        │        │
-Classic Sprint  Puzzle  Daily   Survival Battle  Expedition Co-op  Editor   Prestige
-        Blitz           Weekly
+L0 ──── L2 ──── L4 ──── L6 ──── L8 ──── L10 ──── L12 ──── L16 ──── L20 ──── L50 ──── L100
+│       │       │       │       │       │        │        │        │        │        │
+Classic Sprint  Puzzle  Daily   Survival Battle  Expedition Co-op  Editor   Prestige  Max
+        Blitz           Weekly                                               unlocks
 ```
 
 - **XP sources**: Game completion (50-100), tutorial (+50 one-time), daily missions (+50-100), streak bonus (+10%)
 - **Early curve**: Flat 50-75 XP per level (L1-L6)
-- **Late curve**: 15% exponential growth from 100 XP base (L7-L50)
-- **Milestone skins**: L5 Fossil, L15 Storm, L30 Void, L50 Legendary
+- **Late curve**: 15% exponential growth from 100 XP base (L7-L100)
+- **Milestone skins**: L5 Fossil, L15 Storm, L30 Void, L50 Legendary — continuing every 5 levels through L100 (20 milestone skins total)
 
 #### Prestige (10 tiers after L50)
 
@@ -139,7 +139,7 @@ Classic Sprint  Puzzle  Daily   Survival Battle  Expedition Co-op  Editor   Pres
 | P5   | +25%     | "Legend" title + animated border |
 | P10  | +50%     | Crown leaderboard icon           |
 
-#### Mastery (7 modes × 5 tiers = 35 challenges)
+#### Mastery (8 modes × 5 tiers = 40 challenges)
 
 Tiers: Bronze(1pt) → Silver(2pt) → Gold(3pt) → Diamond(4pt) → Obsidian(5pt)
 
@@ -152,6 +152,7 @@ Tiers: Bronze(1pt) → Silver(2pt) → Gold(3pt) → Diamond(4pt) → Obsidian(5
 | Survival   | 5 min          | 100 blocks  | 15 min      | Diamond Pick       | 30 min + 200 blocks |
 | Battle     | 5 wins         | Iron (1000) | Gold (1200) | Diamond (1400)     | Obsidian (1600+)    |
 | Expedition | 1 per biome    | Tier 5 any  | Tier 10 any | Tier 10 in 2+      | Tier 15 Master      |
+| Depths     | 3 runs         | Floor 5     | Floor 10    | Inf. floor 8       | Inf. floor 15       |
 
 #### Achievements (58 total)
 
@@ -463,14 +464,14 @@ Co-op ──→ Trading (inventory exchange)
 | Block Types              | 20 (14 standard + 6 hazard)                                                                    |
 | Crafting Recipes         | 13                                                                                              |
 | Achievements             | 58                                                                                              |
-| Mastery Challenges       | 35 (7 modes × 5 tiers)                                                                         |
+| Mastery Challenges       | 40 (8 modes × 5 tiers)                                                                         |
 | Daily Mission Templates  | 33                                                                                              |
 | Season Mission Tracks    | 2 (10 missions total)                                                                           |
 | Biomes                   | 4                                                                                               |
 | Biome Reward Tiers       | 60 (4 × 15)                                                                                    |
 | Featured Pass Tiers      | 50                                                                                              |
 | Prestige Tiers           | 10                                                                                              |
-| Player Levels            | 50                                                                                              |
+| Player Levels            | 100 (prestige unlocks at L50)                                                                   |
 | Weekly Modifiers         | 5                                                                                               |
 | Events                   | 4                                                                                               |
 | Cosmetic Categories      | 6 (block skins, themes, trails, titles, borders, season sets)                                   |
