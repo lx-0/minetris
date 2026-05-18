@@ -306,6 +306,10 @@ function resetGame(opts) {
   coopDifficulty = 'normal';
   coopFallMultiplier = 1.5;
   coopScoreMultiplier = 1.8;
+  if (typeof _coopBonusOverlayTimer !== 'undefined' && _coopBonusOverlayTimer) {
+    clearTimeout(_coopBonusOverlayTimer);
+    _coopBonusOverlayTimer = null;
+  }
   coopBonusBannerTimer = 0;
   coopGarbageTimer = 0;
   if (typeof resetCoopHighlights === 'function') resetCoopHighlights();

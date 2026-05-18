@@ -557,6 +557,7 @@ const _SANDSTORM_INTERVAL_MIN_MS = 90000;
 const _SANDSTORM_INTERVAL_MAX_MS = 120000;
 let _sandstormSchedulerAccumMs = 0;
 let _sandstormNextThresholdMs  = _pickSandstormInterval();
+let _clearSkiesBannerTimer = null; // handle for sandstorm-clear-skies-banner hide delay
 
 function _pickSandstormInterval() {
   return _SANDSTORM_INTERVAL_MIN_MS +
@@ -622,7 +623,11 @@ function _onSandstormEnd() {
     var csBanner = document.getElementById('sandstorm-clear-skies-banner');
     if (csBanner) {
       csBanner.style.display = 'block';
-      setTimeout(function () { csBanner.style.display = 'none'; }, 10000);
+      if (_clearSkiesBannerTimer) clearTimeout(_clearSkiesBannerTimer);
+      _clearSkiesBannerTimer = setTimeout(function () {
+        _clearSkiesBannerTimer = null;
+        csBanner.style.display = 'none';
+      }, 10000);
     }
     if (typeof showCraftedBanner === 'function') {
       showCraftedBanner('\u2600 Clear Skies! 2\u00d7 score for 10s');

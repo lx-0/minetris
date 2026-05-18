@@ -787,6 +787,10 @@ function resetEventEngine() {
   }
   clearSkiesActive = false;
   _clearSkiesRemainingMs = 0;
+  if (typeof _clearSkiesBannerTimer !== 'undefined' && _clearSkiesBannerTimer) {
+    clearTimeout(_clearSkiesBannerTimer);
+    _clearSkiesBannerTimer = null;
+  }
   const csBanner = document.getElementById('sandstorm-clear-skies-banner');
   if (csBanner) csBanner.style.display = 'none';
   _sandstormSchedulerAccumMs = 0;

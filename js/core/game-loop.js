@@ -10,6 +10,7 @@ let _cachedLavaBlocks  = [];      // sorted nearest-lava cache, rebuilt at 10fps
 const _BG_INTERVAL     = 1 / 30; // ~33 ms
 const _LAVA_INTERVAL   = 1 / 10; // 100 ms
 let _dangerEl          = null;    // cached once on first frame (DOM doesn't recreate it)
+let _coopBonusOverlayTimer = null; // handle for coop-bonus-overlay hide delay
 
 // ── Cap delta and apply replay speed scaling ──────────────────────────────────
 function _computeDelta(rawDelta) {
@@ -611,7 +612,9 @@ function updatePlayerControls(delta, elapsedTime, time) {
         coopBonusBannerTimer = 0;
         var _bonusEl = document.getElementById('coop-bonus-overlay');
         if (_bonusEl) { _bonusEl.style.opacity = '0'; }
-        setTimeout(function () {
+        if (_coopBonusOverlayTimer) clearTimeout(_coopBonusOverlayTimer);
+        _coopBonusOverlayTimer = setTimeout(function () {
+          _coopBonusOverlayTimer = null;
           var _bEl = document.getElementById('coop-bonus-overlay');
           if (_bEl) _bEl.style.display = 'none';
         }, 1100);
