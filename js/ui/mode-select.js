@@ -658,13 +658,13 @@
           if (isEndless) {
             if (descEl) descEl.textContent = 'No level cap. Mine past milestones at 50/100/200/500/1000 lines. Garbage buries you at 300.';
             if (lbBtn) lbBtn.setAttribute('data-lb-tab', 'marathon_endless');
-            marathonCardEl.setAttribute('aria-label', 'Marathon Endless — no cap, milestones, optional garbage after 300 lines');
+            marathonCardEl.setAttribute('aria-label', 'Marathon Endless — mine past milestones, no level cap, garbage buries you at 300 lines');
             const meBest = typeof loadMarathonEndlessBest === 'function' ? loadMarathonEndlessBest() : null;
             if (pbEl) pbEl.textContent = meBest ? 'Best: ' + meBest.linesCleared + ' lines' : '';
           } else {
             if (descEl) descEl.textContent = 'Dig through 29 levels of rising speed. Mine your way to the legendary kill screen.';
             if (lbBtn) lbBtn.setAttribute('data-lb-tab', 'marathon');
-            marathonCardEl.setAttribute('aria-label', 'Marathon mode — 29 levels, kill screen at level 29');
+            marathonCardEl.setAttribute('aria-label', 'Marathon mode — Mine through 29 levels of escalating speed');
             const mBest = typeof loadMarathonBest === 'function' ? loadMarathonBest() : null;
             if (pbEl) pbEl.textContent = mBest ? 'Best: Level ' + mBest.level + ' (' + mBest.score + ')' : '';
           }

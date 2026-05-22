@@ -18399,6 +18399,13 @@ body.biome-ice #inventory-hud { border-color: #4499dd; }
   letter-spacing: 1px;
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
 }
+.mode-lock-incentive {
+  font-size: 0.85em;
+  color: #c8a84b;
+  font-style: italic;
+  margin-top: 2px;
+  text-shadow: 0 0 6px rgba(200, 168, 75, 0.4);
+}
 /* Locked mode card overrides */
 .mode-card.mode-card-locked {
   opacity: 0.5;
