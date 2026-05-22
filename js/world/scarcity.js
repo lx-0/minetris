@@ -51,6 +51,26 @@ const SCARCITY_MODE_CONFIG = {
       8: { curve: [[0, 0], [300, 0], [420, 2], [600, 3]], peak: 3 },
     },
   },
+  // Endless Survival: mining-primary — longer sessions, depletion starts later than Survival.
+  endless_survival: {
+    enabled: true,
+    curves: {
+      3: { curve: [[0, 4], [240, 4], [420, 2], [600, 1], [780, 0]], peak: 4 },
+      7: { curve: [[0, 1], [300, 2], [480, 4], [660, 3], [900, 1]], peak: 4 },
+      6: { curve: [[0, 1], [360, 2], [720, 5]], peak: 5 },
+      8: { curve: [[0, 0], [480, 0], [600, 1], [840, 3]], peak: 3 },
+    },
+  },
+  // The Depths: dungeon mode — harsh resource pressure; gold depletes fast, lava dominates.
+  depths: {
+    enabled: true,
+    curves: {
+      3: { curve: [[0, 4], [90, 4], [150, 2], [240, 1], [360, 0]], peak: 4 },
+      7: { curve: [[0, 1], [120, 2], [240, 3], [420, 2], [600, 1]], peak: 3 },
+      6: { curve: [[0, 3], [180, 4], [360, 6]], peak: 6 },
+      8: { curve: [[0, 0], [240, 0], [360, 1], [540, 3]], peak: 3 },
+    },
+  },
   // sprint, blitz, zen, practice, training, combo, battle, coop, puzzle: disabled
 };
 
@@ -61,6 +81,8 @@ const SCARCITY_DEPLETION_THRESHOLD = 0.35;
 
 function _scarcityModeId() {
   if (typeof isSurvivalMode !== 'undefined' && isSurvivalMode) return 'survival';
+  if (typeof isEndlessSurvivalMode !== 'undefined' && isEndlessSurvivalMode) return 'endless_survival';
+  if (typeof activeDungeonId !== 'undefined' && activeDungeonId !== null) return 'depths';
   if (typeof isMarathonEndlessMode !== 'undefined' && isMarathonEndlessMode) return 'marathon_endless';
   if (typeof isMarathonMode !== 'undefined' && isMarathonMode) return 'marathon';
   if (typeof isSprintMode !== 'undefined' && isSprintMode) return 'sprint';
