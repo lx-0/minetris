@@ -95,9 +95,8 @@ function triggerBlockPhysics(gx, gy, gz, cascadeDepth) {
     });
   }
 
-  // Low rumble on cascade ≥ 1 (first fall uses a dedicated sound in input.js).
-  if (depth > 0 && audioReady && typeof rumbleSynth !== 'undefined' && rumbleSynth) {
-    try { rumbleSynth.triggerAttackRelease('D2', '16n', Tone.now(), 0.20); } catch (_) {}
+  if (typeof playCascadeRumble === 'function') {
+    playCascadeRumble(depth);
   }
 
   // After 0.15 s, unregister blocks and start the fall animation.
@@ -298,14 +297,20 @@ function _bpHideStreakBanner() {
 }
 
 // Called from lineclear.js when isPhysicsCascade is true.
-function showChainReactionBanner(bonusPoints) {
+const CHAIN_BANNER_TEXTS  = ['CHAIN REACTION!', 'CHAIN x2!', 'CHAIN x3!', 'MEGA CHAIN!'];
+const CHAIN_BANNER_COLORS = ['#ff9800', '#ff6d00', '#ff3d00', '#dd2c00'];
+
+function showChainReactionBanner(bonusPoints, depth) {
   const el = _bpGetChainEl();
   if (!el) return;
-  el.textContent = 'CHAIN REACTION!' + (bonusPoints > 0 ? '  +' + bonusPoints : '');
+  var idx = Math.min(Math.max(depth || 0, 0), 3);
+  el.textContent = CHAIN_BANNER_TEXTS[idx] + (bonusPoints > 0 ? '  +' + bonusPoints : '');
+  el.style.color = CHAIN_BANNER_COLORS[idx];
   el.style.display = 'none';
   void el.offsetHeight;
   el.style.display = 'block';
-  setTimeout(function() { if (el) el.style.display = 'none'; }, 2000);
+  var timeout = idx >= 2 ? 2500 : 2000;
+  setTimeout(function() { if (el) el.style.display = 'none'; }, timeout);
 }
 
 // ── Public: full reset ────────────────────────────────────────────────────────

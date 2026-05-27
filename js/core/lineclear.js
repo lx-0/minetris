@@ -550,7 +550,7 @@ function checkLineClear(newBlocks) {
     const _chainBonus   = (typeof CHAIN_REACTION_BONUS !== 'undefined' ? CHAIN_REACTION_BONUS : 200) * completeLevels.length;
     addScore(_cascadeBonus + _chainBonus);
     if (typeof showChainReactionBanner === 'function') {
-      showChainReactionBanner(_cascadeBonus + _chainBonus);
+      showChainReactionBanner(_cascadeBonus + _chainBonus, _cDepth);
     }
   }
 
@@ -639,15 +639,27 @@ function checkLineClear(newBlocks) {
       const labels = ["", "LINE CLEAR!", "DOUBLE!", "TRIPLE!", "TETRIS!"];
       baseLabel = labels[Math.min(completeLevels.length, 4)];
     }
-    // Classic mining cascade: prefix with "CASCADE" label.
+    // Classic mining cascade: depth-indexed prefix, color, and font bump.
+    var _cascadeColor = '';
     if (typeof isPhysicsCascade !== 'undefined' && isPhysicsCascade) {
-      baseLabel = 'CASCADE  ' + baseLabel;
+      var _cdIdx = Math.min(Math.max((typeof cascadeLevel !== 'undefined' ? cascadeLevel : 0), 0), 3);
+      var _cascadePrefixes = ['CASCADE ', 'CASCADE x2 ', 'CASCADE x3 ', 'CASCADE x4! '];
+      var _cascadeColors   = ['#ff9800', '#ff6d00', '#ff3d00', '#dd2c00'];
+      var _cascadeFontBump = [0, 2, 4, 6];
+      baseLabel = _cascadePrefixes[_cdIdx] + baseLabel;
+      _cascadeColor = _cascadeColors[_cdIdx];
+      lineClearBannerEl.style.fontSize = '';
+      if (_cascadeFontBump[_cdIdx] > 0) {
+        var _basePx = parseFloat(getComputedStyle(lineClearBannerEl).fontSize) || 24;
+        lineClearBannerEl.style.fontSize = (_basePx + _cascadeFontBump[_cdIdx]) + 'px';
+      }
+    } else {
+      lineClearBannerEl.style.fontSize = '';
     }
     const _b2bPrefix = _isB2B ? 'B2B ' : '';
     const _goldenSuffix = (typeof goldenHourActive !== "undefined" && goldenHourActive) ? "  3\xd7" : '';
     const _minedSuffix = _lcIsMined ? '  MINED! 1.5\xd7' : '';
     lineClearBannerEl.textContent = _b2bPrefix + baseLabel + _goldenSuffix + _minedSuffix;
-    const _cascadeColor = (typeof isPhysicsCascade !== 'undefined' && isPhysicsCascade) ? '#ff9800' : '';
     lineClearBannerEl.style.color = _lcIsMined ? '#ffb300'
       : _lcIsTSpin ? '#cc44ff' : (_isB2B ? '#ffaa00' : _cascadeColor);
     lineClearBannerEl.style.display = "block";
