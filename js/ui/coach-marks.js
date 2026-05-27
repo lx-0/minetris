@@ -59,6 +59,14 @@ function coachMarkModeUnlock(newLevel) {
   _cmShow('level2Unlock', 'NEW MODE UNLOCKED! Sprint \u2014 clear 40 lines as fast as you can.');
 }
 
+/**
+ * Fire the "expedition economy" coach mark \u2014 scarcity runs faster in Expedition.
+ * Call from scarcity.js when isExpeditionMode and elapsed >= 10s.
+ */
+function coachMarkExpeditionScarcity() {
+  _cmShow('expeditionScarcity', 'Expedition economy: ores deplete faster and rare materials appear earlier. Adapt your strategy!');
+}
+
 // ── Internal helpers ────────────────────────────────────────────────────────
 
 /** Check if we're within the first N games. */
@@ -90,7 +98,7 @@ function _cmShow(key, text) {
   if (typeof isTutorialActive === 'function' && isTutorialActive()) return;
   // Only during first N games (game-over coach mark checks after stats submit,
   // so use <= to include the game that just ended)
-  if (key !== 'firstGameOver' && !_cmWithinGameLimit()) return;
+  if (key !== 'firstGameOver' && key !== 'expeditionScarcity' && !_cmWithinGameLimit()) return;
   if (key === 'firstGameOver') {
     // For game-over, check gamesPlayed <= limit (just incremented by submitLifetimeStats)
     if (typeof loadLifetimeStats === 'function') {
