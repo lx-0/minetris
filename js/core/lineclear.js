@@ -552,6 +552,27 @@ function checkLineClear(newBlocks) {
     if (typeof showChainReactionBanner === 'function') {
       showChainReactionBanner(_cascadeBonus + _chainBonus, _cDepth);
     }
+
+    // Cascade flash overlay — orange palette, intensity scales with depth.
+    const _reducedMotionCasc = (typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled);
+    if (!_reducedMotionCasc && _cDepth >= 1) {
+      var _cascadeFlashColors = [null, '#ff9800', '#ff6d00', '#ff3d00'];
+      var _cascadeFlashAlphas = [0, 0.12, 0.20, 0.30];
+      var _cFlashEl = document.getElementById('lc-flash-overlay');
+      if (_cFlashEl) {
+        _cFlashEl.style.backgroundColor = _cascadeFlashColors[Math.min(_cDepth, 3)];
+        _cFlashEl.style.transition = 'none';
+        _cFlashEl.style.opacity = _cascadeFlashAlphas[Math.min(_cDepth, 3)];
+        void _cFlashEl.offsetHeight;
+        _cFlashEl.style.transition = 'opacity 0.5s ease-out';
+        _cFlashEl.style.opacity = '0';
+      }
+    }
+
+    // Chromatic aberration — level 4 cascade only (depth >= 3).
+    if (!_reducedMotionCasc && _cDepth >= 3 && typeof triggerChromaticAberration === 'function') {
+      triggerChromaticAberration(0.010, 0.6);
+    }
   }
 
   // Perfect Clear bonus: awarded on top of regular line-clear score.

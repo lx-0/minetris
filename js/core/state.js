@@ -164,6 +164,12 @@ let comboShakeActive = false;
 let comboShakeStart  = 0;
 let comboShakeStrength = 0;
 
+// ── Cascade screen shake ──────────────────────────────────────────────────────
+// Triggered by physics cascade landings; strength scales with cascade depth.
+let cascadeShakeActive = false;
+let cascadeShakeStart  = 0;
+let cascadeShakeStrength = 0;
+
 // ── Piece nudge state ─────────────────────────────────────────────────────────
 let nudgeCooldown = 0;  // seconds remaining before next nudge is allowed
 

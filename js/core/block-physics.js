@@ -225,10 +225,12 @@ function _bpHandleLanding(grp) {
   // Impact effects (skipped on reduced motion).
   const rm = typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled;
   if (!rm) {
-    // Camera micro-shake.
-    if (typeof screenShakeActive !== 'undefined') {
-      screenShakeActive = true;
-      screenShakeStart  = clock.getElapsedTime();
+    // Cascade depth-indexed screen shake.
+    if (typeof cascadeShakeActive !== 'undefined') {
+      var _shakeIntensities = [0.08, 0.14, 0.22, 0.30];
+      cascadeShakeActive = true;
+      cascadeShakeStart  = clock.getElapsedTime();
+      cascadeShakeStrength = _shakeIntensities[Math.min(grp.depth, 3)];
     }
     // Low thud — reuse stoneHit Howler sample at low pitch.
     if (audioReady && typeof sfx !== 'undefined' && sfx && sfx.stoneHit) {
