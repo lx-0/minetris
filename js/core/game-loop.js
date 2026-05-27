@@ -537,6 +537,19 @@ function updatePlayerControls(delta, elapsedTime, time) {
       }
     }
 
+    // Cascade screen shake — duration scales with cascade depth
+    if (cascadeShakeActive) {
+      const _cascShakeDur = 0.15 + cascadeShakeStrength * 1.0;
+      const _cascAge = elapsedTime - cascadeShakeStart;
+      if (_cascAge < _cascShakeDur) {
+        const _cascInt = (1 - _cascAge / _cascShakeDur) * cascadeShakeStrength;
+        camera.position.x += (Math.random() - 0.5) * _cascInt;
+        camera.position.y += (Math.random() - 0.5) * _cascInt;
+      } else {
+        cascadeShakeActive = false;
+      }
+    }
+
     if (!isEditorMode) checkPlayerCollision(playerVelocity.y * delta);
 
     // Safety: below bedrock floor → respawn at surface to prevent softlock.

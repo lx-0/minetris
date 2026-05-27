@@ -539,6 +539,7 @@ function resetGame(opts) {
     playerVelocity.set(0, 0, 0);
     playerPushVelocity.set(0, 0, 0);
     screenShakeActive = false;
+    cascadeShakeActive = false;
     playerOnGround = false;
     canJump = false;
     moveForward = moveBackward = moveLeft = moveRight = false;
