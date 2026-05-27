@@ -754,9 +754,20 @@ function playMiningStreakSound(streak) {
 /**
  * Low cascade rumble when block physics column fall begins.
  */
-function playCascadeRumble() {
+const CASCADE_RUMBLE_NOTES = ['D2', 'C2', 'Bb1', 'A1'];
+const CASCADE_RUMBLE_VELS  = [0.30, 0.42, 0.55, 0.70];
+const CASCADE_RUMBLE_DURS  = ['8n', '8n', 'qn', 'qn'];
+
+function playCascadeRumble(depth) {
   if (!audioReady || !rumbleSynth) return;
-  try { rumbleSynth.triggerAttackRelease('D2', '8n', Tone.now(), 0.30); } catch (_e) {}
+  var idx = Math.min(Math.max(depth || 0, 0), 3);
+  var now = Tone.now();
+  try { rumbleSynth.triggerAttackRelease(CASCADE_RUMBLE_NOTES[idx], CASCADE_RUMBLE_DURS[idx], now, CASCADE_RUMBLE_VELS[idx]); } catch (_e) {}
+  if (idx >= 2) {
+    setTimeout(function() {
+      try { rumbleSynth.triggerAttackRelease(CASCADE_RUMBLE_NOTES[Math.min(idx + 1, 3)], CASCADE_RUMBLE_DURS[idx], Tone.now(), CASCADE_RUMBLE_VELS[idx] * 0.5); } catch (_e2) {}
+    }, 80);
+  }
 }
 
 /**
