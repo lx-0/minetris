@@ -119,6 +119,7 @@ const EXPECTED_IDS = [
   'next-pieces-panel',
   'scarcity-hud',
   'danger-overlay',
+  'mined-clear-banner',
 ];
 
 for (const id of EXPECTED_IDS) {
