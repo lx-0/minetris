@@ -185,6 +185,31 @@ const _SCARCITY_HUD_TYPES = [
 let _scarcityHudEl = null;
 let _scarcityHudVisible = false;
 let _expeditionCoachFired = false;
+const _scarcityHasAppeared = {};
+
+function getScarcityPhase(typeIndex) {
+  const modeId = _scarcityModeId();
+  const cfg = SCARCITY_MODE_CONFIG[modeId];
+  if (!cfg || !cfg.enabled) return null;
+
+  const t = (typeof gameElapsedSeconds !== 'undefined') ? gameElapsedSeconds : 0;
+  const curveSet = (cfg.curves) ? Object.assign({}, SCARCITY_CURVES, cfg.curves) : SCARCITY_CURVES;
+  const entry = curveSet[typeIndex];
+  if (!entry) return null;
+
+  const w = _interpolateCurve(entry.curve, t);
+  const ratio = w / entry.peak;
+
+  if (w <= 0) {
+    if (_scarcityHasAppeared[typeIndex]) {
+      return { phase: 'depleted', label: 'Depleted', hint: 'Exhausted for this game', color: '#888888' };
+    }
+    return { phase: 'incoming', label: 'Incoming', hint: 'Arrives later this game', color: '#44ffff' };
+  }
+  if (ratio >= 0.7) return { phase: 'plentiful', label: 'Plentiful', hint: 'Abundant now', color: '#44ff44' };
+  if (ratio >= 0.35) return { phase: 'thinning', label: 'Thinning', hint: 'Fading — mine it while you can', color: '#ffaa00' };
+  return { phase: 'scarce', label: 'Scarce', hint: 'Almost gone', color: '#ff4444' };
+}
 
 /**
  * Refresh the scarcity HUD. Call after each piece spawn (from pieces.js) or on
@@ -215,10 +240,11 @@ function updateScarcityHUD() {
     .map(({ idx, label, color }) => {
       const entry = curveSet[idx];
       const w = _interpolateCurve(entry.curve, t);
+      if (w > 0) _scarcityHasAppeared[idx] = true;
       const fillPct = Math.round((w / entry.peak) * 100);
       const isDepleting = depletingSet.has(idx);
       const cls = 'sc-swatch' + (isDepleting ? ' sc-depleting' : '');
-      return `<div class="${cls}" title="${label}">` +
+      return `<div class="${cls}" data-type-idx="${idx}" title="${label}">` +
         `<div class="sc-dot" style="background:${color}"></div>` +
         `<div class="sc-bar-wrap"><div class="sc-bar-fill" style="width:${fillPct}%"></div></div>` +
         `</div>`;
@@ -245,5 +271,6 @@ function updateScarcityHUD() {
 function resetScarcityHUD() {
   _scarcityHudVisible = false;
   _expeditionCoachFired = false;
+  for (const k in _scarcityHasAppeared) delete _scarcityHasAppeared[k];
   if (_scarcityHudEl) _scarcityHudEl.style.display = 'none';
 }
