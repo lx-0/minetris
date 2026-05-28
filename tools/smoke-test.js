@@ -120,6 +120,7 @@ const EXPECTED_IDS = [
   'scarcity-hud',
   'scarcity-vignette',
   'danger-overlay',
+  'mined-clear-banner',
 ];
 
 for (const id of EXPECTED_IDS) {

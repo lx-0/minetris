@@ -25,6 +25,25 @@ const _LC_LIGHT_LIFE   = 0.20;  // point light fade duration (s)
 const _LC_K = 180;  // spring stiffness
 const _LC_D = 16;   // spring damping
 
+// ─── Mined-clear banner (MINAA-849) ──────────────────────────────────────────
+let _lcMinedBannerEl = null;
+function _lcGetMinedBannerEl() {
+  if (!_lcMinedBannerEl) _lcMinedBannerEl = document.getElementById('mined-clear-banner');
+  return _lcMinedBannerEl;
+}
+function showMinedClearBanner(bonusPoints) {
+  const el = _lcGetMinedBannerEl();
+  if (!el) return;
+  el.textContent = '⛏ MINED CLEAR!  +' + bonusPoints;
+  el.style.display = 'none';
+  var rm = typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled;
+  if (!rm) {
+    void el.offsetHeight;
+  }
+  el.style.display = 'block';
+  setTimeout(function() { if (el) el.style.display = 'none'; }, 2000);
+}
+
 // ─── Camera jolt / shake ──────────────────────────────────────────────────────
 let _lcJoltAge  = -1;       // -1 = inactive
 const _LC_JOLT     = 0.12;  // jolt duration (s)
@@ -540,7 +559,9 @@ function checkLineClear(newBlocks) {
   addScore(_lcComputedScore);
   lineClearScore += _lcComputedScore;
   if (_lcIsMined) {
-    minedClearBonusScore += Math.round(baseScore * _b2bMult * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult * 0.5);
+    var _mcBonus = Math.round(baseScore * _b2bMult * comboMult * blitzMult * goldMult * goldenHourMult * _depthMult * _oreBoostMult * 0.5);
+    minedClearBonusScore += _mcBonus;
+    showMinedClearBanner(_mcBonus);
   }
 
   // Classic mining cascade: award chain reaction + cascade bonuses.
@@ -658,8 +679,7 @@ function checkLineClear(newBlocks) {
     }
     const _b2bPrefix = _isB2B ? 'B2B ' : '';
     const _goldenSuffix = (typeof goldenHourActive !== "undefined" && goldenHourActive) ? "  3\xd7" : '';
-    const _minedSuffix = _lcIsMined ? '  MINED! 1.5\xd7' : '';
-    lineClearBannerEl.textContent = _b2bPrefix + baseLabel + _goldenSuffix + _minedSuffix;
+    lineClearBannerEl.textContent = _b2bPrefix + baseLabel + _goldenSuffix;
     lineClearBannerEl.style.color = _lcIsMined ? '#ffb300'
       : _lcIsTSpin ? '#cc44ff' : (_isB2B ? '#ffaa00' : _cascadeColor);
     lineClearBannerEl.style.display = "block";

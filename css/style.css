@@ -25297,6 +25297,25 @@ body.ui-theme-retro .notif-toast {
   pointer-events: none;
   white-space: nowrap;
 }
+@keyframes mined-clear-bounce {
+  0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  55%  { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
+  80%  { transform: translate(-50%, -50%) scale(0.95); }
+  100% { transform: translate(-50%, -50%) scale(1.0);  opacity: 1; }
+}
+#mined-clear-banner {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "Press Start 2P", cursive;
+  font-size: 20px;
+  color: #ffb300;
+  text-shadow: 2px 2px 4px #000, 0 0 14px #ff8c00;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: mined-clear-bounce 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
 #classic-mine-hint {
   position: absolute;
   top: 58%;

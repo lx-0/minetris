@@ -285,9 +285,10 @@
   #material-tooltip { bottom: 80px; font-size: 6px; padding: 4px 10px; }
 
   /* Banners */
-  #line-clear-banner { font-size: 16px; }
-  #combo-banner      { font-size: 14px; }
-  #speed-up-banner   { font-size: 14px; }
+  #line-clear-banner   { font-size: 16px; }
+  #combo-banner        { font-size: 14px; }
+  #speed-up-banner     { font-size: 14px; }
+  #mined-clear-banner  { font-size: 14px; }
   #danger-text       { font-size: 10px; }
 }
 
