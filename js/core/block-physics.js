@@ -237,9 +237,18 @@ function _bpHandleLanding(grp) {
         sfx.stoneHit.rate(0.55 + Math.min(landed.length * 0.04, 0.20), id);
       } catch (_) {}
     }
-    // Dust burst on each landed block.
+    // Dust burst on each landed block — count scaled by cascade depth.
     if (typeof spawnDustParticles === 'function') {
-      landed.forEach(function(b) { spawnDustParticles(b); });
+      const _particleMults = [1.0, 1.5, 2.0, 3.0];
+      const _pMult = _particleMults[Math.min(grp.depth, 3)];
+      const _callCount = Math.round(_pMult);
+      const _goldDepth = grp.depth >= 2;
+      let _totalCalls = 0;
+      landed.forEach(function(b) {
+        for (let _p = 0; _p < _callCount && _totalCalls < 200; _p++, _totalCalls++) {
+          spawnDustParticles(b, (_goldDepth && _p > 0) ? { colorOverride: 0xff9800 } : undefined);
+        }
+      });
     }
   }
 
