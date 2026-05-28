@@ -456,15 +456,93 @@ body {
   border-radius: 2px;
   transition: width 1.5s linear;
 }
-.sc-swatch.sc-depleting .sc-dot {
-  animation: sc-deplete-pulse 0.9s ease-in-out infinite;
-}
-.sc-swatch.sc-depleting .sc-bar-fill {
+/* Three-tier scarcity state — warning (≤35%), critical (≤15%), exhausted (0%) */
+.sc-swatch.sc-warning .sc-bar-fill {
   background: rgba(255, 200, 0, 0.8);
 }
-@keyframes sc-deplete-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,220,0,0); }
-  50%       { box-shadow: 0 0 0 3px rgba(255,220,0,0.65); }
+.sc-swatch.sc-warning .sc-dot {
+  border-color: rgba(255, 200, 0, 0.6);
+}
+.sc-swatch.sc-warning .sc-bar-wrap {
+  box-shadow: 0 0 4px rgba(255, 200, 0, 0.4);
+}
+.sc-swatch.sc-critical .sc-bar-fill {
+  background: rgba(255, 50, 30, 0.85);
+}
+.sc-swatch.sc-critical .sc-dot {
+  border-color: rgba(255, 50, 30, 0.7);
+}
+.sc-swatch.sc-exhausted .sc-bar-fill {
+  background: rgba(100, 100, 100, 0.3);
+  width: 0% !important;
+}
+.sc-swatch.sc-exhausted .sc-dot {
+  border-color: rgba(100, 100, 100, 0.4);
+  opacity: 0.5;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sc-swatch.sc-warning .sc-dot {
+    animation: sc-warn-pulse 1.0s ease-in-out infinite;
+  }
+  .sc-swatch.sc-critical .sc-dot {
+    animation: sc-critical-pulse 0.6s ease-in-out infinite;
+  }
+  .sc-swatch.sc-critical .sc-bar-wrap {
+    animation: sc-bar-critical-glow 0.6s ease-in-out infinite;
+  }
+  .sc-status-critical {
+    animation: sc-status-blink 0.8s step-end infinite;
+  }
+}
+@keyframes sc-warn-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 220, 0, 0); }
+  50%      { box-shadow: 0 0 0 3px rgba(255, 220, 0, 0.65); }
+}
+@keyframes sc-critical-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 50, 30, 0); }
+  50%      { box-shadow: 0 0 0 4px rgba(255, 50, 30, 0.7); }
+}
+@keyframes sc-bar-critical-glow {
+  0%, 100% { box-shadow: 0 0 4px rgba(255, 50, 30, 0.3); }
+  50%      { box-shadow: 0 0 8px rgba(255, 50, 30, 0.6); }
+}
+@keyframes sc-status-blink {
+  0%, 50%   { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+/* Material name abbreviation (Au, Cr, Lv, Di) */
+.sc-name {
+  font-size: 5px;
+  color: rgba(255, 255, 255, 0.6);
+  min-width: 12px;
+  text-align: right;
+  flex-shrink: 0;
+}
+/* Status text — LOW / ! / OUT */
+.sc-status {
+  font-size: 5px;
+  min-width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.sc-status-warning  { color: rgba(255, 200, 0, 0.8); }
+.sc-status-critical { color: rgba(255, 50, 30, 0.9); }
+.sc-status-exhausted { color: rgba(100, 100, 100, 0.5); }
+/* Scarcity vignette — dark-red edge flash on material exhaustion */
+#scarcity-vignette {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 800;
+}
+@media (prefers-reduced-motion: no-preference) {
+  #scarcity-vignette.active {
+    animation: sc-vignette-flash 0.8s ease-out forwards;
+  }
+}
+@keyframes sc-vignette-flash {
+  0%   { box-shadow: inset 0 0 120px 40px rgba(80, 0, 0, 0.5); }
+  100% { box-shadow: inset 0 0 120px 40px rgba(80, 0, 0, 0); }
 }
 .sc-swatch { pointer-events: auto; padding: 4px; cursor: help; }
 .scarcity-tooltip {

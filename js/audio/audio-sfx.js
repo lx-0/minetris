@@ -805,6 +805,45 @@ function playInventoryFullSound() {
   try { invFullSynth.triggerAttackRelease(80, '16n', Tone.now()); } catch (_e) {}
 }
 
+// ── Scarcity depletion audio cues (MINAA-853) ─────────────────────────────────
+
+const SCARCITY_CHIME_NOTES = {
+  3: ['E5', 'C5'],   // Gold: warm, bell-like descending chime
+  7: ['G5', 'D5'],   // Crystal: bright, glassy descending chime
+  6: ['A4', 'E4'],   // Lava: lower, darker descending chime
+  8: ['B5', 'F#5'],  // Diamond: high, precious descending chime
+};
+
+/** Crystalline descending two-note chime on first 35% warning threshold crossing per material. */
+function playScarcityWarningChime(materialIdx) {
+  if (!audioReady || !scarcityChimeSynth) return;
+  const notes = SCARCITY_CHIME_NOTES[materialIdx];
+  if (!notes) return;
+  const now = Tone.now();
+  try {
+    scarcityChimeSynth.triggerAttackRelease(notes[0], '8n', now,        0.6);
+    scarcityChimeSynth.triggerAttackRelease(notes[1], '8n', now + 0.18, 0.45);
+  } catch (_e) {}
+}
+
+/** Low resonant rumble tone on first 15% critical threshold crossing. */
+function playScarcityCriticalTone() {
+  if (!audioReady || !rumbleSynth) return;
+  try {
+    rumbleSynth.triggerAttackRelease('D4', '16n', Tone.now(), 0.5);
+  } catch (_e) {}
+}
+
+/** Hollow descending tone when a material first reaches 0% (exhaustion). */
+function playScarcityExhaustionTone(materialIdx) {
+  if (!audioReady || !scarcityChimeSynth) return;
+  const now = Tone.now();
+  try {
+    scarcityChimeSynth.triggerAttackRelease('A3', '4n', now,        0.4);
+    scarcityChimeSynth.triggerAttackRelease('E3', '4n', now + 0.25, 0.3);
+  } catch (_e) {}
+}
+
 function playAchievementUnlockSfx() {
   if (!audioReady) return;
   const now = Tone.now();
