@@ -40,6 +40,10 @@ const GAME_TOOLTIPS = {
     text: 'Not enough inventory space for crafting output.',
     key: 'craftingInventoryFull',
   },
+  scarcityIntro: {
+    text: "Materials appear in waves — mine what's plentiful now before it depletes. Watch the VEINS panel.",
+    key: 'scarcityIntro',
+  },
 };
 
 let _gtActiveTooltip = null; // { key, timerId }

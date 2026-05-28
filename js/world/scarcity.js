@@ -184,6 +184,7 @@ const _SCARCITY_HUD_TYPES = [
 
 let _scarcityHudEl = null;
 let _scarcityHudVisible = false;
+let _expeditionCoachFired = false;
 
 /**
  * Refresh the scarcity HUD. Call after each piece spawn (from pieces.js) or on
@@ -230,11 +231,19 @@ function updateScarcityHUD() {
   if (!_scarcityHudVisible) {
     _scarcityHudEl.style.display = '';
     _scarcityHudVisible = true;
+    if (typeof gameTooltip === 'function') gameTooltip('scarcityIntro');
+  }
+
+  // Layer 3: expedition economy coach mark at 10s
+  if (!_expeditionCoachFired && modeId === 'expedition' && t >= 10) {
+    _expeditionCoachFired = true;
+    if (typeof coachMarkExpeditionScarcity === 'function') coachMarkExpeditionScarcity();
   }
 }
 
 /** Reset scarcity HUD state (call on game reset). */
 function resetScarcityHUD() {
   _scarcityHudVisible = false;
+  _expeditionCoachFired = false;
   if (_scarcityHudEl) _scarcityHudEl.style.display = 'none';
 }
