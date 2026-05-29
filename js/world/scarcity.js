@@ -76,6 +76,11 @@ const SCARCITY_MODE_CONFIG = {
 
 // Weight fraction below which a type is considered "depleting" (for HUD indicator).
 const SCARCITY_DEPLETION_THRESHOLD = 0.35;
+// Weight fraction below which a type enters the critical (red) tier.
+const SCARCITY_CRITICAL_THRESHOLD = 0.15;
+// Duration constants for exhaustion feedback.
+const SCARCITY_VIGNETTE_MS = 800;
+const SCARCITY_EXHAUSTION_BANNER_MS = 1500;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────────
 
@@ -176,16 +181,22 @@ function getScarcityDepletingTypes() {
 
 // Block type metadata for the HUD (tracked types only).
 const _SCARCITY_HUD_TYPES = [
-  { idx: 3, label: 'Gold',    color: '#ffff00' },
-  { idx: 7, label: 'Crystal', color: '#800080' },
-  { idx: 6, label: 'Lava',    color: '#ff0000' },
-  { idx: 8, label: 'Diamond', color: '#1a237e' },
+  { idx: 3, label: 'Gold',    color: '#ffff00', abbr: 'Au' },
+  { idx: 7, label: 'Crystal', color: '#800080', abbr: 'Cr' },
+  { idx: 6, label: 'Lava',    color: '#ff0000', abbr: 'Lv' },
+  { idx: 8, label: 'Diamond', color: '#1a237e', abbr: 'Di' },
 ];
 
 let _scarcityHudEl = null;
 let _scarcityHudVisible = false;
 let _expeditionCoachFired = false;
 const _scarcityHasAppeared = {};
+// One-shot event tracking — reset on game reset.
+const _scarcityChimeFired    = new Set();  // warning chime fired per material idx
+const _scarcityCriticalFired = new Set();  // critical tone fired per material idx
+const _scarcityExhaustionFired = new Set(); // exhaustion events fired per material idx
+let _scarcityVignetteEl = null;
+let _exhaustionBannerEl = null;
 
 function getScarcityPhase(typeIndex) {
   const modeId = _scarcityModeId();
@@ -237,16 +248,59 @@ function updateScarcityHUD() {
   // Build swatch HTML only for types that have a defined curve.
   const swatchParts = _SCARCITY_HUD_TYPES
     .filter(({ idx }) => !!curveSet[idx])
-    .map(({ idx, label, color }) => {
+    .map(({ idx, label, color, abbr }) => {
       const entry = curveSet[idx];
       const w = _interpolateCurve(entry.curve, t);
       if (w > 0) _scarcityHasAppeared[idx] = true;
       const fillPct = Math.round((w / entry.peak) * 100);
-      const isDepleting = depletingSet.has(idx);
-      const cls = 'sc-swatch' + (isDepleting ? ' sc-depleting' : '');
+      const ratio = w / entry.peak;
+
+      // Three-tier classification
+      let tier = 'healthy';
+      if (w <= 0) {
+        tier = 'exhausted';
+      } else if (ratio <= SCARCITY_CRITICAL_THRESHOLD) {
+        tier = 'critical';
+      } else if (depletingSet.has(idx)) {
+        tier = 'warning';
+      }
+
+      // Tier CSS class and inline status text
+      let tierClass = '';
+      let statusHtml = '';
+      if (tier === 'warning') {
+        tierClass = ' sc-warning';
+        statusHtml = '<span class="sc-status sc-status-warning">LOW</span>';
+      } else if (tier === 'critical') {
+        tierClass = ' sc-critical';
+        statusHtml = '<span class="sc-status sc-status-critical">!</span>';
+      } else if (tier === 'exhausted') {
+        tierClass = ' sc-exhausted';
+        statusHtml = '<span class="sc-status sc-status-exhausted">OUT</span>';
+      }
+
+      // One-shot audio/visual events on first tier entry
+      if (tier === 'warning' && !_scarcityChimeFired.has(idx)) {
+        _scarcityChimeFired.add(idx);
+        if (typeof playScarcityWarningChime === 'function') playScarcityWarningChime(idx);
+      }
+      if (tier === 'critical' && !_scarcityCriticalFired.has(idx)) {
+        _scarcityCriticalFired.add(idx);
+        if (typeof playScarcityCriticalTone === 'function') playScarcityCriticalTone();
+      }
+      if (tier === 'exhausted' && _scarcityHasAppeared[idx] && !_scarcityExhaustionFired.has(idx)) {
+        _scarcityExhaustionFired.add(idx);
+        if (typeof playScarcityExhaustionTone === 'function') playScarcityExhaustionTone(idx);
+        _triggerScarcityVignette();
+        _showScarcityExhaustionBanner(label);
+      }
+
+      const cls = 'sc-swatch' + tierClass;
       return `<div class="${cls}" data-type-idx="${idx}" title="${label}">` +
         `<div class="sc-dot" style="background:${color}"></div>` +
+        `<span class="sc-name">${abbr}</span>` +
         `<div class="sc-bar-wrap"><div class="sc-bar-fill" style="width:${fillPct}%"></div></div>` +
+        statusHtml +
         `</div>`;
     });
 
@@ -267,10 +321,45 @@ function updateScarcityHUD() {
   }
 }
 
+// ── Exhaustion feedback helpers ────────────────────────────────────────────────
+
+function _triggerScarcityVignette() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!_scarcityVignetteEl) _scarcityVignetteEl = document.getElementById('scarcity-vignette');
+  if (!_scarcityVignetteEl) return;
+  _scarcityVignetteEl.style.display = 'block';
+  _scarcityVignetteEl.classList.add('active');
+  setTimeout(function() {
+    if (!_scarcityVignetteEl) return;
+    _scarcityVignetteEl.classList.remove('active');
+    _scarcityVignetteEl.style.display = 'none';
+  }, SCARCITY_VIGNETTE_MS);
+}
+
+function _showScarcityExhaustionBanner(materialLabel) {
+  if (!_exhaustionBannerEl) _exhaustionBannerEl = document.getElementById('mining-streak-banner');
+  if (!_exhaustionBannerEl) return;
+  const _show = function() {
+    _exhaustionBannerEl.textContent = materialLabel + ' veins exhausted';
+    _exhaustionBannerEl.style.display = 'block';
+    setTimeout(function() {
+      if (_exhaustionBannerEl) _exhaustionBannerEl.style.display = 'none';
+    }, SCARCITY_EXHAUSTION_BANNER_MS);
+  };
+  if (_exhaustionBannerEl.style.display !== 'none') {
+    setTimeout(_show, 500);
+  } else {
+    _show();
+  }
+}
+
 /** Reset scarcity HUD state (call on game reset). */
 function resetScarcityHUD() {
   _scarcityHudVisible = false;
   _expeditionCoachFired = false;
   for (const k in _scarcityHasAppeared) delete _scarcityHasAppeared[k];
+  _scarcityChimeFired.clear();
+  _scarcityCriticalFired.clear();
+  _scarcityExhaustionFired.clear();
   if (_scarcityHudEl) _scarcityHudEl.style.display = 'none';
 }
