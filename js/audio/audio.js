@@ -47,6 +47,7 @@ let moveSynth           = null;   // subtle click for piece lateral move
 let softDropSynth       = null;   // short tick for soft drop activation
 let lockClunkSynth      = null;   // deep clunk for piece lock
 let invFullSynth        = null;   // dull rejection clunk for inventory-full
+let scarcityChimeSynth  = null;   // crystalline chime for scarcity depletion events
 let masterCompressor = null;
 let masterReverb = null;
 let masterLimiter = null;
@@ -381,6 +382,13 @@ function initAudio() {
       envelope:        { attack: 0.001, decay: 0.08, sustain: 0.0, release: 0.05 },
     }).connect(sfxGain);
     invFullSynth.volume.value = -6;
+
+    // Scarcity chime — PolySynth/AMSynth for per-material depletion notifications
+    scarcityChimeSynth = new Tone.PolySynth(Tone.AMSynth, {
+      harmonicity: 2.5,
+      envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 0.5 },
+    }).connect(sfxGain);
+    scarcityChimeSynth.volume.value = -18;
 
     _initBgMusic();
     _initEnvironmentalAudio();

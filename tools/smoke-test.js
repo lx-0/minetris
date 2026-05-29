@@ -118,6 +118,7 @@ const EXPECTED_IDS = [
   'hud-level',
   'next-pieces-panel',
   'scarcity-hud',
+  'scarcity-vignette',
   'danger-overlay',
 ];
 

@@ -313,12 +313,16 @@ function spawnDustParticles(block, opts) {
       (Math.random() - 0.5) * 1.5
     );
   } else {
-    // Default: landed_block — unchanged behavior
+    // Default: landed_block
     count = 4;
-    dustColor = block.userData.originalColor
-      ? block.userData.originalColor.clone()
-      : block.material.color.clone();
-    dustColor.multiplyScalar(0.7);
+    if (opts.colorOverride !== undefined) {
+      dustColor = new THREE.Color(opts.colorOverride);
+    } else {
+      dustColor = block.userData.originalColor
+        ? block.userData.originalColor.clone()
+        : block.material.color.clone();
+      dustColor.multiplyScalar(0.7);
+    }
     lifetime = 0.35;
     velocityFn = () => new THREE.Vector3(
       (Math.random() - 0.5) * 4,
