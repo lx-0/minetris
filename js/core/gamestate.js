@@ -362,6 +362,8 @@ function triggerGameOver() {
   // Hide screenshot button once game ends
   const _ssBtnGO = document.getElementById('screenshot-btn');
   if (_ssBtnGO) _ssBtnGO.style.display = 'none';
+  var _mcbGO = document.getElementById('mined-clear-banner');
+  if (_mcbGO) _mcbGO.style.display = 'none';
   // Flush any notifications that were buffered during gameplay
   if (typeof notifFlushQueued === 'function') notifFlushQueued();
   // Screen reader: announce game over with final score
