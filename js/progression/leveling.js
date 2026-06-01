@@ -19,9 +19,10 @@
 // CUMULATIVE_XP[0] = 0 (starting XP for level 1).
 
 const MAX_LEVEL = 100;
+const PRESTIGE_LEVEL = 50;
 
 // ── Prestige system ──────────────────────────────────────────────────────────
-// At level 50, players can prestige: reset XP/level to 0 for permanent bonuses.
+// At level 50 (PRESTIGE_LEVEL), players can prestige: reset XP/level to 0 for permanent bonuses.
 
 const PRESTIGE_KEY = 'mineCtris_prestige';
 const PRESTIGE_TOTAL_XP_KEY = 'mineCtris_prestigeTotalXP';
@@ -98,7 +99,7 @@ function performPrestige() {
   if (typeof loadLifetimeStats !== 'function') return 0;
   var stats = loadLifetimeStats();
   var currentLevel = getLevelFromXP(stats.playerXP || 0);
-  if (currentLevel < MAX_LEVEL) return getPrestigeLevel(); // not eligible
+  if (currentLevel < PRESTIGE_LEVEL) return getPrestigeLevel(); // not eligible
 
   // Track total XP across all prestiges
   var totalXP = getPrestigeTotalXP() + (stats.playerXP || 0);
@@ -135,7 +136,7 @@ function performPrestige() {
 
 /** Check if the player can prestige right now. */
 function canPrestige() {
-  return getPlayerLevel() >= MAX_LEVEL;
+  return getPlayerLevel() >= PRESTIGE_LEVEL;
 }
 
 function _showPrestigeToast(prestigeLevel) {
