@@ -27,6 +27,7 @@ const _LC_D = 16;   // spring damping
 
 // ─── Mined-clear banner (MINAA-849) ──────────────────────────────────────────
 let _lcMinedBannerEl = null;
+let _lcMinedBannerTimer = null;
 function _lcGetMinedBannerEl() {
   if (!_lcMinedBannerEl) _lcMinedBannerEl = document.getElementById('mined-clear-banner');
   return _lcMinedBannerEl;
@@ -34,6 +35,7 @@ function _lcGetMinedBannerEl() {
 function showMinedClearBanner(bonusPoints) {
   const el = _lcGetMinedBannerEl();
   if (!el) return;
+  if (_lcMinedBannerTimer) { clearTimeout(_lcMinedBannerTimer); _lcMinedBannerTimer = null; }
   el.textContent = '⛏ MINED CLEAR!  +' + bonusPoints;
   el.style.display = 'none';
   var rm = typeof reducedMotionEnabled !== 'undefined' && reducedMotionEnabled;
@@ -41,7 +43,15 @@ function showMinedClearBanner(bonusPoints) {
     void el.offsetHeight;
   }
   el.style.display = 'block';
-  setTimeout(function() { if (el) el.style.display = 'none'; }, 2000);
+  _lcMinedBannerTimer = setTimeout(function() {
+    _lcMinedBannerTimer = null;
+    if (el) el.style.display = 'none';
+  }, 2000);
+}
+function resetMinedClearBanner() {
+  if (_lcMinedBannerTimer) { clearTimeout(_lcMinedBannerTimer); _lcMinedBannerTimer = null; }
+  const el = _lcGetMinedBannerEl();
+  if (el) el.style.display = 'none';
 }
 
 // ─── Camera jolt / shake ──────────────────────────────────────────────────────
