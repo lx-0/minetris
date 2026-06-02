@@ -197,6 +197,9 @@ const _scarcityCriticalFired = new Set();  // critical tone fired per material i
 const _scarcityExhaustionFired = new Set(); // exhaustion events fired per material idx
 let _scarcityVignetteEl = null;
 let _exhaustionBannerEl = null;
+let _scarcityVignetteTimer    = null;
+let _exhaustionBannerTimer    = null;
+let _exhaustionBannerDelayTimer = null;
 
 function getScarcityPhase(typeIndex) {
   const modeId = _scarcityModeId();
@@ -327,9 +330,11 @@ function _triggerScarcityVignette() {
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   if (!_scarcityVignetteEl) _scarcityVignetteEl = document.getElementById('scarcity-vignette');
   if (!_scarcityVignetteEl) return;
+  if (_scarcityVignetteTimer) { clearTimeout(_scarcityVignetteTimer); _scarcityVignetteTimer = null; }
   _scarcityVignetteEl.style.display = 'block';
   _scarcityVignetteEl.classList.add('active');
-  setTimeout(function() {
+  _scarcityVignetteTimer = setTimeout(function() {
+    _scarcityVignetteTimer = null;
     if (!_scarcityVignetteEl) return;
     _scarcityVignetteEl.classList.remove('active');
     _scarcityVignetteEl.style.display = 'none';
@@ -340,14 +345,20 @@ function _showScarcityExhaustionBanner(materialLabel) {
   if (!_exhaustionBannerEl) _exhaustionBannerEl = document.getElementById('mining-streak-banner');
   if (!_exhaustionBannerEl) return;
   const _show = function() {
+    if (_exhaustionBannerTimer) { clearTimeout(_exhaustionBannerTimer); _exhaustionBannerTimer = null; }
     _exhaustionBannerEl.textContent = materialLabel + ' veins exhausted';
     _exhaustionBannerEl.style.display = 'block';
-    setTimeout(function() {
+    _exhaustionBannerTimer = setTimeout(function() {
+      _exhaustionBannerTimer = null;
       if (_exhaustionBannerEl) _exhaustionBannerEl.style.display = 'none';
     }, SCARCITY_EXHAUSTION_BANNER_MS);
   };
   if (_exhaustionBannerEl.style.display !== 'none') {
-    setTimeout(_show, 500);
+    if (_exhaustionBannerDelayTimer) clearTimeout(_exhaustionBannerDelayTimer);
+    _exhaustionBannerDelayTimer = setTimeout(function() {
+      _exhaustionBannerDelayTimer = null;
+      _show();
+    }, 500);
   } else {
     _show();
   }
@@ -362,4 +373,13 @@ function resetScarcityHUD() {
   _scarcityCriticalFired.clear();
   _scarcityExhaustionFired.clear();
   if (_scarcityHudEl) _scarcityHudEl.style.display = 'none';
+  // Cancel any in-flight feedback timers so they don't bleed into the next session
+  if (_scarcityVignetteTimer) { clearTimeout(_scarcityVignetteTimer); _scarcityVignetteTimer = null; }
+  if (_scarcityVignetteEl) {
+    _scarcityVignetteEl.classList.remove('active');
+    _scarcityVignetteEl.style.display = 'none';
+  }
+  if (_exhaustionBannerTimer) { clearTimeout(_exhaustionBannerTimer); _exhaustionBannerTimer = null; }
+  if (_exhaustionBannerDelayTimer) { clearTimeout(_exhaustionBannerDelayTimer); _exhaustionBannerDelayTimer = null; }
+  if (_exhaustionBannerEl) _exhaustionBannerEl.style.display = 'none';
 }

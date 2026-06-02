@@ -145,7 +145,7 @@ function restoreGameState() {
   score               = data.score              || 0;
   blocksMined         = data.blocksMined         || 0;
   linesCleared        = data.linesCleared        || 0;
-  gameElapsedSeconds  = data.gameElapsedSeconds  || 0;
+  gameElapsedSeconds  = Math.max(0, data.gameElapsedSeconds  || 0);
   lastDifficultyTier  = data.lastDifficultyTier  || 0;
   difficultyMultiplier = data.difficultyMultiplier || 1.0;
 

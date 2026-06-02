@@ -429,6 +429,9 @@ function resetGame(opts) {
   // Reset scarcity HUD (hides it when switching away from Survival)
   if (typeof resetScarcityHUD === 'function') resetScarcityHUD();
 
+  // Cancel any pending mined-clear banner hide timer
+  if (typeof resetMinedClearBanner === 'function') resetMinedClearBanner();
+
   // Reset dungeon modifier state (Entropy and session tracking)
   if (typeof resetDungeonModifiers === 'function') resetDungeonModifiers();
 
