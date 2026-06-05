@@ -142,6 +142,7 @@ function finesseGetAPM(elapsedSeconds) {
 
 // ── HUD ───────────────────────────────────────────────────────────────────────
 let _finesseFlashTimer = null;
+let _perfectFlashTimer = null;
 
 /** Returns per-metric visibility preferences from localStorage. */
 function _finesseMetricEnabled(key) {
@@ -203,7 +204,11 @@ function _triggerPerfectFlash(isPerfect) {
   const canvas = document.getElementById('three-canvas') || document.body;
   if (isPerfect) {
     canvas.classList.add('finesse-perfect-border');
-    setTimeout(function () { canvas.classList.remove('finesse-perfect-border'); }, 400);
+    if (_perfectFlashTimer) { clearTimeout(_perfectFlashTimer); _perfectFlashTimer = null; }
+    _perfectFlashTimer = setTimeout(function () {
+      canvas.classList.remove('finesse-perfect-border');
+      _perfectFlashTimer = null;
+    }, 400);
   }
 }
 
@@ -278,6 +283,9 @@ function finesseReset() {
   finessePieceLandTimes       = [];
   _currentPieceInputs         = 0;
   if (_finesseFlashTimer) { clearTimeout(_finesseFlashTimer); _finesseFlashTimer = null; }
+  if (_perfectFlashTimer) { clearTimeout(_perfectFlashTimer); _perfectFlashTimer = null; }
+  const canvas = document.getElementById('three-canvas') || document.body;
+  if (canvas) canvas.classList.remove('finesse-perfect-border');
   const el = document.getElementById('finesse-hud');
   if (el) {
     el.textContent = 'Faults: 0 (0.0)';

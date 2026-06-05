@@ -45,6 +45,7 @@ const _BIOME_SKY_THEMES = {
 
 let activeBiomeId = null;       // null = not in expedition biome mode
 let _preBiomeTheme = 'classic'; // user's cosmetic theme before expedition
+let _biomeBannerShowTimer = null; // tracked to cancel pending banner show on reset
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -107,6 +108,15 @@ function applyBiomeTheme(biomeId) {
  * Called automatically by resetGame() in gamestate.js.
  */
 function clearBiomeTheme() {
+  // Always cancel pending banner timers, even if activeBiomeId is already null.
+  if (_biomeBannerShowTimer) { clearTimeout(_biomeBannerShowTimer); _biomeBannerShowTimer = null; }
+  const _banner = document.getElementById('biome-entry-banner');
+  if (_banner) {
+    clearTimeout(_banner._hideTimer);
+    _banner._hideTimer = null;
+    _banner.classList.remove('visible');
+  }
+
   if (!activeBiomeId) return;
   activeBiomeId = null;
   if (typeof isExpeditionMode !== 'undefined') isExpeditionMode = false;
@@ -228,6 +238,10 @@ document.addEventListener('expeditionLaunch', function (e) {
   _runBiomeTransition(function () {
     applyBiomeTheme(biomeId);
     // Show banner after theme is applied (visible against new background)
-    setTimeout(function () { _showBiomeBanner(biomeName, biomeId); }, 150);
+    if (_biomeBannerShowTimer) { clearTimeout(_biomeBannerShowTimer); _biomeBannerShowTimer = null; }
+    _biomeBannerShowTimer = setTimeout(function () {
+      _biomeBannerShowTimer = null;
+      _showBiomeBanner(biomeName, biomeId);
+    }, 150);
   });
 });
