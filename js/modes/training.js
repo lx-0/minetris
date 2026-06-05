@@ -222,6 +222,7 @@ let _trainingB2BAchieved     = false;
 let _trainingTSpinType       = '';     // last T-spin type ('mini'|'full')
 let _trainingLinesThisSession = 0;     // lines cleared this session
 let _trainingSpeedDrillDone  = false;  // speed drill completion flag
+let _trainingCompleteTimer   = null;   // tracked timeout for triggerTrainingComplete
 
 // Fixed piece queue for training (mirrors puzzle pattern)
 let trainingFixedQueue = [];
@@ -558,7 +559,8 @@ function checkTrainingGoal(params) {
 
   if (met) {
     _trainingGoalMet = true;
-    setTimeout(function () { triggerTrainingComplete(); }, 600);
+    if (_trainingCompleteTimer) clearTimeout(_trainingCompleteTimer);
+    _trainingCompleteTimer = setTimeout(function () { _trainingCompleteTimer = null; triggerTrainingComplete(); }, 600);
   }
 }
 
@@ -584,7 +586,8 @@ function onTrainingPiecePlaced() {
       if (!_trainingGoalMet) {
         _trainingGoalMet = true;
         const ppmFinal = (elapsed > 0) ? (_trainingPiecesPlaced / elapsed) * 60 : 0;
-        setTimeout(function () { triggerTrainingComplete(ppmFinal); }, 300);
+        if (_trainingCompleteTimer) clearTimeout(_trainingCompleteTimer);
+        _trainingCompleteTimer = setTimeout(function () { _trainingCompleteTimer = null; triggerTrainingComplete(ppmFinal); }, 300);
       }
     }
   }
@@ -593,7 +596,7 @@ function onTrainingPiecePlaced() {
 // ── Complete overlay ──────────────────────────────────────────────────────────
 
 function triggerTrainingComplete(finalPpm) {
-  if (isGameOver) return;
+  if (!isTrainingMode || isGameOver) return;
   isGameOver       = true;
   gameTimerRunning = false;
 
@@ -940,6 +943,7 @@ function resetTrainingMode() {
   _trainingGarbageRowsCleared = 0;
   _trainingB2BAchieved     = false;
   _trainingSpeedDrillDone  = false;
+  if (_trainingCompleteTimer) { clearTimeout(_trainingCompleteTimer); _trainingCompleteTimer = null; }
   trainingFixedQueue.length = 0;
 
   const badgeEl = document.getElementById('training-badge');
