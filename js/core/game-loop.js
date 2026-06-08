@@ -315,18 +315,18 @@ function updatePowerups(delta) {
       if (magnetLastPullTime >= 1.0) {
         magnetLastPullTime = 0;
         const playerPos = controls.getObject().position;
-        const MAGNET_RANGE = 5;
-        let nearestDist = Infinity;
+        const MAGNET_RANGE_SQ = 25; // 5² — use squared distance to avoid Math.sqrt
+        let nearestDistSq = Infinity;
         let nearestBlock = null;
         worldGroup.children.forEach(function (obj) {
           if (!obj.userData.isBlock || !obj.userData.gridPos) return;
           const dx = playerPos.x - obj.position.x;
           const dy = playerPos.y - obj.position.y;
           const dz = playerPos.z - obj.position.z;
-          const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-          if (dist < MAGNET_RANGE && dist < nearestDist) {
-            nearestDist  = dist;
-            nearestBlock = obj;
+          const distSq = dx * dx + dy * dy + dz * dz;
+          if (distSq < MAGNET_RANGE_SQ && distSq < nearestDistSq) {
+            nearestDistSq = distSq;
+            nearestBlock  = obj;
           }
         });
         if (nearestBlock) {
