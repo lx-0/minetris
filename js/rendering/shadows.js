@@ -3,17 +3,22 @@
 //           config.js (BLOCK_SIZE, COLORS, SHADOW_APPEAR_DIST)
 
 const _shadowRaycaster = new THREE.Raycaster();
-const _shadowDownDir = new THREE.Vector3(0, -1, 0);
 const _shadowWP = new THREE.Vector3();
+
+// Pre-cached direction vectors — avoids allocating new Vector3 objects every frame.
+const _CAST_DIR_UP    = new THREE.Vector3( 0, +1, 0);
+const _CAST_DIR_DOWN  = new THREE.Vector3( 0, -1, 0);
+const _CAST_DIR_LEFT  = new THREE.Vector3(-1,  0, 0);
+const _CAST_DIR_RIGHT = new THREE.Vector3(+1,  0, 0);
 
 /** Returns the cast direction vector for the current gravity mode. */
 function _getShadowCastDir() {
   const _grav = (typeof gravityDirection !== 'undefined') ? gravityDirection : 'down';
   switch (_grav) {
-    case 'up':    return new THREE.Vector3(0, +1, 0);
-    case 'left':  return new THREE.Vector3(-1, 0, 0);
-    case 'right': return new THREE.Vector3(+1, 0, 0);
-    default:      return new THREE.Vector3(0, -1, 0);
+    case 'up':    return _CAST_DIR_UP;
+    case 'left':  return _CAST_DIR_LEFT;
+    case 'right': return _CAST_DIR_RIGHT;
+    default:      return _CAST_DIR_DOWN;
   }
 }
 
