@@ -76,6 +76,14 @@ const _LIGHT_KEYS = [
 
 const _dangerFogColor = new THREE.Color(0x8b1a1a);
 
+// Pre-allocated reusable vectors to avoid per-frame allocations in sky update.
+const _moonNorm    = new THREE.Vector3();
+const _lookTarget  = new THREE.Vector3();
+
+// Sun direction has a fixed Z component (60/120 = 0.5); X and Y are unit-circle
+// components so X²+Y² = 1. Total length is always sqrt(1 + 0.25) = sqrt(1.25).
+const _SUN_DIR_LEN = Math.sqrt(1.25);
+
 // ── Shooting star pool ────────────────────────────────────────────────────────
 const _SKY_RADIUS = 430;
 const _SHOOT_POOL_SIZE = 3;
@@ -376,7 +384,7 @@ function updateSky(elapsedSeconds, delta = 0.016) {
   const sunDirX = Math.cos(sunAngle);
   const sunDirY = Math.sin(sunAngle);
   const sunDirZ = 60 / 120; // matches the lighting direction ratio
-  const sunDirLen = Math.sqrt(sunDirX * sunDirX + sunDirY * sunDirY + sunDirZ * sunDirZ);
+  const sunDirLen = _SUN_DIR_LEN; // constant: sqrt(cos²+sin²+0.5²) = sqrt(1.25)
   const sunR = _SKY_RADIUS * 0.95;
   const sunPosX = (sunDirX / sunDirLen) * sunR;
   const sunPosY = (sunDirY / sunDirLen) * sunR;
@@ -404,8 +412,8 @@ function updateSky(elapsedSeconds, delta = 0.016) {
     const moonFade = Math.max(0, Math.min(1, -sunNormY * 8 + 0.5));
     moonMesh.visible = moonFade > 0.01;
     // Crescent mask: offset 0.3 units toward center (toward camera at origin)
-    const moonNorm = moonMesh.position.clone().normalize();
-    moonCrescent.position.copy(moonMesh.position).addScaledVector(moonNorm, -0.3);
+    _moonNorm.copy(moonMesh.position).normalize();
+    moonCrescent.position.copy(moonMesh.position).addScaledVector(_moonNorm, -0.3);
     moonCrescent.visible = moonFade > 0.01;
   }
 
@@ -458,7 +466,8 @@ function updateSky(elapsedSeconds, delta = 0.016) {
         // Position along arc
         s.mesh.position.copy(s.startPos).addScaledVector(s.velocity, s.progress);
         // Orient along velocity
-        s.mesh.lookAt(s.mesh.position.clone().add(s.velocity));
+        _lookTarget.copy(s.mesh.position).add(s.velocity);
+        s.mesh.lookAt(_lookTarget);
         // Opacity: fade in 0-0.1s, hold, fade out last 0.2s
         let op;
         if (s.progress < 0.1) {

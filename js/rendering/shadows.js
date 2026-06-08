@@ -97,10 +97,10 @@ function updatePieceShadow(piece) {
   const castDir = _getShadowCastDir();
 
   // Gather world positions and landing surface for each block in one pass.
+  // Store scalar x/y/z instead of cloning _shadowWP to avoid per-frame Vector3 allocations.
   const blockData = piece.children.map((block) => {
     block.getWorldPosition(_shadowWP);
-    const wp = _shadowWP.clone();
-    _shadowRaycaster.set(wp, castDir);
+    _shadowRaycaster.set(_shadowWP, castDir);
     const hits = _shadowRaycaster.intersectObjects(targets, false);
     let surfaceVal;  // the coordinate of the landing surface along the gravity axis
     if (hits.length > 0) {
@@ -119,19 +119,19 @@ function updatePieceShadow(piece) {
         default:      surfaceVal = 0; break;
       }
     }
-    return { wp, surfaceVal };
+    return { x: _shadowWP.x, y: _shadowWP.y, z: _shadowWP.z, surfaceVal };
   });
 
   // Find the closest landing surface across all blocks (piece stops at first contact).
   // delta = signed shift needed to rest the block face against the surface.
   let landingDelta = -Infinity;
-  blockData.forEach(({ wp, surfaceVal }) => {
+  blockData.forEach(({ x, y, surfaceVal }) => {
     let delta;
     switch (_grav) {
-      case 'up':    delta = surfaceVal - BLOCK_SIZE / 2 - wp.y; break;  // block top → surface
-      case 'left':  delta = surfaceVal + BLOCK_SIZE / 2 - wp.x; break;  // block left → surface
-      case 'right': delta = surfaceVal - BLOCK_SIZE / 2 - wp.x; break;  // block right → surface
-      default:      delta = surfaceVal + BLOCK_SIZE / 2 - wp.y; break;  // block bottom → surface
+      case 'up':    delta = surfaceVal - BLOCK_SIZE / 2 - y; break;  // block top → surface
+      case 'left':  delta = surfaceVal + BLOCK_SIZE / 2 - x; break;  // block left → surface
+      case 'right': delta = surfaceVal - BLOCK_SIZE / 2 - x; break;  // block right → surface
+      default:      delta = surfaceVal + BLOCK_SIZE / 2 - y; break;  // block bottom → surface
     }
     if (delta > landingDelta) landingDelta = delta;
   });
@@ -162,7 +162,7 @@ function updatePieceShadow(piece) {
   // HC opacity is higher so the outline is clearly visible
   const hcOpacity = 0.3 + t * 0.7;
 
-  blockData.forEach(({ wp, surfaceVal }, i) => {
+  blockData.forEach(({ x, y, z, surfaceVal }, i) => {
     if (i >= shadowGroup.children.length) return;
     const slot = shadowGroup.children[i];
     if (!slot) return;
@@ -171,10 +171,10 @@ function updatePieceShadow(piece) {
 
     // Place the slot flush against the landing surface.
     switch (_grav) {
-      case 'up':    slot.position.set(wp.x, surfaceVal - 0.05, wp.z); break;
-      case 'left':  slot.position.set(surfaceVal + 0.05, wp.y, wp.z); break;
-      case 'right': slot.position.set(surfaceVal - 0.05, wp.y, wp.z); break;
-      default:      slot.position.set(wp.x, surfaceVal + 0.05, wp.z); break;
+      case 'up':    slot.position.set(x, surfaceVal - 0.05, z); break;
+      case 'left':  slot.position.set(surfaceVal + 0.05, y, z); break;
+      case 'right': slot.position.set(surfaceVal - 0.05, y, z); break;
+      default:      slot.position.set(x, surfaceVal + 0.05, z); break;
     }
 
     // Toggle fill / edge visibility based on high contrast mode.
