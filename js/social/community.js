@@ -223,7 +223,8 @@
   // ── Creator play count achievement check ─────────────────────────────────────
 
   function _checkCreatorPlayAchievements(allPuzzles) {
-    var publishedRaw = localStorage.getItem('mineCtris_publishedPuzzles');
+    var publishedRaw;
+    try { publishedRaw = localStorage.getItem('mineCtris_publishedPuzzles'); } catch (_) { return; }
     if (!publishedRaw) return;
     var publishedIds;
     try { publishedIds = JSON.parse(publishedRaw); } catch (_) { return; }
