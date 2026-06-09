@@ -46,14 +46,18 @@ function _initShareModal() {
         var code = decodeURIComponent(puzzleParam);
 
         // Get or generate creator ID
-        var creatorId = localStorage.getItem("mineCtris_creatorId");
-        if (!creatorId) {
-          creatorId = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0;
-            return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
-          });
-          localStorage.setItem("mineCtris_creatorId", creatorId);
-        }
+        var creatorId;
+        try {
+          creatorId = localStorage.getItem("mineCtris_creatorId");
+          if (!creatorId) {
+            creatorId = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+              var r = Math.random() * 16 | 0;
+              return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+            localStorage.setItem("mineCtris_creatorId", creatorId);
+          }
+        } catch (_) {}
+        if (!creatorId) creatorId = "anonymous";
 
         publishBtn.textContent = "Publishing\u2026";
         publishBtn.disabled = true;

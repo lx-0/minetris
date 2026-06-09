@@ -143,9 +143,10 @@ function isBoardSkinUnlocked(skinId) {
 
   if (skin.unlockType === 'puzzles') {
     try {
-      var raw = localStorage.getItem('mineCtris_puzzlesCompleted');
-      var count = raw ? parseInt(raw, 10) : 0;
-      return !isNaN(count) && count >= (skin.unlockPuzzles || 10);
+      var count = typeof loadLifetimeStats === 'function'
+        ? (loadLifetimeStats().puzzlesCompleted || 0)
+        : 0;
+      return count >= (skin.unlockPuzzles || 10);
     } catch (_) { return false; }
   }
 
