@@ -573,6 +573,7 @@ function triggerGameOver() {
       mode: isDailyChallenge ? 'daily' : isWeeklyChallenge ? 'weekly' : (isEndlessSurvivalMode ? 'endless' : (isSurvivalMode ? 'survival' : (isMarathonMode ? 'marathon' : 'classic'))),
       score: state.score,
       lines: state.linesCleared,
+      blocksMined: state.blocksMined,
       durationSecs: _gsDurSecs,
       level: isMarathonMode ? marathonLevel : lastDifficultyTier,
       maxCombo: sessionHighestComboCount,
