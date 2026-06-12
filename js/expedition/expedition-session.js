@@ -244,8 +244,35 @@ function showExpeditionResults(data) {
     statsEl.innerHTML =
       '<div class="exp-res-stat"><span class="exp-res-label">SCORE</span>'         + '<span class="exp-res-val">'  + (data.score || 0).toLocaleString() + '</span></div>' +
       '<div class="exp-res-stat"><span class="exp-res-label">LINES CLEARED</span>' + '<span class="exp-res-val">'  + (data.linesCleared || 0)           + '</span></div>' +
+      '<div class="exp-res-stat"><span class="exp-res-label">BLOCKS MINED</span>'  + '<span class="exp-res-val">+' + (data.blocksMined || 0)               + '</span></div>' +
       '<div class="exp-res-stat"><span class="exp-res-label">FRAGMENTS</span>'     + '<span class="exp-res-val">+' + fragments                           + '</span></div>' +
       '<div class="exp-res-stat"><span class="exp-res-label">TIME</span>'          + '<span class="exp-res-val">'  + mm + ':' + ss                      + '</span></div>';
+  }
+
+  // Ore breakdown (shown when any ores were mined this run)
+  var oreBreakdownEl = document.getElementById('exp-results-ore-breakdown');
+  if (oreBreakdownEl) {
+    var _OM = data.oreMined || {};
+    var _oreKeys = Object.keys(_OM).filter(function (k) { return _OM[k] > 0; });
+    if (_oreKeys.length > 0) {
+      var _ORE_COLORS = {
+        diamond: '#4fc3f7', obsidian: '#7c4dff', gold: '#ffd700', crystal: '#00bcd4',
+        lava: '#ff5722', moss: '#4caf50', rock: '#78909c', stone: '#b0bec5',
+        wood: '#8d6e63', ice: '#b3e5fc', dirt: '#a1887f', leaf: '#81c784',
+        plank: '#d4a56a', rubble: '#9e9e9e',
+      };
+      var _oreParts = _oreKeys.map(function (k) {
+        var c = _ORE_COLORS[k] || '#ccc';
+        var label = k.charAt(0).toUpperCase() + k.slice(1);
+        return '<span style="color:' + c + '">' + label + ':&nbsp;' + _OM[k] + '</span>';
+      });
+      oreBreakdownEl.innerHTML =
+        '<div class="exp-res-ore-header">ORE BREAKDOWN</div>' +
+        '<div class="exp-res-ore-list">' + _oreParts.join('<span class="exp-res-ore-sep"> | </span>') + '</div>';
+      oreBreakdownEl.style.display = 'block';
+    } else {
+      oreBreakdownEl.style.display = 'none';
+    }
   }
 
   // Reward track — full 15-tier per-biome display

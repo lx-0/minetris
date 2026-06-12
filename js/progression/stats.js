@@ -94,6 +94,7 @@ function submitLifetimeStats({ score, blocksMined, linesCleared, blocksPlaced, t
     pm.totalScore += score;
     if (score > pm.bestScore) pm.bestScore = score;
     if ((linesCleared || 0) > (pm.bestLines || 0)) pm.bestLines = linesCleared || 0;
+    if (blocksMined > 0) pm.totalMined = (pm.totalMined || 0) + blocksMined;
     if (mode === 'combo_challenge') {
       if ((highestComboCount || 0) > (pm.bestComboStreak || 0)) pm.bestComboStreak = highestComboCount || 0;
     }
@@ -141,7 +142,7 @@ function loadSessionHistory() {
  * @param {number} [params.kpp]         keys per piece
  * @param {number} [params.finessePercentage] finesse % (0–100)
  */
-function logSession({ mode, score, lines, durationSecs, result, level, maxCombo, tSpins, tetrises, piecesPlaced, apm, kpp, finessePercentage }) {
+function logSession({ mode, score, lines, durationSecs, result, level, maxCombo, tSpins, tetrises, piecesPlaced, apm, kpp, finessePercentage, blocksMined }) {
   try {
     const history = loadSessionHistory();
     const entry = {
@@ -159,6 +160,7 @@ function logSession({ mode, score, lines, durationSecs, result, level, maxCombo,
       kpp: kpp || 0,
       finessePercentage: finessePercentage != null ? finessePercentage : 100,
     };
+    if (blocksMined > 0) entry.blocksMined = blocksMined;
     if (level != null && level > 0) entry.level = level;
     history.unshift(entry);
     // Keep only the most recent entries
@@ -482,6 +484,7 @@ function _renderTabModes(stats) {
     html += isOverallBest ? _statsRowPb('BEST SCORE', d.bestScore) : _statsRow('BEST SCORE', d.bestScore);
     html += _statsRow('AVG SCORE', avg);
     if (d.bestLines > 0) html += _statsRow('BEST LINES', d.bestLines);
+    if ((d.totalMined || 0) > 0) html += _statsRow('TOTAL MINED', d.totalMined);
     if (modeKey === 'combo_challenge' && d.bestComboStreak > 0) {
       html += _statsRow('BEST COMBO STREAK', 'x' + d.bestComboStreak);
     }
