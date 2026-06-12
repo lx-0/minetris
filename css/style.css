@@ -25331,3 +25331,280 @@ body.ui-theme-retro .notif-toast {
   transition: opacity 0.4s ease;
   z-index: 900;
 }
+
+/* ── Mastery Challenge Progress HUD ──────────────────────────────────────── */
+#mastery-progress-hud {
+  position: absolute;
+  bottom: 100px;
+  left: 12px;
+  z-index: 20;
+  width: 220px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#mastery-progress-hud.mastery-hud-visible {
+  opacity: 1;
+}
+.mastery-hud-inner {
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 7px 9px;
+  font-family: "Press Start 2P", cursive;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mastery-hud-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.mastery-hud-icon {
+  font-size: 11px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.mastery-hud-tier {
+  font-size: 9px;
+  color: #e8e8e8;
+  font-weight: bold;
+  flex: 1;
+  letter-spacing: 0.5px;
+}
+.mastery-hud-mode-label {
+  font-size: 7px;
+  color: #888;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+.mastery-hud-challenge {
+  font-size: 7px;
+  color: #bbb;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mastery-hud-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mastery-hud-bar-wrap {
+  position: relative;
+  flex: 1;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  overflow: visible;
+}
+.mastery-hud-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  min-width: 0;
+}
+.mastery-hud-bar-ghost {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0.35) 2px,
+    transparent 2px,
+    transparent 5px
+  );
+}
+.mastery-hud-progress-text {
+  font-size: 7px;
+  color: #ccc;
+  white-space: nowrap;
+  font-family: "Press Start 2P", cursive;
+  flex-shrink: 0;
+}
+.mastery-hud-secondary {
+  font-size: 7px;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mastery-hud-sec-met   { color: #4ade80; }
+.mastery-hud-sec-unmet { color: #999; }
+.mastery-hud-complete {
+  font-size: 7px;
+  color: #b9f2ff;
+  text-align: center;
+  padding: 4px 0;
+  white-space: nowrap;
+}
+
+/* Pulse animation at 80%+ progress */
+@keyframes mastery-hud-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+#mastery-progress-hud.mastery-hud-pulse .mastery-hud-bar-fill {
+  animation: mastery-hud-pulse 1.4s ease-in-out infinite;
+}
+
+/* Expanded view */
+.mastery-hud-expanded {
+  gap: 5px;
+}
+.mastery-hud-exp-title {
+  font-size: 8px;
+  color: #e8e8e8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 4px;
+  margin-bottom: 1px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mastery-hud-collapse-hint {
+  font-size: 7px;
+  color: #666;
+}
+.mastery-exp-row {
+  display: flex;
+  gap: 5px;
+  align-items: flex-start;
+  padding: 2px 0;
+}
+.mastery-exp-icon {
+  font-size: 10px;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+.mastery-exp-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow: hidden;
+}
+.mastery-exp-tier-name {
+  font-size: 7px;
+  color: #ddd;
+  font-weight: bold;
+}
+.mastery-exp-desc {
+  font-size: 6px;
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mastery-exp-complete .mastery-exp-desc  { color: #555; text-decoration: line-through; }
+.mastery-exp-locked .mastery-exp-tier-name,
+.mastery-exp-locked .mastery-exp-desc    { color: #555; }
+.mastery-exp-bar-wrap {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.mastery-exp-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* ── Mastery milestone flash banner ─────────────────────────────────────── */
+.mastery-milestone-flash {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-40px);
+  z-index: 160;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid;
+  border-radius: 8px;
+  padding: 10px 18px;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  font-family: "Press Start 2P", cursive;
+  width: 300px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.mastery-milestone-flash.mastery-milestone-in {
+  animation: mastery-milestone-slide-in 0.3s ease-out forwards;
+}
+.mastery-milestone-flash.mastery-milestone-out {
+  animation: mastery-milestone-slide-out 0.5s ease-in forwards;
+}
+@keyframes mastery-milestone-slide-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-40px) scaleY(0.85); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0)      scaleY(1);   }
+}
+@keyframes mastery-milestone-slide-out {
+  from { opacity: 1; transform: translateX(-50%) translateY(0)      scaleY(1);   }
+  to   { opacity: 0; transform: translateX(-50%) translateY(-28px)  scaleY(0.9); }
+}
+.mastery-milestone-line1 {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--mastery-flash-color, #ffd700);
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+  line-height: 1.3;
+}
+.mastery-milestone-line2 {
+  font-size: 9px;
+  color: #ddd;
+  letter-spacing: 0.3px;
+}
+
+/* ── Mastery particle burst ──────────────────────────────────────────────── */
+.mastery-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: mastery-particle-burst 0.8s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes mastery-particle-burst {
+  0%   { transform: translate(-50%, -50%) translate(0, 0) scale(1);    opacity: 1; }
+  100% { transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+}
+
+/* Mobile: narrow screens */
+@media (max-width: 400px) {
+  #mastery-progress-hud {
+    width: 180px;
+  }
+  .mastery-hud-challenge,
+  .mastery-hud-progress-text {
+    font-size: 6px;
+  }
+}
+
+/* Reduced motion overrides */
+@media (prefers-reduced-motion: reduce) {
+  #mastery-progress-hud.mastery-hud-pulse .mastery-hud-bar-fill {
+    animation: none;
+  }
+  .mastery-milestone-flash.mastery-milestone-in {
+    animation: none;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scaleY(1);
+  }
+  .mastery-milestone-flash.mastery-milestone-out {
+    animation: none;
+    opacity: 0;
+  }
+  .mastery-particle {
+    display: none;
+  }
+}

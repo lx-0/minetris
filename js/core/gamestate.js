@@ -220,6 +220,8 @@ function updateScoreHUD() {
   }
   // Refresh ghost replay score comparison HUD
   if (typeof ghostReplayRefreshHud === 'function') ghostReplayRefreshHud();
+  // Update mastery challenge progress HUD (debounced internally)
+  if (typeof masteryHudUpdate === 'function') masteryHudUpdate();
 }
 
 /** Returns current game stats for use by the Game Over screen. */
@@ -355,6 +357,8 @@ function triggerGameOver() {
   if (isGameOver) return;
   isGameOver = true;
   gameTimerRunning = false;
+  // Hide mastery HUD immediately on game over
+  if (typeof masteryHudStop === 'function') masteryHudStop();
   // Dig Mode: record survival stats before generic game-over handling
   if (isDigMode && typeof onDigModeEnd === 'function') onDigModeEnd();
   // Haptic feedback on game over.
