@@ -2,6 +2,8 @@
 // Requires: state.js, world/mining.js, player/crafting.js loaded first.
 // Touch gate: initialises virtual touch controls on touch-capable devices.
 
+let _fortifyBannerShown = false;
+
 function onWheel(event) {
   if (typeof isReplayMode !== 'undefined' && isReplayMode) return;
   if (!controls || !controls.isLocked || isGameOver) return;
@@ -173,6 +175,15 @@ function onMouseDown(event) {
     else if (pickaxeTier === "iron" || pickaxeTier === "diamond") clicksNeeded = 1;
     // Obsidian Pickaxe: -1 hit to all blocks (min 1), stacks with Earthquake
     if (obsidianPickaxeActive) clicksNeeded = Math.max(1, clicksNeeded - 1);
+    if (obsidianPickaxeActive && !_fortifyBannerShown) {
+      showTierAbilityBanner('FORTIFY', '#7c3aed');
+      playTierAbilitySound('obsidian');
+      _fortifyBannerShown = true;
+    }
+    if (obsidianPickaxeActive && targetedBlock && targetedBlock.material) {
+      targetedBlock.material.emissive = new THREE.Color(0.30, 0.10, 0.55);
+      targetedBlock.material.needsUpdate = true;
+    }
     // Earthquake bonus: halve all hit requirements (rounded down, minimum 1)
     if (earthquakeActive) clicksNeeded = Math.max(1, Math.floor(clicksNeeded / 2));
     isMining = true;
