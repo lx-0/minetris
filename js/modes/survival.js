@@ -270,7 +270,7 @@ function renderWorldCard() {
     '<div class="wc-row"><span class="wc-label">SESSIONS</span><span class="wc-val">' + stats.sessionsSurvived + '</span></div>' +
     '<div class="wc-row"><span class="wc-label">TIME</span><span class="wc-val">' + timeStr + '</span></div>' +
     '<div class="wc-row"><span class="wc-label">SCORE</span><span class="wc-val">' + stats.totalScore.toLocaleString() + '</span></div>' +
-    '<div class="wc-row"><span class="wc-label">BLOCKS</span><span class="wc-val">' + stats.totalBlocksMined.toLocaleString() + '</span></div>' +
+    '<div class="wc-row"><span class="wc-label">MINED</span><span class="wc-val">' + stats.totalBlocksMined.toLocaleString() + '</span></div>' +
     '<div class="wc-row"><span class="wc-label">LINES</span><span class="wc-val">' + stats.totalLinesCleared + '</span></div>' +
     journalHtml;
 }

@@ -59,7 +59,7 @@ function updateScoreHUD() {
   }
   scoreEl.querySelector(".hud-score").textContent = score;
   scoreEl.querySelector(".hud-stat:nth-child(2)").textContent =
-    "Blocks: " + blocksMined;
+    "Mined: " + blocksMined;
   if (isDailyChallenge) {
     // Daily: show lines progress toward 200-line limit
     scoreEl.querySelector(".hud-stat:nth-child(3)").textContent =
@@ -181,7 +181,7 @@ function updateScoreHUD() {
     const cdSecs = Math.floor(countdownElapsedMs / 1000);
     const cdm = Math.floor(cdSecs / 60).toString().padStart(2, "0");
     const cds = (cdSecs % 60).toString().padStart(2, "0");
-    scoreEl.querySelector(".hud-stat:nth-child(2)").textContent = "Blocks: " + blocksMined;
+    scoreEl.querySelector(".hud-stat:nth-child(2)").textContent = "Mined: " + blocksMined;
     scoreEl.querySelector(".hud-stat:nth-child(3)").textContent = "Lines: " + linesCleared;
     const cdTimerEl = scoreEl.querySelector(".hud-stat:nth-child(4)");
     if (cdTimerEl) {
