@@ -55,7 +55,7 @@ function unhighlightTarget() {
 }
 
 function updateTargeting() {
-  if (!controls || !camera || !raycaster) return;
+  if (!controls || !camera || !raycaster || !worldGroup) return;
   raycaster.setFromCamera({ x: 0, y: 0 }, camera);
   const intersects = raycaster.intersectObjects(worldGroup.children, true);
   let newTarget = null;
@@ -110,9 +110,9 @@ function updateTargeting() {
     unhighlightTarget();
     if (newTarget) {
       highlightBlock(newTarget);
-      crosshair.classList.add("target-locked");
+      if (crosshair) crosshair.classList.add("target-locked");
     } else {
-      crosshair.classList.remove("target-locked");
+      if (crosshair) crosshair.classList.remove("target-locked");
     }
     targetedBlock = newTarget;
     miningProgress = 0;
