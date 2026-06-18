@@ -125,7 +125,7 @@ function onMouseDown(event) {
       unhighlightTarget();
       targetedBlock = null;
       miningProgress = 0;
-      crosshair.classList.remove("target-locked");
+      if (crosshair) crosshair.classList.remove("target-locked");
     }
     return;
   }
@@ -415,7 +415,7 @@ function onMouseDown(event) {
       }
       targetedBlock = null;
       miningProgress = 0;
-      crosshair.classList.remove("target-locked");
+      if (crosshair) crosshair.classList.remove("target-locked");
       isMining = false;
       if (pickaxeGroup) pickaxeGroup.rotation.z = Math.PI / 8;
     }
