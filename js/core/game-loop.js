@@ -643,7 +643,7 @@ function updatePlayerControls(delta, elapsedTime, time) {
     unhighlightTarget();
     targetedBlock = null;
     miningProgress = 0;
-    crosshair.classList.remove("target-locked");
+    if (crosshair) crosshair.classList.remove("target-locked");
     isMining = false;
     if (pickaxeGroup) pickaxeGroup.rotation.z = Math.PI / 8;
   }
