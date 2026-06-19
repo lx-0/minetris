@@ -285,7 +285,7 @@ function playVictoryFanfare() {
 
 /**
  * Play a sound cue when a pickaxe tier ability activates.
- * @param {'stone'|'iron'|'diamond'} tier
+ * @param {'stone'|'iron'|'diamond'|'obsidian'} tier
  */
 function playTierAbilitySound(tier) {
   if (!audioReady) return;
@@ -315,6 +315,18 @@ function playTierAbilitySound(tier) {
       try { clearSynth.triggerAttackRelease('E5', '16n', now + 0.08, 0.45); } catch (_e) {}
       try { clearSynth.triggerAttackRelease('B5', '16n', now + 0.16, 0.35); } catch (_e) {}
       try { clearSynth.triggerAttackRelease('E6', '32n', now + 0.24, 0.25); } catch (_e) {}
+    }
+  } else if (tier === 'obsidian') {
+    if (rumbleSynth) {
+      try { rumbleSynth.triggerAttackRelease('D1', '4n', now); } catch (_e) {}
+    }
+    if (blockBreakSynth) {
+      try { blockBreakSynth.triggerAttackRelease('D4', '8n', now + 0.10, 0.35); } catch (_e) {}
+    }
+    if (clearSynth) {
+      try { clearSynth.triggerAttackRelease('A4', '16n', now + 0.20, 0.40); } catch (_e) {}
+      try { clearSynth.triggerAttackRelease('D5', '16n', now + 0.32, 0.30); } catch (_e) {}
+      try { clearSynth.triggerAttackRelease('F#5', '32n', now + 0.44, 0.20); } catch (_e) {}
     }
   }
 }
