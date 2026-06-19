@@ -121,6 +121,7 @@ const EXPECTED_IDS = [
   'scarcity-vignette',
   'danger-overlay',
   'mined-clear-banner',
+  'mastery-progress-hud',
 ];
 
 for (const id of EXPECTED_IDS) {

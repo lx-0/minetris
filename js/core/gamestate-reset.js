@@ -569,6 +569,9 @@ function resetGame(opts) {
   const _ssBtnReset = document.getElementById('screenshot-btn');
   if (_ssBtnReset) _ssBtnReset.style.display = 'none';
 
+  // Reset mastery HUD session state
+  if (typeof masteryHudReset === 'function') masteryHudReset();
+
   updateScoreHUD();
 
   function _showStartScreen() {

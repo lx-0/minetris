@@ -333,7 +333,14 @@ function unlockMasteryTier(mode, tier) {
   var cosmeticId = 'mastery_' + mode + '_' + tierName;
   if (typeof processUnlocks === 'function') processUnlocks();
 
-  _showMasteryUnlockOverlay(modeLabel, tierName, cosmeticId);
+  // Skip post-game overlay if already celebrated mid-game via mastery HUD
+  var _midKey = mode + '_' + tierName;
+  var _skipOverlay = typeof _masteryMidGameUnlocks !== 'undefined' &&
+                     _masteryMidGameUnlocks instanceof Set &&
+                     _masteryMidGameUnlocks.has(_midKey);
+  if (!_skipOverlay) {
+    _showMasteryUnlockOverlay(modeLabel, tierName, cosmeticId);
+  }
 
   // Award guild XP for mastery tier unlock
   if (typeof awardGuildXP === 'function') {
@@ -769,4 +776,265 @@ function _submitMasteryToLeaderboard() {
       timestamp:    new Date().toISOString(),
     }),
   }).catch(function () {}); // fire-and-forget
+}
+
+// ── Live progress calculator (for in-game HUD) ────────────────────────────────
+//
+// Returns (current, target, unit, type) for the next incomplete tier.
+// Read-only: does not mutate any stored state.
+
+var MASTERY_LIVE_CALC = {
+
+  classic: [
+    function(p, s) { // Bronze: clear 50 lines
+      var cur = Math.max(p.bestLines || 0, s.linesCleared || 0);
+      return { type: 'threshold', primary: { current: cur, target: 50, unit: 'lines' }, percent: cur / 50 };
+    },
+    function(p, s) { // Silver: score 25,000
+      var cur = Math.max(p.bestScore || 0, s.score || 0);
+      return { type: 'threshold', primary: { current: cur, target: 25000, unit: 'pts' }, percent: cur / 25000 };
+    },
+    function(p, s) { // Gold: 10+ combo
+      var cur = Math.max(p.bestCombo || 0, s.maxCombo || 0);
+      return { type: 'threshold', primary: { current: cur, target: 10, unit: 'combo' }, percent: cur / 10 };
+    },
+    function(p, s) { // Diamond: 50K + diamond pickaxe
+      var cur = Math.max(p.bestScoreWithDiamond || 0, s.hasDiamondPickaxe ? (s.score || 0) : 0);
+      var secMet = !!(s.hasDiamondPickaxe || (p.bestScoreWithDiamond || 0) > 0);
+      return { type: 'compound', primary: { current: cur, target: 50000, unit: 'pts' },
+        secondary: { label: '⛏ Diamond Pick', met: secMet }, percent: cur / 50000 };
+    },
+    function(p, s) { // Obsidian: 10+ tiers + 10 min
+      var curTier = Math.max(p.bestTier || 0, s.difficultyTier || 0);
+      var curTime = Math.max(p.bestTimeSeconds || 0, s.timeSeconds || 0);
+      return { type: 'compound', primary: { current: curTier, target: 10, unit: 'tiers' },
+        secondary: { label: '⏱ 10+ min', met: curTime >= 600 }, percent: curTier / 10 };
+    },
+  ],
+
+  sprint: [
+    function(p, s) { // Bronze: 10 completions
+      var cur = p.completions || 0;
+      return { type: 'cumulative', primary: { current: cur, target: 10, unit: 'games', pending: true }, percent: cur / 10 };
+    },
+    function(p, s) { // Silver: under 2:00
+      var e = s.elapsedMs || 0;
+      return { type: 'time_under', primary: { current: e, target: 120000, unit: 'ms' }, percent: e / 120000 };
+    },
+    function(p, s) { // Gold: under 1:30
+      var e = s.elapsedMs || 0;
+      return { type: 'time_under', primary: { current: e, target: 90000, unit: 'ms' }, percent: e / 90000 };
+    },
+    function(p, s) { // Diamond: under 1:15
+      var e = s.elapsedMs || 0;
+      return { type: 'time_under', primary: { current: e, target: 75000, unit: 'ms' }, percent: e / 75000 };
+    },
+    function(p, s) { // Obsidian: under 1:00
+      var e = s.elapsedMs || 0;
+      return { type: 'time_under', primary: { current: e, target: 60000, unit: 'ms' }, percent: e / 60000 };
+    },
+  ],
+
+  blitz: [
+    function(p, s) { // Bronze: 10 completions
+      var cur = p.completions || 0;
+      return { type: 'cumulative', primary: { current: cur, target: 10, unit: 'games', pending: true }, percent: cur / 10 };
+    },
+    function(p, s) { // Silver: 10,000
+      var cur = Math.max(p.bestScore || 0, s.score || 0);
+      return { type: 'threshold', primary: { current: cur, target: 10000, unit: 'pts' }, percent: cur / 10000 };
+    },
+    function(p, s) { // Gold: 15,000
+      var cur = Math.max(p.bestScore || 0, s.score || 0);
+      return { type: 'threshold', primary: { current: cur, target: 15000, unit: 'pts' }, percent: cur / 15000 };
+    },
+    function(p, s) { // Diamond: 20K + 5 combos
+      var combos = s.combos || 0;
+      var cur = Math.max(p.bestScore || 0, s.score || 0);
+      var secMet = combos >= 5;
+      return { type: 'compound', primary: { current: cur, target: 20000, unit: 'pts' },
+        secondary: { label: 'Combos: ' + combos + '/5', met: secMet }, percent: cur / 20000 };
+    },
+    function(p, s) { // Obsidian: 25,000
+      var cur = Math.max(p.bestScore || 0, s.score || 0);
+      return { type: 'threshold', primary: { current: cur, target: 25000, unit: 'pts' }, percent: cur / 25000 };
+    },
+  ],
+
+  daily: [
+    function(p, s) { // Bronze: 7 completions
+      var cur = p.completions || 0;
+      return { type: 'cumulative', primary: { current: cur, target: 7, unit: 'challenges', pending: false }, percent: cur / 7 };
+    },
+    function(p, s) { // Silver: 14 top-50%
+      var cur = p.top50Count || 0;
+      return { type: 'cumulative', primary: { current: cur, target: 14, unit: 'top-50%', pending: false }, percent: cur / 14 };
+    },
+    function(p, s) { // Gold: 1 first place
+      var cur = p.firstPlaceCount || 0;
+      return { type: 'cumulative', primary: { current: cur, target: 1, unit: '#1 finish', pending: false }, percent: cur / 1 };
+    },
+    function(p, s) { // Diamond: 30 completions
+      var cur = p.completions || 0;
+      return { type: 'cumulative', primary: { current: cur, target: 30, unit: 'challenges', pending: false }, percent: cur / 30 };
+    },
+    function(p, s) { // Obsidian: 5 first places
+      var cur = p.firstPlaceCount || 0;
+      return { type: 'cumulative', primary: { current: cur, target: 5, unit: '#1 finishes', pending: false }, percent: cur / 5 };
+    },
+  ],
+
+  survival: [
+    function(p, s) { // Bronze: 5 min
+      var cur = Math.max(p.bestTimeSeconds || 0, s.timeSeconds || 0);
+      return { type: 'threshold', primary: { current: cur, target: 300, unit: 'sec' }, percent: cur / 300 };
+    },
+    function(p, s) { // Silver: 100 blocks
+      var cur = Math.max(p.bestBlocksPlaced || 0, s.blocksPlaced || 0);
+      return { type: 'threshold', primary: { current: cur, target: 100, unit: 'blocks' }, percent: cur / 100 };
+    },
+    function(p, s) { // Gold: 15 min
+      var cur = Math.max(p.bestTimeSeconds || 0, s.timeSeconds || 0);
+      return { type: 'threshold', primary: { current: cur, target: 900, unit: 'sec' }, percent: cur / 900 };
+    },
+    function(p, s) { // Diamond: craft diamond pickaxe
+      var met = !!(p.diamondPickaxeCrafted || s.hasDiamondPickaxe);
+      return { type: 'threshold', primary: { current: met ? 1 : 0, target: 1, unit: 'craft' }, percent: met ? 1.0 : 0.0 };
+    },
+    function(p, s) { // Obsidian: 30 min + 200 blocks
+      var curTime = Math.max(p.bestTimeSeconds || 0, s.timeSeconds || 0);
+      var curBlocks = Math.max(p.bestBlocksPlaced || 0, s.blocksPlaced || 0);
+      return { type: 'compound', primary: { current: curTime, target: 1800, unit: 'sec' },
+        secondary: { label: 'Blocks: ' + curBlocks + '/200', met: curBlocks >= 200 }, percent: curTime / 1800 };
+    },
+  ],
+
+  battle: [
+    function(p, s) { // Bronze: 5 wins
+      var cur = p.wins || 0;
+      return { type: 'cumulative', primary: { current: cur, target: 5, unit: 'wins', pending: false }, percent: cur / 5 };
+    },
+    function(p, s) { // Silver: 1000 rating
+      var cur = Math.max(p.peakRating || 0, s.rating || 0);
+      return { type: 'threshold', primary: { current: cur, target: 1000, unit: 'rating' }, percent: cur / 1000 };
+    },
+    function(p, s) { // Gold: 1200 rating
+      var cur = Math.max(p.peakRating || 0, s.rating || 0);
+      return { type: 'threshold', primary: { current: cur, target: 1200, unit: 'rating' }, percent: cur / 1200 };
+    },
+    function(p, s) { // Diamond: 1400 rating
+      var cur = Math.max(p.peakRating || 0, s.rating || 0);
+      return { type: 'threshold', primary: { current: cur, target: 1400, unit: 'rating' }, percent: cur / 1400 };
+    },
+    function(p, s) { // Obsidian: 1600 rating
+      var cur = Math.max(p.peakRating || 0, s.rating || 0);
+      return { type: 'threshold', primary: { current: cur, target: 1600, unit: 'rating' }, percent: cur / 1600 };
+    },
+  ],
+
+  expedition: [
+    function(p, s) { // Bronze: all 4 biomes
+      var bc = p.biomesCompleted || {};
+      var biomes = ['stone', 'forest', 'nether', 'ice'];
+      var count = 0;
+      for (var i = 0; i < biomes.length; i++) { if (bc[biomes[i]]) count++; }
+      return { type: 'multi_target', primary: { current: count, target: 4, unit: 'biomes' }, percent: count / 4 };
+    },
+    function(p, s) { // Silver: max biome tier 5
+      var cur = Math.max(p.maxBiomeTier || 0, s.maxBiomeTier || 0);
+      return { type: 'threshold', primary: { current: cur, target: 5, unit: 'tier' }, percent: cur / 5 };
+    },
+    function(p, s) { // Gold: max biome tier 10
+      var cur = Math.max(p.maxBiomeTier || 0, s.maxBiomeTier || 0);
+      return { type: 'threshold', primary: { current: cur, target: 10, unit: 'tier' }, percent: cur / 10 };
+    },
+    function(p, s) { // Diamond: 2+ biomes at tier 10
+      var cur = Math.max(p.biomesAtTier10 || 0, s.biomesAtTier10 || 0);
+      return { type: 'multi_target', primary: { current: cur, target: 2, unit: 'biomes@T10' }, percent: cur / 2 };
+    },
+    function(p, s) { // Obsidian: max biome tier 15
+      var cur = Math.max(p.maxBiomeTier || 0, s.maxBiomeTier || 0);
+      return { type: 'threshold', primary: { current: cur, target: 15, unit: 'tier' }, percent: cur / 15 };
+    },
+  ],
+
+  depths: [
+    function(p, s) { // Bronze: 3 completions
+      var cur = p.completions || 0;
+      return { type: 'cumulative', primary: { current: cur, target: 3, unit: 'runs', pending: false }, percent: cur / 3 };
+    },
+    function(p, s) { // Silver: floor 5
+      var cur = Math.max(p.bestFloor || 0, s.floor || 0);
+      return { type: 'threshold', primary: { current: cur, target: 5, unit: 'floors' }, percent: cur / 5 };
+    },
+    function(p, s) { // Gold: floor 10
+      var cur = Math.max(p.bestFloor || 0, s.floor || 0);
+      return { type: 'threshold', primary: { current: cur, target: 10, unit: 'floors' }, percent: cur / 10 };
+    },
+    function(p, s) { // Diamond: infinite floor 8
+      var cur = Math.max(p.bestInfiniteFloor || 0, s.infiniteFloor || 0);
+      return { type: 'threshold', primary: { current: cur, target: 8, unit: 'floors' }, percent: cur / 8 };
+    },
+    function(p, s) { // Obsidian: infinite floor 15
+      var cur = Math.max(p.bestInfiniteFloor || 0, s.infiniteFloor || 0);
+      return { type: 'threshold', primary: { current: cur, target: 15, unit: 'floors' }, percent: cur / 15 };
+    },
+  ],
+
+};
+
+/**
+ * Compute live progress toward the next incomplete mastery tier.
+ * Read-only — does not mutate any stored state.
+ * Called from the mastery HUD on discrete game events (debounced at ~2/sec).
+ *
+ * @param {string} mode         Mode key (e.g. 'classic')
+ * @param {object} currentStats Real-time stats for this mode (see mastery-hud.js)
+ * @returns {object|null} Progress descriptor, or null if mode has no mastery data.
+ *   Fields: tierIndex, tierName, tierLabel, tierIcon, tierColor, challengeText,
+ *           progressType, primary, secondary, percent, justUnlocked, allComplete
+ */
+function getMasteryLiveProgress(mode, currentStats) {
+  var challenges = MASTERY_CHALLENGES[mode];
+  var calcs      = MASTERY_LIVE_CALC[mode];
+  if (!challenges || !calcs) return null;
+
+  var state = loadMastery();
+  var ms = _getModeState(state, mode);
+  var currentTier = ms.tier || 0;
+
+  if (currentTier >= 5) return { allComplete: true };
+
+  var nextTierIdx = currentTier; // 0-indexed
+  var challenge   = challenges[nextTierIdx];
+  var calc        = calcs[nextTierIdx];
+  if (!challenge || !calc) return { allComplete: true };
+
+  var tierName  = challenge.tierName;
+  var computed  = calc(ms.progress || {}, currentStats || {});
+  var pct       = isNaN(computed.percent) ? 0 : Math.min(1.0, Math.max(0, computed.percent));
+
+  // Determine if this threshold was just crossed (mid-game unlock eligible)
+  var justUnlocked = false;
+  if (computed.type === 'threshold' || computed.type === 'multi_target') {
+    justUnlocked = pct >= 1.0;
+  } else if (computed.type === 'compound') {
+    justUnlocked = pct >= 1.0 && !!(computed.secondary && computed.secondary.met);
+  }
+  // time_under and cumulative are handled post-game; justUnlocked stays false
+
+  return {
+    tierIndex:     nextTierIdx,
+    tierName:      tierName,
+    tierLabel:     tierName.charAt(0).toUpperCase() + tierName.slice(1),
+    tierIcon:      MASTERY_TIER_ICONS[tierName]  || '⭐',
+    tierColor:     MASTERY_TIER_COLORS[tierName] || '#ffd700',
+    challengeText: challenge.desc,
+    progressType:  computed.type,
+    primary:       computed.primary  || null,
+    secondary:     computed.secondary || null,
+    percent:       pct,
+    justUnlocked:  justUnlocked,
+    allComplete:   false,
+  };
 }
