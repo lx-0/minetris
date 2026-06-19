@@ -261,6 +261,7 @@
       { label: 'Duration',      value: _fmtTime(s.durationSecs) },
       { label: 'Mode',          value: _modeLabel(s.mode) },
     ];
+    if (s.blocksMined > 0)   stats.push({ label: 'Mined',         value: s.blocksMined.toLocaleString() });
     if (s.level != null && s.level > 0) stats.push({ label: 'Level Reached', value: s.level });
     if (s.maxCombo > 0)      stats.push({ label: 'Max Combo',    value: s.maxCombo + '×' });
     if (s.tetrises > 0)      stats.push({ label: 'Tetrises',     value: s.tetrises });
@@ -457,7 +458,7 @@
 
   function _exportCSV(history) {
     var rows = [
-      ['Date', 'Mode', 'Score', 'Lines', 'Duration (s)', 'Level', 'Max Combo',
+      ['Date', 'Mode', 'Score', 'Lines', 'Mined', 'Duration (s)', 'Level', 'Max Combo',
        'Tetrises', 'T-Spins', 'Pieces', 'APM', 'Result'].join(',')
     ];
     for (var i = 0; i < history.length; i++) {
@@ -467,6 +468,7 @@
         s.mode || '',
         s.score || 0,
         s.lines || 0,
+        s.blocksMined || 0,
         s.durationSecs || 0,
         s.level || '',
         s.maxCombo || 0,
