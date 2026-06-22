@@ -122,7 +122,7 @@ function triggerPracticeGameOver() {
   if (statsEl) {
     statsEl.innerHTML =
       `<div><span class="go-label">LINES CLEARED</span><br>${linesCleared}</div>` +
-      `<div><span class="go-label">BLOCKS MINED</span><br>${blocksMined}</div>` +
+      `<div><span class="go-label">MINED</span><br>${blocksMined}</div>` +
       `<div><span class="go-label">BEST COMBO</span><br>${sessionHighestComboCount}</div>` +
       `<div><span class="go-label">TIME</span><br>${mm}:${ss}</div>`;
   }

@@ -508,7 +508,7 @@ function triggerGameOver() {
       statsEl.innerHTML =
         _modBadge +
         `<div><span class="go-label">SCORE</span><br>${state.score}</div>` +
-        `<div><span class="go-label">BLOCKS MINED</span><br>${state.blocksMined}</div>` +
+        `<div><span class="go-label">MINED</span><br>${state.blocksMined}</div>` +
         `<div><span class="go-label">LINES CLEARED</span><br>${state.linesCleared}</div>` +
         `<div><span class="go-label">TIME SURVIVED</span><br>${mm}:${ss}</div>`;
     }
