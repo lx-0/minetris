@@ -10,6 +10,7 @@ let _cachedLavaBlocks  = [];      // sorted nearest-lava cache, rebuilt at 10fps
 const _BG_INTERVAL     = 1 / 30; // ~33 ms
 const _LAVA_INTERVAL   = 1 / 10; // 100 ms
 let _dangerEl          = null;    // cached once on first frame (DOM doesn't recreate it)
+let _coopBonusEl       = null;    // cached once on first use (same lifecycle as _dangerEl)
 let _coopBonusOverlayTimer = null; // handle for coop-bonus-overlay hide delay
 
 // ── Cap delta and apply replay speed scaling ──────────────────────────────────
@@ -620,21 +621,19 @@ function updatePlayerControls(delta, elapsedTime, time) {
     if (typeof updateOreCrafting === 'function') updateOreCrafting(delta);
     // Tick co-op bonus banner fade-out
     if (coopBonusBannerTimer > 0) {
+      if (!_coopBonusEl) _coopBonusEl = document.getElementById('coop-bonus-overlay');
       coopBonusBannerTimer -= delta;
       if (coopBonusBannerTimer <= 0) {
         coopBonusBannerTimer = 0;
-        var _bonusEl = document.getElementById('coop-bonus-overlay');
-        if (_bonusEl) { _bonusEl.style.opacity = '0'; }
+        if (_coopBonusEl) { _coopBonusEl.style.opacity = '0'; }
         if (_coopBonusOverlayTimer) clearTimeout(_coopBonusOverlayTimer);
         _coopBonusOverlayTimer = setTimeout(function () {
           _coopBonusOverlayTimer = null;
-          var _bEl = document.getElementById('coop-bonus-overlay');
-          if (_bEl) _bEl.style.display = 'none';
+          if (_coopBonusEl) _coopBonusEl.style.display = 'none';
         }, 1100);
       } else if (coopBonusBannerTimer < 1.0) {
         // Start fading in the last second
-        var _bonusEl2 = document.getElementById('coop-bonus-overlay');
-        if (_bonusEl2) _bonusEl2.style.opacity = String(coopBonusBannerTimer);
+        if (_coopBonusEl) _coopBonusEl.style.opacity = String(coopBonusBannerTimer);
       }
     }
   } else {
