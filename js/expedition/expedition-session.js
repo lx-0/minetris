@@ -244,7 +244,7 @@ function showExpeditionResults(data) {
     statsEl.innerHTML =
       '<div class="exp-res-stat"><span class="exp-res-label">SCORE</span>'         + '<span class="exp-res-val">'  + (data.score || 0).toLocaleString() + '</span></div>' +
       '<div class="exp-res-stat"><span class="exp-res-label">LINES CLEARED</span>' + '<span class="exp-res-val">'  + (data.linesCleared || 0)           + '</span></div>' +
-      '<div class="exp-res-stat"><span class="exp-res-label">BLOCKS MINED</span>'  + '<span class="exp-res-val">+' + (data.blocksMined || 0)               + '</span></div>' +
+      '<div class="exp-res-stat"><span class="exp-res-label">MINED</span>'          + '<span class="exp-res-val">+' + (data.blocksMined || 0)               + '</span></div>' +
       '<div class="exp-res-stat"><span class="exp-res-label">FRAGMENTS</span>'     + '<span class="exp-res-val">+' + fragments                           + '</span></div>' +
       '<div class="exp-res-stat"><span class="exp-res-label">TIME</span>'          + '<span class="exp-res-val">'  + mm + ':' + ss                      + '</span></div>';
   }

@@ -419,7 +419,7 @@ function _renderTabOverview(stats) {
   html += _statsRowNum('BEST SCORE',      stats.bestScore);
   html += _statsRowNum('LINES CLEARED',   stats.totalLinesCleared);
   html += _statsRowNum('PIECES PLACED',   stats.totalBlocksPlaced || 0);
-  html += _statsRowNum('BLOCKS MINED',    stats.totalBlocksMined);
+  html += _statsRowNum('MINED',           stats.totalBlocksMined);
   html += _statsRowNum('TOTAL XP',        stats.playerXP || 0);
   html += _statsRow('PLAYER LEVEL',       typeof getLevelFromXP === 'function' ? getLevelFromXP(stats.playerXP || 0) : 1);
   html += _statsRow('CURRENT STREAK',     (stats.currentStreak || 0) + ' day' + ((stats.currentStreak || 0) === 1 ? '' : 's'));
