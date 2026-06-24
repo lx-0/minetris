@@ -1117,7 +1117,7 @@ function _populateCoopSummary() {
   // Contribution rows
   const rows = [
     ['SCORE',       coopMyScore,           coopPartnerScore],
-    ['BLOCKS MINED',coopMyBlocksMined,     coopPartnerBlocksMined],
+    ['MINED',       coopMyBlocksMined,     coopPartnerBlocksMined],
     ['LINES TRIG.', coopMyLinesTriggered,  coopPartnerLinesTriggered],
     ['CRAFTS MADE', coopMyCraftsMade,      coopPartnerCraftsMade],
     ['TRADES',      coopMyTradesCompleted, coopPartnerTradesCompleted],
