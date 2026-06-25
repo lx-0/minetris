@@ -311,7 +311,7 @@ function _fireOnTick(delta, type) {
   if (type === EVENT_TYPES.GOLDEN_HOUR) _onGoldenHourTick();
   if (type === EVENT_TYPES.EARTHQUAKE)  _onEarthquakeTick();
   if (type === EVENT_TYPES.CREEPER)     _onCreeperTick(delta);
-  if (type === EVENT_TYPES.SANDSTORM)   _onSandstormTick();
+  if (type === EVENT_TYPES.SANDSTORM)   _onSandstormTick(delta);
   _updateEventCountdownHud();
 }
 
@@ -590,10 +590,10 @@ function _onSandstormStart() {
   document.body.classList.add('sandstorm-active');
 }
 
-function _onSandstormTick() {
+function _onSandstormTick(delta) {
   // Tick the clear-skies bonus if it's running
   if (clearSkiesActive) {
-    _clearSkiesRemainingMs -= 16; // approximate per-frame delta
+    _clearSkiesRemainingMs -= delta * 1000;
     if (_clearSkiesRemainingMs <= 0) {
       clearSkiesActive = false;
       _clearSkiesRemainingMs = 0;
