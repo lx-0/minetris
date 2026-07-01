@@ -120,6 +120,17 @@ function resetBossBattle() {
 
   _hideBossHUD();
   _hideDarkness();
+
+  var introEl = document.getElementById('boss-intro-splash');
+  if (introEl) {
+    introEl.style.display = 'none';
+    introEl.classList.remove('boss-intro-visible');
+  }
+  var victoryEl = document.getElementById('boss-victory-screen');
+  if (victoryEl) {
+    victoryEl.style.display = 'none';
+    victoryEl.classList.remove('bvs-visible');
+  }
 }
 
 // ── Public: deal damage (called from lineclear.js on each clear) ──────────────
