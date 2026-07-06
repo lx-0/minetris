@@ -323,6 +323,7 @@ function _attackWarden() {
 }
 
 function _hideDarkness() {
+  if (_bossDarknessHideTimer) { clearTimeout(_bossDarknessHideTimer); _bossDarknessHideTimer = null; }
   var overlay = document.getElementById('boss-darkness-overlay');
   if (!overlay) return;
   overlay.classList.remove('boss-darkness-active');
