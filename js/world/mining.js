@@ -14,7 +14,6 @@ function _acquireDustParticle(color, opacity) {
     const p = _dustPool.pop();
     p.material.color.copy(color);
     p.material.opacity = opacity;
-    p.material.needsUpdate = true;
     return p;
   }
   const material = new THREE.MeshLambertMaterial({ color: color, transparent: true, opacity: opacity });
@@ -34,8 +33,7 @@ function highlightBlock(block) {
   if (!block.userData.originalColor) {
     block.userData.originalColor = block.material.color.clone();
   }
-  block.material.emissive = new THREE.Color(0x555555);
-  block.material.needsUpdate = true;
+  block.material.emissive.setHex(0x555555);
 }
 
 function unhighlightBlock(block) {
@@ -43,9 +41,8 @@ function unhighlightBlock(block) {
   if (block.userData.defaultEmissive) {
     block.material.emissive.copy(block.userData.defaultEmissive);
   } else {
-    block.material.emissive = new THREE.Color(0x000000);
+    block.material.emissive.setHex(0x000000);
   }
-  block.material.needsUpdate = true;
 }
 
 function unhighlightTarget() {
@@ -154,14 +151,12 @@ function applyMineDamage(block, hits, effectiveMax) {
       orig.b * 0.2
     );
   }
-  block.material.needsUpdate = true;
 }
 
 function resetMineDamage(block) {
   if (!block || !block.material || !block.userData.originalColor) return;
   block.material.color.copy(block.userData.originalColor);
   block.userData.fractured = false;
-  block.material.needsUpdate = true;
 }
 
 function startMiningShake(block) {
@@ -358,7 +353,6 @@ function updateDustParticles(delta) {
     p.velocity.y -= GRAVITY * delta;
     p.mesh.position.addScaledVector(p.velocity, delta);
     p.mesh.material.opacity = 0.85 * (1 - age / p.lifetime);
-    p.mesh.material.needsUpdate = true;
   }
 }
 
