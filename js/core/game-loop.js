@@ -90,7 +90,6 @@ function updateEnvironment(delta, elapsedTime) {
         0,
         (0x66 / 255) * _t * 0.35
       );
-      _ob.material.needsUpdate = true;
     }
   }
 }
