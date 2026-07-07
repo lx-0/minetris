@@ -349,6 +349,10 @@ function _initBattleHandlers() {
           }
 
           battle.rankedMatch(myRating).then(function (data) {
+            // If the user cancelled before the promise resolved, don't start the
+            // expansion timer \u2014 it would leak since closeBattleOverlay() already
+            // cleared _rankedQueueExpandTimer before the async response arrived.
+            if (battleOverlay.style.display === "none") return;
             if (data.waiting) {
               if (roomCodeEl) roomCodeEl.textContent = data.roomCode;
               if (waitingEl) waitingEl.textContent = "\u9696 Ranked queue \u2014 searching for opponent\u2026";
