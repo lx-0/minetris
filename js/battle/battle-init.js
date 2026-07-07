@@ -160,6 +160,8 @@ function _initBattleHandlers() {
           clearInterval(_rankedQueueExpandTimer);
           _rankedQueueExpandTimer = null;
         }
+        _battleHostReady  = false;
+        _battleGuestReady = false;
         battleOverlay.style.display = "none";
         battle.disconnect();
         blocker.style.display = "flex";
